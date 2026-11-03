@@ -300,9 +300,9 @@ html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max
     <h2>按出线层列出（每层一张按网络的表）</h2>
     <div class="hint" style="margin-bottom:10px">不再把所有层混在一张表里。不符合的行整行标红，超标的线宽 / 线长 / 弧半径数字加深标红，鼠标悬停可看原因。原来的「按网络汇总」已按出线层扇出到下面各表，一行 = 该层上的一个网络。</div>
     <div class="row" style="margin-bottom:8px">
-      <label class="fld">搜索网络 <input type="text" id="fltQ" style="width:150px" placeholder="网络名包含..."></label>
-      <label class="fld">只看层 <select id="fltLayer" style="width:150px"><option value="">全部</option></select></label>
-      <label class="fld">状态 <select id="fltStatus" style="width:100px"><option value="">全部</option><option value="fail">不符合</option><option value="pass">通过</option><option value="none">未检查</option></select></label>
+      <label class="fld">搜索网络 <input type="text" id="fltQ" style="width:150px" placeholder="网络名包含..." data-no-persist></label>
+      <label class="fld">只看层 <select id="fltLayer" style="width:150px" data-no-persist><option value="">全部</option></select></label>
+      <label class="fld">状态 <select id="fltStatus" style="width:100px" data-no-persist><option value="">全部</option><option value="fail">不符合</option><option value="pass">通过</option><option value="none">未检查</option></select></label>
       <span class="hint" id="fltNote">点击红色「不符合」只显示不符合项，再点一次恢复全部。</span>
       <button type="button" class="btn" id="btnExpReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
       <button type="button" class="btn ghost" id="btnExpAll">导出全部 CSV</button>
@@ -344,7 +344,7 @@ html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max
     <h2>差分线长差分析（支持逐层线长差与所有层总线长差检查）</h2>
     <div class="row" style="margin-bottom:8px">
       <button type="button" class="btn" id="btnExpDiffReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
-      <label class="fld"><input type="checkbox" id="chkDiffOnlyFail"> 仅显示超差对</label>
+      <label class="fld"><input type="checkbox" id="chkDiffOnlyFail" data-no-persist> 仅显示超差对</label>
       <button type="button" class="btn ghost" id="btnExpDiff">导出差分分析 CSV</button>
       <button type="button" class="btn ghost" id="btnClearDiffRev">清空复验标记</button>
       <span class="hint" id="diffRevHint"></span>
@@ -2844,5 +2844,6 @@ if(typeof module!=='undefined'&&module.exports){
     exportTraceReportExcel:exportTraceReportExcel,exportDiffReportExcel:exportDiffReportExcel};
 }
 </script>
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>

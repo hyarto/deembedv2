@@ -295,7 +295,7 @@ html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max
     </div>
     <div class="row searchbar" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative;flex:1;min-width:280px;max-width:540px">
-        <input type="text" id="inpResSearch" class="search-inp" placeholder="🔍 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off">
+        <input type="text" id="inpResSearch" class="search-inp" placeholder="🔍 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off" data-no-persist>
         <button type="button" id="btnClearSearch" title="清空搜索" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;display:none;padding:2px 6px">×</button>
       </div>
       <button type="button" class="btn gray" id="btnSearchGo" title="快速滚动并高亮定位到匹配的过孔">定位到孔</button>
@@ -2106,5 +2106,6 @@ syncPin();
   syncUI();
 })();
 </script>
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>

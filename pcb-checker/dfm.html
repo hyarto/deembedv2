@@ -322,7 +322,7 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
 
         <div class="form-item">
           <label for="selLayerFilter">层筛选 (Layer Filter)</label>
-          <select id="selLayerFilter">
+          <select id="selLayerFilter" data-no-persist>
             <option value="" selected>全部层 (All Layers)</option>
           </select>
         </div>
@@ -453,7 +453,7 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
 
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <div class="search-bar" style="margin-bottom:0;flex:1;min-width:240px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)...">
+          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)..." data-no-persist>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button type="button" class="btn sec small" id="btnFilterAll">全部</button>
@@ -849,6 +849,12 @@ const HistoryManager = {
   }
 };
 window.HistoryManager = HistoryManager;
+
+/* 界面参数记忆（ui-prefs.js）回填输入框后，历史值圆钮上的「当前值」高亮要跟着刷新，
+   否则刷新后看起来像「值变了但圆钮还停在默认值」。 */
+document.addEventListener('pcb:prefs-restored', function () {
+  try { HistoryManager.renderAll(); } catch (e) {}
+});
 
 function applyPresetScheme(schemeName) {
   if (schemeName === 'eda_project') {
@@ -2905,5 +2911,6 @@ window.addEventListener('DOMContentLoaded', () => {
   syncUI();
 })();
 </script>
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>
