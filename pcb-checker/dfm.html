@@ -137,6 +137,26 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 html:fullscreen,html:-webkit-full-screen{background:var(--bg,#f8fafc);overflow-y:auto}
 html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
 html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh - 230px) !important;min-height:580px !important}
+
+  /* ===== 规律分析 (Pattern Analysis) ===== */
+  .pat-bar-row{display:grid;grid-template-columns:120px 1fr 78px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12.5px}
+  .pat-bar-row:last-child{border-bottom:none}
+  .pat-bar-name{font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .pat-bar-name:hover{color:#0284c7;text-decoration:underline}
+  .pat-bar-track{height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden}
+  .pat-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#38bdf8,#0284c7);transition:width .2s}
+  .pat-bar-fill.bad{background:linear-gradient(90deg,#fb7185,#e11d48)}
+  .pat-bar-fill.warn{background:linear-gradient(90deg,#fbbf24,#d97706)}
+  .pat-bar-val{text-align:right;font-family:var(--mono);font-size:11.5px;color:#475569}
+  .pat-concl{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0284c7;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.75;color:#1e293b}
+  .pat-concl b{color:#0369a1}
+  .pat-concl .risk{color:#be123c;font-weight:700}
+  .pat-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;margin-left:4px}
+  .pat-chip.muted{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+  .pat-obj-btn{font-size:12.5px !important;padding:5px 12px !important}
+  .pat-obj-btn.active{background:#0284c7 !important;color:#fff !important;border-color:#0284c7 !important}
+  @media (max-width:1100px){ #patChartsRow{grid-template-columns:1fr !important} }
+  .pat-tab-note{font-size:11.5px;color:#94a3b8;margin-top:2px}
 </style>
 </head>
 <body>
@@ -172,7 +192,8 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
   <button data-tab="import" class="active">① 规则与数据导入</button>
   <button data-tab="canvas">② 空间几何可视化图与测量</button>
   <button data-tab="result">③ 检查结果明细</button>
-  <button data-tab="legend">④ 判定原理与算法说明</button>
+  <button data-tab="analysis">④ 规律分析（按信号孔 / 按走线）</button>
+  <button data-tab="legend">⑤ 判定原理与算法说明</button>
 </nav>
 
 <main>
@@ -301,7 +322,7 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
 
         <div class="form-item">
           <label for="selLayerFilter">层筛选 (Layer Filter)</label>
-          <select id="selLayerFilter">
+          <select id="selLayerFilter" data-no-persist>
             <option value="" selected>全部层 (All Layers)</option>
           </select>
         </div>
@@ -432,7 +453,7 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
 
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <div class="search-bar" style="margin-bottom:0;flex:1;min-width:240px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)...">
+          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)..." data-no-persist>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button type="button" class="btn sec small" id="btnFilterAll">全部</button>
@@ -520,6 +541,134 @@ html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh
   </section>
 
   <!-- TAB 4: 判定原理与算法 -->
+  <!-- TAB 4: 规律分析（按信号孔 / 按走线归纳全板问题分布） -->
+  <section class="tab" id="tab-analysis">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px">
+        <div>
+          <h2 style="margin:0 0 4px">📊 规律分析：全板间距问题分布归纳</h2>
+          <div style="font-size:12.5px;color:var(--sub)" id="patHint">
+            以<b>问题对象</b>为单位归纳：同一个信号孔（或同一条走线）上累计了多少处间距不足、集中在哪些层 / 网络，以及亏欠量分布。
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn sec small" id="btnPatExport">📥 导出规律分析 (CSV)</button>
+          <button type="button" class="btn sec small" id="btnPatRefresh">🔄 重新归纳</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:6px">
+        <div>
+          <div style="font-size:12px;color:var(--sub);margin-bottom:4px">分析对象</div>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn sec small pat-obj-btn active" id="btnPatObjVia" data-obj="via">📡 按信号孔</button>
+            <button type="button" class="btn sec small pat-obj-btn" id="btnPatObjTrace" data-obj="trace">🛣 按走线</button>
+          </div>
+        </div>
+        <div>
+          <label for="selPatViaKind" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">过孔范围</label>
+          <select id="selPatViaKind" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+            <option value="all">全部过孔（信号孔 + GND 孔）</option>
+            <option value="signal">仅信号孔</option>
+            <option value="gnd">仅 GND 孔</option>
+          </select>
+        </div>
+        <div>
+          <label for="selPatDim" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">归纳维度</label>
+          <select id="selPatDim" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+            <option value="layer">出线层 (Subset)</option>
+            <option value="net">网络 (Net)</option>
+            <option value="kind">孔型（通孔 / 盲埋孔）</option>
+            <option value="padstack">Padstack</option>
+            <option value="width">走线线宽</option>
+          </select>
+        </div>
+        <div>
+          <label for="selPatSort" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">排序</label>
+          <select id="selPatSort" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+            <option value="failCount">缺陷处数（多 → 少）</option>
+            <option value="maxDeficit">最大亏欠量（大 → 小）</option>
+            <option value="minDist">最小间距（小 → 大）</option>
+          </select>
+        </div>
+        <div>
+          <label for="selPatTopN" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">显示数量</label>
+          <select id="selPatTopN" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+            <option value="5">Top 5</option>
+            <option value="10" selected>Top 10</option>
+            <option value="20">Top 20</option>
+            <option value="50">Top 50</option>
+            <option value="0">全部</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="patStatsGrid">
+      <div class="stat-box" style="border-left:3px solid #0284c7">
+        <div class="num" id="patKpiObjects">0</div>
+        <div class="lbl" id="patKpiObjectsLbl">🏷 问题对象数（信号孔）</div>
+      </div>
+      <div class="stat-box bad">
+        <div class="num" id="patKpiDefects">0</div>
+        <div class="lbl">❌ 累计缺陷处数</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="patKpiPairs" style="font-size:16px">0</div>
+        <div class="lbl">🔗 涉及对偶数（去重）</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="patKpiMinDist" style="font-size:16px">-</div>
+        <div class="lbl">📏 全板最小实测间距 (mil)</div>
+      </div>
+      <div class="stat-box warn">
+        <div class="num" id="patKpiMaxDeficit" style="font-size:16px">-</div>
+        <div class="lbl">⚠ 最大亏欠量 (mil)</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="patKpiConcentration" style="font-size:16px">-</div>
+        <div class="lbl" id="patKpiConcentrationLbl">🎯 前 3 名维度集中度</div>
+      </div>
+    </div>
+
+    <div class="card" id="cardPatConcl" style="display:none">
+      <h3 style="margin:0 0 8px;font-size:15px">🧭 规律结论</h3>
+      <div class="pat-concl" id="patConclusion"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px" id="patChartsRow">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0;font-size:15px" id="patDimTitle">📈 按出线层分布</h3>
+          <span style="font-size:11.5px;color:var(--sub)" id="patDimSub"></span>
+        </div>
+        <div id="patDimChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据，请先在①导入数据并运行检查。</div></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 style="margin:0;font-size:15px">📉 亏欠量分布（阈值 − 实测间距）</h3>
+          <span style="font-size:11.5px;color:var(--sub)" id="patDeficitSub"></span>
+        </div>
+        <div id="patDeficitChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据。</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <h3 style="margin:0;font-size:15px" id="patTableTitle">🏷 问题对象排行（按信号孔）</h3>
+        <span style="font-size:11.5px;color:var(--sub)" id="patTableSub"></span>
+      </div>
+      <div style="overflow:auto;max-height:560px">
+        <table id="tblPatObjects">
+          <thead id="tblPatObjectsHead"></thead>
+          <tbody id="tblPatObjectsBody">
+            <tr><td colspan="9" style="text-align:center;padding:26px;color:#94a3b8">尚无数据，请先在①导入数据并运行检查。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="tab" id="tab-legend">
     <div class="card">
       <h2>空间几何间距判定原理与算法模型</h2>
@@ -701,6 +850,12 @@ const HistoryManager = {
 };
 window.HistoryManager = HistoryManager;
 
+/* 界面参数记忆（ui-prefs.js）回填输入框后，历史值圆钮上的「当前值」高亮要跟着刷新，
+   否则刷新后看起来像「值变了但圆钮还停在默认值」。 */
+document.addEventListener('pcb:prefs-restored', function () {
+  try { HistoryManager.renderAll(); } catch (e) {}
+});
+
 function applyPresetScheme(schemeName) {
   if (schemeName === 'eda_project') {
     if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '4.01575';
@@ -758,9 +913,471 @@ document.querySelectorAll('nav#tabs button').forEach(btn => {
     if (tabEl) tabEl.classList.add('active');
     if (btn.dataset.tab === 'canvas') {
       setTimeout(renderCanvas, 50);
+    } else if (btn.dataset.tab === 'analysis') {
+      renderPatternAnalysis();
     }
   });
 });
+
+/* =========================================================================
+ * 规律分析（Pattern Analysis）
+ * 以「问题对象」为单位归纳全板间距问题：
+ *   - 按信号孔（过孔）：同一个孔上的多处间距不足、涉及哪些层/网络
+ *   - 按走线：同一条走线上的多处间距不足、涉及哪些孔/层
+ * 纯函数 buildDfmPatternAnalysis(result, opts) 只做归纳，渲染与交互在 renderPatternAnalysis()
+ * ========================================================================= */
+const PatternState = {
+  object: 'via',        // 'via' | 'trace'
+  viaKind: 'all',       // 'all' | 'signal' | 'gnd'（仅按信号孔模式生效）
+  dimension: 'layer',   // 'layer' | 'net' | 'kind' | 'padstack' | 'width'
+  sortBy: 'failCount',  // 'failCount' | 'maxDeficit' | 'minDist'
+  topN: 10,
+  last: null
+};
+
+function patDeficitOf(p) {
+  const d = Number(p.threshold) - Number(p.evalDist);
+  return isFinite(d) && d > 0 ? d : 0;
+}
+
+function buildDfmPatternAnalysis(result, opts) {
+  const o = Object.assign({ object: 'via', viaKind: 'all', dimension: 'layer', sortBy: 'failCount', topN: 10 }, opts || {});
+  const empty = {
+    object: o.object, dimension: o.dimension, hasData: false,
+    objects: [], dimensionRows: [], deficitBuckets: [],
+    kpis: { objectCount: 0, defectCount: 0, pairCount: 0, minDist: null, maxDeficit: 0, concentration: 0 },
+    summary: { headline: '尚无缺陷数据：请先在①规则与数据导入页载入数据并运行检查。', bullets: [] }
+  };
+  if (!result || !Array.isArray(result.defectPairs) || result.defectPairs.length === 0) return empty;
+
+  // 1. 选对象范围
+  let pairs = result.defectPairs.filter(p => p && p.via && p.trace);
+  if (o.object === 'via') {
+    if (o.viaKind === 'signal') pairs = pairs.filter(p => !p.via.isGnd);
+    else if (o.viaKind === 'gnd') pairs = pairs.filter(p => p.via.isGnd);
+  }
+  if (pairs.length === 0) {
+    const e2 = Object.assign({}, empty, { kpis: Object.assign({}, empty.kpis) });
+    e2.summary = {
+      headline: o.object === 'via' && o.viaKind === 'signal'
+        ? '当前筛选下没有信号孔相关的间距缺陷。'
+        : (o.object === 'via' && o.viaKind === 'gnd' ? '当前筛选下没有 GND 孔相关的间距缺陷。' : '没有可用于归纳的缺陷对偶。'),
+      bullets: []
+    };
+    return e2;
+  }
+
+  // 2. 按对象聚合
+  const objMap = new Map();
+  pairs.forEach(p => {
+    const isVia = o.object === 'via';
+    const key = isVia ? ('V' + (p.via.id != null ? p.via.id : p.via.padstack)) : ('T' + (p.trace.id != null ? p.trace.id : p.trace.subset + '_' + p.trace.net));
+    let it = objMap.get(key);
+    if (!it) {
+      it = {
+        key,
+        id: isVia ? p.via.id : p.trace.id,
+        net: isVia ? (p.via.net || '') : (p.trace.net || ''),
+        isGnd: isVia ? !!p.via.isGnd : false,
+        padstack: isVia ? (p.via.padstack || '') : '',
+        spanType: isVia ? (p.via.viaTypeLabel || '通孔') : '',
+        layer: isVia ? '' : (p.trace.subset || ''),
+        width: isVia ? null : (Number.isFinite(Number(p.trace.width)) ? Number(p.trace.width) : null),
+        origin: isVia && p.via.origin ? p.via.origin : null,
+        failCount: 0,
+        minDist: Infinity,
+        maxDeficit: 0,
+        layers: new Map(),
+        nets: new Map(),
+        peers: new Map(),
+        pairs: []
+      };
+      objMap.set(key, it);
+    }
+    it.failCount++;
+    const dist = Number(p.evalDist); if (isFinite(dist) && dist < it.minDist) it.minDist = dist;
+    const def = patDeficitOf(p); if (def > it.maxDeficit) it.maxDeficit = def;
+    const layerKey = (isVia ? (p.trace.subset || '未知层') : (p.via.viaTypeLabel || '通孔'));
+    it.layers.set(layerKey, (it.layers.get(layerKey) || 0) + 1);
+    it.nets.set(p.trace.net || '未知网络', (it.nets.get(p.trace.net || '未知网络') || 0) + 1);
+    // peers = 与本对象发生间距问题的「对端」：按信号孔时是走线，按走线时是过孔
+    const peer = isVia ? ('Trace #' + p.trace.id) : ('Via #' + p.via.id);
+    it.peers.set(peer, (it.peers.get(peer) || 0) + 1);
+    it.pairs.push(p);
+  });
+
+  let objects = [...objMap.values()].map(it => Object.assign(it, {
+    minDist: isFinite(it.minDist) ? it.minDist : null,
+    topLayer: [...it.layers.entries()].sort((a, b) => b[1] - a[1])[0] || null,
+    peersCount: it.peers.size,
+    peerList: [...it.peers.keys()]
+  }));
+
+  // 3. 排序 + Top N
+  const sorters = {
+    failCount: (a, b) => b.failCount - a.failCount || (b.maxDeficit - a.maxDeficit),
+    maxDeficit: (a, b) => b.maxDeficit - a.maxDeficit || (b.failCount - a.failCount),
+    minDist: (a, b) => (a.minDist == null ? Infinity : a.minDist) - (b.minDist == null ? Infinity : b.minDist)
+  };
+  objects.sort(sorters[o.sortBy] || sorters.failCount);
+  const objectCount = objects.length;
+  const shown = o.topN > 0 ? objects.slice(0, o.topN) : objects.slice();
+
+  // 4. 维度分布（用于条形图与集中度）
+  const dimKeyOf = (it) => {
+    if (o.dimension === 'net') return it.net || '未知网络';
+    if (o.dimension === 'kind') return o.object === 'via' ? (it.spanType || '通孔') : '走线';
+    if (o.dimension === 'padstack') return o.object === 'via' ? (it.padstack || '未知 Padstack') : (it.net || '未知网络');
+    if (o.dimension === 'width') return o.object === 'via'
+      ? (it.padstack || '未知 Padstack')
+      : (it.width == null ? '未知线宽' : it.width.toFixed(2) + ' mil');
+    return o.object === 'via' ? ((it.topLayer && it.topLayer[0]) || '未知层') : (it.layer || '未知层');
+  };
+  const dimMap = new Map();
+  objects.forEach(it => {
+    const k = dimKeyOf(it);
+    dimMap.set(k, (dimMap.get(k) || 0) + it.failCount);
+  });
+  const dimTotal = [...dimMap.values()].reduce((a, b) => a + b, 0) || 1;
+  const dimensionRows = [...dimMap.entries()]
+    .map(([key, count]) => ({ key, count, pct: count / dimTotal }))
+    .sort((a, b) => b.count - a.count);
+  const concentration = dimensionRows.slice(0, 3).reduce((a, r) => a + r.count, 0) / dimTotal;
+
+  // 5. 亏欠量分档（问题严重程度分布）
+  const bucketing = [
+    { label: '轻微 0–0.5 mil', min: 0, max: 0.5, count: 0 },
+    { label: '明显 0.5–1 mil', min: 0.5, max: 1, count: 0 },
+    { label: '严重 1–2 mil', min: 1, max: 2, count: 0 },
+    { label: '致命 > 2 mil', min: 2, max: Infinity, count: 0 }
+  ];
+  pairs.forEach(p => {
+    const d = patDeficitOf(p);
+    const b = bucketing.find(x => d >= x.min && d < x.max) || bucketing[bucketing.length - 1];
+    b.count++;
+  });
+  const deficitBuckets = bucketing.map(b => Object.assign(b, { pct: b.count / pairs.length }));
+
+  // 6. KPI
+  let minDist = Infinity, maxDeficit = 0;
+  pairs.forEach(p => {
+    const d = Number(p.evalDist); if (isFinite(d) && d < minDist) minDist = d;
+    const def = patDeficitOf(p); if (def > maxDeficit) maxDeficit = def;
+  });
+  const kpis = {
+    objectCount,
+    defectCount: pairs.length,
+    pairCount: pairs.length,
+    minDist: isFinite(minDist) ? minDist : null,
+    maxDeficit,
+    concentration
+  };
+
+  // 7. 结论文字
+  const objName = o.object === 'via' ? (o.viaKind === 'signal' ? '信号孔' : (o.viaKind === 'gnd' ? 'GND 孔' : '过孔（信号孔 + GND 孔）')) : '走线';
+  const topObj = objects[0];
+  const topDim = dimensionRows[0];
+  const fatal = deficitBuckets[deficitBuckets.length - 1];
+  const bullets = [];
+  if (topObj) {
+    const where = o.object === 'via'
+      ? (topObj.isGnd ? 'GND 孔' : '信号孔') + (topObj.padstack ? `（${topObj.padstack}）` : '')
+      : `走线（${topObj.layer || '未知层'} / ${topObj.net || '未知网络'}${topObj.width != null ? ' / ' + topObj.width.toFixed(2) + ' mil' : ''}）`;
+    bullets.push(`问题最集中的对象是 <b>${escHtml(o.object === 'via' ? 'Via #' + topObj.id : 'Trace #' + topObj.id)}</b> ${escHtml(where)}，一条对象上就有 <b>${topObj.failCount}</b> 处间距不足${topObj.minDist != null ? `，最小实测 ${topObj.minDist.toFixed(3)} mil` : ''}${topObj.maxDeficit > 0 ? `，最大亏欠 <span class="risk">${topObj.maxDeficit.toFixed(3)} mil</span>` : ''}。`);
+  }
+  if (topDim) {
+    bullets.push(`按「${escHtml(patDimLabel(o.dimension))}」归纳，问题最集中在 <b>${escHtml(topDim.key)}</b>（${topDim.count} 处，占 ${(topDim.pct * 100).toFixed(1)}%），前 3 名合计占 <b>${(concentration * 100).toFixed(1)}%</b>。`);
+  }
+  if (fatal.count > 0) {
+    bullets.push(`有 <b>${fatal.count}</b> 处亏欠量超过 2 mil（占 ${(fatal.pct * 100).toFixed(1)}%），属于优先返工对象。`);
+  } else if (deficitBuckets[2].count + deficitBuckets[3].count > 0) {
+    bullets.push(`亏欠量集中在 1 mil 以上，共 ${deficitBuckets[2].count + deficitBuckets[3].count} 处，建议按对象集中返工。`);
+  }
+  if (o.object === 'via' && o.viaKind === 'all' && result.defectPairs.length === pairs.length) {
+    const gndCnt = pairs.filter(p => p.via.isGnd).length;
+    bullets.push(`缺陷构成：GND 孔相关的 ${gndCnt} 处（占 ${(gndCnt / pairs.length * 100).toFixed(1)}%），信号孔相关的 ${pairs.length - gndCnt} 处。`);
+  }
+  const headline = `本次共 <b>${pairs.length}</b> 处间距不足，分布在 <b>${objectCount}</b> 个${objName}对象上${objectCount > 0 ? `，平均每个对象 ${(pairs.length / objectCount).toFixed(2)} 处` : ''}。`;
+
+  return {
+    object: o.object, dimension: o.dimension, hasData: true,
+    objects: shown, allObjects: objects, objectCount,
+    dimensionRows, deficitBuckets,
+    kpis,
+    summary: { headline, bullets },
+    viaKind: o.viaKind
+  };
+}
+
+function patDimLabel(dim) {
+  return ({ layer: '出线层', net: '网络', kind: '孔型', padstack: 'Padstack', width: '走线线宽' })[dim] || dim;
+}
+
+function patDimTitleFor(dim, object) {
+  if (dim === 'kind') return object === 'via' ? '📈 按孔型（通孔 / 盲埋孔）分布' : '📈 按走线分布';
+  if (dim === 'width') return object === 'via' ? '📈 按 Padstack 分布（按信号孔模式无独立线宽维度）' : '📈 按走线线宽分布';
+  return `📈 按${patDimLabel(dim)}分布`;
+}
+
+function patObjectTitle(object, viaKind) {
+  if (object !== 'via') return '🏷 问题对象排行（按走线）';
+  const kind = viaKind === 'signal' ? '信号孔' : (viaKind === 'gnd' ? 'GND 孔' : '过孔');
+  return `🏷 问题对象排行（按${kind}）`;
+}
+
+function patTableHead(object) {
+  const cols = object === 'via'
+    ? ['#', '对象', '网络', '孔型', 'Padstack', '缺陷处数', '占比', '最小间距 (mil)', '最大亏欠 (mil)', '操作']
+    : ['#', '对象', '出线层', '网络', '线宽 (mil)', '缺陷处数', '占比', '最小间距 (mil)', '最大亏欠 (mil)', '操作'];
+  return '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+}
+
+function renderPatternAnalysis() {
+  const res = State.checkResult;
+  const hasResult = res && Array.isArray(res.defectPairs);
+  const analysis = buildDfmPatternAnalysis(res, {
+	object: PatternState.object,
+	viaKind: PatternState.viaKind,
+	dimension: PatternState.dimension,
+	sortBy: PatternState.sortBy,
+	topN: PatternState.topN
+  });
+  PatternState.last = analysis;
+
+  // 按钮/下拉态
+  ['btnPatObjVia', 'btnPatObjTrace'].forEach(id => {
+	const el = $(id); if (!el) return;
+	const active = el.dataset.obj === PatternState.object;
+	el.classList.toggle('active', active);
+  });
+  if ($('selPatViaKind')) $('selPatViaKind').disabled = PatternState.object !== 'via';
+
+  // KPI
+  const k = analysis.kpis;
+  if ($('patKpiObjects')) $('patKpiObjects').textContent = k.objectCount;
+  const objLbl = PatternState.object === 'via'
+	? (PatternState.viaKind === 'signal' ? '信号孔' : (PatternState.viaKind === 'gnd' ? 'GND 孔' : '过孔'))
+	: '走线';
+  if ($('patKpiObjectsLbl')) $('patKpiObjectsLbl').textContent = '🏷 问题对象数（' + objLbl + '）';
+  if ($('patKpiDefects')) $('patKpiDefects').textContent = k.defectCount;
+  if ($('patKpiPairs')) $('patKpiPairs').textContent = hasResult ? (res.failCount || k.defectCount) : 0;
+  if ($('patKpiMinDist')) $('patKpiMinDist').textContent = k.minDist == null ? '-' : k.minDist.toFixed(3);
+  if ($('patKpiMaxDeficit')) $('patKpiMaxDeficit').textContent = k.maxDeficit ? k.maxDeficit.toFixed(3) : '-';
+  if ($('patKpiConcentration')) $('patKpiConcentration').textContent = k.defectCount ? (k.concentration * 100).toFixed(1) + '%' : '-';
+  if ($('patKpiConcentrationLbl')) $('patKpiConcentrationLbl').textContent = '🎯 前 3 名「' + patDimLabel(PatternState.dimension) + '」集中度';
+
+  // 结论
+  if ($('cardPatConcl')) $('cardPatConcl').style.display = analysis.hasData ? '' : 'none';
+  if ($('patConclusion')) {
+	$('patConclusion').innerHTML = analysis.hasData
+	  ? `<div>${analysis.summary.headline}</div>` + (analysis.summary.bullets.length
+		? '<ul style="margin:8px 0 0;padding-left:20px">' + analysis.summary.bullets.map(b => `<li>${b}</li>`).join('') + '</ul>'
+		: '')
+	  : `<div style="color:#64748b">${escHtml(analysis.summary.headline || '尚无缺陷数据，先在①导入数据并运行检查。')}</div>`;
+  }
+
+  // 维度条形图
+  if ($('patDimTitle')) $('patDimTitle').textContent = patDimTitleFor(PatternState.dimension, PatternState.object);
+  const dimBox = $('patDimChart');
+  if (dimBox) {
+	if (!analysis.hasData || analysis.dimensionRows.length === 0) {
+	  dimBox.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:12px 0">暂无数据</div>';
+	} else {
+	  const max = analysis.dimensionRows[0].count || 1;
+	  dimBox.innerHTML = analysis.dimensionRows.map((r, i) => `
+		<div class="pat-bar-row">
+		  <div class="pat-bar-name" title="${escHtml(r.key)}" onclick="patFocusDimensionAt(${i})">${escHtml(r.key)}</div>
+		  <div class="pat-bar-track"><div class="pat-bar-fill ${i === 0 ? 'bad' : (i === 1 ? 'warn' : '')}" style="width:${Math.max(2, r.count / max * 100).toFixed(1)}%"></div></div>
+		  <div class="pat-bar-val">${r.count} 处 · ${(r.pct * 100).toFixed(1)}%</div>
+		</div>`).join('');
+	}
+  }
+  if ($('patDimSub')) $('patDimSub').textContent = analysis.hasData ? `共 ${analysis.dimensionRows.length} 组 · 合计 ${analysis.kpis.defectCount} 处` : '';
+
+  // 亏欠量分布
+  const defBox = $('patDeficitChart');
+  if (defBox) {
+	if (!analysis.hasData) {
+	  defBox.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:12px 0">暂无数据</div>';
+	} else {
+	  const maxB = Math.max(1, ...analysis.deficitBuckets.map(b => b.count));
+	  defBox.innerHTML = analysis.deficitBuckets.map((b, i) => `
+		<div class="pat-bar-row">
+		  <div class="pat-bar-name" style="cursor:default">${b.label}</div>
+		  <div class="pat-bar-track"><div class="pat-bar-fill ${i >= 2 ? 'bad' : (i === 1 ? 'warn' : '')}" style="width:${Math.max(1, b.count / maxB * 100).toFixed(1)}%"></div></div>
+		  <div class="pat-bar-val">${b.count} 处 · ${(b.pct * 100).toFixed(0)}%</div>
+		</div>`).join('');
+	}
+  }
+  if ($('patDeficitSub')) $('patDeficitSub').textContent = analysis.hasData ? '按阈值与实测间距之差分档' : '';
+
+  // 对象排行表
+  if ($('patTableTitle')) $('patTableTitle').textContent = patObjectTitle(PatternState.object, PatternState.viaKind);
+  if ($('tblPatObjectsHead')) $('tblPatObjectsHead').innerHTML = patTableHead(PatternState.object);
+  const tbody = $('tblPatObjectsBody');
+  if (tbody) {
+	if (!analysis.hasData) {
+	  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:26px;color:#94a3b8">${escHtml(analysis.summary.headline || '尚无数据，请先在①导入数据并运行检查。')}</td></tr>`;
+	} else {
+	  const total = analysis.kpis.defectCount || 1;
+	  tbody.innerHTML = analysis.objects.map((it, i) => {
+		const pct = (it.failCount / total * 100).toFixed(1);
+		const objCell = PatternState.object === 'via'
+		  ? `<b>Via #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">[${it.origin ? it.origin[0].toFixed(1) + ', ' + it.origin[1].toFixed(1) : '-'}]</div>`
+		  : `<b>Trace #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">${escHtml(it.peerList.slice(0, 2).join(', '))}${it.peerList.length > 2 ? ' 等' + it.peerList.length + ' 个孔' : ''}</div>`;
+		const col3 = PatternState.object === 'via'
+		  ? `<span class="pat-chip ${it.isGnd ? 'muted' : ''}">${escHtml(it.spanType || '通孔')}</span>`
+		  : `<span class="pat-chip">${escHtml(it.layer || '-')}</span>`;
+		const col4 = PatternState.object === 'via'
+		  ? escHtml(it.padstack || '-')
+		  : escHtml(it.net || '-');
+		const col5 = PatternState.object === 'via'
+		  ? `<span style="font-size:11.5px">${escHtml(it.net || '-')}</span>`
+		  : (it.width == null ? '-' : it.width.toFixed(2));
+		return `<tr>
+		  <td style="color:#94a3b8">${i + 1}</td>
+		  <td>${objCell}</td>
+		  <td>${col3}</td>
+		  <td>${col4}</td>
+		  <td>${col5}</td>
+		  <td><b style="color:#be123c">${it.failCount}</b></td>
+		  <td>${pct}%</td>
+		  <td>${it.minDist == null ? '-' : it.minDist.toFixed(3)}</td>
+		  <td>${it.maxDeficit ? '<b style="color:#be123c">' + it.maxDeficit.toFixed(3) + '</b>' : '-'}</td>
+		  <td><button type="button" class="btn sec small pat-obj-btn" onclick="patJumpToDetailAt(${i})">查看明细</button></td>
+		</tr>`;
+	  }).join('');
+	}
+  }
+  if ($('patTableSub')) {
+	$('patTableSub').textContent = analysis.hasData
+	  ? `共 ${analysis.objectCount} 个对象，当前显示 ${analysis.objects.length} 个 · 排序：${{ failCount: '缺陷处数', maxDeficit: '最大亏欠量', minDist: '最小间距' }[PatternState.sortBy]}`
+	  : '';
+  }
+  return analysis;
+}
+
+/* 点击维度行：把该维度值作为搜索词带到结果明细页 */
+function patFocusDimension(value) {
+  if (!value) return;
+  const tabBtn = document.querySelector('nav#tabs button[data-tab="result"]');
+  if (tabBtn) tabBtn.click();
+  const inp = $('inpSearch');
+  if (inp) {
+	inp.value = value;
+	inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
+/* 按索引取维度值（避免把外部文本拼进 onclick 属性） */
+function patFocusDimensionAt(idx) {
+  const rows = (PatternState.last && PatternState.last.dimensionRows) || [];
+  const row = rows[idx];
+  if (row) patFocusDimension(row.key);
+}
+
+/* 按索引取对象（同上） */
+function patJumpToDetailAt(idx) {
+  const list = (PatternState.last && PatternState.last.objects) || [];
+  const it = list[idx];
+  if (it) patJumpToDetail(it.id);
+}
+
+/* 对象行「查看明细」：切到结果页并按对象号搜索 */
+function patJumpToDetail(id) {
+  const tabBtn = document.querySelector('nav#tabs button[data-tab="result"]');
+  if (tabBtn) tabBtn.click();
+  const inp = $('inpSearch');
+  if (inp) {
+	inp.value = (PatternState.object === 'via' ? 'Via ' : 'Trace ') + id;
+	inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
+/* CSV 导出：对象维度 + 维度分布 + 亏欠量分档 */
+function buildPatternCsv(analysis) {
+  if (!analysis || !analysis.hasData) return '';
+  const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const lines = [];
+  const objLabel = analysis.object === 'via' ? '信号孔' : '走线';
+  lines.push([esc('规律分析 / 对象维度'), esc(objLabel), esc('缺陷处数'), esc('占比'), esc('最小间距(mil)'), esc('最大亏欠(mil)'), esc('对象信息')].join(','));
+  const total = analysis.kpis.defectCount || 1;
+  analysis.allObjects.forEach(it => {
+    const info = analysis.object === 'via'
+	  ? `Via #${it.id} ${it.net} ${it.padstack} ${it.spanType}`
+	  : `Trace #${it.id} ${it.layer} ${it.net} ${it.width == null ? '' : it.width + ' mil'}`;
+    lines.push([esc(analysis.object === 'via' ? 'Via#' + it.id : 'Trace#' + it.id), esc(objLabel), it.failCount, (it.failCount / total * 100).toFixed(1) + '%',
+	  it.minDist == null ? '' : it.minDist.toFixed(3), it.maxDeficit ? it.maxDeficit.toFixed(3) : '0', esc(info)].join(','));
+  });
+  lines.push('');
+  lines.push([esc('维度分布'), esc(patDimLabel(analysis.dimension)), esc('缺陷处数'), esc('占比')].join(','));
+  analysis.dimensionRows.forEach(r => lines.push([esc('分布'), esc(r.key), r.count, (r.pct * 100).toFixed(1) + '%'].join(',')));
+  lines.push('');
+  lines.push([esc('亏欠量分档'), esc('区间'), esc('处数'), esc('占比')].join(','));
+  analysis.deficitBuckets.forEach(b => lines.push([esc('分档'), esc(b.label), b.count, (b.pct * 100).toFixed(1) + '%'].join(',')));
+  return lines.join('\r\n');
+}
+
+function exportPatternCsv() {
+  const analysis = PatternState.last || renderPatternAnalysis();
+  if (!analysis.hasData) { alert('暂无可导出的规律分析数据，请先运行检查。'); return; }
+  const csv = buildPatternCsv(analysis);
+  const name = `DFM规律分析_${analysis.object === 'via' ? '信号孔' : '走线'}_${new Date().toISOString().slice(0, 10)}.csv`;
+  if (typeof showExportBox === 'function') showExportBox(name, csv, `共 ${analysis.objectCount} 个问题对象 / ${analysis.kpis.defectCount} 处缺陷。`, 'text/csv');
+  else {
+	const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+	const a = document.createElement('a');
+	a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  }
+}
+
+window.buildDfmPatternAnalysis = buildDfmPatternAnalysis;
+window.renderPatternAnalysis = renderPatternAnalysis;
+window.patFocusDimension = patFocusDimension;
+window.patJumpToDetail = patJumpToDetail;
+window.patFocusDimensionAt = patFocusDimensionAt;
+window.patJumpToDetailAt = patJumpToDetailAt;
+window.buildPatternCsv = buildPatternCsv;
+window.exportPatternCsv = exportPatternCsv;
+window.PatternState = PatternState;
+
+// --- 规律分析交互 ---
+function syncPatDimOptions() {
+  const sel = $('selPatDim');
+  if (!sel) return;
+  const viaOnly = ['kind', 'padstack'], traceOnly = ['width'];
+  [...sel.options].forEach(o => {
+    if (PatternState.object === 'via' && traceOnly.includes(o.value)) o.disabled = true;
+    else if (PatternState.object === 'trace' && viaOnly.includes(o.value)) o.disabled = true;
+    else o.disabled = false;
+  });
+  const curOpt = [...sel.options].find(o => o.value === sel.value);
+  if (curOpt && curOpt.disabled) {
+    const first = [...sel.options].find(o => !o.disabled);
+    if (first) { sel.value = first.value; PatternState.dimension = first.value; }
+  }
+}
+
+(function initPatternAnalysisControls() {
+  ['btnPatObjVia', 'btnPatObjTrace'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.addEventListener('click', () => {
+      PatternState.object = btn.dataset.obj;
+      syncPatDimOptions();
+      renderPatternAnalysis();
+    });
+  });
+  const bind = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+  bind('selPatViaKind', 'change', e => { PatternState.viaKind = e.target.value; renderPatternAnalysis(); });
+  bind('selPatDim', 'change', e => { PatternState.dimension = e.target.value; renderPatternAnalysis(); });
+  bind('selPatSort', 'change', e => { PatternState.sortBy = e.target.value; renderPatternAnalysis(); });
+  bind('selPatTopN', 'change', e => { PatternState.topN = parseInt(e.target.value, 10) || 0; renderPatternAnalysis(); });
+  bind('btnPatRefresh', 'click', () => renderPatternAnalysis());
+  bind('btnPatExport', 'click', () => exportPatternCsv());
+  syncPatDimOptions();
+})();
+
+window.syncPatDimOptions = syncPatDimOptions;
 
 function setGndThreshold(val) {
   if ($('inpThresholdGnd')) $('inpThresholdGnd').value = val;
@@ -1027,6 +1644,7 @@ function runCheck(sync) {
 
     renderResults();
     renderCanvas();
+    try { renderPatternAnalysis(); } catch (e) { /* 规律分析渲染失败不应影响主流程 */ }
   };
 
   if (sync || window.__SYNC_CHECK__) {
@@ -2293,5 +2911,6 @@ window.addEventListener('DOMContentLoaded', () => {
   syncUI();
 })();
 </script>
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>

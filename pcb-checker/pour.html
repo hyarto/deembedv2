@@ -416,7 +416,7 @@ html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:
         </div>
 
         <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索孔号/网络/层名/Shape号..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()">
+          <input type="text" id="inpSearch" placeholder="🔍 搜索孔号/网络/层名/Shape号..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()" data-no-persist>
         </div>
       </div>
 
@@ -425,7 +425,7 @@ html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:
         <table>
           <thead>
             <tr>
-              <th style="width:40px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)"></th>
+              <th style="width:40px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)" data-no-persist></th>
               <th>检查分类</th>
               <th>目标对象 / 网络</th>
               <th>涉及层别范围</th>
@@ -553,17 +553,17 @@ html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:
     <div class="form-grid">
       <div class="form-item">
         <label>过孔类型 (Padstack 关键字) *</label>
-        <input type="text" id="modalR1InpPadstack" placeholder="例如: HDI_045drill_ring3_1_4 或 BGA_GND">
+        <input type="text" id="modalR1InpPadstack" placeholder="例如: HDI_045drill_ring3_1_4 或 BGA_GND" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Padstack"></div>
       </div>
       <div class="form-item">
         <label>要求铺铜层范围 (如 L1-L5 / Top, 02G01P, 19IS08) *</label>
-        <input type="text" id="modalR1InpLayers" placeholder="例如: L1-L5 或 Top, 02G01P, 19IS08">
+        <input type="text" id="modalR1InpLayers" placeholder="例如: L1-L5 或 Top, 02G01P, 19IS08" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Layers"></div>
       </div>
       <div class="form-item">
         <label>距孔中心最大铺铜判定距离 (mil) *</label>
-        <input type="number" id="modalR1InpDist" value="50.0" step="1.0">
+        <input type="number" id="modalR1InpDist" value="50.0" step="1.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Dist"></div>
       </div>
     </div>
@@ -585,22 +585,22 @@ html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:
     <div class="form-grid">
       <div class="form-item">
         <label>模板名称 *</label>
-        <input type="text" id="modalR2InpName" placeholder="例如: L2特定异型泪滴铜皮">
+        <input type="text" id="modalR2InpName" placeholder="例如: L2特定异型泪滴铜皮" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Name"></div>
       </div>
       <div class="form-item">
         <label>过孔类型 (Padstack 关键字) *</label>
-        <input type="text" id="modalR2InpPadstack" placeholder="例如: BGA_3510">
+        <input type="text" id="modalR2InpPadstack" placeholder="例如: BGA_3510" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Padstack"></div>
       </div>
       <div class="form-item">
         <label>目标层别 (Layer / Subset) *</label>
-        <input type="text" id="modalR2InpLayer" placeholder="例如: 02G01P 或 L2">
+        <input type="text" id="modalR2InpLayer" placeholder="例如: 02G01P 或 L2" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Layer"></div>
       </div>
       <div class="form-item">
         <label>面积允许容差 (± sq mil)</label>
-        <input type="number" id="modalR2InpTol" value="30.0" step="5.0">
+        <input type="number" id="modalR2InpTol" value="30.0" step="5.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Tol"></div>
       </div>
     </div>
@@ -640,22 +640,22 @@ html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:
     <div class="form-grid">
       <div class="form-item">
         <label>走线信号层 *</label>
-        <input type="text" id="modalR3InpTraceLayer" placeholder="例如: 19IS08 或 L4">
+        <input type="text" id="modalR3InpTraceLayer" placeholder="例如: 19IS08 或 L4" data-no-persist>
         <div class="chip-bar" id="chipsModalR3TraceLayer"></div>
       </div>
       <div class="form-item">
         <label>上参考层</label>
-        <input type="text" id="modalR3InpUpperRef" placeholder="例如: 08IS03 或 L3">
+        <input type="text" id="modalR3InpUpperRef" placeholder="例如: 08IS03 或 L3" data-no-persist>
         <div class="chip-bar" id="chipsModalR3UpperRef"></div>
       </div>
       <div class="form-item">
         <label>下参考层</label>
-        <input type="text" id="modalR3InpLowerRef" placeholder="例如: Bottom 或 L5">
+        <input type="text" id="modalR3InpLowerRef" placeholder="例如: Bottom 或 L5" data-no-persist>
         <div class="chip-bar" id="chipsModalR3LowerRef"></div>
       </div>
       <div class="form-item">
         <label>铜皮单侧最小超宽 (mil) *</label>
-        <input type="number" id="modalR3InpMargin" value="50.0" step="1.0">
+        <input type="number" id="modalR3InpMargin" value="50.0" step="1.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR3Margin"></div>
       </div>
     </div>
@@ -2824,5 +2824,6 @@ window.State = State;
 })();
 </script>
 
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>

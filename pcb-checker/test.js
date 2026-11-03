@@ -2,7 +2,8 @@
 const fs = require('fs');
 const assert = require('assert');
 const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
-const m = html.match(/<script>([\s\S]*)<\/script>/);
+/* 只取页面自身的第一个内联 <script>（index.html 末尾另有 <script src="ui-prefs.js">，不能被吞进来） */
+const m = html.match(/<script>([\s\S]*?)<\/script>/);
 assert(m, 'script block found');
 eval(m[1]);
 const L = module.exports;

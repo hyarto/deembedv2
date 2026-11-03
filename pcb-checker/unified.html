@@ -1507,7 +1507,7 @@ html:fullscreen #modalViewFanoutScheme .modal-box {
               <!-- Item 9: Layer Filter -->
               <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
                 <div style="margin-bottom:4px;font-weight:600;color:#0f172a">层筛选 (Layer Filter) *</div>
-                <select id="selDfmLayerFilter" style="width:100%">
+                <select id="selDfmLayerFilter" style="width:100%" data-no-persist>
                   <option value="all" selected>全部层 (All Layers)</option>
                   <option value="02G01P">02G01P</option>
                   <option value="19IS08">19IS08</option>
@@ -7869,7 +7869,7 @@ window.setGlobalWideMode = setGlobalWideMode;
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">方案名称 *</label>
-          <input type="text" id="modalFanoutInpName" style="width:100%" placeholder="例如: SMA-Bot-L19-5孔标准十字扇出">
+          <input type="text" id="modalFanoutInpName" style="width:100%" placeholder="例如: SMA-Bot-L19-5孔标准十字扇出" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span class="hist-chip" onclick="fillInput('modalFanoutInpName','SMA-Bot-L19-5孔标准十字扇出')">SMA-Bot-L19-5孔十字</span>
             <span class="hist-chip" onclick="fillInput('modalFanoutInpName','SMA-L2-5孔表层十字扇出')">SMA-L2-5孔十字</span>
@@ -7879,7 +7879,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">方案类型 / 分类标签 *</label>
-          <input type="text" id="modalFanoutInpTag" style="width:100%" placeholder="例如: SMA接插件扇出 或 BGA差分扇出">
+          <input type="text" id="modalFanoutInpTag" style="width:100%" placeholder="例如: SMA接插件扇出 或 BGA差分扇出" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span class="hist-chip" onclick="fillInput('modalFanoutInpTag','SMA接插件扇出')">SMA接插件扇出</span>
             <span class="hist-chip" onclick="fillInput('modalFanoutInpTag','BGA差分扇出')">BGA差分扇出</span>
@@ -7901,7 +7901,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         <div id="uModalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
         <div id="uModalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:11.5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}">
+          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:11.5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}" data-no-persist>
           <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addUnifiedCustomKw('modal')">+ 新增关键词</button>
         </div>
       </div>
@@ -7985,7 +7985,7 @@ window.setGlobalWideMode = setGlobalWideMode;
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">模板名称 *</label>
-          <input type="text" id="modalPourShapeInpName" style="width:100%" placeholder="例如: L2特定异型铜皮_1">
+          <input type="text" id="modalPourShapeInpName" style="width:100%" placeholder="例如: L2特定异型铜皮_1" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpName','L2特定异型泪滴铜皮')">L2特定异型泪滴铜皮</span>
@@ -7996,7 +7996,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">过孔类型 (Padstack 关键字) *</label>
-          <input type="text" id="modalPourShapeInpPadstack" style="width:100%" placeholder="例如: BGA_3510">
+          <input type="text" id="modalPourShapeInpPadstack" style="width:100%" placeholder="例如: BGA_3510" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px" id="chipsModalPourPadstack">
             <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpPadstack','BGA_3510')">BGA_3510</span>
@@ -8011,7 +8011,7 @@ window.setGlobalWideMode = setGlobalWideMode;
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">目标层别 (Layer / Subset) *</label>
-          <input type="text" id="modalPourShapeInpLayer" style="width:100%" placeholder="例如: 02G01P">
+          <input type="text" id="modalPourShapeInpLayer" style="width:100%" placeholder="例如: 02G01P" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px" id="chipsModalPourLayer">
             <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpLayer','02G01P')">02G01P</span>
@@ -8023,7 +8023,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
         <div>
           <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">面积允许容差 (± sq mil)</label>
-          <input type="number" id="modalPourShapeInpTol" value="30.0" step="5.0" style="width:100%">
+          <input type="number" id="modalPourShapeInpTol" value="30.0" step="5.0" style="width:100%" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpTol','30.0')">30.0 sq mil</span>
@@ -8079,7 +8079,7 @@ window.setGlobalWideMode = setGlobalWideMode;
       </div>
       <div style="margin-bottom:10px">
         <label style="font-weight:700;color:#0f172a;display:block;margin-bottom:4px">新方案名称（按点选顺序自动用 <code>_</code> 连接，也可手动编辑）*</label>
-        <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff;padding:6px 10px;border-radius:6px">
+        <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff;padding:6px 10px;border-radius:6px" data-no-persist>
       </div>
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -8092,7 +8092,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         <div id="uQuickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;align-items:center;padding:5px 8px;background:#fff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px"></div>
         <div id="uQuickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px dashed #cbd5e1">
-          <input type="text" id="inpUAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;padding:5px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('quick');}">
+          <input type="text" id="inpUAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;padding:5px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('quick');}" data-no-persist>
           <button type="button" class="btn sec small" onclick="addUnifiedCustomKw('quick')">+ 增加新关键词</button>
         </div>
       </div>
@@ -8193,5 +8193,6 @@ window.setGlobalWideMode = setGlobalWideMode;
   </div>
 </div>
 
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>

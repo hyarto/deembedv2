@@ -368,7 +368,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
           <select id="selImportTraceLayer" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;background:#fff" onchange="renderImportedTraceTable()">
             <option value="">全部走线层 (Subset)</option>
           </select>
-          <input type="text" id="inpImportTraceSearch" placeholder="搜索走线网络/层别/Item..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:180px" oninput="renderImportedTraceTable()">
+          <input type="text" id="inpImportTraceSearch" placeholder="搜索走线网络/层别/Item..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:180px" oninput="renderImportedTraceTable()" data-no-persist>
           <button class="btn sec small" onclick="switchTab('tabCanvas')">在 2D 画布查看走线</button>
         </div>
       </div>
@@ -428,12 +428,12 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
           <button class="btn small sec" id="btnFilterIsolated" onclick="setResultFilter('unmatched')">⚠️ 未匹配方案 (<span id="cntFilterIsolated">0</span>)</button>
         </div>
 
-        <select id="selSchemeFilter" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;background:#fff" onchange="applyFilters()">
+        <select id="selSchemeFilter" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;background:#fff" onchange="applyFilters()" data-no-persist>
           <option value="">📚 所有匹配方案</option>
         </select>
 
         <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索孔号/网络/Padstack/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()">
+          <input type="text" id="inpSearch" placeholder="🔍 搜索孔号/网络/Padstack/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()" data-no-persist>
         </div>
       </div>
 
@@ -442,7 +442,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
         <table>
           <thead>
             <tr>
-              <th style="width:40px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)"></th>
+              <th style="width:40px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)" data-no-persist></th>
               <th>孔群编号</th>
               <th>孔数</th>
               <th>中心坐标 / 跨度</th>
@@ -561,7 +561,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
         </div>
 
         <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpAnaSearch" placeholder="🔍 搜索差分网络/孔号/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyAnalysisFilters()">
+          <input type="text" id="inpAnaSearch" placeholder="🔍 搜索差分网络/孔号/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyAnalysisFilters()" data-no-persist>
         </div>
       </div>
 
@@ -698,7 +698,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
     <div class="form-grid">
       <div class="form-item">
         <label>方案名称 (支持直接输入或下方点选关键词自动拼接) *</label>
-        <input type="text" id="modalInpName" placeholder="输入扇出方案名称，或点击下方关键词按顺序生成">
+        <input type="text" id="modalInpName" placeholder="输入扇出方案名称，或点击下方关键词按顺序生成" data-no-persist>
       </div>
       <div class="form-item">
         <label>所属类别</label>
@@ -724,14 +724,14 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
       <div id="modalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
       <div id="modalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input type="text" id="inpAddKwModal" placeholder="输入新关键词 (如 bottom / 10pitch / L5)..." style="width:220px;padding:4px 8px;font-size:11.5px;border:1px solid #cbd5e1;border-radius:5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('modal');}">
+        <input type="text" id="inpAddKwModal" placeholder="输入新关键词 (如 bottom / 10pitch / L5)..." style="width:220px;padding:4px 8px;font-size:11.5px;border:1px solid #cbd5e1;border-radius:5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('modal');}" data-no-persist>
         <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addCustomSchemeKeyword('modal')">+ 新增关键词</button>
       </div>
     </div>
 
     <div class="form-item">
       <label>方案描述说明 (选填)</label>
-      <input type="text" id="modalInpDesc" placeholder="简要说明适用层别、过孔功能与阻抗要求">
+      <input type="text" id="modalInpDesc" placeholder="简要说明适用层别、过孔功能与阻抗要求" data-no-persist>
     </div>
 
     <div style="margin-top:12px">
@@ -829,7 +829,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
 
     <div class="form-item" style="margin-bottom:10px">
       <label style="font-weight:700;color:#0f172a">新方案名称（点选下方关键词按顺序自动用 <code>_</code> 分隔生成，也可手动微调）*</label>
-      <input type="text" id="inpQuickRenameName" style="font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff" placeholder="请点选下方关键词自动生成名称...">
+      <input type="text" id="inpQuickRenameName" style="font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff" placeholder="请点选下方关键词自动生成名称..." data-no-persist>
     </div>
 
     <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
@@ -847,7 +847,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
       <div id="quickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px dashed #cbd5e1">
-        <input type="text" id="inpAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;min-width:200px;padding:5px 10px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('quick');}">
+        <input type="text" id="inpAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;min-width:200px;padding:5px 10px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('quick');}" data-no-persist>
         <button type="button" class="btn sec small" onclick="addCustomSchemeKeyword('quick')">+ 增加新关键词</button>
       </div>
     </div>
@@ -4952,5 +4952,6 @@ window.State = State;
 })();
 </script>
 
+<script src="ui-prefs.js?v=1"></script>
 </body>
 </html>
