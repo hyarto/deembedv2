@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCB 加工能力与空间间距检查工具</title>
-<script src="pad-geom.js"></script>
-<script src="dfm-check.js?v=4"></script>
+<script src="pad-geom.js?v=5"></script>
+<script src="dfm-check.js?v=5"></script>
 <style>
 :root{
   --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
@@ -608,6 +608,14 @@ window.setThreshold = setThreshold;
 
 const $ = id => document.getElementById(id);
 
+/* HTML 转义：网表/层名来自外部导入的 TXT，属不可信输入，插入 innerHTML 前必须转义，
+   否则 `Net: <img src=x onerror=...>` 这类内容会在页面里执行脚本。 */
+function escHtml(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // --- History Configuration Manager ---
 const HistoryManager = {
   keys: {
@@ -899,7 +907,7 @@ function loadTextData(text, sourceName) {
       <div><b>孔型构成：</b><span class="tag-badge" style="background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe">通孔: ${thruCount} | 盲孔: ${blindCount} | 埋孔: ${buriedCount}</span></div>
       <div><b>走线段数：</b><span class="tag-badge ok">${State.traces.length} 段</span></div>
       <div><b>涉及层数：</b><span class="tag-badge ok">${State.layers.length} 层 (${State.layers.join('、')})</span></div>
-      <div><b>涉及网络：</b><span class="tag-badge ok">${Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、')}</span></div>
+      <div><b>涉及网络：</b><span class="tag-badge ok">${escHtml(Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、'))}</span></div>
     </div>
     <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#475569;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
       <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
@@ -1008,7 +1016,11 @@ function runCheck(sync) {
     const skipNote = result.skippedNonSpanningPairs > 0
       ? `（已智能排除 ${result.skippedNonSpanningPairs.toLocaleString()} 处盲埋孔未穿过走线层的无关对偶）`
       : '';
-    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。`;
+    // 层信息无法解析的对偶一律照常检查，这里必须显式提示，避免被误读成「全查过了/全是干净的」
+    const unknownNote = result.undeterminedSpanPairs > 0
+      ? ` ⚠ 另有 ${result.undeterminedSpanPairs.toLocaleString()} 处对偶的过孔/走线层名无法解析为层号，已按「全部检查」处理（宁可多检不可漏检）`
+      : '';
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${unknownNote}`;
 
     btn.disabled = false;
     btn.innerHTML = origBtnText;
@@ -1149,11 +1161,11 @@ function renderNetGroupView() {
     html += `
       <tr class="${isBad ? 'fail-row' : ''}" style="border-top:1px solid #cbd5e1">
         <td style="font-weight:700">${idx + 1}</td>
-        <td><span class="tag-badge" style="background:#e2e8f0;color:#1e293b;border:1px solid #94a3b8">${item.layer}</span></td>
+        <td><span class="tag-badge" style="background:#e2e8f0;color:#1e293b;border:1px solid #94a3b8">${escHtml(item.layer)}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${netColor}"></span>
-            <b style="font-size:13px">${item.net}</b>
+            <b style="font-size:13px">${escHtml(item.net)}</b>
           </div>
         </td>
         <td style="font-family:var(--mono);font-size:11px">
@@ -1170,7 +1182,7 @@ function renderNetGroupView() {
                 ${isExpanded ? '▲ 收起明细' : `🔍 展开明细 (${item.failCount})`}
               </button>
             ` : ''}
-            <button type="button" class="btn pri small btn-locate-net-route" data-layer="${item.layer}" data-net="${item.net}">
+            <button type="button" class="btn pri small btn-locate-net-route" data-layer="${escHtml(item.layer)}" data-net="${escHtml(item.net)}">
               📍 画布高亮走线
             </button>
           </div>
@@ -1184,14 +1196,14 @@ function renderNetGroupView() {
         const pKey = `${p.via.id}_${p.trace.id}`;
         const isRev = !!State.reviewedKeys[pKey];
         const vSpanBadge = p.via.viaSpanType === 'buried'
-          ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:10px;padding:1px 5px">${p.via.spanLabel}</span>`
+          ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
           : (p.via.viaSpanType === 'blind'
-            ? `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 5px">${p.via.spanLabel}</span>`
-            : `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${p.via.spanLabel || '通孔 (Top~Bottom)'}</span>`);
+            ? `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
+            : `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`);
         return `
           <tr class="${isRev ? 'reviewed' : ''}" style="background:#fff">
             <td>${dIdx + 1}</td>
-            <td><b>Via ${p.via.id}</b> (${p.via.net}) ${vSpanBadge} <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
+            <td><b>Via ${p.via.id}</b> (${escHtml(p.via.net)}) ${vSpanBadge} <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
             <td>${p.targetType}</td>
             <td>Trace ${p.trace.id} (${p.trace.width}mil)</td>
             <td style="font-family:var(--mono)">[${p.proj[0].toFixed(1)}, ${p.proj[1].toFixed(1)}]</td>
@@ -1208,7 +1220,7 @@ function renderNetGroupView() {
           <td colspan="9" style="padding:10px 16px">
             <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px">
               <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
-                <span>走线【${item.net} @ ${item.layer}】上全部 ${item.defects.length} 处不满足间距对偶明细：</span>
+                <span>走线【${escHtml(item.net)} @ ${escHtml(item.layer)}】上全部 ${item.defects.length} 处不满足间距对偶明细：</span>
                 <span style="font-weight:400;font-size:11px;color:var(--sub)">点击单项「定位图」可在画布中聚焦</span>
               </div>
               <table class="net-defects-table" style="width:100%">
@@ -1336,7 +1348,7 @@ function renderPairListView() {
       : (p.via.viaSpanType === 'blind'
         ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd'
         : 'background:#f8fafc;color:#475569;border:1px solid #cbd5e1');
-    const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:10px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${p.via.definedRaw || 'Top to Bottom'}">${p.via.spanLabel || '通孔 (Top~Bottom)'}</span>`;
+    const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:10px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${escHtml(p.via.definedRaw || 'Top to Bottom')}">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`;
 
     return `
       <tr class="${isBad ? 'fail-row' : ''} ${isRev ? 'reviewed' : ''}" id="row-${idx}" data-via="${p.via.id}" data-trace="${p.trace.id}">
@@ -1345,12 +1357,12 @@ function renderPairListView() {
         <td><span class="tag-badge ${isBad ? 'bad' : 'ok'}">${p.status}</span></td>
         <td>${typeBadge}</td>
         <td>
-          <b>Via ${p.via.id}</b> (${p.via.net})<br>
+          <b>Via ${p.via.id}</b> (${escHtml(p.via.net)})<br>
           ${spanBadge}<br>
           <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">[${p.via.origin[0].toFixed(2)}, ${p.via.origin[1].toFixed(2)}]</span>
         </td>
         <td>
-          <b>Trace ${p.trace.id}</b> (${p.trace.subset}, ${p.trace.net})<br>
+          <b>Trace ${p.trace.id}</b> (${escHtml(p.trace.subset)}, ${escHtml(p.trace.net)})<br>
           <span style="font-size:11px;color:var(--sub)">线宽: ${p.trace.width} mil (${p.trace.kind})</span>
         </td>
         <td style="font-family:var(--mono);font-size:11px">
@@ -1866,7 +1878,7 @@ function showMeasureCardViaToVia(m) {
   const card = $('measureCard');
   card.style.display = 'block';
   $('measureCardBody').innerHTML = `
-    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.v1.id} (${m.v1.net}) ↔ Via ${m.v2.id} (${m.v2.net})</div>
+    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.v1.id} (${escHtml(m.v1.net)}) ↔ Via ${m.v2.id} (${escHtml(m.v2.net)})</div>
     <div class="m-row"><span>孔中心到中心距：</span><b>${m.centerDist.toFixed(3)} mil</b></div>
     <div class="m-row"><span>孔盘到孔盘 Airgap：</span><b style="color:#38bdf8">${m.padAirgap.toFixed(3)} mil</b></div>
     <div class="m-row"><span>孔盘到一钻孔壁 Airgap：</span><b>${m.padToDrillAirgap.toFixed(3)} mil</b></div>
@@ -1879,13 +1891,13 @@ function showMeasureCardTraceToVia(m) {
   card.style.display = 'block';
   const spanNotice = m.spansTraceLayer === false
     ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#bae6fd;line-height:1.4">
-         ℹ️ <b>非同穿层提示：</b>Via ${m.via.id} (${m.via.spanLabel || '盲埋孔'}) <b>未穿过</b>走线层 <b>${m.trace.subset}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
+         ℹ️ <b>非同穿层提示：</b>Via ${m.via.id} (${escHtml(m.via.spanLabel || '盲埋孔')}) <b>未穿过</b>走线层 <b>${escHtml(m.trace.subset)}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
        </div>`
     : `<div style="background:rgba(16,185,129,0.14);border:1px solid rgba(52,211,153,0.4);border-radius:5px;padding:4px 7px;margin-bottom:6px;font-size:11px;color:#6ee7b7">
-         ✓ 穿层有效：${m.via.spanLabel || '通孔 (Top~Bottom)'} 穿过走线层 <b>${m.trace.subset}</b>
+         ✓ 穿层有效：${escHtml(m.via.spanLabel || '通孔 (Top~Bottom)')} 穿过走线层 <b>${escHtml(m.trace.subset)}</b>
        </div>`;
   $('measureCardBody').innerHTML = `
-    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.via.id} (${m.via.net}) ↔ Trace ${m.trace.id} (${m.trace.subset})</div>
+    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.via.id} (${escHtml(m.via.net)}) ↔ Trace ${m.trace.id} (${escHtml(m.trace.subset)})</div>
     ${spanNotice}
     <div class="m-row"><span>孔中心到走线中心距：</span><b>${m.centerDist.toFixed(3)} mil</b></div>
     <div class="m-row"><span>孔盘到走线边缘 Airgap：</span><b style="color:#38bdf8">${m.padAirgap.toFixed(3)} mil</b></div>
@@ -2023,13 +2035,13 @@ canvas.addEventListener('mousemove', e => {
     tip.style.left = (e.clientX + 14) + 'px';
     tip.style.top = (e.clientY + 14) + 'px';
     tip.innerHTML = `
-      <b>Via ${nearestVia.id}</b> (${nearestVia.net})<br>
-      孔型与跨层: <b style="color:#7dd3fc">${nearestVia.spanLabel || '通孔 (Top~Bottom)'}</b><br>
-      Padstack Defined: ${nearestVia.definedRaw || 'Top to Bottom'}<br>
+      <b>Via ${nearestVia.id}</b> (${escHtml(nearestVia.net)})<br>
+      孔型与跨层: <b style="color:#7dd3fc">${escHtml(nearestVia.spanLabel || '通孔 (Top~Bottom)')}</b><br>
+      Padstack Defined: ${escHtml(nearestVia.definedRaw || 'Top to Bottom')}<br>
       坐标: [${nearestVia.origin[0].toFixed(2)}, ${nearestVia.origin[1].toFixed(2)}]<br>
       完成孔径: ${nearestVia.drill.toFixed(2)} mil | 一钻孔径: ${nearestVia.firstDrill.toFixed(2)} mil<br>
       环宽: ${nearestVia.padRing.toFixed(2)} mil | 焊盘直径: ${nearestVia.padDiameter.toFixed(2)} mil<br>
-      Padstack: ${nearestVia.padstack}
+      Padstack: ${escHtml(nearestVia.padstack)}
     `;
   } else {
     tip.style.display = 'none';
@@ -2154,7 +2166,7 @@ function renderDfmSpatialReviewCard(viaId, traceId) {
     </div>
     ${p ? `
       <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">
-        <div>走线: <strong style="color:#7dd3fc">${p.trace.net}</strong> (${p.trace.subset}) | 过孔: <strong>Via ${p.via.id}</strong> (${p.via.net}, ${p.via.spanLabel || '通孔'})</div>
+        <div>走线: <strong style="color:#7dd3fc">${escHtml(p.trace.net)}</strong> (${escHtml(p.trace.subset)}) | 过孔: <strong>Via ${p.via.id}</strong> (${escHtml(p.via.net)}, ${escHtml(p.via.spanLabel || '通孔')})</div>
         <div>实测间距: <strong style="color:${p.status === '不满足' ? '#f87171' : '#4ade80'};font-family:var(--mono)">${p.evalDist.toFixed(2)} mil</strong> (要求 ≥ ${p.threshold.toFixed(2)} mil)</div>
       </div>
     ` : ''}

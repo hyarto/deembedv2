@@ -147,11 +147,16 @@
   /**
    * 核心层间穿越判定：判断过孔 (via) 是否物理穿过/连接走线所在层 (traceLayer)
    * 例：
-   * - 过孔 Padstack Defined from 10G07P to 13G09P (层范围 10..13)，走线在 L12 (12) -> 返回 true (穿过 L12，需检查线孔间距)
-   * - 过孔 Padstack Defined from L1 to L3 / Top to 03G02P (层范围 1..3)，走线在 L12 (12) -> 返回 false (不穿过 L12，无需分析)
+   * - 过孔 Padstack Defined from 10G07P to 13G09P (层范围 10..13)，走线在 L12 (12) -> 穿过，需检查线孔间距
+   * - 过孔 Padstack Defined from L1 to L3 / Top to 03G02P (层范围 1..3)，走线在 L12 (12) -> 不穿过 L12，无需分析
+   *
+   * 返回值 { spans, determined }：
+   * - spans: 是否按穿越该层处理（false = 明确不穿越，整对跳过）
+   * - determined: 该结论是否由层号/层名精确判定得出。为 false 表示层信息无法解析，
+   *   按「宁可多检、不可漏检」的 DRC 原则一律照常检查（旧版本此处返回 false，会造成静默漏检）。
    */
-  function doesViaSpanLayer(via, traceLayer, precomputedTraceLayerNum) {
-    if (!via) return false;
+  function evaluateViaSpan(via, traceLayer, precomputedTraceLayerNum) {
+    if (!via) return { spans: false, determined: true };
 
     let minL = via.minLayerNum;
     let maxL = via.maxLayerNum;
@@ -165,32 +170,40 @@
       }
     }
 
-    // 未携带层定义的老旧/简化对象默认按通孔兼容处理
-    if (minL == null || maxL == null) {
-      if (!via.startLayer && !via.endLayer) return true;
-      const tLow = String(traceLayer || '').trim().toLowerCase();
-      if (!tLow) return true;
-      if (via.startLayer && via.startLayer.trim().toLowerCase() === tLow) return true;
-      if (via.endLayer && via.endLayer.trim().toLowerCase() === tLow) return true;
-      if (Array.isArray(via.traceLayers) && via.traceLayers.some(l => String(l).trim().toLowerCase() === tLow)) return true;
+    const tStr = String(traceLayer || '').trim().toLowerCase();
+    const nameMatches = () => {
+      if (!tStr) return false;
+      if (via.startLayer && via.startLayer.trim().toLowerCase() === tStr) return true;
+      if (via.endLayer && via.endLayer.trim().toLowerCase() === tStr) return true;
+      if (Array.isArray(via.traceLayers) && via.traceLayers.some(l => String(l).trim().toLowerCase() === tStr)) return true;
       return false;
+    };
+
+    // 过孔层跨度未知：默认按通孔兼容处理（照常检查，不静默跳过）
+    if (minL == null || maxL == null) {
+      if (!via.startLayer && !via.endLayer) return { spans: true, determined: false };
+      if (nameMatches()) return { spans: true, determined: true };
+      // 层名对不上且无法按层号比较 —— 不能证明「不穿过」，按检查处理
+      return { spans: true, determined: false };
     }
 
     // 通孔快速通道
-    if (minL === 1 && maxL === BOTTOM_LAYER_INDEX) return true;
+    if (minL === 1 && maxL === BOTTOM_LAYER_INDEX) return { spans: true, determined: true };
 
     const tNum = precomputedTraceLayerNum !== undefined ? precomputedTraceLayerNum : parseLayerIndex(traceLayer);
     if (tNum != null) {
-      return tNum >= minL && tNum <= maxL;
+      return { spans: tNum >= minL && tNum <= maxL, determined: true };
     }
 
-    // 若走线层名无法解析为层号，回退精确匹配起止层或连接层
-    const tStr = String(traceLayer || '').trim().toLowerCase();
-    if (!tStr) return true;
-    if (via.startLayer && via.startLayer.trim().toLowerCase() === tStr) return true;
-    if (via.endLayer && via.endLayer.trim().toLowerCase() === tStr) return true;
-    if (Array.isArray(via.traceLayers) && via.traceLayers.some(l => String(l).trim().toLowerCase() === tStr)) return true;
-    return false;
+    // 走线层名无法解析为层号：回退精确匹配起止层或连接层
+    if (!tStr) return { spans: true, determined: false };
+    if (nameMatches()) return { spans: true, determined: true };
+    // 无法比较 → 照常检查（不做静默跳过）
+    return { spans: true, determined: false };
+  }
+
+  function doesViaSpanLayer(via, traceLayer, precomputedTraceLayerNum) {
+    return evaluateViaSpan(via, traceLayer, precomputedTraceLayerNum).spans;
   }
 
   const RE_TRACE_SUBSET = /Subset:\s*([^\n\r]+)/i;
@@ -610,6 +623,7 @@
     let gndTotal = 0;
     let sigTotal = 0;
     let skippedNonSpanningPairs = 0;
+    let undeterminedSpanPairs = 0;
     const viaTypeCounts = { thru: 0, blind: 0, buried: 0 };
 
     vias.forEach(v => {
@@ -622,8 +636,10 @@
         const candidateCnt = diffNetOnly ? (st.total - (st.byNet.get(v.net) || 0)) : st.total;
         if (candidateCnt <= 0) return;
 
-        if (doesViaSpanLayer(v, subsetName, st.layerNum)) {
+        const spanInfo = evaluateViaSpan(v, subsetName, st.layerNum);
+        if (spanInfo.spans) {
           count += candidateCnt;
+          if (!spanInfo.determined) undeterminedSpanPairs += candidateCnt;
         } else {
           skippedNonSpanningPairs += candidateCnt;
         }
@@ -901,6 +917,7 @@
       passCount: passCount,
       totalChecked: totalChecked,
       skippedNonSpanningPairs: skippedNonSpanningPairs,
+      undeterminedSpanPairs: undeterminedSpanPairs,
       viaTypeCounts: viaTypeCounts,
       minObservedDist: minObservedDist === Infinity ? 0 : minObservedDist,
       minClearanceGnd: minClearanceGnd,
@@ -993,6 +1010,7 @@
   exports.parseLayerIndex = parseLayerIndex;
   exports.parseViaLayerSpan = parseViaLayerSpan;
   exports.doesViaSpanLayer = doesViaSpanLayer;
+  exports.evaluateViaSpan = evaluateViaSpan;
   exports.parseDfmItems = parseDfmItems;
   exports.ptToSegDist = ptToSegDist;
   exports.ptToArcDist = ptToArcDist;

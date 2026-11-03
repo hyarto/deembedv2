@@ -526,5 +526,62 @@ t('全部通过场景生成合格汇总报告', () => {
   assert.ok(rep.rows[0][3].includes('无需修改'));
 });
 
+console.log('== 单段 Item（Trace Seg / Arc Seg）与非走线 Item ==');
+const TRACE_SEG_TXT = `Total 2 Items
+
+Item 27                < Trace Seg >
+  Set:                Trace
+  Subset:             19IS08
+  Net:                25_N
+  Seg Length:         194.990000
+  Seg: xy [20991.1100, 35481.6700]  xy [21186.1000, 35481.6700] Width (6.0000)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 28                < Via >
+  Origin-xy:          [22401.6900, 35517.7700]
+  Net:                GND
+  Padstack Name:      BGA_GND_pad1mil_0902
+  Circle Drill:       3.9400
+`;
+t('< Trace Seg > 的 Seg Length 被识别：线长 194.99（旧版为 NaN，导致总线长判定整条失效）', () => {
+  const recs = L.parseBlockText(TRACE_SEG_TXT);
+  const r = recs.find(x => x.item === '27');
+  if (!r) throw new Error('未解析到 Item 27');
+  assert.ok(Math.abs(r.length - 194.99) < 1e-6, '线长应为 194.99，实际 ' + r.length);
+});
+t('< Via > 不计入走线记录（旧版会把过孔当成 0 长度走线）', () => {
+  const recs = L.parseBlockText(TRACE_SEG_TXT);
+  assert.strictEqual(recs.length, 1, '记录数应为 1，实际 ' + recs.length);
+  assert.ok(!recs.some(r => r.item === '28'), 'Via 项不应出现在走线记录中');
+});
+t('无 Length / Seg Length 时按线段几何求和兜底', () => {
+  const txt = `Item 5                < Trace >
+  Subset:             02G01P
+  Net:                105_P
+  Seg: xy [0.0000, 0.0000]  xy [30.0000, 40.0000] Width (5.6000)
+`;
+  const r = L.parseBlockText(txt)[0];
+  assert.ok(Math.abs(r.length - 50) < 1e-9, '3-4-5 三角形斜边应为 50，实际 ' + r.length);
+});
+t('多行 Seg Length 按段累加', () => {
+  const txt = `Item 6                < Trace >
+  Subset:             02G01P
+  Net:                105_P
+  Seg Length:         10.000000
+  Seg: xy [0.0000, 0.0000]  xy [10.0000, 0.0000] Width (5.6000)
+  Seg Length:         20.000000
+  Seg: xy [10.0000, 0.0000]  xy [30.0000, 0.0000] Width (5.6000)
+`;
+  const r = L.parseBlockText(txt)[0];
+  assert.ok(Math.abs(r.length - 30) < 1e-9, '累加应为 30，实际 ' + r.length);
+});
+t('总线长缺失不再把合规数据判成「不符合」：Trace Seg 文件配区间规则应通过', () => {
+  const recs = L.parseBlockText(TRACE_SEG_TXT);
+  const rule = { enabled: true, layer: '19IS08', widths: [6], widthsText: '6', lenMode: 'range', lenMin: 100, lenMax: 300, checkWidth: true, checkLen: true };
+  const res = L.runChecks(recs, [rule], null, { checkWidth: true, checkLen: true, checkWidthLen: false, checkRadius: false, tol: 0.001 });
+  const viol = res.recViol;
+  assert.strictEqual(viol.size, 0, '不应有违规定，实际 ' + JSON.stringify([...viol.entries()]));
+});
+
 console.log('\n结果: ' + passed + ' 通过, ' + failed + ' 失败');
 process.exit(failed ? 1 : 0);

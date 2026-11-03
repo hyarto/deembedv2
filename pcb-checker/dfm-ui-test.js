@@ -203,5 +203,56 @@ test('按出线层x走线网络聚合分析视图切换与明细展开', () => {
   if (w.State.resViewMode !== 'pair_list') throw new Error('切回对偶明细视图失败');
 });
 
+// ---------------------------------------------------------------------------
+// 安全性 / 可观测性回归
+// ---------------------------------------------------------------------------
+test('网表名中的 HTML 不会被执行（结果表必须转义不可信输入）', () => {
+  const evil = '<img src=x onerror="window.__pwn=1">';
+  const txt = `Total 2 Items
+
+Item 1                < Via >
+  Origin-xy: [100.0000, 100.0000]
+  Net: ${evil}
+  Padstack Name: P
+  Circle Drill: 3.9400
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 2                < Trace >
+  Subset: 02G01P
+  Net: SIG${evil}
+  Type: Seg
+  Seg Length: 10.0000
+  Seg: xy [100.0000, 100.4000]  xy [110.0000, 100.4000] Width (6.0000)
+`;
+  w.eval(`loadTextData(${JSON.stringify(txt)}, "evil.txt"); runCheck();`);
+  const injected = d.querySelectorAll('img[src="x"]');
+  if (injected.length) throw new Error('结果页出现 ' + injected.length + ' 个注入节点，说明 innerHTML 未转义');
+  if (!/&lt;img|img src=x/.test(d.body.textContent + d.body.innerHTML)) throw new Error('转义后的原始文本应在页面上以字面量出现');
+});
+
+test('层名无法解析时，检查提示必须显式告知「已按全部检查处理」', () => {
+  const txt = `Total 2 Items
+
+Item 1                < Via >
+  Origin-xy: [100.0000, 100.0000]
+  Net: GND
+  Padstack Name: P
+  Padstack Defined from <L2> to <L5>
+  Circle Drill: 3.9400
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 2                < Trace >
+  Subset: SIGA
+  Net: 25_N
+  Type: Seg
+  Seg Length: 100.0000
+  Seg: xy [100.0000, 103.0000]  xy [200.0000, 103.0000] Width (6.0000)
+`;
+  w.eval(`loadTextData(${JSON.stringify(txt)}, "signame.txt"); runCheck();`);
+  const hint = $('runHint').textContent;
+  if (!/共核对 1 处/.test(hint)) throw new Error('应照常核对 1 处，实际提示: ' + hint);
+  if (!/层名无法解析|无法解析为层号/.test(hint)) throw new Error('缺少「层名无法解析」提示，实际: ' + hint);
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

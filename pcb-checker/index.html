@@ -461,11 +461,23 @@ function calcSegLen(seg){
   return chord;
 }
 
+const NON_TRACE_KINDS=/^(via|vias|pad|pads|pin|pins|shape|shapes|text|texts|region|regions|keepout|keep\s*out|anti-?pad|antipad|hole|holes|drill|drills|outline|keepout\s*region)$/i;
+
 function parseBlockText(text){
   const lines=text.split(/\r?\n/);
   const recs=[];let cur=null;
   const flush=()=>{
     if(cur&&cur.net){
+      // 非走线 Item（< Via > / < Shape > / < Text > …）不计入走线记录，否则记录数、总线长、网络数都会被带偏
+      const kind=(cur.kind||'').trim();
+      if(kind && NON_TRACE_KINDS.test(kind)){cur=null;return;}
+      // 线长兜底：< Trace Seg > / < Arc Seg > 这类单段项只有 Seg Length 字段；再没有就按线段几何求和，
+      // 避免总线长规则因为字段缺失而整条失效（旧版本会给出 NaN，被判定为「总线长缺失」并误报不符合）
+      if(cur.segs&&cur.segs.length){cur.segs.forEach(s=>{s.len=calcSegLen(s);});}
+      if(isNaN(cur.length)){
+        if(!isNaN(cur.segLenSum)&&cur.segLenSum>0)cur.length=cur.segLenSum;
+        else if(cur.segs&&cur.segs.length)cur.length=cur.segs.reduce((a,s)=>a+(isFinite(s.len)?s.len:0),0);
+      }
       cur.widthsArr=[...cur.widths.keys()].sort((a,b)=>a-b);
       cur.radiiArr=[...(cur.radii||new Map()).keys()].sort((a,b)=>a-b);
       cur.widthLens=new Map();
@@ -500,17 +512,23 @@ function parseBlockText(text){
     if(/^Item\s+\d+/i.test(line)){
       flush();
       m=line.match(/Item\s+(\d+)/i);
-      cur={item:m?m[1]:'',net:'',layer:'',length:NaN,widths:new Map(),widthsArr:[],widthSeq:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
+      const km=line.match(/<\s*([^<>]+?)\s*>/);
+      cur={item:m?m[1]:'',kind:km?km[1]:'',net:'',layer:'',length:NaN,segLenSum:NaN,widths:new Map(),widthsArr:[],widthSeq:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
       continue;
     }
     if(!cur){
       m=line.match(/^Net\s*:\s*(.+)$/i);
-      if(m)cur={item:'',net:m[1].trim(),layer:'',length:NaN,widths:new Map(),widthsArr:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
+      if(m)cur={item:'',kind:'',net:m[1].trim(),layer:'',length:NaN,segLenSum:NaN,widths:new Map(),widthsArr:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
       continue;
     }
     if((m=line.match(/^Subset\s*:\s*(\S+)/i))){cur.layer=m[1];continue;}
     if((m=line.match(/^Net\s*:\s*(.+)$/i))){cur.net=m[1].trim();continue;}
     if((m=line.match(/^Length\s*:\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)/i))){cur.length=parseFloat(m[1]);continue;}
+    if((m=line.match(/^Seg\s+Length\s*:\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)/i))){
+      const v=parseFloat(m[1]);
+      if(!isNaN(v))cur.segLenSum=(isNaN(cur.segLenSum)?0:cur.segLenSum)+v;
+      continue;
+    }
     if((m=line.match(/^(Arc\s+seg|Seg)\s*:\s*xy\s*\[([^\]]*)\]\s*xy\s*\[([^\]]*)\]\s*Width\s*\(\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)\s*\)/i))){
       const type=/^arc/i.test(m[1])?'arc':'seg';
       const w=parseFloat(m[4]);
@@ -1252,8 +1270,11 @@ function applyData(){
   S.netLens=aggregateRecords(S.records).netLens;
   if(S.format==='block'){
     S.meta=parseBlockMeta(S.rawText);
-    const mismatch=S.meta.declared!=null&&S.meta.declared!==S.records.length;
-    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item / 解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络'+(mismatch?' ⚠ 声明与解析数量不符':'');
+    // 数量核对比的是「Item 块数」，不是走线记录数：含 Via/Shape 的文件里两者天然不等
+    const blockCount=S.meta.items!=null?S.meta.items:null;
+    const mismatch=S.meta.declared!=null&&blockCount!=null&&S.meta.declared!==blockCount;
+    const skippedNonTrace=blockCount!=null&&blockCount>S.records.length?blockCount-S.records.length:0;
+    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item / 解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络'+(skippedNonTrace?' / 另有 '+skippedNonTrace+' 项非走线 Item（Via / Shape 等）未计入':'')+(mismatch?' ⚠ 声明与解析数量不符':'');
   }else{
     $('hdrMeta').textContent='｜'+(S.fileName||'')+'：解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络';
   }
