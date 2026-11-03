@@ -9,6 +9,7 @@ const { JSDOM } = loadJsdom();
 
 const html = fs.readFileSync(path.join(__dirname, 'dfm.html'), 'utf8');
 const jsCode = fs.readFileSync(path.join(__dirname, 'dfm-check.js'), 'utf8');
+const padGeomCode = fs.readFileSync(path.join(__dirname, 'pad-geom.js'), 'utf8');
 
 const dom = new JSDOM(html, {
   runScripts: 'dangerously',
@@ -32,7 +33,8 @@ function test(name, fn) {
   }
 }
 
-// Inject DfmCheck engine script manually in JSDOM environment
+// Inject 几何内核 + DfmCheck 引擎脚本 (顺序与页面一致：pad-geom.js → dfm-check.js)
+w.eval(padGeomCode);
 w.eval(jsCode);
 w.__SYNC_CHECK__ = true;
 

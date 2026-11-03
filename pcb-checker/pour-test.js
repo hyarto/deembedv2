@@ -223,4 +223,66 @@ console.log('== 铜皮五项检查引擎单元测试 ==');
   console.log('  PASS  圆弧高精度参数化插值采样与 image-1.png 走线/过孔全量元素解析对齐');
 }
 
-console.log('\n结果: 全部 8 项铜皮检查单元测试通过！');
+
+// 9. 圆弧扫掠角：点位于弧的「缺口」方向时，最近点必须是弧端点
+{
+  const shape = {
+    id: 900, layer: 'Top', bbox: { minX: 0, minY: 0, maxX: 100, maxY: 100, spanX: 100, spanY: 100 },
+    boundary: [
+      { type: 'line', x1: 100, y1: 0, x2: 100, y2: 0, width: 0 },
+      { type: 'arc', x1: 100, y1: 0, x2: 0, y2: 100, cx: 0, cy: 0, radius: 100, ccw: true }
+    ],
+    arcs: [{ cx: 0, cy: 0, radius: 100 }]
+  };
+  const px = -110, py = -110;                       // 225° 方向，落在弧的缺口里
+  const got = PourChecker.pointToShapeDistance(px, py, shape);
+  const toEndpoint = Math.min(Math.hypot(px - 100, py), Math.hypot(px, py - 100));
+  const wrong = Math.abs(Math.hypot(px, py) - 100); // 旧算法：|d - r|
+  assert.ok(Math.abs(got - toEndpoint) < 1e-6, `应取弧端点距离 ${toEndpoint.toFixed(3)}，实得 ${got.toFixed(3)}`);
+  assert.ok(got > wrong + 50, '仍在使用 |d-r| 的错误近似');
+  console.log('  PASS  圆弧扫掠角：缺口方向的点按弧端点取距（不再用 |d−r| 逼近）');
+}
+
+// 10. 点在形内判定：L 形铜皮的包围盒中心不在铜皮上
+{
+  const L = [[0, 0], [100, 0], [100, 20], [20, 20], [20, 100], [0, 100]];
+  const boundary = L.map((p, i) => ({
+    type: 'line', x1: p[0], y1: p[1], x2: L[(i + 1) % L.length][0], y2: L[(i + 1) % L.length][1], width: 0
+  }));
+  const shape = {
+    id: 901, layer: '02G01P', boundary, arcs: [],
+    bbox: { minX: 0, minY: 0, maxX: 100, maxY: 100, spanX: 100, spanY: 100 }
+  };
+  const inside = PourChecker.pointToShapeDistance(10, 10, shape);
+  const outsideButInBBox = PourChecker.pointToShapeDistance(50, 50, shape);
+  assert.strictEqual(inside, 0, 'L 形铜皮内部点应为 0');
+  assert.ok(Math.abs(outsideButInBBox - 30) < 1e-6,
+    `包围盒内但铜皮外的点应返回真实边界距离 30，实得 ${outsideButInBBox}`);
+  console.log('  PASS  点在形内判定：L 形/带缺口铜皮的包围盒中心不再被误判为「在上面」');
+}
+
+// 11. 孤立小铜皮判定：过孔是否真的落在铜皮轮廓内（同层）
+{
+  const L = [[0, 0], [100, 0], [100, 20], [20, 20], [20, 100], [0, 100]];
+  const boundary = L.map((p, i) => ({
+    type: 'line', x1: p[0], y1: p[1], x2: L[(i + 1) % L.length][0], y2: L[(i + 1) % L.length][1], width: 0
+  }));
+  const shape = {
+    id: 902, layer: '02G01P', area: 120, areaMm2: 0.077, boundary, arcs: [],
+    centroid: { x: 20, y: 20 },
+    bbox: { minX: 0, minY: 0, maxX: 100, maxY: 100, spanX: 100, spanY: 100 }
+  };
+  // 质心附近(20,20)有过孔，但包围盒中心(50,50)在铜皮外
+  const insideVia = [{ id: 1, x: 10, y: 10 }, ];
+  const outsideVia = [{ id: 2, x: 50, y: 50 }];
+
+  const a = checkIsolatedSmallCopper([shape], insideVia, 500);
+  const b = checkIsolatedSmallCopper([shape], outsideVia, 500);
+  assert.strictEqual(a[0].containsVia, true, '孔在铜皮轮廓内应判为已连接');
+  assert.strictEqual(a[0].viaInsideId, 1);
+  assert.strictEqual(b[0].containsVia, false, '孔不在轮廓内（即使靠近质心）不应判为已连接');
+  assert.strictEqual(a[0].containsViaBy, 'outline');
+  console.log('  PASS  孤立小铜皮：按轮廓点内判定 + 同层过滤（不再用「质心 30 mil 内」近似）');
+}
+
+console.log('\n结果: 全部 11 项铜皮检查单元测试通过！');

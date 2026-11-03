@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCB 加工能力与空间间距检查工具</title>
-<script src="dfm-check.js?v=2"></script>
+<script src="pad-geom.js"></script>
+<script src="dfm-check.js?v=3"></script>
 <style>
 :root{
   --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
@@ -212,6 +213,46 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
           <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" style="width:100%" title="非 GND 信号过孔焊盘直径，如 12 mil / 9.94 mil">
           <div class="hist-bar" id="hist_pad_sig"></div>
         </div>
+
+        <details class="pad-shape-box" style="grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin:2px 0 6px">
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#334155">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
+          <div class="grid" style="margin-top:10px">
+            <div class="form-item">
+              <label for="selPadShape">焊盘形状</label>
+              <select id="selPadShape" title="圆形焊盘用直径；长圆/圆角矩形/矩形按长×宽与圆角精确计算 airgap">
+                <option value="circle" selected>圆形 (Circle · 用焊盘直径)</option>
+                <option value="oblong">长圆 / 椭圆 (Oblong)</option>
+                <option value="roundrect">圆角矩形 (Rounded Rect)</option>
+                <option value="rect">直角矩形 (Rect)</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label for="inpGndPadW">GND 焊盘 长 × 宽 (mil)</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="number" id="inpGndPadW" value="7.906" step="0.001" min="0.1" style="width:100%" title="GND 焊盘长轴尺寸 (mil)">
+                <span>×</span>
+                <input type="number" id="inpGndPadH" value="7.906" step="0.001" min="0.1" style="width:100%" title="GND 焊盘短轴尺寸 (mil)">
+              </div>
+            </div>
+            <div class="form-item">
+              <label for="inpSigPadW">信号 焊盘 长 × 宽 (mil)</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="number" id="inpSigPadW" value="9.94" step="0.001" min="0.1" style="width:100%" title="信号焊盘长轴尺寸 (mil)">
+                <span>×</span>
+                <input type="number" id="inpSigPadH" value="9.94" step="0.001" min="0.1" style="width:100%" title="信号焊盘短轴尺寸 (mil)">
+              </div>
+            </div>
+            <div class="form-item">
+              <label for="inpPadCorner">圆角半径 (mil)</label>
+              <input type="number" id="inpPadCorner" value="0" step="0.001" min="0" style="width:100%" title="圆角矩形焊盘的圆角半径，0 表示按短边 1/4 自适应">
+            </div>
+            <div class="form-item">
+              <label for="inpPadRot">旋转角 (°)</label>
+              <input type="number" id="inpPadRot" value="0" step="0.5" style="width:100%" title="非圆焊盘相对 X 轴的旋转角度">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:8px">圆形焊盘走解析式（与旧版完全一致）；长圆/矩形焊盘按「凸多边形 ⊕ 圆角」模型精确求间距，圆弧走线也按弧段精确投影，不再采样近似。</div>
+        </details>
 
         <div class="form-item">
           <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
@@ -745,6 +786,35 @@ function readFile(file) {
   reader.readAsText(file);
 }
 
+const PAD_SHAPE_LABEL = { circle: '圆形', oblong: '长圆', roundrect: '圆角矩形', rect: '矩形' };
+function padShapeNote(p) {
+  const sh = p && p.via && p.via.padShape;
+  if (!sh || !sh.kind || sh.kind === 'circle') return '';
+  const w = Number(sh.w || 0).toFixed(2), h = Number(sh.h || 0).toFixed(2);
+  const corner = sh.corner ? ` R${Number(sh.corner).toFixed(2)}` : '';
+  const rot = sh.rot ? ` ${Number(sh.rot).toFixed(1)}°` : '';
+  return `<br><span style="color:#0284c7">${PAD_SHAPE_LABEL[sh.kind] || sh.kind} ${w}×${h}${corner}${rot}</span>`;
+}
+
+function readPadShapes() {
+  const kind = ($('selPadShape') && $('selPadShape').value) || 'circle';
+  const gndD = parseFloat($('inpGndPadDiam') ? $('inpGndPadDiam').value : 7.906) || 7.906;
+  const sigD = parseFloat($('inpSignalPadDiam') ? $('inpSignalPadDiam').value : 9.94) || 9.94;
+  if (kind === 'circle') {
+    return { gndPad: { kind: 'circle', w: gndD }, signalPad: { kind: 'circle', w: sigD } };
+  }
+  const corner = parseFloat($('inpPadCorner') ? $('inpPadCorner').value : 0) || 0;
+  const rot = parseFloat($('inpPadRot') ? $('inpPadRot').value : 0) || 0;
+  const gndW = parseFloat($('inpGndPadW') ? $('inpGndPadW').value : gndD) || gndD;
+  const gndH = parseFloat($('inpGndPadH') ? $('inpGndPadH').value : gndD) || gndD;
+  const sigW = parseFloat($('inpSigPadW') ? $('inpSigPadW').value : sigD) || sigD;
+  const sigH = parseFloat($('inpSigPadH') ? $('inpSigPadH').value : sigD) || sigD;
+  return {
+    gndPad: { kind, w: gndW, h: gndH, corner, rot },
+    signalPad: { kind, w: sigW, h: sigH, corner, rot }
+  };
+}
+
 function loadTextData(text, sourceName) {
   State.rawText = text;
   const gndPadDiam = parseFloat($('inpGndPadDiam') ? $('inpGndPadDiam').value : 7.906) || 7.906;
@@ -752,12 +822,12 @@ function loadTextData(text, sourceName) {
   const gndFirstDrill = parseFloat($('inpGndFirstDrill') ? $('inpGndFirstDrill').value : 5.54) || 5.54;
   const sigFirstDrill = parseFloat($('inpSignalFirstDrill') ? $('inpSignalFirstDrill').value : 5.54) || 5.54;
 
-  const parsed = DfmCheck.parseDfmItems(text, {
+  const parsed = DfmCheck.parseDfmItems(text, Object.assign({
     gndPadDiameter: gndPadDiam,
     signalPadDiameter: sigPadDiam,
     gndFirstDrill: gndFirstDrill,
     signalFirstDrill: sigFirstDrill
-  });
+  }, readPadShapes()));
   State.vias = parsed.vias;
   State.traces = parsed.traces;
 
@@ -846,12 +916,12 @@ function runCheck(sync) {
 
     // Re-parse with updated diameters if raw text exists
     if (State.rawText) {
-      const parsed = DfmCheck.parseDfmItems(State.rawText, {
+      const parsed = DfmCheck.parseDfmItems(State.rawText, Object.assign({
         gndPadDiameter: gndPadDiam,
         signalPadDiameter: sigPadDiam,
         gndFirstDrill: gndFirstDrill,
         signalFirstDrill: sigFirstDrill
-      });
+      }, readPadShapes()));
       State.vias = parsed.vias;
       State.traces = parsed.traces;
     }
@@ -1230,7 +1300,7 @@ function renderPairListView() {
         <td style="font-family:var(--mono);font-weight:700;color:${isBad ? 'var(--bad)' : 'var(--ok)'}">${diffStr}</td>
         <td style="font-family:var(--mono);font-size:11px;color:#475569">
           一钻: ${p.via.firstDrill.toFixed(2)} mil<br>
-          焊盘: ${(p.via.padDiameter || p.via.padRadius * 2).toFixed(2)} mil
+          焊盘: ${(p.via.padDiameter || p.via.padRadius * 2).toFixed(2)} mil${padShapeNote(p)}
         </td>
         <td style="font-size:11px;color:#334155">${advice}</td>
         <td>

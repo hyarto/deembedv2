@@ -15,7 +15,9 @@ const {
   clusterVias,
   matchClusterToLibrary,
   runFanoutInspection,
-  getStandardPresetSchemes
+  getStandardPresetSchemes,
+  candidateRotations,
+  dist2D
 } = FanoutChecker;
 
 console.log('== 扇出方案检查引擎单元测试 ==');
@@ -225,7 +227,85 @@ Item 3                < Via >
   }
 }
 
-console.log('\n结果: 全部 6 项单元测试通过！');
+
+// -------------------------------------------------------------
+// Test 8: 任意角度姿态（allowArbitraryRotation）
+// -------------------------------------------------------------
+{
+  const library = new FanoutLibrary();
+  library.addScheme(new FanoutScheme({
+    id: 'scheme_rot37',
+    name: 'L型3孔方案(任意角测试)',
+    vias: [
+      { id: 1, x: 0, y: 0, padstack: 'SIG_PAD', net: 'SIG', role: '信号孔' },
+      { id: 2, x: 0, y: 20, padstack: 'GND_PAD', net: 'GND', role: '地孔1' },
+      { id: 3, x: 20, y: 0, padstack: 'GND_PAD', net: 'GND', role: '地孔2' }
+    ]
+  }));
+
+  const deg = 37;
+  const rad = deg * Math.PI / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  const place = ([x, y]) => [x * cos - y * sin + 500, x * sin + y * cos + 700];
+  const p0 = place([0, 0]), p1 = place([0, 20]), p2 = place([20, 0]);
+
+  const vias = [
+    { id: 101, x: p0[0], y: p0[1], padstack: 'SIG_PAD', net: 'SIG' },
+    { id: 102, x: p1[0], y: p1[1], padstack: 'GND_PAD', net: 'GND' },
+    { id: 103, x: p2[0], y: p2[1], padstack: 'GND_PAD', net: 'GND' }
+  ];
+  const centroid = {
+    x: (p0[0] + p1[0] + p2[0]) / 3,
+    y: (p0[1] + p1[1] + p2[1]) / 3
+  };
+  const pairwiseDistances = [
+    { dist: dist2D(vias[0].x, vias[0].y, vias[1].x, vias[1].y) },
+    { dist: dist2D(vias[0].x, vias[0].y, vias[2].x, vias[2].y) },
+    { dist: dist2D(vias[1].x, vias[1].y, vias[2].x, vias[2].y) }
+  ];
+  const cluster = { viaCount: 3, vias, centroid, pairwiseDistances };
+
+  // 默认（只试 0/90/180/270）：37° 姿态应判不出匹配
+  const strict = matchClusterToLibrary(cluster, library, { distanceTolerance: 2.0 });
+  assert.strictEqual(strict.pass, false, '默认正交口径不应把 37° 姿态判为通过');
+
+  // 打开任意角度：应能识别并给出 37° 的姿态角
+  const free = matchClusterToLibrary(cluster, library, { distanceTolerance: 2.0, allowArbitraryRotation: true });
+  assert.strictEqual(free.pass, true, '开启任意角后应匹配成功，实际: ' + free.status);
+  const angle = ((free.rotationAngle % 360) + 360) % 360;
+  assert.ok(Math.abs(angle - 37) < 0.2, '识别出的旋转角应约 37°，实际 ' + angle);
+  if (!free.alignment || free.alignment.maxPointDev > 1e-6) {
+    throw new Error('识别姿态的点位偏差应为 0，实际 ' + (free.alignment && free.alignment.maxPointDev));
+  }
+
+  // 用识别出的姿态反算，应该精确复原原始孔位
+  const rr = angle * Math.PI / 180;
+  const cc = Math.cos(rr), ss = Math.sin(rr);
+  const schemePts = [[0, 0], [0, 20], [20, 0]];
+  const centroidScheme = { x: 20 / 3, y: 20 / 3 };
+  let maxErr = 0;
+  schemePts.forEach(([x, y]) => {
+    let dx = x - centroidScheme.x, dy = y - centroidScheme.y;
+    if (free.isMirrored) dx = -dx;
+    const rx = dx * cc - dy * ss + cluster.centroid.x;
+    const ry = dx * ss + dy * cc + cluster.centroid.y;
+    const nearest = Math.min(...vias.map(v => Math.hypot(v.x - rx, v.y - ry)));
+    if (nearest > maxErr) maxErr = nearest;
+  });
+  assert.ok(maxErr < 1e-6, '按识别姿态复原孔位应精确吻合，实际偏差 ' + maxErr.toExponential(2));
+
+  // 候选角生成器：几何完全一致时 45°/135° 组合也应被推导出来
+  const cands = candidateRotations(
+    [{ x: 0, y: 0 }, { x: 10, y: 10 }],
+    [{ x: 0, y: 0 }, { x: 0, y: Math.hypot(10, 10) }],
+    2.0, true, true
+  );
+  assert.ok(cands.some(a => Math.abs(a - 45) < 0.2 || Math.abs(a + 45) < 0.2),
+    '应推导出 45° 候选角: ' + cands.join(','));
+  console.log('  PASS  任意角度姿态：默认正交口径不变，开启后支持 37° 等非正交扇出');
+}
+
+console.log('\n结果: 全部 7 项单元测试通过！');
 
 // -------------------------------------------------------------
 // Test 7: 孔阵列子集/局部匹配与冗余地孔容差分析 (针对 image-7.png 复杂孔群)

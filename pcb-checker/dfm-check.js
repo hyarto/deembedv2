@@ -5,6 +5,11 @@
 (function(exports) {
   'use strict';
 
+  // 精确几何内核（Node 下 require，浏览器下取全局 PadGeom）
+  const PG = (typeof module === 'object' && module.exports)
+    ? require('./pad-geom.js')
+    : (typeof PadGeom !== 'undefined' ? PadGeom : null);
+
   // --- Regexes for parsing PCB coordinate reports ---
   const RE_ITEM = /Item\s+(\d+)\s+<\s*([^>]+)\s*>/i;
   const RE_VIA_ORIGIN = /Origin-xy:\s*\[([-\d.]+),\s*([-\d.]+)\]/i;
@@ -32,6 +37,11 @@
    */
   function parseDfmItems(text, opts) {
     opts = opts || {};
+    // 焊盘形状（可选）：circle / oblong / roundrect / rect，默认圆形
+    const gndPadShape = PG ? PG.normalizeShape(opts.gndPad || opts.gndPadShape,
+      typeof opts.gndPadDiameter === 'number' ? opts.gndPadDiameter : 7.906) : null;
+    const signalPadShape = PG ? PG.normalizeShape(opts.signalPad || opts.signalPadShape,
+      typeof opts.signalPadDiameter === 'number' ? opts.signalPadDiameter : 9.94) : null;
     const defaultGndPadDiam = typeof opts.gndPadDiameter === 'number' ? opts.gndPadDiameter :
       (typeof opts.gndPadRing === 'number' ? (3.94 + 2 * opts.gndPadRing) : 7.906);
     const defaultSignalPadDiam = typeof opts.signalPadDiameter === 'number' ? opts.signalPadDiameter :
@@ -68,10 +78,11 @@
           const isGnd = (netName.toUpperCase() === 'GND');
           const padName = mPad ? mPad[1].trim() : '';
 
-          const padDiameter = isGnd ? defaultGndPadDiam : defaultSignalPadDiam;
+          const shape = isGnd ? gndPadShape : signalPadShape;
+          const padDiameter = shape ? Math.max(shape.w, shape.h) : (isGnd ? defaultGndPadDiam : defaultSignalPadDiam);
           const firstDrill = isGnd ? defaultGndFirstDrill : defaultSignalFirstDrill;
 
-          const padRadius = padDiameter / 2.0;
+          const padRadius = padDiameter / 2.0;   // 外接圆半径（展示用；精确几何见 padRegion）
           const firstDrillRadius = firstDrill / 2.0;
 
           vias.push({
@@ -85,9 +96,11 @@
             finishDrill: finishDrill,
             firstDrill: firstDrill,         // 一钻直径 First Drill Diameter (直接参与计算)
             firstDrillRadius: firstDrillRadius,
-            padDiameter: padDiameter,       // 焊盘直径 Pad Diameter (直接参与计算)
-            padRadius: padRadius,           // 焊盘半径
+            padDiameter: padDiameter,       // 焊盘外接直径 (展示用)
+            padRadius: padRadius,           // 外接圆半径 (圆形焊盘时即真实半径)
+            padShape: shape,                // 焊盘形状 {kind,w,h,corner,rot}
             padRing: (padDiameter - finishDrill) / 2.0, // 环宽 (仅供展示参考)
+            needsCadGeometry: !!(shape && shape.kind !== 'circle'),
             traceLayers: mConn ? mConn[1].trim().split(/\s+/) : [],
             raw: sec.trim()
           });
@@ -266,6 +279,42 @@
     return pts;
   }
 
+  // --- 精确焊盘几何（圆形 / 椭圆 / 圆角矩形 / 矩形） ---
+
+  /**
+   * 取过孔的焊盘区域（绝对坐标，首次调用时构建并缓存）。
+   * 区域 = 凸多边形 ⊕ 圆角半径，1 点表示圆、2 点表示长圆（椭圆/槽）、4 点表示矩形。
+   */
+  function padRegionOf(via, fallbackDiameter) {
+    if (via.padRegion) return via.padRegion;
+    if (!PG) return null;
+    const shape = via.padShape && via.padShape.kind
+      ? via.padShape
+      : { kind: 'circle', w: via.padDiameter || fallbackDiameter || (via.padRadius ? via.padRadius * 2 : 1) };
+    const local = PG.regionOf(shape);
+    via.padRegion = PG.translateRegion(local, via.origin[0], via.origin[1]);
+    return via.padRegion;
+  }
+
+  /**
+   * 走线中心线 → 焊盘边界的**有符号**距离（正=间隙，负=重叠）。
+   * 圆形焊盘走解析式（与旧版完全一致）；非圆焊盘走精确的多边形/圆弧几何。
+   */
+  function traceToPadSigned(region, trace) {
+    if (!region || !PG) return NaN;
+    if (PG.isCircleRegion(region)) {
+      const c = region.poly[0];
+      const d = trace.kind === 'line'
+        ? ptToSegDist(c, trace.p1, trace.p2).dist
+        : ptToArcDist(c, trace.center, trace.radius, trace.p1, trace.p2, trace.dir).dist;
+      return d - region.round;
+    }
+    if (trace.kind === 'line') {
+      return PG.signedSegmentRegionDist(trace.p1, trace.p2, region);
+    }
+    return PG.signedArcRegionDist(trace.center, trace.radius, trace.p1, trace.p2, trace.dir, region, 0);
+  }
+
   /**
    * Run high-performance spatial clearance check using 2D Grid Partitioning.
    * - Broad Phase: 2D Spatial Hash Grid with bounding box pruning.
@@ -372,15 +421,20 @@
       const vPadRadius = via.padRadius || (via.isGnd ? defaultGndPadDiam / 2.0 : defaultSignalPadDiam / 2.0);
       const vFirstDrillR = via.firstDrillRadius || (via.isGnd ? defaultGndFirstDrill / 2.0 : defaultSignalFirstDrill / 2.0);
       const vx = via.origin[0], vy = via.origin[1];
+      // 精确焊盘区域（非圆形焊盘时按真实形状判定）
+      const vRegion = PG ? padRegionOf(via, vPadRadius * 2.0) : null;
+      const vIsCircle = !vRegion || PG.isCircleRegion(vRegion);
+      // 焊盘大于默认值时同步放大搜索半径，避免漏检
+      const vSearchR = SEARCH_RADIUS + Math.max(0, vPadRadius - maxPadR);
 
       const targetThreshold = via.isGnd ? minClearanceGnd : minClearanceSignal;
       const targetType = via.isGnd ? '线到GND孔' : '线到信号孔';
 
       layerGrids.forEach(lGrid => {
-        const gx0 = Math.floor((vx - SEARCH_RADIUS) / CELL_SIZE);
-        const gx1 = Math.floor((vx + SEARCH_RADIUS) / CELL_SIZE);
-        const gy0 = Math.floor((vy - SEARCH_RADIUS) / CELL_SIZE);
-        const gy1 = Math.floor((vy + SEARCH_RADIUS) / CELL_SIZE);
+        const gx0 = Math.floor((vx - vSearchR) / CELL_SIZE);
+        const gx1 = Math.floor((vx + vSearchR) / CELL_SIZE);
+        const gy0 = Math.floor((vy - vSearchR) / CELL_SIZE);
+        const gy1 = Math.floor((vy + vSearchR) / CELL_SIZE);
 
         const checkedTraceIds = new Set();
 
@@ -398,8 +452,8 @@
               if (diffNetOnly && via.net === trace.net) continue;
 
               // Fast AABB rejection
-              if (vx < item.minX - SEARCH_RADIUS || vx > item.maxX + SEARCH_RADIUS ||
-                  vy < item.minY - SEARCH_RADIUS || vy > item.maxY + SEARCH_RADIUS) {
+              if (vx < item.minX - vSearchR || vx > item.maxX + vSearchR ||
+                  vy < item.minY - vSearchR || vy > item.maxY + vSearchR) {
                 continue;
               }
 
@@ -414,7 +468,9 @@
               const traceHalfW = trace.width / 2.0;
               const traceEdgeDist = centerDist - traceHalfW;
               const drillEdgeDist = traceEdgeDist - vFirstDrillR;
-              const padEdgeDist = traceEdgeDist - vPadRadius;
+              // 中心线到焊盘边界的距离：圆形=中心距-半径（解析）；非圆=精确几何
+              const padToCenterline = vIsCircle ? (centerDist - vPadRadius) : traceToPadSigned(vRegion, trace);
+              const padEdgeDist = padToCenterline - traceHalfW;
 
               let evalDist;
               if (mode === 'pad_to_trace') evalDist = padEdgeDist;
@@ -440,6 +496,8 @@
                 firstDrillRadius: vFirstDrillR,
                 padDiameter: via.padDiameter || vPadRadius * 2.0,
                 padRadius: vPadRadius,
+                padShapeKind: via.padShape ? via.padShape.kind : 'circle',
+                padToCenterline: padToCenterline,
                 evalDist: evalDist,
                 threshold: targetThreshold,
                 status: isFail ? '不满足' : '满足',
@@ -599,7 +657,10 @@
    */
   function calcViaToViaMetrics(v1, v2) {
     const dCenter = Math.hypot(v1.origin[0] - v2.origin[0], v1.origin[1] - v2.origin[1]);
-    const padAirgap = dCenter - v1.padRadius - v2.padRadius;
+    const r1 = PG ? padRegionOf(v1) : null;
+    const r2 = PG ? padRegionOf(v2) : null;
+    const padAirgap = (r1 && r2) ? PG.signedRegionDist(r1, r2)
+                                 : dCenter - v1.padRadius - v2.padRadius;
     const drillAirgap = dCenter - v1.firstDrillRadius - v2.firstDrillRadius;
     const padToDrill1 = dCenter - v1.padRadius - v2.firstDrillRadius;
     const padToDrill2 = dCenter - v2.padRadius - v1.firstDrillRadius;
@@ -629,7 +690,11 @@
     const dCenter = geomRes.dist;
     const traceHalfW = trace.width / 2.0;
     const traceEdgeDist = dCenter - traceHalfW;
-    const padAirgap = traceEdgeDist - via.padRadius;
+    const padRegion = PG ? padRegionOf(via) : null;
+    const padAirgap = (padRegion && PG.isCircleRegion(padRegion))
+      ? traceEdgeDist - via.padRadius
+      : (padRegion ? traceToPadSigned(padRegion, trace) - traceHalfW
+                   : traceEdgeDist - via.padRadius);
     const drillAirgap = traceEdgeDist - via.firstDrillRadius;
 
     return {
@@ -652,5 +717,8 @@
   exports.runDfmCheck = runDfmCheck;
   exports.calcViaToViaMetrics = calcViaToViaMetrics;
   exports.calcTraceToViaMetrics = calcTraceToViaMetrics;
+  exports.padRegionOf = padRegionOf;
+  exports.traceToPadSigned = traceToPadSigned;
+  exports.PadGeom = PG;
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (this.DfmCheck = {}));
