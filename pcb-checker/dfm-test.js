@@ -196,5 +196,98 @@ test('大数据集性能与空间网格索引测试 (720万理论对偶，<1秒�
   if (elapsed > 3000) throw new Error('执行时间过长：' + elapsed + 'ms');
 });
 
+
+// ---------------------------------------------------------------------------
+// 非圆形焊盘：矩形 / 长圆 / 圆角矩形（精确几何，不再一律当外接圆）
+// ---------------------------------------------------------------------------
+const TINY_TXT = `Total 2 Items
+
+Item 1                < Via >
+  Origin-xy: [0.0000, 0.0000]
+  Padstack Name: GND_TEST
+  Net: GND
+  Circle Drill: 3.9400
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 2                < Trace >
+  Subset: 01G01P
+  Net: SIG_A
+  Type: Seg
+  Seg Length: 100.0000
+  xy [0.0000, 20.0000] xy [100.0000, 20.0000] Width (4.0000)
+`;
+
+function runTiny(padOpts, extraOpts) {
+  const parsed = DfmCheck.parseDfmItems(TINY_TXT, Object.assign({
+    gndPadDiameter: 20, signalPadDiameter: 20,
+    gndFirstDrill: 3.94, signalFirstDrill: 3.94
+  }, padOpts));
+  return DfmCheck.runDfmCheck(parsed.vias, parsed.traces, Object.assign({
+    minClearanceGnd: 0.1, minClearanceSignal: 0.1,
+    mode: 'pad_to_trace', diffNetOnly: true
+  }, extraOpts));
+}
+
+test('矩形焊盘 20×8：airgap=14 mil（按真实长宽，而非外接圆 r=10 的 8 mil）', () => {
+  const rect = runTiny({ gndPad: { kind: 'rect', w: 20, h: 8 } });
+  const circle = runTiny({ gndPad: { kind: 'circle', w: 20 } });
+  const p1 = rect.pairs[0], p2 = circle.pairs[0];
+  if (Math.abs(p1.evalDist - 14) > 1e-6) throw new Error('矩形焊盘应得 14，实得 ' + p1.evalDist);
+  if (Math.abs(p2.evalDist - 8) > 1e-6) throw new Error('圆形对照应得 8，实得 ' + p2.evalDist);
+  if (p1.padShapeKind !== 'rect') throw new Error('padShapeKind 未标记: ' + p1.padShapeKind);
+});
+
+test('矩形焊盘旋转 90°：由 20×8 变为 8×20，airgap=8 mil', () => {
+  const res = runTiny({ gndPad: { kind: 'rect', w: 20, h: 8, rot: 90 } });
+  const p = res.pairs[0];
+  if (Math.abs(p.evalDist - 8) > 1e-6) throw new Error('旋转 90° 应得 8，实得 ' + p.evalDist);
+});
+
+test('长圆焊盘 20×8：与矩形同尺寸但 14 mil 与 6 mil 分别为长轴/短轴方向', () => {
+  const res = runTiny({ gndPad: { kind: 'oblong', w: 20, h: 8 } });
+  const p = res.pairs[0];
+  // 长圆在高 8 的方向上半径 4 → 20-4-2=14（与矩形一致，因为此方向是长轴侧边）
+  if (Math.abs(p.evalDist - 14) > 1e-6) throw new Error('长圆应得 14，实得 ' + p.evalDist);
+});
+
+test('非圆焊盘不会因阈值不同而漏判：rect 14 mil 在阈值 12 下通过、在阈值 18 下超标', () => {
+  const pass = runTiny({ gndPad: { kind: 'rect', w: 20, h: 8 } }, { minClearanceGnd: 12 });
+  const fail = runTiny({ gndPad: { kind: 'rect', w: 20, h: 8 } }, { minClearanceGnd: 18 });
+  if (pass.pairs[0].status !== '满足') throw new Error('阈值 12 应满足');
+  if (fail.pairs[0].status !== '不满足') throw new Error('阈值 18 应不满足');
+});
+
+test('非圆焊盘测量接口（calcTraceToViaMetrics）与检查结果一致', () => {
+  const parsed = DfmCheck.parseDfmItems(TINY_TXT, {
+    gndPadDiameter: 20, signalPadDiameter: 20,
+    gndPad: { kind: 'rect', w: 20, h: 8 }, signalPad: { kind: 'rect', w: 20, h: 8 }
+  });
+  const via = parsed.vias[0], trace = parsed.traces[0];
+  const m = DfmCheck.calcTraceToViaMetrics(via, trace);
+  if (Math.abs(m.padAirgap - 14) > 1e-6) throw new Error('测量面板应得 14，实得 ' + m.padAirgap);
+  if (Math.abs(m.centerDist - 20) > 1e-9) throw new Error('中心距应为 20');
+});
+
+test('非圆焊盘性能：2300 组对偶的矩形焊盘检查 < 2s', () => {
+  const vias = [];
+  for (let i = 0; i < 46; i++) {
+    vias.push({ id: i + 1, type: 'via', origin: [i * 50, 0], net: i % 2 ? 'GND' : 'SIG_' + i,
+                isGnd: i % 2 === 0, padShape: { kind: 'roundrect', w: 14, h: 8, corner: 2 },
+                padDiameter: 14, padRadius: 7, firstDrillRadius: 1.97, firstDrill: 3.94 });
+  }
+  const traces = [];
+  for (let i = 0; i < 50; i++) {
+    traces.push({ id: 1000 + i, type: 'trace', kind: 'line', subset: '01G01P', net: 'NET_' + i,
+                  p1: [-200, 30 + i * 2], p2: [2400, 30 + i * 2], width: 4, len: 2600 });
+  }
+  const t0 = Date.now();
+  const res = DfmCheck.runDfmCheck(vias, traces, { minClearanceGnd: 6, minClearanceSignal: 6,
+    mode: 'pad_to_trace', diffNetOnly: true });
+  const ms = Date.now() - t0;
+  if (!res.totalChecked) throw new Error('未产生对偶');
+  if (ms > 2000) throw new Error('非圆焊盘路径过慢: ' + ms + ' ms');
+  console.log(`        ${res.totalChecked.toLocaleString()} 对偶 / ${ms} ms`);
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

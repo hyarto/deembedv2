@@ -24,6 +24,58 @@
     return Math.hypot(x1 - x2, y1 - y2);
   }
 
+  /**
+   * 生成候选旋转角（度）。
+   * 默认只试正交 0/90/180/270（保持既有判定口径，避免把错的姿态判成通过）；
+   * 打开 allowArbitraryRotation 后，用「两孔间距一致的孔对」反推真实旋转角，
+   * 从而支持 30°/45°/37.5° 这类任意角度的扇出姿态。
+   */
+  function candidateRotations(clusterPts, schemePts, distTol, allowRotation, allowArbitrary) {
+    const base = allowRotation ? [0, 90, 180, 270] : [0];
+    if (!allowArbitrary || !allowRotation || !clusterPts || !schemePts) return base;
+
+    const out = [];
+    const seen = new Set();
+    const push = (deg) => {
+      let d = ((deg % 360) + 360) % 360;
+      if (d > 180) d -= 360;
+      const key = Math.round(d * 10) / 10;          // 0.1° 粒度去重
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(key);
+    };
+    base.forEach(push);
+
+    const tol = distTol != null ? distTol : 2.0;
+    for (let i = 0; i < clusterPts.length; i++) {
+      for (let j = i + 1; j < clusterPts.length; j++) {
+        const dc = dist2D(clusterPts[i].x, clusterPts[i].y, clusterPts[j].x, clusterPts[j].y);
+        for (let a = 0; a < schemePts.length; a++) {
+          for (let b = a + 1; b < schemePts.length; b++) {
+            const ds = dist2D(schemePts[a].x, schemePts[a].y, schemePts[b].x, schemePts[b].y);
+            if (Math.abs(dc - ds) > tol) continue;   // 间距谱不一致，该孔对不可能对应
+            // 把「方案 → 孔群」需要的旋转角正反两个方向都作为候选
+            const d1 = angleDiffDeg(clusterPts[i], clusterPts[j], schemePts[a], schemePts[b]);
+            push(d1);
+            push(-d1);
+            if (out.length > 64) return out;
+          }
+        }
+      }
+    }
+    return out;
+  }
+
+  /** 两条有向线段的夹角差（度，−180~180） */
+  function angleDiffDeg(c1, c2, s1, s2) {
+    const ac = Math.atan2(c2.y - c1.y, c2.x - c1.x);
+    const as = Math.atan2(s2.y - s1.y, s2.x - s1.x);
+    let d = (as - ac) * 180 / Math.PI;
+    while (d > 180) d -= 360;
+    while (d <= -180) d += 360;
+    return d;
+  }
+
   function roundN(val, n = 4) {
     if (typeof val !== 'number' || isNaN(val)) return 0;
     const factor = Math.pow(10, n);
@@ -869,6 +921,7 @@
     const allowRotation = options.allowRotation !== false;
     const allowMirror = options.allowMirror !== false;
     const allowSubsetMatch = options.allowSubsetMatch !== false; // 默认开启子集/冗余孔容差规则
+    const allowArbitraryRotation = options.allowArbitraryRotation === true; // 任意角度姿态（默认关闭）
     const redundantPolicy = options.redundantViaPolicy || 'ANY_GND_REDUNDANT';
 
     const K = cluster.viaCount;
@@ -908,7 +961,7 @@
 
     for (const scheme of library.schemes) {
       if (!scheme.vias || scheme.vias.length === 0) continue;
-      const res = compareClusterWithScheme(cluster, scheme, { distTol, allowRotation, allowMirror });
+      const res = compareClusterWithScheme(cluster, scheme, { distTol, allowRotation, allowMirror, allowArbitraryRotation });
 
       // 如果完全匹配通过，直接返回
       if (res.pass) {
@@ -965,7 +1018,7 @@
   /**
    * 将一个孔整体与指定方案进行深入比对
    */
-  function compareClusterWithScheme(cluster, scheme, { distTol = 2.0, allowRotation = true, allowMirror = true }) {
+  function compareClusterWithScheme(cluster, scheme, { distTol = 2.0, allowRotation = true, allowMirror = true, allowArbitraryRotation = false }) {
     const K = cluster.viaCount;
     const M = scheme.viaCount;
 
@@ -1001,7 +1054,7 @@
 
     // 2. 质心归一化点云刚体匹配 (寻找最佳旋转与点对点双射映射 Mapping)
     // 质心平移后测试标准旋转角度：0°, 90°, 180°, 270° 以及是否镜像
-    const angles = allowRotation ? [0, 90, 180, 270] : [0];
+    const angles = candidateRotations(cluster.vias, scheme.vias, distTol, allowRotation, allowArbitraryRotation);
     const mirrors = allowMirror ? [false, true] : [false];
 
     // 聚类归一化坐标
@@ -1378,6 +1431,7 @@
    */
   function runFanoutInspection(inputData, library, options = {}) {
     const startTime = Date.now();
+    const allowArbitraryRotation = options.allowArbitraryRotation === true; // 任意角度姿态（默认关闭）
 
     // 1. 解析过孔数据
     let vias = [];
@@ -1459,7 +1513,7 @@
         // 信号孔数量必须一致
         if (schemeSigVias.length !== unitSigVias.length) continue;
 
-        const angles = allowRotation ? [0, 90, 180, 270] : [0];
+        const angles = candidateRotations(unitSigVias, schemeSigVias, distTol, allowRotation, allowArbitraryRotation);
         const mirrors = allowMirror ? [false, true] : [false];
         const s0 = schemeSigVias[0];
 
@@ -2057,6 +2111,7 @@
     buildGndSpatialIndex,
     groupSignalUnits,
     compareClusterWithScheme,
+    candidateRotations,
     runFanoutInspection
   };
 

@@ -12,7 +12,7 @@
 | `pcb-checker/index.html` | 走线检查：导入网络走线报告 → 概览 → 按出线层配规则（线宽组合 / 总线长 / 指定线宽线长 / 弧半径）→ 结果标注 → 差分对逐层线长差分析 |
 | `pcb-checker/copper.html` | 约束检查：把铜皮 / 焊盘栈参数整理成可导入 EDA 的约束条件，并核对回读数据是否符合 |
 | `pcb-checker/dfm.html` | 加工能力检查：孔到孔、走线到过孔的空间间距（Airgap）判定，含 2D 几何测量与逐层定位 |
-| `pcb-checker/fanout.html` | 扇出方案检查：过孔自动聚类 + 刚体平移/旋转不变匹配，比对方案库判断扇出是否合规 |
+| `pcb-checker/fanout.html` | 扇出方案检查：过孔自动聚类 + 刚体平移/旋转/镜像不变匹配，比对方案库判断扇出是否合规（可开启任意角度姿态，支持 30°/45° 等非正交扇出） |
 | `pcb-checker/pour.html` | 铜皮检查：铺铜覆盖、异型铜皮、参考层覆盖 / 超宽、孤立碎铜、最小圆弧半径五大项 |
 | `pcb-checker/unified.html` | 综合一体化检查：一套数据同时跑五大引擎，输出统一缺陷清单、风险雷达与综合报告 |
 
@@ -44,17 +44,52 @@ EDA 导出的文本报告，主体是 `Item N < Via / Trace / Shape >` 段落，
 兼容 GBK 与 UTF-8 编码、CRLF 换行，也兼容旧的表格文本（Tab / 逗号分隔，含 网络 / 层 / 线宽 / 线长 列）。
 `pcb-checker/sample/` 下提供了可直接加载的示例（走线、铜皮、过孔间距、SMA 扇出）。
 
+## 数值精度与几何模型
+
+所有判定都是**解析计算**，不做「多点采样近似」；浮点用 IEEE754 double，在万级 mil 尺度上
+绝对误差 ~1e-12 mil，而工程容差是 1e-3 ~ 2 mil，差 9 个数量级以上——精度瓶颈从来不是浮点。
+
+| 对象 | 模型 | 计算方式 |
+| --- | --- | --- |
+| 过孔焊盘 | 圆 / 长圆(椭圆) / 圆角矩形 / 矩形，可带旋转角 | 统一建模为「凸多边形 ⊕ 圆角半径」，形状间距离有闭式解 `max(0, dist(A,B) − ra − rb)`；矩形/椭圆焊盘不再被当成外接圆 |
+| 走线段 | 中心线 + 线宽（胶囊） | 点-线段最短距离解析式 |
+| 圆弧走线 | 圆心 / 半径 / 起止点 / 顺逆时针 | 按**扫掠角**判断垂足是否落在弧段内，取垂足或弧端点；与多边形焊盘求距时用弧上黄金分割细化，误差 < 1e-8 mil |
+| 铜皮轮廓 | 直线段 + 圆弧段 | 按弦高 0.05 mil 自适应离散成闭合环：真实面积（鞋带公式）、面积加权质心、点在形内判定 |
+| 空间索引 | 100 mil 哈希网格 + AABB 粗筛 | 720 万组对偶 < 1 s；非圆焊盘路径同样走网格，几十毫秒量级 |
+
+几条容易踩的坑，引擎里已经处理：
+
+- **圆弧不能一律用 `|d − r|`**：点落在弧的缺口方向时，最近点是弧端点而不是弧面上的垂足。铜皮检查与 DFM 都按扫掠角判定。
+- **铜皮不能只看包围盒**：L 形 / 带孔铜皮的包围盒中心并不在铜皮上，判定「点在形内」必须走轮廓多边形。
+- **孤立碎铜不能只看「质心 30 mil 内有过孔」**：改为轮廓内点判定 + 同层过滤，无几何数据时才退回近似。
+- **单段圆弧 + 一段弦（D 形铜皮）不是圆**：整圆快捷路径要求弧扫掠角 = 360°。
+
+焊盘形状在 `dfm.html` 的「焊盘形状（可选）」里配置（默认圆形，与旧口径完全一致）；
+`unified.html` 的综合检查目前仍使用圆形焊盘默认值。
+
 ## 测试
 
 ```bash
 npm install
-npm test               # 引擎单元测试 + jsdom 全流程 UI 测试
-npm run test:engine    # 只跑引擎逻辑
+npm test               # 几何对拍 + 引擎单元测试 + jsdom 全流程 UI 测试
+npm run test:engine    # 只跑引擎逻辑（含几何对拍）
+npm run test:geometry  # 只跑几何内核 vs shapely 基准对拍
 npm run test:ui        # 只跑 UI 交互
 npm run bench          # 走线检查引擎性能对照（合成 15000 项数据）
 ```
 
 测试通过 jsdom 载入真实页面并模拟点击，覆盖导入 → 规则 → 检查 → 导出 → 复验的完整链路。
+
+**几何内核的独立验证**：`tools/oracle/gen-fixtures.py` 用 shapely(GEOS) 生成 180+ 组随机
+焊盘/走线组合（圆形、长圆、圆角矩形、矩形 × 直线/圆弧，含重叠样本）作为基准值，写入
+`pcb-checker/sample/geometry-oracle-fixtures.json`；`geometry-oracle-test.js` 逐条对拍，
+要求偏差 < 0.01 mil、重叠必须判负、且不允许出现系统性乐观偏差（DRC 最怕把危险值算大）。
+夹具已入库，CI 不需要 Python：
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install shapely   # 仅在需要重新生成夹具时
+.venv/bin/python tools/oracle/gen-fixtures.py
+```
 
 ## 目录结构
 
@@ -71,9 +106,12 @@ pcb-checker/
   dfm-check.js          DFM 空间间距引擎
   fanout-check.js       扇出聚类 / 匹配引擎
   pour-check.js         铜皮检查引擎
-  sample/               示例数据
-  *-test.js             引擎与 UI 测试
+  pad-geom.js           精确几何内核（凸多边形 ⊕ 圆角，焊盘/走线求距）
+  sample/               示例数据（含 shapely 几何基准夹具）
+  *-test.js             引擎、几何对拍与 UI 测试
   bench-perf.js         性能对照脚本
+tools/oracle/
+  gen-fixtures.py       用 shapely 生成几何基准夹具（开发期工具）
 ```
 
 ## 整理说明

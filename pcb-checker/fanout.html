@@ -274,6 +274,9 @@ canvas#mainCanvas:active{cursor:grabbing}
             <label style="font-size:12px;font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
               <input type="checkbox" id="chkAllowMirror" checked> 允许镜像对称比对 (X / Y 轴镜像翻转)
             </label>
+            <label style="font-size:12px;font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer" title="默认只试 0/90/180/270；勾选后按孔对间距谱反推任意旋转角（如 30°/45°/37.5° 扇出）">
+              <input type="checkbox" id="chkAllowArbitraryRotation"> 允许任意角度姿态 (非正交扇出，如 30° / 45°)
+            </label>
           </div>
         </div>
 
@@ -1749,6 +1752,8 @@ function executeFanoutCheck() {
   const distTol = parseFloat(document.getElementById('inpDistTol').value) || 2.0;
   const allowRot = document.getElementById('chkAllowRotation').checked;
   const allowMir = document.getElementById('chkAllowMirror').checked;
+  const allowArb = document.getElementById('chkAllowArbitraryRotation')
+    ? document.getElementById('chkAllowArbitraryRotation').checked : false;
 
   const btn = document.getElementById('btnRunCheck');
   if (btn) {
@@ -1766,6 +1771,7 @@ function executeFanoutCheck() {
       distanceTolerance: distTol,
       allowRotation: allowRot,
       allowMirror: allowMir,
+      allowArbitraryRotation: allowArb,
       allowSubsetMatch: allowSubset,
       redundantViaPolicy: redundantPolicy
     });
