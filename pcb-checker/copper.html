@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCB 约束检查 · 规则</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --line:#e3e8ef; --txt:#1f2937; --sub:#6b7280;
+  --pri:#2563eb; --pri-d:#1d4ed8; --ok:#16a34a; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+header{background:#0f172a;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:18px;font-weight:600}
+header a{color:#7dd3fc;font-size:13px;text-decoration:none;margin-left:auto}
+header .sub{color:#94a3b8;font-size:12px}
+main{max-width:1100px;margin:0 auto;padding:18px 24px 48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:8px}
+.hint{color:var(--sub);font-size:12px;line-height:1.7}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label.fld{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+input[type=text],input[type=number],select{border:1px solid #cbd5e1;border-radius:6px;padding:6px 8px;font-size:13px;background:#fff;color:var(--txt)}
+input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--pri)}
+button.btn{background:var(--pri);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer}
+button.btn.ghost{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+button.btn.gray{background:#e5e7eb;color:#374151}
+button.btn.gray.on{background:#dbeafe;color:#1d4ed8;box-shadow:inset 0 0 0 1px #2563eb}
+button.btn.gray:hover{background:#dbe3ee}
+button.btn.danger{background:#fee2e2;color:var(--bad)}
+button.btn.small{padding:3px 8px;font-size:12px}
+button.btn:disabled{opacity:.6;cursor:wait}
+#btnGen{padding:8px 18px;font-weight:600}
+#drop,#dataDrop{border:2px dashed #94a3b8;border-radius:10px;padding:28px;text-align:center;color:var(--sub);cursor:pointer;background:#f8fafc}
+#drop.over,#drop:focus,#dataDrop.over,#dataDrop:focus{border-color:var(--pri);background:#eff6ff;color:var(--pri);outline:none}
+.filechip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
+.filechip img{width:42px;height:28px;object-fit:cover;border-radius:4px;background:#fff}
+.set{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;background:#fff}
+.set head,.set .hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;color:#fff}
+.set.SMA .hd{background:#15803d}
+.set.BGA .hd{background:#1d4ed8}
+.set.其他 .hd,.set.混合 .hd{background:#334155}
+.set .body{padding:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+th{background:#f1f5f9}
+.cat{background:#dcfce7;font-weight:600;width:110px}
+.set.BGA .cat{background:#dbeafe}
+img.ref{max-width:100%;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:#fff}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:rgba(255,255,255,.2)}
+.srcnote{color:var(--sub);font-size:12px;margin-top:4px;line-height:1.4}
+input.cCell.none{color:#94a3b8;background:#f8fafc}
+td.nosrc{background:#f8fafc}
+.hd .txthead{flex-basis:100%;color:#e2e8f0;font-size:12px}
+.jumpnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;padding:10px 12px;background:#f8fafc;border:1px solid var(--line);border-radius:8px}
+.jumpnav .jlabel{width:100%;font-size:12px;color:var(--sub);font-weight:600}
+.jumpnav a{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid #cbd5e1;color:#1d4ed8;text-decoration:none;font-size:13px}
+.jumpnav a:hover{background:#eff6ff;border-color:#2563eb}
+.jumpnav a .k{font-size:11px;color:#fff;background:#15803d;border-radius:8px;padding:1px 6px;flex:none}
+.jumpnav a.BGA .k{background:#1d4ed8}
+.jumpnav a.其他 .k,.jumpnav a.混合 .k{background:#334155}
+.jumpnav .cols{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;width:100%}
+.jumpcol{min-width:196px;max-width:250px;border-left:1px solid var(--line);padding-left:10px}
+.jumpcol:first-child{border-left:none;padding-left:0}
+.jumpcol-h{font-size:11px;font-weight:700;color:#475569;margin-bottom:5px;white-space:nowrap}
+.jumpcol-h .cnt{color:#94a3b8;font-weight:400}
+.jumpcol .chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
+.jumpcol a{display:flex;width:100%;justify-content:space-between;gap:8px;margin-bottom:4px}
+.jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.set{scroll-margin-top:calc(var(--pin-h, 16px) + var(--nav-h, 48px) + 12px)}
+nav.bar{position:sticky;top:0;z-index:45;display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--line);padding:0 16px}
+nav.bar button{border:none;background:none;padding:12px 18px;font-size:14px;cursor:pointer;color:var(--sub);border-bottom:3px solid transparent}
+nav.bar button.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
+section.tab{display:none}
+section.tab.active{display:block}
+.bad{color:#dc2626;font-weight:700}
+.search-inp{width:100%;box-sizing:border-box;padding:7px 32px 7px 11px;border:1px solid var(--line);border-radius:6px;font-size:13px;outline:none;background:#fff;transition:border-color .15s,box-shadow .15s}
+.search-inp:focus{border-color:var(--pri);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+@keyframes pulseLocate{
+  0%{box-shadow:0 0 0 0 rgba(37,99,235,.7);transform:scale(1)}
+  25%{box-shadow:0 0 0 8px rgba(37,99,235,.25);transform:scale(1.006)}
+  50%{box-shadow:0 0 0 14px rgba(37,99,235,0);transform:scale(1)}
+  100%{box-shadow:0 0 0 0 rgba(37,99,235,0);transform:scale(1)}
+}
+.pulse-target{animation:pulseLocate 1.2s ease-out;border-color:var(--pri)!important;outline:2px solid var(--pri)!important}
+.chipbar{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.chipbar-t{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:14px;max-height:260px;overflow:auto;align-items:flex-start}
+.chipcol{min-width:132px;max-width:190px;border-left:1px solid var(--line);padding-left:10px}
+.chipcol:first-child{border-left:none;padding-left:0}
+.chipcol-h{font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;white-space:nowrap}
+.chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
+.chipcol .chip{display:flex;width:100%;justify-content:space-between;gap:10px;margin-bottom:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;
+  border:1px solid #cbd5e1;color:#1f2937;font-size:12px;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--pri);background:#eff6ff}
+.chip.on{background:#dbeafe;border-color:var(--pri);color:#1d4ed8;font-weight:600}
+.chip .cn{color:#64748b}
+.chip.on .cn{color:#1d4ed8}
+.chip.miss{border-style:dashed;color:#6b7280}
+.chip.zero{opacity:.55}
+.chip .cn{font-variant-numeric:tabular-nums}
+.chip .cl{font-weight:600}
+.chip .cn{font-variant-numeric:tabular-nums}
+ol.rules{margin:6px 0 10px 20px;font-size:13px;line-height:1.9;color:#374151}
+ol.rules code{background:#f1f5f9;border-radius:4px;padding:0 4px;font-size:12px}
+.card h3{font-size:14px;margin:14px 0 4px;color:#111827}
+.ok{color:#15803d}
+.muted{color:#6b7280}
+.stat{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:88px}
+.stat b{display:block;font-size:18px}
+.chk{display:inline-flex;align-items:center;gap:4px;margin-right:12px}
+.stat.click{cursor:pointer;user-select:none}
+.stat.click:hover{border-color:#2563eb;background:#eff6ff}
+.stat.on{background:#eff6ff;border-color:#2563eb;box-shadow:inset 0 0 0 1px #2563eb}
+.stat.on b{color:#1d4ed8}
+.stat .fnote{display:block;font-size:11px;color:#1d4ed8}
+tr.fail td{background:#fef2f2}
+th.rvw,td.rvw{width:46px;text-align:center}
+td.rvw input{width:15px;height:15px;cursor:pointer}
+tr.reviewed td{background:#f1f2f4;color:#9ca3af}
+tr.reviewed td.rvw{background:#fff}
+tr.reviewed td .bad{color:#9ca3af}
+tr.reviewed td .ok{color:#9ca3af}
+.rvTag{display:inline-block;margin-left:4px;font-size:11px;color:#6b7280;background:#e5e7eb;border-radius:8px;padding:0 6px}
+.badge.rev{background:rgba(255,255,255,.25);cursor:pointer}
+.badge.rev:hover{background:rgba(255,255,255,.38)}
+.grpRvw{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:rgba(255,255,255,.16);
+  padding:2px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.grpRvw:hover{background:rgba(255,255,255,.3)}
+.grpRvw input{width:14px;height:14px;cursor:pointer}
+.set.allrev .hd{background-image:linear-gradient(0deg,rgba(255,255,255,.08),rgba(255,255,255,.08))}
+tr.reviewed .rvTag{display:inline-block}
+#checkOut{margin-top:12px}
+.pinblock{position:sticky;top:var(--nav-h, 48px);z-index:40;background:var(--bg);padding-bottom:6px;max-height:calc(100vh - var(--nav-h, 48px) - 12px);overflow:auto}
+.pinblock.stuck{box-shadow:0 10px 18px rgba(15,23,42,.08)}
+.pinblock .card:last-child{margin-bottom:8px}
+.layerwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.layertable{min-width:100%}
+table.layertable th,table.layertable td{text-align:center}
+table.layertable td.lname,table.layertable th.lname{text-align:left;position:sticky;left:0;background:#f8fafc;z-index:1;min-width:92px;font-weight:600}
+table.layertable th.lname{background:#e2e8f0}
+table.layertable input.cCell{width:72px;text-align:center}
+table.layertable input.cName{width:128px}
+table.layertable .subh{display:block;font-weight:400;color:#64748b;font-size:11px}
+tr.extra td{background:#fffbeb}
+tr.extra td.lname{background:#fef3c7}
+tr.over td.lname{color:#b45309}
+tr.fan td.lname{color:#15803d}
+pre.ocr{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:6px;padding:8px;margin-top:6px;font-size:12px;color:#374151}
+#expMask{display:none;position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.45);align-items:center;justify-content:center;padding:16px}
+.expbox{background:#fff;border-radius:12px;padding:16px;width:min(640px,100%)}
+.expbox textarea{width:100%;height:180px;font-family:Consolas,Menlo,monospace;font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>PCB 约束检查工具</h1>
+  <span class="sub">导入规则 TXT → 生成各层约束 → 铜皮与过孔按位置匹配、推算该用哪条约束 → 逐层检查反焊盘 / 焊盘 / 非功能焊盘尺寸 → 判定规律与分布</span>
+  <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+    <a href="index.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">走线检查</a>
+    <a href="copper.html" style="color:#fff;background:#0284c7;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px;font-weight:600">约束检查</a>
+    <a href="dfm.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">加工能力检查</a>
+    <a href="fanout.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">扇出方案检查</a>
+    <a href="pour.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">铜皮检查</a>
+    <a href="unified.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">综合一体化检查</a>
+  </div>
+</header>
+<nav class="bar" id="tabs">
+  <button data-tab="rules" class="active">① 规则约束</button>
+  <button data-tab="sets">② 生成的约束</button>
+  <button data-tab="data">③ 导入数据</button>
+  <button data-tab="result">④ 检查结果</button>
+  <button data-tab="legend">⑤ 规律分析</button>
+</nav>
+<main>
+<section class="tab active" id="tab-rules">
+<div id="pin" class="pinblock">
+  <div class="card">
+    <h2>叠层</h2>
+    <div class="row">
+      <label class="fld">总层数 <input type="number" id="inpN" min="1" max="64" placeholder="自动" style="width:84px"></label>
+      <button type="button" class="btn gray small" id="btnAutoN">按 TXT 自动</button>
+      <span class="hint" id="autoNHint"></span>
+    </div>
+    <div class="hint" style="margin-top:6px">留空＝按导入的 TXT 自动识别；填了就以你填的为准（比如 TXT 只写到 L21、实际是 24 层板）。改完会按新的层数重新展开约束并重算检查结果。</div>
+  </div>
+
+  <div class="card">
+    <h2>导入文件</h2>
+    <div class="hint" id="stackHint" style="margin-bottom:8px"></div>
+    <div class="hint" style="margin-bottom:10px">只接受 TXT。中文若是 GBK 也会按 GB18030 读取，避免乱码。文件里每一类约束单独成一组，每一类里的每一条约束各成一条规则。请重新导入刚才的 copper.txt。</div>
+    <div id="drop" tabindex="0">点击选择，或把 TXT 拖到这里<br><span class="hint">只接受 .txt，可多选</span></div>
+    <input type="file" id="fileInput" multiple accept=".txt,text/plain" style="display:none">
+    <div class="row" style="margin-top:10px">
+      <button type="button" class="btn gray" id="btnClear">清空导入</button>
+      <a class="btn ghost" href="sample/L17层扇出SMA.txt" download>下载 SMA 示例 TXT</a>
+      <a class="btn ghost" href="sample/L15层扇出SMA.txt" download>下载 L15 扇出 SMA 示例 TXT</a>
+      <a class="btn ghost" href="sample/L19层扇出SMA_bot_D2M5.txt" download>下载 bot 面 D2M5 示例 TXT</a>
+      <span class="hint" id="genHint">还没有导入。</span>
+    </div>
+    <div class="row" id="fileList" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>下一步</h2>
+    <div class="hint">导入 TXT 后会生成约束，接着到「② 生成的约束」逐层核对参数，再到「③ 导入数据」导入 Item 数据 TXT 做铜皮检查。</div>
+  </div>
+</div>
+</section>
+
+<section class="tab" id="tab-sets">
+<div id="pinB" class="pinblock">
+  <div class="card">
+    <h2>生成的约束</h2>
+    <div class="hint" style="margin-bottom:10px">名称写在每张表的标题里，按 TXT 生成。例如「一、SMA在bottom面，D2M为6mil的封装方案」加上「1. L19层扇出 SMA」，名称就是 Bot-SMA-L19-D2M6mil。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+    <div id="jumpNav" class="jumpnav" hidden></div>
+  </div>
+</div>
+<div class="card" id="rulesBody">
+  <div id="sets"></div>
+  <div class="row">
+    <button type="button" class="btn gray" id="btnSave">保存到本地</button>
+    <button type="button" class="btn gray" id="btnLoad">从本地文件读取</button>
+    <input type="file" id="ruleFile" accept=".json,application/json" style="display:none">
+    <span class="hint" id="saveHint"></span>
+  </div>
+</div>
+</section>
+
+<section class="tab" id="tab-data">
+  <div class="card">
+    <h2>导入数据</h2>
+    <div class="hint" style="margin-bottom:10px">数据 TXT 里是 Item 块，类型为 Shape、Via、Trace。<b>先把铜皮和过孔按位置配对</b>：圆形 Route Keepout 的圆心对上过孔的 Origin-xy。再读该过孔 Padstack Name 里的 BGA/SMA、L19、D2M 等关键字，推算应该用哪条已生成的约束，然后核对该位置每一层的半径。Route Keepout 归入反焊盘尺寸。</div>
+    <div id="dataDrop" tabindex="0">点击选择，或把数据 TXT 拖到这里<br><span class="hint">Item 块，含 Shape / Via / Trace</span></div>
+    <input type="file" id="dataFile" accept=".txt,text/plain" style="display:none">
+    <div class="row" style="margin-top:12px">
+      <label class="chk"><input type="checkbox" id="ckAnti" checked>检查反焊盘尺寸</label>
+      <label class="chk"><input type="checkbox" id="ckPad" checked>检查焊盘尺寸</label>
+      <label class="chk"><input type="checkbox" id="ckNfp" checked>检查非功能焊盘尺寸</label>
+      <label class="chk"><input type="checkbox" id="ckPadstack" checked>检查Padstack层名</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="fld">位置容差 mil <input type="number" id="posTol" value="0.05" step="0.01" min="0" style="width:72px"></label>
+      <label class="fld">数值容差 mil <input type="number" id="valTol" value="0.01" step="0.001" min="0" style="width:72px"></label>
+      <button type="button" class="btn" id="btnCheck">开始检查 →</button>
+      <a class="btn ghost" href="sample/铜皮数据示例.txt" download>下载数据示例</a>
+      <span class="hint" id="checkHint">还没有导入数据。</span>
+    </div>
+    <div class="hint" id="perfLine" style="margin-top:6px"></div>
+  </div>
+  <div class="card" id="matchCard">
+    <h2>铜皮 × 过孔 匹配，以及推算出的约束</h2>
+    <div id="matchOut"><div class="hint">还没有导入数据。</div></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-result">
+  <div class="card">
+    <div class="row" id="resStats"></div>
+    <div class="row" style="margin-top:10px">
+      <button type="button" class="btn gray" id="btnOnlyBad">只看不符合</button>
+      <button type="button" class="btn gray" id="btnOnlyMatched">只看已配对过孔</button>
+      <button type="button" class="btn gray" id="btnOnlyNoRule">只看没推算到约束</button>
+      <button type="button" class="btn gray" id="btnAllRows">全部</button>
+      <button type="button" class="btn gray" id="btnReviewAll">全部复核</button>
+      <button type="button" class="btn gray" id="btnClearReview">清空复核标记</button>
+      <button type="button" class="btn gray" id="btnCsv">导出 CSV</button>
+      <span class="hint" id="resHint">还没有检查结果。</span>
+    </div>
+    <div class="row searchbar" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="position:relative;flex:1;min-width:280px;max-width:540px">
+        <input type="text" id="inpResSearch" class="search-inp" placeholder="🔍 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off">
+        <button type="button" id="btnClearSearch" title="清空搜索" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;display:none;padding:2px 6px">×</button>
+      </div>
+      <button type="button" class="btn gray" id="btnSearchGo" title="快速滚动并高亮定位到匹配的过孔">定位到孔</button>
+      <span class="hint" id="searchStat" style="font-size:12px;color:var(--sub)"></span>
+    </div>
+    <div class="chipbar">
+      <div class="chipbar-t">按约束筛选 · 点一条只看这个约束的匹配情况，再点一次取消<span id="chipScope"></span></div>
+      <div class="chips" id="resChips"></div>
+    </div>
+  </div>
+  <div id="checkOut"></div>
+</section>
+
+<section class="tab" id="tab-legend">
+  <div class="card">
+    <h2>判定规律与当前分布</h2>
+    <div class="hint">这一页说明每条记录是怎么被判成符合 / 不符合的，并汇总不符合、没推算到约束、未配对铜皮的分布。参数与数据跟着 ③④ 页走，重新导入或改容差后会同步更新。</div>
+  </div>
+  <div id="legendOut"></div>
+</section>
+</main>
+<div id="expMask"></div>
+<script src="copper-check.js"></script>
+<script>
+const S = {sets:[], queue:[], stack:0};
+let qseq = 1;
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let stackCache={key:'', n:0};
+function autoLayerCount(){
+  const key=(S.sets||[]).length+'#'+(S.sets||[]).map(function(s){return (s.title||'').length+(s.constraints||[]).length;}).join(',')+'#'+
+    (S.queue||[]).map(function(f){return (f.text||'').length;}).join(',');
+  if(stackCache.key===key && stackCache.n)return stackCache.n;
+  let n=S.stack||0;
+  const bump=function(txt){const m=String(txt||'').match(/L\s*(\d+)/i); if(m)n=Math.max(n,+m[1]);};
+  (S.sets||[]).forEach(function(set){
+    const fan=fanLayerOf(set);
+    (set.constraints||[]).forEach(function(c){
+      (c.scopes||[]).forEach(function(sc){
+        const s=String(sc.scope||'');
+        if(/扇出|出线/.test(s))return;
+        bump(s);
+      });
+      Object.keys(c.values||{}).forEach(function(k){
+        const m=/^L(\d+)$/.exec(k);
+        if(m&&+m[1]!==fan)n=Math.max(n,+m[1]);
+      });
+    });
+    if(fan&&!n)n=fan;
+  });
+  (S.queue||[]).forEach(function(f){
+    String(f.text||'').split(/\r?\n/).forEach(function(line){
+      if(/扇出|出线|总层数/.test(line))return;
+      bump(line);
+    });
+  });
+  n=n>0?n:18;
+  stackCache={key:key, n:n};
+  return n;
+}
+function manualStack(){
+  const el=$('inpN');
+  if(!el)return 0;
+  const v=parseInt(el.value,10);
+  return (v>=1&&v<=64)?v:0;
+}
+function layerCount(){return manualStack()||autoLayerCount();}
+function updateStackHints(){
+  const auto=autoLayerCount(), manual=manualStack(), eff=manual||auto;
+  const hint=$('autoNHint');
+  if(hint)hint.textContent=manual?('当前手动设为 '+manual+' 层，自动识别是 '+auto+' 层。'):('当前按自动识别：'+auto+' 层。');
+  const sh=$('stackHint');
+  if(sh)sh.textContent='叠层：L1 为表层，L'+eff+' 为底层（'+(manual?('手动设置 '+manual+' 层'):('按 TXT 自动识别 '+auto+' 层'))+'）。';
+  return eff;
+}
+
+function detectKind(filename, text){
+  const f=filename||'', t=text||'';
+  const fB=/BGA/i.test(f), fS=/SMA/i.test(f);
+  const tB=/BGA/i.test(t), tS=/SMA/i.test(t);
+  if((fB||tB)&&!(fS||tS))return 'BGA';
+  if((fS||tS)&&!(fB||tB))return 'SMA';
+  if((fB||tB)&&(fS||tS))return '混合';
+  return '其他';
+}
+function scopeOf(name){
+  if(/表层/.test(name))return '表层';
+  if(/扇出/.test(name))return '扇出走线层';
+  if(/^bottom\b/i.test(name))return 'bottom';
+  if(/^top\b/i.test(name))return 'top';
+  const below=name.match(/L\s*\d+\s*及以下[^，,反焊盘半径]*/);
+  if(below)return below[0].replace(/\s+/g,'');
+  const ls=name.match(/L\s*\d+(?:\s*[\/,，、|]\s*L?\s*\d+)*/i);
+  if(ls)return ls[0].replace(/\s+/g,'').replace(/[\/,，、|]/g,', ');
+  return name;
+}
+function typeOf(name, cat){
+  const s=(name||'')+(cat||'');
+  if(/反焊盘/.test(s))return '反焊盘半径';
+  if(/焊盘/.test(s))return '焊盘半径';
+  if(/间距|间隙|clearance/i.test(s))return '间距';
+  if(/铜皮|铜宽/.test(s))return '铜皮尺寸';
+  return cat||'尺寸';
+}
+function decodeTxt(buf){
+  const u8=buf instanceof Uint8Array?buf:new Uint8Array(buf);
+  if(u8.length>=2 && u8[0]===0xFF && u8[1]===0xFE) return {text:new TextDecoder('utf-16le').decode(u8).replace(/^\uFEFF/,''), enc:'UTF-16'};
+  if(u8.length>=2 && u8[0]===0xFE && u8[1]===0xFF) return {text:new TextDecoder('utf-16be').decode(u8).replace(/^\uFEFF/,''), enc:'UTF-16'};
+  const utf8=new TextDecoder('utf-8').decode(u8).replace(/^\uFEFF/,'');
+  const bad=(utf8.match(/\uFFFD/g)||[]).length;
+  if(!bad) return {text:utf8, enc:'UTF-8'};
+  let gbk='';
+  try{gbk=new TextDecoder('gb18030').decode(u8).replace(/^\uFEFF/,'');}
+  catch(e){return {text:utf8, enc:'UTF-8'};}
+  const gbkBad=(gbk.match(/\uFFFD/g)||[]).length;
+  if(gbkBad<bad) return {text:gbk, enc:'GB18030'};
+  return {text:utf8, enc:'UTF-8'};
+}
+function isCategoryLine(line){
+  return /^(反焊盘尺寸|焊盘尺寸|铜皮尺寸|间距|参数|尺寸)$/.test(String(line||'').trim());
+}
+function lineValue(line){
+  const m=String(line||'').match(/^(.*?)([0-9]+(?:\.[0-9]+)?)\s*(mil|mm|um|μm)\s*$/i)
+    ||String(line||'').match(/^(.+?)[\s:：|｜\t]+([0-9]+(?:\.[0-9]+)?)\s*(mil|mm|um|μm)?\s*$/i)
+    ||String(line||'').match(/(.{2,80}半径)\s*([0-9]+(?:\.[0-9]+)?)\s*(mil|mm|um|μm)?/i);
+  if(!m)return null;
+  let name=m[1].replace(/[|｜]/g,'').trim();
+  if(name.length<2||/^(参数|尺寸|类别)$/.test(name))return null;
+  if(/反焊盘尺寸|焊盘尺寸/.test(name)&&name.length<8)return {catOnly:name};
+  return {name:name, value:m[2], unit:(m[3]||'mil').toLowerCase()};
+}
+function isClassHead(line){
+  const s=String(line||'').trim();
+  if(!s||isCategoryLine(s)||lineValue(s))return false;
+  if(s.length<2||s.length>40)return false;
+  if(/半径/.test(s))return false;
+  return /类|约束|规则|SMA|BGA|扇出|铜皮|焊盘|^[【\[].+[】\]]|第?[一二三四五六七八九十0-9]{1,3}类/.test(s);
+}
+function pushRule(rules, item, cat, raw){
+  if(item.catOnly)return item.catOnly;
+  const name=item.name;
+  const sp=splitNameScope(name);
+  rules.push({cat:cat||typeOf(name,''), name:name, scope:sp.scope||scopeOf(name), type:typeOf(name,cat), value:item.value, unit:item.unit, raw:raw||name});
+  return cat;
+}
+function headingInfo(line){
+  const s=String(line||'').trim();
+  if(!s||isCategoryLine(s)||lineValue(s))return null;
+  if(/^尺寸类型|^具体参数|尺寸类型\s*具体参数/.test(s))return null;
+  if(/^[一二三四五六七八九十]+、/.test(s)||/^第[一二三四五六七八九十0-9]+[章节类、.]/.test(s)||/^[（(][一二三四五六七八九十]+[）)]/.test(s))return {level:1, title:s};
+  if(/^\d+\s*[.、．]\s*/.test(s)&&/扇出|SMA|BGA/i.test(s)&&!/半径/.test(s))return {level:2, title:s};
+  if(/层扇出/.test(s)&&!/半径/.test(s)&&s.length<=40&&!/\d+(?:\.\d+)?\s*mil/i.test(s))return {level:2, title:s};
+  return null;
+}
+function makeConstraintName(scheme, item){
+  const blob=(scheme||'')+' '+(item||'');
+  // 面的写法：bottom / bot / BOTTOM，或 底面、底层、底侧；同理 top / 顶面、顶层、顶侧、表层
+  const hasBot=/(?:^|[^A-Za-z])(?:BOT|BOTTOM)(?![A-Za-z])/i.test(blob)||/底面|底层|底侧|底部/.test(blob);
+  const hasTop=/(?:^|[^A-Za-z])TOP(?![A-Za-z])/i.test(blob)||/顶面|顶层|顶侧|顶部/.test(blob)||/表层/.test(scheme||'');
+  let side='';
+  if(hasBot&&!hasTop)side='Bot';
+  else if(hasTop&&!hasBot)side='Top';
+  else if(hasTop&&hasBot)side='';   // 两个面都提到时不硬猜，保持不标面
+  let type='';
+  if(/BGA/i.test(blob))type='BGA';
+  else if(/SMA/i.test(blob))type='SMA';
+  let layer='';
+  const fan=(item||'').match(/L\s*(\d+)\s*层?\s*扇出/i)||(item||'').match(/扇出\s*L\s*(\d+)/i)||(scheme||'').match(/L\s*(\d+)\s*层?\s*扇出/i);
+  if(fan)layer='L'+fan[1];
+  const dims=[];
+  const re=/([A-Za-z][A-Za-z0-9]*)\s*(?:为|=|＝|:|：)\s*([0-9]+(?:\.[0-9]+)?)\s*mil/gi;
+  let m; const dimSrc=scheme||'';
+  while((m=re.exec(dimSrc)))dims.push(m[1]+m[2]+'mil');
+  const parts=[side,type,layer].concat(dims).filter(Boolean);
+  if(parts.length>=2)return parts.join('-');
+  const fallback=(item||scheme||'').replace(/^\d+\s*[.、．]\s*/,'').replace(/^[一二三四五六七八九十]+、/,'').trim();
+  return fallback;
+}
+function setsFromSections(sections, filename){
+  const sets=[];
+  sections.forEach(sec=>{
+    let cat='';
+    const rules=[];
+    sec.lines.forEach(line=>{
+      if(isCategoryLine(line)){cat=line;return;}
+      if(/^尺寸类型|^具体参数/.test(line))return;
+      const item=lineValue(line);
+      if(!item)return;
+      cat=pushRule(rules, item, cat, line)||cat;
+    });
+    if(!rules.length)return;
+    const blob=(sec.scheme||'')+'\n'+(sec.item||'')+'\n'+sec.lines.join('\n');
+    const named=sec.named||makeConstraintName(sec.scheme||'', sec.item||sec.title||'');
+    const kind0=detectKind(named||sec.title||filename, blob);
+    let kind=/BGA/i.test(named)?'BGA':(/SMA/i.test(named)?'SMA':kind0);
+    const title=(named||sec.title||filename||'导入文件').replace(/\.(png|jpe?g|txt|pdf|pptx?)$/i,'');
+    const txtHead=[sec.scheme, sec.item].filter(Boolean).join(' / ');
+    sets.push({kind:kind, title:title, txtHead:txtHead, source:filename||'导入文本', sourceType:'text', image:'', rules:rules});
+  });
+  return sets;
+}
+function tryMatrix(raw, filename){
+  const rows=String(raw||'').split(/\r?\n/).map(s=>s.replace(/\u0000/g,'').trim()).filter(Boolean);
+  if(rows.length<2)return null;
+  const cols=rows.map(r=>r.indexOf('\t')>=0?r.split('\t').map(s=>s.trim()):(/\s{2,}/.test(r)?r.split(/\s{2,}/).map(s=>s.trim()):[r]));
+  const width=Math.max.apply(null, cols.map(c=>c.length));
+  if(width<3)return null;
+  if(cols.filter(c=>c.length>=3).length<3)return null;
+  const numCount=c=>c.filter(x=>/\d/.test(x)).length;
+  let header=null, data=cols;
+  if(numCount(cols[0])<=1 && numCount(cols[1])>=2){header=cols[0]; data=cols.slice(1);}
+  else return null;
+  const sets=[];
+  for(let c=1;c<width;c++){
+    const title=(header[c]||('第'+c+'类')).replace(/\.(txt)$/i,'');
+    sets.push({kind:detectKind(title, title), title:title, source:filename||'导入文本', sourceType:'text', image:'', rules:[]});
+  }
+  data.forEach(row=>{
+    const label=(row[0]||'').trim();
+    if(!label)return;
+    for(let c=1;c<width;c++){
+      const cell=row[c]||'';
+      const m=String(cell).match(/([0-9]+(?:\.[0-9]+)?)\s*(mil|mm|um|μm)?/i);
+      if(!m)continue;
+      const name=label;
+      sets[c-1].rules.push({cat:typeOf(name,''), name:name, scope:scopeOf(name), type:typeOf(name,''), value:m[1], unit:(m[2]||'mil').toLowerCase()});
+    }
+  });
+  if(!sets.some(s=>s.rules.length))return null;
+  return sets.filter(s=>s.rules.length);
+}
+function parseConstraintText(text, filename){
+  const raw=String(text||'').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n');
+  const matrix=tryMatrix(raw, filename);
+  if(matrix)return matrix;
+  const lines=[];
+  raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).forEach(line=>{
+    const mixed=line.match(/^(反焊盘尺寸|焊盘尺寸|铜皮尺寸|间距)\s+(.+)$/);
+    if(mixed && /\d/.test(mixed[2])){lines.push(mixed[1]); lines.push(mixed[2]);}
+    else lines.push(line);
+  });
+  const sections=[];
+  let scheme='', cur=null;
+  function start(item){
+    cur={scheme:scheme, item:item||'', title:item||scheme||'', lines:[]};
+    sections.push(cur);
+  }
+  lines.forEach(line=>{
+    const h=headingInfo(line);
+    if(h&&h.level===1){scheme=h.title; cur=null; return;}
+    if(h&&h.level===2){start(h.title); return;}
+    if(!cur)start('');
+    cur.lines.push(line);
+  });
+  return setsFromSections(sections, filename);
+}
+
+function splitNameScope(raw){
+  const s=String(raw||'').replace(/\t/g,' ').trim();
+  let m=s.match(/^(L\s*\d+\s*层?\s*及以[上下])(?:背钻经过层|层)?\s*(.+)$/i);
+  if(m)return {scope:m[1].replace(/\s+/g,'').replace(/层及/,'及'), name:m[2].replace(/^背钻经过层/,'').trim()};
+  m=s.match(/^(扇出走线层|出线层|扇出层|表层|顶层|底层|bottom|top)\s*层?\s*(.+)$/i);
+  if(m)return {scope:m[1], name:m[2].trim()};
+  m=s.match(/^(L\s*\d+(?:\s*[\/,，、|]\s*L?\s*\d+)*)\s*层?\s*(.+)$/i);
+  if(m)return {scope:m[1].replace(/\s+/g,'').replace(/[\/,，、|]/g,','), name:m[2].trim()};
+  if(/^(扇出走线层|出线层|扇出层)$/.test(s))return {scope:s, name:''};
+  return {scope:'', name:s};
+}
+function fanLayerOf(set){
+  const title=String(set&&set.title||'');
+  const head=String(set&&(set.txtHead||set.item)||'');
+  let m=title.match(/-L(\d+)(?:-|$)/i);
+  if(m)return +m[1];
+  m=(head+' '+title).match(/L\s*(\d+)\s*层?\s*扇出/i);
+  if(m)return +m[1];
+  m=title.match(/\bL(\d+)\b/i);
+  return m?+m[1]:0;
+}
+function isFanScope(scope){
+  const s=String(scope||'').replace(/\s+/g,'');
+  return /^(扇出走线层|扇出层|出线层)$/.test(s);
+}
+function layersForScope(scope, n, fan){
+  const s=String(scope||'').replace(/\s+/g,'');
+  if(!s)return [];
+  if(/^(表层|顶层|top)$/i.test(s))return [1];
+  if(/^(底层|bottom)$/i.test(s))return n>0?[n]:[];
+  if(isFanScope(s))return fan>0?[fan]:[];
+  const up=s.match(/^L(\d+)及以上/i);
+  if(up){
+    const a=+up[1], out=[];
+    for(let i=1;i<=a;i++)out.push(i);
+    return out;
+  }
+  const below=s.match(/^L(\d+)及以下/i);
+  if(below){
+    const a=+below[1], end=Math.max(n,a), out=[];
+    for(let i=a;i<=end;i++)out.push(i);
+    return out;
+  }
+  const nums=[...s.matchAll(/L(\d+)/gi)].map(x=>+x[1]);
+  if(nums.length)return nums.filter(i=>i>=1);
+  // 形如 “18/19/20” 这种省略 L 的列表
+  const bare=s.split(/[\/,，、|]/).map(x=>x.trim()).filter(Boolean);
+  if(bare.length>1 && bare.every(x=>/^\d+$/.test(x)))return bare.map(Number).filter(i=>i>=1);
+  return [];
+}
+function scopeRank(scope){
+  const s=String(scope||'').replace(/\s+/g,'');
+  if(/及以[上下]/.test(s))return 1;
+  if(/^(表层|顶层|底层|bottom|top|扇出走线层|扇出层|出线层)$/i.test(s))return 3;
+  return 2;
+}
+function applyScopes(scopes, n, fan){
+  const values={}, sources={}, extras=[], seen={};
+  const ordered=(scopes||[]).map((sc,i)=>({sc:sc,i:i})).sort((a,b)=>scopeRank(a.sc.scope)-scopeRank(b.sc.scope)||a.i-b.i);
+  ordered.forEach(function(row){
+    const sc=row.sc;
+    const layers=layersForScope(sc.scope, n, fan);
+    const src=sc.raw||((sc.scope?sc.scope+' ':'')+(sc.value||'')+(sc.unit||'mil'));
+    if(!layers.length){
+      if(!sc.scope)return;
+      const key='X:'+sc.scope;
+      values[key]=sc.value;
+      sources[key]=src;
+      if(!seen[key]){seen[key]=1; extras.push({key:key, label:sc.scope});}
+      return;
+    }
+    layers.forEach(i=>{values['L'+i]=sc.value; sources['L'+i]=src;});
+  });
+  return {values:values, sources:sources, extras:extras};
+}
+function maxLayer(scopes, n, fan){
+  let m=Math.max(n, fan||0);
+  (scopes||[]).forEach(sc=>{
+    [...String(sc.scope||'').matchAll(/L\s*(\d+)/gi)].forEach(x=>{m=Math.max(m, +x[1]);});
+  });
+  return m;
+}
+function buildConstraints(rules){
+  const list=[], index={};
+  (rules||[]).forEach(r=>{
+    const sp=splitNameScope(r.name);
+    let name=(sp.name||'').replace(/^层/,'').trim();
+    if(!name && isFanScope(sp.scope)){
+      const typed=typeOf('', r.cat||'');
+      name=typed==='尺寸'?(r.cat||'出线层'):typed;
+    }
+    if(!name)name=(r.name||'').replace(/^层/,'').trim()||'未命名约束';
+    const scope=sp.scope||((r.scope&&r.scope!==r.name)?r.scope:'');
+    const key=(r.cat||'')+'\n'+name;
+    if(!index[key]){
+      index[key]={name:name, cat:r.cat||'', unit:r.unit||'mil', scopes:[], values:{}, auto:{}, extras:[], unscoped:''};
+      list.push(index[key]);
+    }
+    const c=index[key];
+    if(r.unit)c.unit=r.unit;
+    if(scope)c.scopes.push({scope:scope, value:r.value, unit:r.unit||c.unit, raw:r.raw||((scope+' '+name+' '+r.value+(r.unit||'mil')).trim())});
+    else c.unscoped=r.value;
+  });
+  return list;
+}
+function reexpandAll(){
+  const n=layerCount();
+  S.sets.forEach(set=>{
+    if(!set.constraints)set.constraints=buildConstraints(set.rules||[]);
+    const fan=fanLayerOf(set);
+    set.fanLayer=fan;
+    set.constraints.forEach(c=>{
+      const next=applyScopes(c.scopes||[], n, fan);
+      const oldAuto=c.auto||null;
+      const values=Object.assign({}, c.values||{});
+      const maxL=maxLayer(c.scopes||[], n, fan);
+      Object.keys(values).forEach(k=>{
+        const m=k.match(/^L(\d+)$/);
+        if(m&&+m[1]>maxL)delete values[k];
+      });
+      if(!oldAuto){
+        Object.keys(next.values).forEach(k=>{
+          if(values[k]==null||values[k]==='')values[k]=next.values[k];
+        });
+      }else{
+        Object.keys(next.values).forEach(k=>{
+          if(values[k]==null||values[k]===''||values[k]===oldAuto[k])values[k]=next.values[k];
+        });
+        Object.keys(oldAuto).forEach(k=>{
+          if(next.values[k]==null&&values[k]===oldAuto[k])delete values[k];
+        });
+      }
+      const sources={};
+      Object.keys(values).forEach(k=>{
+        if(values[k]==null||values[k]===''||values[k]==='无'){delete values[k]; return;}
+        sources[k]=(next.values[k]!=null&&values[k]===next.values[k])?(next.sources[k]||''):'手工填写';
+      });
+      c.values=values;
+      c.auto=next.values;
+      c.sources=sources;
+      c.extras=next.extras;
+    });
+  });
+}
+function scopeNote(scope){
+  const n=layerCount();
+  const m=String(scope||'').match(/L\s*(\d+)\s*及以下/);
+  if(!m)return '';
+  const a=+m[1];
+  if(a>n)return '起始层超过总层数 '+n;
+  return '在当前总层数下覆盖 L'+a+'–L'+n;
+}
+
+function renderFiles(){
+  $('fileList').innerHTML=S.queue.map(f=>'<div class="fileblock"><span class="filechip"><b>'+esc(f.name)+'</b> '+esc(f.status)+' <button type="button" class="btn gray small" data-act="delq" data-id="'+f.id+'">移除</button></span>'+(f.text?'<details style="margin-top:6px"><summary class="hint">解码后的原文'+(f.enc?' · '+esc(f.enc):'')+'</summary><pre class="ocr">'+esc(f.text.slice(0,2500))+'</pre></details>':'')+'</div>').join('');
+}
+function jumpItems(){
+  const byKind=function(set){
+    const title=String(set.title||'');
+    const kind=set.kind||'';
+    if(/BGA/i.test(kind)||/BGA/i.test(title))return 'BGA';
+    if(/SMA/i.test(kind)||/SMA/i.test(title)){
+      if(/^Top/i.test(title))return 'SMA · Top 面';
+      if(/^Bot/i.test(title))return 'SMA · bottom 面';
+      return 'SMA · 未标面';
+    }
+    return kind||'其他';
+  };
+  const items=S.sets.map(function(set,si){
+    const title=String(set.title||'');
+    const m=chipMeta(title);
+    return {set:set, si:si, group:byKind(set), layer:m.layer, d2m:m.d2m, title:title, kind:set.kind||'其他'};
+  });
+  const rank={'BGA':0,'SMA · Top 面':1,'SMA · bottom 面':2,'SMA · 未标面':3};
+  items.sort(function(a,b){
+    const ra=rank[a.group]===undefined?9:rank[a.group];
+    const rb=rank[b.group]===undefined?9:rank[b.group];
+    if(ra!==rb)return ra-rb;
+    if(a.group!==b.group)return a.group<b.group?-1:1;
+    const da=a.d2m>0?(1e6-a.d2m):1e9, db=b.d2m>0?(1e6-b.d2m):1e9;
+    if(da!==db)return da-db;
+    if(a.layer!==b.layer)return b.layer-a.layer;
+    return a.title.localeCompare(b.title);
+  });
+  const cols=[], idx={};
+  items.forEach(function(it){
+    if(!idx[it.group]){idx[it.group]={group:it.group, items:[]}; cols.push(idx[it.group]);}
+    idx[it.group].items.push(it);
+  });
+  return cols;
+}
+function renderJump(){
+  const nav=$('jumpNav');
+  if(!nav)return;
+  if(!S.sets.length){nav.hidden=true; nav.innerHTML=''; return;}
+  nav.hidden=false;
+  const cols=jumpItems();
+  let h='<div class="jlabel">约束指引 · 按封装/面分列，点击跳到对应约束</div><div class="cols">';
+  cols.forEach(function(col){
+    h+='<div class="jumpcol"><div class="jumpcol-h">'+esc(col.group)+'<span class="cnt"> '+col.items.length+'</span></div>';
+    const multi=col.items.some(function(x){return x.d2m>0;});
+    let lastD2M=null;
+    col.items.forEach(function(it){
+      const dk=it.d2m?('D2M'+it.d2m+'mil'):'未标 D2M';
+      if(multi && dk!==lastD2M){h+='<div class="chipsub">'+esc(dk)+'</div>'; lastD2M=dk;}
+      const name=it.title||('约束 '+(it.si+1));
+      h+='<a class="'+esc(it.kind)+'" href="#set-'+it.si+'" data-si="'+it.si+'" title="'+esc(name)+'">'+
+        '<span class="k">'+esc(it.kind)+'</span><span class="jname">'+esc(name)+'</span></a>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  nav.innerHTML=h;
+}
+function cellHtml(si, ci, key, c){
+  const v=(c.values&&c.values[key]!=null)?String(c.values[key]).trim():'';
+  const src=(c.sources&&c.sources[key])||'';
+  if(!v||v==='无'){
+    return '<td class="nosrc"><input class="cCell none" data-si="'+si+'" data-ci="'+ci+'" data-key="'+esc(key)+'" value="无"></td>';
+  }
+  return '<td><input class="cCell" data-si="'+si+'" data-ci="'+ci+'" data-key="'+esc(key)+'" value="'+esc(v)+'"><div class="srcnote">来源：'+esc(src||'手工填写')+'</div></td>';
+}
+function render(){
+  const n=layerCount();
+  let hi=n;
+  S.sets.forEach(set=>{const fan=fanLayerOf(set); (set.constraints||[]).forEach(c=>{hi=Math.max(hi, maxLayer(c.scopes||[], n, fan));});});
+  updateStackHints();
+  if(hi>n)$('stackHint').textContent+=' TXT 写到 L'+hi+'，高于当前层数，超出的层已标出。';
+  renderFiles();
+  renderJump();
+  if(!S.sets.length){
+    $('sets').innerHTML='<div class="hint">还没有约束。导入 TXT 后会按叠层每一层生成。</div>';
+    return;
+  }
+  let h='';
+  S.sets.forEach((set,si)=>{
+    const kind=set.kind||'其他';
+    const cons=set.constraints||[];
+    const fan=fanLayerOf(set);
+    let maxL=Math.max(n, fan||0);
+    const extras=[];
+    const seen={};
+    cons.forEach(c=>{
+      maxL=Math.max(maxL, maxLayer(c.scopes||[], n, fan));
+      (c.extras||[]).forEach(e=>{if(!seen[e.key]){seen[e.key]=1; extras.push(e);}});
+    });
+    h+='<div class="set '+esc(kind)+'" id="set-'+si+'" data-si="'+si+'"><div class="hd">'+
+      '<span class="badge">'+esc(kind)+'</span>'+
+      '<input class="setTitle" data-si="'+si+'" value="'+esc(set.title)+'" style="width:360px" title="约束名称">'+
+      (set.txtHead?'<span class="txthead">TXT：'+esc(set.txtHead)+'</span>':'')+
+      '<select class="setKind" data-si="'+si+'">'+['SMA','BGA','其他'].map(k=>'<option'+(k===kind?' selected':'')+'>'+k+'</option>').join('')+'</select>'+
+      '<span style="margin-left:auto;font-size:12px;opacity:.9">来源 '+esc(set.source||'')+'</span>'+
+      '<button type="button" class="btn danger small" data-act="delset" data-si="'+si+'">删除此类</button></div><div class="body">';
+    if(!cons.length){
+      h+='<div class="hint">这一类没有抽出约束。请检查 TXT 是否写成「名称 数值mil」。</div>';
+    }else{
+      h+='<div class="layerwrap"><table class="layertable"><thead><tr><th class="lname">层</th>';
+      cons.forEach((c,ci)=>{
+        const src=(c.scopes||[]).map(s=>(s.scope||'未写层')+' '+s.value+(c.unit||'')).join('；');
+        h+='<th title="'+esc(src)+'">'+(c.cat?'<span class="subh">'+esc(c.cat)+'</span>':'')+
+          '<input class="cName" data-si="'+si+'" data-ci="'+ci+'" value="'+esc(c.name)+'" title="约束名称，取自 TXT">'+
+          '<div class="subh"><input class="cUnit" data-si="'+si+'" data-ci="'+ci+'" value="'+esc(c.unit||'mil')+'" style="width:52px"> '+
+          '<button type="button" class="btn danger small" data-act="delcol" data-si="'+si+'" data-ci="'+ci+'">删除</button></div>'+
+          (c.unscoped?'<div class="srcnote">TXT 有 '+esc(c.unscoped)+'，但没写层</div>':'')+
+          '</th>';
+      });
+      h+='</tr></thead><tbody>';
+      for(let i=1;i<=maxL;i++){
+        const tag=i===fan?'出线层':(i===1?'表层':(i===n?'底层':(i>n?'超出总层数':'')));
+        h+='<tr class="'+(i===fan?'fan':'')+(i>n?' over':'')+'"><td class="lname">L'+i+(tag?'<span class="subh">'+tag+'</span>':'')+'</td>';
+        cons.forEach((c,ci)=>{
+          h+=cellHtml(si, ci, 'L'+i, c);
+        });
+        h+='</tr>';
+      }
+      extras.forEach(e=>{
+        h+='<tr class="extra"><td class="lname">'+esc(e.label)+'<span class="subh">TXT 中的非叠层范围</span></td>';
+        cons.forEach((c,ci)=>{
+          h+=cellHtml(si, ci, e.key, c);
+        });
+        h+='</tr>';
+      });
+      h+='</tbody></table></div>';
+      h+='<div class="srcnote">没有来源的格子填「无」。L18及以上填 L1 到该层。出线层填到名称中的那一层。</div>';
+    }
+    h+='<div class="row" style="margin-top:8px"><button type="button" class="btn ghost small" data-act="addcol" data-si="'+si+'">+ 加一个约束</button>'+
+      '<button type="button" class="btn gray small" data-act="refill" data-si="'+si+'">按 TXT 重填</button></div></div></div>';
+  });
+  $('sets').innerHTML=h;
+  syncPin();
+}
+
+function collect(){
+  document.querySelectorAll('.setTitle').forEach(el=>{if(S.sets[+el.dataset.si])S.sets[+el.dataset.si].title=el.value;});
+  document.querySelectorAll('.setKind').forEach(el=>{if(S.sets[+el.dataset.si])S.sets[+el.dataset.si].kind=el.value;});
+  document.querySelectorAll('.cName').forEach(el=>{const s=S.sets[+el.dataset.si]; if(s&&s.constraints[+el.dataset.ci])s.constraints[+el.dataset.ci].name=el.value;});
+  document.querySelectorAll('.cUnit').forEach(el=>{const s=S.sets[+el.dataset.si]; if(s&&s.constraints[+el.dataset.ci])s.constraints[+el.dataset.ci].unit=el.value;});
+  document.querySelectorAll('.cCell').forEach(el=>{
+    const s=S.sets[+el.dataset.si];
+    if(!(s&&s.constraints[+el.dataset.ci]))return;
+    const raw=el.value.trim();
+    s.constraints[+el.dataset.ci].values[el.dataset.key]=(raw===''||raw==='无')?'':raw;
+  });
+}
+
+function addFiles(fileList){
+  const jobs=[];
+  for(const file of fileList){
+    if(!file)continue;
+    const ext=(file.name&&file.name.indexOf('.')>=0?(file.name.split('.').pop()||''):'').toLowerCase();
+    const id=qseq++;
+    const name=file.name||('导入-'+id+'.txt');
+    const ok=ext==='txt'||file.type==='text/plain'||file.type==='';
+    if(!ok || (ext && ext!=='txt' && file.type!=='text/plain')){
+      S.queue.push({id:id, name:name, text:'', status:'只接受 TXT'});
+      continue;
+    }
+    jobs.push({id:id, name:name, file:file});
+  }
+  if(!jobs.length){render(); $('genHint').textContent='没有可导入的 TXT。'; return;}
+  let left=jobs.length;
+  jobs.forEach(job=>{
+    const fr=new FileReader();
+    fr.onload=function(){
+      const dec=decodeTxt(fr.result);
+      const bad=(dec.text.match(/\uFFFD/g)||[]).length;
+      S.queue.push({id:job.id, name:job.name, text:dec.text, enc:dec.enc, status:bad?('已按 '+dec.enc+' 读取，仍有乱码'):('已按 '+dec.enc+' 读取')});
+      left--;
+      if(left===0)rebuild();
+    };
+    fr.onerror=function(){
+      S.queue.push({id:job.id, name:job.name, text:'', status:'读取失败'});
+      left--;
+      if(left===0)rebuild();
+    };
+    fr.readAsArrayBuffer(job.file);
+  });
+}
+function rebuild(){
+  const sets=[];
+  S.queue.forEach(item=>{
+    if(!item.text)return;
+    const parsed=parseConstraintText(item.text, item.name);
+    if(parsed.length){
+      parsed.forEach(set=>{
+        set.source=item.name;
+        set.constraints=buildConstraints(set.rules||[]);
+        sets.push(set);
+      });
+      item.status='已生成 '+parsed.map(s=>s.kind).join('、')+' '+parsed.reduce((a,s)=>a+(s.constraints||[]).length,0)+' 个约束';
+    }else item.status='没有抽出参数。每行写成「名称 数值mil」';
+  });
+  S.sets=sets;
+  reexpandAll();
+  const n=S.sets.reduce((a,s)=>a+(s.constraints||[]).length,0);
+  $('genHint').textContent=n?('已从 TXT 生成 '+n+' 个约束，并按当前总层数填入每一层。'):'没有生成出规则。请检查 TXT 格式。';
+  render();
+  if(n && typeof showTab==='function'){
+    showTab('sets');
+    $('genHint').textContent='已从 TXT 生成 '+n+' 个约束，并按叠层填入每一层。下面是「② 生成的约束」。';
+  }
+}
+
+function showBox(name, text, hint){
+  const mask=$('expMask');
+  mask.style.display='flex';
+  mask.innerHTML='<div class="expbox"><h2>'+esc(name)+'</h2><div class="hint">'+esc(hint||'')+'</div>'+
+    '<div class="row" style="margin-top:10px"><a class="btn" id="expLink">下载文件</a><button type="button" class="btn ghost" id="expCopy">复制全部</button><button type="button" class="btn gray" id="expClose">关闭</button></div>'+
+    '<textarea id="expText" readonly></textarea></div>';
+  $('expText').value=text;
+  let url='';
+  try{url=URL.createObjectURL(new Blob([text],{type:'application/json'}));}catch(e){url='data:application/json,'+encodeURIComponent(text);}
+  $('expLink').href=url;$('expLink').download=name;
+  $('expClose').onclick=function(){mask.style.display='none';};
+  $('expCopy').onclick=function(){const ta=$('expText');ta.focus();ta.select();if(navigator.clipboard)navigator.clipboard.writeText(text).then(function(){$('expCopy').textContent='已复制';});};
+}
+
+const drop=$('drop');
+drop.onclick=function(){$('fileInput').click();};
+$('fileInput').onchange=function(e){addFiles(e.target.files);e.target.value='';};
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',function(e){
+  e.preventDefault();
+  if(e.dataTransfer&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files);
+});
+$('btnClear').onclick=function(){
+  S.queue=[];
+  S.sets=[];
+  $('genHint').textContent='已清空。请导入 TXT。';
+  render();
+};
+document.addEventListener('change',function(e){
+  if(e.target.classList.contains('setKind')||e.target.classList.contains('setTitle')){collect();reexpandAll();render();}
+});
+document.addEventListener('input',function(e){
+  if(!e.target.classList.contains('setTitle'))return;
+  const a=document.querySelector('#jumpNav a[data-si="'+e.target.dataset.si+'"] .jname');
+  if(a)a.textContent=e.target.value||('约束 '+(+e.target.dataset.si+1));
+});
+document.addEventListener('click',function(e){
+  const a=e.target.closest('#jumpNav a');
+  if(!a)return;
+  const el=document.getElementById('set-'+a.dataset.si);
+  if(!el)return;
+  e.preventDefault();
+  const pin=visiblePin();
+  const ph=pin?pin.offsetHeight:0;
+  const y=el.getBoundingClientRect().top+window.scrollY-ph-8;
+  window.scrollTo({top:Math.max(0,y), behavior:'smooth'});
+});
+function visiblePin(){
+  const list=[$('pin'),$('pinB')].filter(Boolean);
+  for(let i=0;i<list.length;i++){
+    if(list[i].offsetParent!==null || list[i].getClientRects().length)return list[i];
+  }
+  return list[0]||null;
+}
+let pinRaf=false, navHSeen=-1, pinHSeen=-1, stuckSeen=-1;
+function syncPin(){
+  if(pinRaf)return;
+  pinRaf=true;
+  const run=function(){pinRaf=false; syncPinNow();};
+  if(window.requestAnimationFrame)requestAnimationFrame(run); else setTimeout(run,16);
+}
+function syncPinNow(){
+  const bar=document.querySelector('nav.bar');
+  if(bar){
+    const hh=bar.offsetHeight;
+    if(hh&&hh!==navHSeen){
+      navHSeen=hh;
+      document.documentElement.style.setProperty('--nav-h', hh+'px');
+    }
+  }
+  const pin=visiblePin();
+  if(!pin){stuckSeen=-1; return;}
+  const ph=pin.offsetHeight;
+  if(ph!==pinHSeen){
+    pinHSeen=ph;
+    if(ph)document.documentElement.style.setProperty('--pin-h', ph+'px');
+  }
+  const stuck=(pin.getBoundingClientRect().top<=1 && window.scrollY>8)?1:0;
+  if(stuck!==stuckSeen){
+    stuckSeen=stuck;
+    pin.classList.toggle('stuck', !!stuck);
+  }
+}
+window.addEventListener('scroll', function(){syncPin();}, {passive:true});
+window.addEventListener('resize', function(){navHSeen=-1; pinHSeen=-1; syncPin();});
+document.addEventListener('toggle', function(e){
+  if(e.target&&e.target.closest&&(e.target.closest('#pin')||e.target.closest('#pinB')))syncPin();
+}, true);
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('button');if(!btn)return;
+  if(btn.dataset.act==='delq'){
+    const id=+btn.dataset.id;
+    const i=S.queue.findIndex(f=>f.id===id);
+    if(i>=0){
+      if(S.queue[i].url)try{URL.revokeObjectURL(S.queue[i].url);}catch(err){}
+      S.queue.splice(i,1);
+    }
+    $('genHint').textContent='已移除。';
+    rebuild();
+  }else if(btn.dataset.act==='delset'){collect();S.sets.splice(+btn.dataset.si,1);render();}
+  else if(btn.dataset.act==='delcol'){collect();S.sets[+btn.dataset.si].constraints.splice(+btn.dataset.ci,1);render();}
+  else if(btn.dataset.act==='addcol'){
+    collect();
+    if(!S.sets[+btn.dataset.si].constraints)S.sets[+btn.dataset.si].constraints=[];
+    S.sets[+btn.dataset.si].constraints.push({name:'新约束', cat:'', unit:'mil', scopes:[], values:{}, auto:{}, extras:[], unscoped:''});
+    render();
+  }else if(btn.dataset.act==='refill'){
+    collect();
+    const set=S.sets[+btn.dataset.si];
+    (set.constraints||[]).forEach(c=>{c.values={}; c.auto=null;});
+    reexpandAll();
+    render();
+  }
+});
+$('btnSave').onclick=function(){
+  collect();
+  const data={kind:'pcb-copper-rules', version:3, layerCount:layerCount(),
+    sets:S.sets.map(s=>({kind:s.kind, title:s.title, source:s.source, rules:s.rules, constraints:s.constraints}))};
+  $('saveHint').textContent='已生成，请在窗口里下载';
+  showBox('铜皮约束.json', JSON.stringify(data,null,2), '含 '+data.sets.length+' 类约束。');
+};
+$('btnLoad').onclick=function(){$('ruleFile').click();};
+$('ruleFile').onchange=function(e){
+  const file=e.target.files&&e.target.files[0];e.target.value='';if(!file)return;
+  const fr=new FileReader();
+  fr.onload=function(){
+    try{
+      const d=JSON.parse(String(fr.result).replace(/^\uFEFF/,''));
+      if(!d.sets)throw new Error('不是本页保存的约束文件');
+      if(d.layerCount){
+        S.stack=d.layerCount;
+        if(stackInput)stackInput.value=String(d.layerCount);
+        updateStackHints();
+      }
+      S.sets=(d.sets||[]).map(s=>{
+        if(!s.constraints)s.constraints=buildConstraints(s.rules||[]);
+        return s;
+      });
+      reexpandAll();
+      $('saveHint').textContent='已从本地载入：'+file.name;
+      render();
+    }catch(err){alert('读取失败：'+err.message);}
+  };
+  fr.readAsText(file,'utf-8');
+};
+
+render();
+
+const UI = {items:[], result:null, onlyBad:false, resFilter:'', resRule:'', resSearch:'', matchFilter:'', reviewed:{}, runSeq:0,
+  dataVer:0, viewVer:0, matchLimit:300, resLimit:120, matchMs:0, resMs:0};
+function viewMs(t0){const t1=(window.performance&&performance.now)?performance.now():Date.now();return Math.round(t1-t0);}
+function nowMs(){return (window.performance&&performance.now)?performance.now():Date.now();}
+
+function showTab(name){
+  ['rules','sets','data','result','legend'].forEach(function(t){
+    const sec=$('tab-'+t);
+    if(sec)sec.className='tab'+(t===name?' active':'');
+  });
+  document.querySelectorAll('#tabs button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.tab===name);
+  });
+  if(name==='data')renderMatch();
+  if(name==='result'&&UI.result)renderResults();
+  if(name==='sets')render();
+  if(name==='legend')renderLegend(true);
+  syncPin();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('#tabs button').forEach(function(b){
+  b.onclick=function(){showTab(b.dataset.tab);};
+});
+
+function checkEnabled(){
+  return {
+    '反焊盘尺寸':$('ckAnti').checked,
+    '焊盘尺寸':$('ckPad').checked,
+    '非功能焊盘尺寸':$('ckNfp').checked,
+    'Padstack层名':$('ckPadstack')?$('ckPadstack').checked:true
+  };
+}
+function keyTxt(g){
+  const k=g.keys;
+  const t=[k.kind, k.side, k.fan?('L'+k.fan):'', k.d2m?('D2M'+k.d2m):'', k.ring?('ring'+k.ring+'mil'):''].filter(Boolean).join(' / ');
+  return t||'无关键信息';
+}
+function updatePerf(){
+  const el=$('perfLine');
+  if(!el)return;
+  const c=UI.counts||{};
+  if(!UI.items.length){el.textContent='';return;}
+  el.textContent='文件 '+(UI.fileKB||0)+' KB｜Item '+UI.items.length+'（Shape '+(c.shape||0)+' / Via '+(c.via||0)+' / Trace '+(c.trace||0)+'）'+
+    '｜解码 '+(UI.decMs||0)+' ms｜解析 '+(UI.parseMsN||0)+' ms｜检查 '+(UI.chkMs||0)+' ms｜匹配表 '+(UI.matchMs||0)+' ms｜结果 '+(UI.resMs||0)+' ms';
+}
+function tabVisible(id){
+  const el=$(id);
+  return !!(el && el.classList.contains('active'));
+}
+function renderVisible(){
+  if(tabVisible('tab-data'))renderMatch();
+  if(tabVisible('tab-result'))renderResults();
+}
+function runCheck(silent){
+  if(!UI.items.length){
+    $('checkHint').textContent='请先导入数据 TXT。';
+    return false;
+  }
+  const pos=parseFloat($('posTol').value), val=parseFloat($('valTol').value);
+  const t0=(window.performance&&performance.now)?performance.now():Date.now();
+  UI.result=CopperCheck.runCopperCheck(UI.items, S.sets, {
+    layerCount:layerCount(),
+    posTol:isNaN(pos)?0.05:pos,
+    valTol:isNaN(val)?0.01:val,
+    enabled:checkEnabled()
+  });
+  const r=UI.result;
+  UI.viewVer++; UI.runSeq++;
+  // 数据越大，默认一页给的越少，避免一次性铺几千个卡片
+  const gcount=r.groups.length;
+  const autoMatch=gcount>3000?100:(gcount>800?200:300);
+  const autoRes=gcount>3000?40:(gcount>800?80:120);
+  if(!UI.limitTouched){
+    UI.matchLimit=Math.min(UI.matchLimit, autoMatch);
+    UI.resLimit=Math.min(UI.resLimit, autoRes);
+  }
+  const t1=(window.performance&&performance.now)?performance.now():Date.now();
+  UI.chkMs=Math.round(t1-t0);
+  const bad=r.groups.reduce(function(n,g){return n+(g.failCount||0);},0);
+  const bigNote=gcount>800?(' 数据较大（'+gcount+' 个过孔），列表默认只渲染前 '+UI.resLimit+' 个过孔、前 '+UI.matchLimit+' 行，可点「显示更多」或「全部展开」。'):'';
+  $('checkHint').textContent='过孔 '+r.viaCount+'，圆形铜皮 '+r.circleCount+'，不符合 '+bad+'。'+
+    '检查耗时 '+Math.round(t1-t0)+' ms。'+bigNote+
+    (!S.sets.length?' 还没有规则，请先在「① 规则约束」导入约束 TXT。':'')+
+    (r.maxLayer>layerCount()?(' 数据写到 L'+r.maxLayer+'，当前叠层按 L'+layerCount()+' 算，底层按 L'+layerCount()+' 比对。'):'');
+  renderVisible();
+  updatePerf();
+  return true;
+}
+function matchCounts(r){
+  let rows=0, groupsWith=0, groupsWithout=0;
+  r.groups.forEach(function(g){
+    const realCount=(g.rows||[]).filter(function(row){return !row.missing && !row.isPadstackCheck;}).length;
+    if(realCount){rows+=realCount; groupsWith++;} else groupsWithout++;
+  });
+  const unm=(r.unmatchedCircles||[]).length;
+  const c={rows:rows, groupsWith:groupsWith, groupsWithout:groupsWithout, unm:unm};
+  c.via=rows+groupsWithout;
+  c.matched=rows;
+  c.circle=rows+unm;
+  c.unmatched=unm;
+  c.all=rows+groupsWithout+unm;
+  return c;
+}
+function matchTotal(c, f){ return (f&&c[f]!=null)?c[f]:c.all; }
+function matchCountWith(r, f){
+  if(!f)return matchTotal(matchCounts(r), '');
+  if(f==='unmatched')return (r.unmatchedCircles||[]).length;
+  const c=matchCounts(r);
+  return matchTotal(c, f);
+}
+function matchRowHtml(g, row){
+  const cand=(!g.rule&&g.candidates&&g.candidates.length)?('<div class="hint">候选：'+g.candidates.map(esc).join('、')+'</div>'):'';
+  const fail=row.status==='不符合';
+  return '<tr class="'+(fail?'fail':'')+'">'+
+    '<td>'+row.shapeId+'</td><td>L'+row.layer+'</td><td>'+esc(row.subset)+'</td><td>'+esc(row.actual)+'</td>'+
+    '<td>Via '+g.via.id+'</td><td>'+esc(g.via.net||'无网络')+'</td><td>'+esc(g.via.padstack||'无 Padstack')+'</td>'+
+    '<td>'+esc(keyTxt(g))+(g.note?'<div class="hint">'+esc(g.note)+'</div>':'')+'</td>'+
+    '<td>'+(g.rule?('<b>'+esc(g.rule.title)+'</b>'):'<b class="bad">未选中规则</b>')+cand+
+    '<div class="hint">'+esc(row.checkType)+'</div></td></tr>';
+}
+function viaNoShapeHtml(g){
+  return '<tr><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td>'+
+    '<td>Via '+g.via.id+'</td><td>'+esc(g.via.net||'无网络')+'</td><td>'+esc(g.via.padstack||'无 Padstack')+'</td>'+
+    '<td>'+esc(keyTxt(g))+'</td><td colspan="2" class="muted">'+esc(g.note||'附近没有圆形铜皮')+'</td></tr>';
+}
+function circleRowHtml(sh){
+  return '<tr class="fail"><td>'+sh.id+'</td><td>L'+CopperCheck.subsetToLayer(sh.subset, layerCount())+'</td><td>'+esc(sh.subset)+'</td><td>'+esc(sh.radius)+'</td>'+
+    '<td colspan="5" class="muted">没有配对到过孔（圆心附近没有过孔 Origin）</td></tr>';
+}
+function renderMatch(){
+  const r=UI.result, box=$('matchOut');
+  if(!r){box.innerHTML='<div class="hint">还没有导入数据。</div>';box.dataset.ver='';return;}
+  const f=UI.matchFilter||'';
+  const ver=UI.dataVer+'-'+UI.viewVer+'-'+UI.matchLimit+'-'+f;
+  if(box.dataset.ver===ver)return;
+  const t0=nowMs();
+  const counts=matchCounts(r);
+  const total=matchTotal(counts, f);
+  const matched=counts.groupsWith;
+  const tiles=[
+    {f:'via', n:r.viaCount, label:'过孔', tip:'所有过孔'},
+    {f:'matched', n:matched, label:'已配对过孔', tip:'铜皮已配对的过孔'},
+    {f:'circle', n:r.circleCount, label:'圆形铜皮', tip:'全部圆形铜皮'},
+    {f:'unmatched', n:r.unmatchedCircles.length, label:'未配对铜皮', tip:'没配到过孔的铜皮'}
+  ];
+  let h='<div class="row" style="margin-bottom:6px">'+tiles.map(function(t){
+    return '<div class="stat click'+(f===t.f?' on':'')+'" data-f="'+t.f+'" title="'+esc(t.tip)+'"><b>'+t.n+'</code>'+
+      '<span class="hint">'+esc(t.label)+'</span>'+(f===t.f?'<span class="fnote">筛选中</span>':'')+'</div>';
+  }).join('')+
+  '<span class="hint" style="margin-left:6px">点击方块只看这一类，再点一次显示全部。</span></div>';
+  h+='<table><thead><tr><th>铜皮#</th><th>层</th><th>Subset</th><th>半径 mil</th><th>过孔#</th><th>网络</th><th>Padstack Name</th><th>提取的关键信息</th><th>推算的约束</th></tr></thead><tbody>';
+  if(!total){
+    h+='<tr><td colspan="9" class="muted">这一类没有记录。</td></tr>';
+  }
+  // 流式渲染：够 limit 就停，不再先建整张表的中间数组
+  let shown=0;
+  const cap=UI.matchLimit;
+  const wantVia=!f||f==='via';
+  const wantMatch=!f||f==='via'||f==='matched'||f==='circle';
+  for(let gi=0;gi<r.groups.length&&shown<cap;gi++){
+    const g=r.groups[gi];
+    const realRows=(g.rows||[]).filter(function(row){return !row.missing && !row.isPadstackCheck;});
+    if(!realRows.length){
+      if(wantVia){h+=viaNoShapeHtml(g); shown++;}
+      continue;
+    }
+    if(!wantMatch)continue;
+    for(let ri=0;ri<realRows.length&&shown<cap;ri++){
+      h+=matchRowHtml(g, realRows[ri]);
+      shown++;
+    }
+  }
+  if((!f||f==='circle'||f==='unmatched')){
+    const un=r.unmatchedCircles||[];
+    for(let i=0;i<un.length&&shown<cap;i++){h+=circleRowHtml(un[i]); shown++;}
+  }
+  h+='</tbody></table>';
+  h+='<div class="hint" style="margin-top:8px">当前显示 '+shown+' / '+total+' 行'+(f?('（只看'+(tiles.filter(function(x){return x.f===f;})[0]||{}).label+'）'):'')+
+    '。未配对圆形铜皮 '+r.unmatchedCircles.length+' 个，多边形铜皮 '+r.polygons.length+' 个不参与过孔配对。'+
+    '渲染 '+UI.matchMs+' ms。</div>';
+  if(total>shown){
+    h+='<div class="row" style="margin-top:8px"><button type="button" class="btn gray" id="btnMoreMatch">显示更多（还有 '+(total-shown)+' 行）</button>'+
+       '<button type="button" class="btn gray" id="btnMoreMatchAll">全部展开</button></div>';
+  }
+  box.innerHTML=h;
+  box.dataset.ver=ver;
+  UI.matchMs=viewMs(t0);
+  updatePerf();
+}
+function reviewKey(g,row){return 'v'+g.via.id+'-s'+row.shapeId+'-L'+row.layer+'-'+row.checkType;}
+function refreshReview(){
+  if(!UI.result)return;
+  let total=0, done=0;
+  UI.result.groups.forEach(function(g,si){
+    const fails=g.failRows||[];
+    const chip=$('grv-'+si);
+    if(!fails.length){if(chip)chip.textContent='复核 0/0'; return;}
+    let ok=0;
+    for(let i=0;i<fails.length;i++)if(UI.reviewed[reviewKey(g,fails[i])])ok++;
+    total+=fails.length; done+=ok;
+    if(chip)chip.textContent='复核 '+ok+'/'+fails.length;
+    // 总复核勾选框：全勾=选中，勾了一部分=半选
+    const box=$('grp-'+si)&&$('grp-'+si).querySelector('.grpBox');
+    if(box){
+      box.checked=(ok===fails.length);
+      box.indeterminate=(ok>0&&ok<fails.length);
+      const card=$('grp-'+si);
+      if(card)card.classList.toggle('allrev', ok===fails.length);
+    }
+  });
+  const tile=$('rvStat');
+  if(tile)tile.querySelector('b').textContent=done+'/'+total;
+  $('resHint').textContent=resFilterText()+'。已复核 '+done+' / 不符合 '+total+'。渲染 '+UI.resMs+' ms'+
+    '。反焊盘 '+(checkEnabled()['反焊盘尺寸']?'开':'关')+'，焊盘 '+(checkEnabled()['焊盘尺寸']?'开':'关')+'，非功能焊盘 '+(checkEnabled()['非功能焊盘尺寸']?'开':'关')+'。';
+}
+function layerListTxt(layers){
+  const arr=layers.slice().sort(function(a,b){return a-b;});
+  const head=arr.slice(0,8).map(function(l){return 'L'+l;}).join('、');
+  return head+(arr.length>8?(' 等 '+arr.length+' 层'):'');
+}
+function renderLegend(force){
+  const box=$('legendOut');
+  if(!box)return;
+  if(!force && UI.legendRendered && UI.legendRenderedVer===UI.dataVer)return;
+  UI.legendRendered=true;
+  UI.legendRenderedVer=UI.dataVer;
+
+  const r=UI.result;
+  if(!r){
+    box.innerHTML='<div class="card"><div class="hint">还没有检查结果。请在「③ 导入数据」页导入并运行检查。</div></div>';
+    box.dataset.ver=UI.runSeq+'|'+UI.viewVer;
+    return;
+  }
+  box.dataset.ver=UI.runSeq+'|'+UI.viewVer;
+  const pos=($('posTol') && !isNaN(parseFloat($('posTol').value))) ? parseFloat($('posTol').value) : 0.05;
+  const val=($('valTol') && !isNaN(parseFloat($('valTol').value))) ? parseFloat($('valTol').value) : 0.01;
+
+  function renderReasonNetBadges(byNet){
+    const keys=Object.keys(byNet||{});
+    if(!keys.length)return '<span class="muted">无网络</span>';
+    keys.sort(function(a,b){
+      const lenA=(byNet[a]||[]).length;
+      const lenB=(byNet[b]||[]).length;
+      return lenB-lenA || a.localeCompare(b);
+    });
+    return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px">'+
+      keys.map(function(netName){
+        const viaList=byNet[netName]||[];
+        const viaStr=viaList.map(function(vid){return '#'+vid;}).join('、');
+        return '<span style="display:inline-flex;align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:1px 6px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">'+
+          '<code>'+esc(netName)+'</code>'+
+          '<span style="color:#64748b;margin-left:4px;font-size:10px">('+viaList.length+'孔: '+esc(viaStr)+')</span>'+
+        '</span>';
+      }).join('')+
+    '</div>';
+  }
+
+  // ---- 统计不符合项分布与详细原因 ----
+  let badTotal=0;
+  const badMap={};      // ruleTitle · checkType -> { n, layers:{}, padstacks:{}, reasons:{} }
+  const layerBadMap={}; // 'Lxx' -> count
+
+  r.groups.forEach(function(g){
+    if(!g.rule)return;
+    const ruleTitle=g.rule.title||'未命名约束';
+    const padName=g.via.padstack||'无 Padstack';
+    const netName=g.via.net||'未命名网络';
+
+    g.rows.forEach(function(row){
+      if(row.status!=='不符合')return;
+      badTotal++;
+
+      const ctype=row.checkType||'检查项';
+      const isMiss=(row.actual==='无铜皮'||row.statusNote==='缺失层');
+      const layerNum=row.layer;
+      const lKey=String(layerNum).startsWith('L') ? String(layerNum) : ('L'+layerNum);
+      layerBadMap[lKey]=(layerBadMap[lKey]||0)+1;
+
+      // 提取偏差值或缺失原因
+      let reasonTxt='';
+      let actualVal=row.actual, expectVal=row.expect;
+      if(isMiss){
+        reasonTxt='<b class="bad">无铜皮</b>（缺失该层铜皮，规则要求 '+esc(row.expect)+' mil）';
+      }else if(row.actual!=null && row.expect!=null && !isNaN(row.actual) && !isNaN(row.expect)){
+        const diff=row.actual - row.expect;
+        const diffStr=(diff>0?'+':'')+diff.toFixed(2);
+        reasonTxt='实测 '+esc(row.actual)+' mil ≠ 规则 '+esc(row.expect)+' mil（偏差 '+diffStr+' mil）';
+      }else{
+        reasonTxt='实测 '+esc(row.actual)+' ≠ 规则 '+esc(row.expect);
+      }
+
+      // 按 (约束 · 检查项) 汇总，并记录内部的 (层 + 原因) 明细
+      const bKey=ruleTitle+' · '+ctype;
+      if(!badMap[bKey]){
+        badMap[bKey]={
+          title:ruleTitle, checkType:ctype, n:0, layers:{}, padstacks:{},
+          reasons:{}
+        };
+      }
+      badMap[bKey].n++;
+      badMap[bKey].layers[layerNum]=1;
+      badMap[bKey].padstacks[padName]=1;
+      
+      const subKey='L'+layerNum+'|'+actualVal+'|'+expectVal+'|'+(isMiss?1:0);
+      if(!badMap[bKey].reasons[subKey]){
+        badMap[bKey].reasons[subKey]={
+          layer:layerNum, actual:actualVal, expect:expectVal, missing:isMiss,
+          reason:reasonTxt, n:0, vias:{}, byNet:{}
+        };
+      }
+      badMap[bKey].reasons[subKey].n++;
+      badMap[bKey].reasons[subKey].vias[g.via.id]=1;
+      if(!badMap[bKey].reasons[subKey].byNet[netName])badMap[bKey].reasons[subKey].byNet[netName]=[];
+      if(badMap[bKey].reasons[subKey].byNet[netName].indexOf(g.via.id)<0)badMap[bKey].reasons[subKey].byNet[netName].push(g.via.id);
+    });
+  });
+
+  // ---- 没推算到约束：按 Padstack 汇总 ----
+  const noRuleMap={};
+  r.groups.forEach(function(g){
+    if(!g.rows.length||g.rule)return;
+    const key=g.via.padstack||'无 Padstack';
+    if(!noRuleMap[key])noRuleMap[key]={vias:0, rows:0, cands:g.candidates||[], note:g.note||''};
+    noRuleMap[key].vias++;
+    noRuleMap[key].rows+=g.rows.length;
+  });
+
+  // ---- 同一过孔同层同检查项的重复记录 ----
+  let dupGroups=0;
+  r.groups.forEach(function(g){
+    const seen={};
+    g.rows.forEach(function(row){
+      const key=row.layer+'|'+row.checkType+'|'+row.actual;
+      seen[key]=(seen[key]||0)+1;
+    });
+    Object.keys(seen).forEach(function(k){if(seen[k]>1)dupGroups++;});
+  });
+
+  let h='<div class="card">';
+
+  // ==========================================
+  // 【置顶展示】各约束下不符合的具体原因展开明细（过孔网络一一对应全列出）
+  // ==========================================
+  h+='<h3 style="margin-top:0">各约束下不符合的具体原因展开明细（过孔网络一一对应全列出'+(badTotal?('，共 '+badTotal+' 条'):'')+'）</h3>';
+  if(!badTotal){
+    h+='<div class="hint" style="margin-bottom:16px">本次检查所有配对过孔与铜皮均符合约束规则，没有不符合的记录。</div>';
+  }else{
+    // 按层汇总条
+    const layerKeys=Object.keys(layerBadMap).sort(function(a,b){
+      const na=+a.replace(/^L/,''), nb=+b.replace(/^L/,'');
+      return layerBadMap[b]-layerBadMap[a] || na-nb;
+    });
+    h+='<div style="margin:8px 0 14px 0"><span style="font-size:12px;color:var(--sub);font-weight:600">按层分布概览：</span>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">'+
+      layerKeys.map(function(lk){
+        return '<span style="padding:2px 8px;border-radius:4px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px">'+
+          lk+'：<b class="bad">'+layerBadMap[lk]+'</b> 条</span>';
+      }).join('')+
+      '</div></div>';
+
+    const badKeys=Object.keys(badMap).sort(function(a,b){return badMap[b].n-badMap[a].n;});
+    h+='<table><thead><tr><th>约束 · 检查项</th><th>总条数</th><th>具体原因与对应过孔网络明细（一一对应全列出）</th><th>Padstack</th></tr></thead><tbody>';
+    badKeys.forEach(function(k){
+      const v=badMap[k];
+      const subReasons=Object.keys(v.reasons).map(function(srk){return v.reasons[srk];}).sort(function(a,b){
+        return a.layer-b.layer || b.n-a.n;
+      });
+      let detailHtml='<div style="display:flex;flex-direction:column;gap:8px">';
+      subReasons.forEach(function(sr){
+        const netCount=Object.keys(sr.byNet).length;
+        detailHtml+='<div style="padding:6px 9px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0">'+
+          '<div style="font-size:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">'+
+            '<div><b>L'+sr.layer+'</b>：<span class="'+(sr.missing?'bad':'')+'">'+sr.reason+'</span></div>'+
+            '<div class="bad" style="font-weight:700;white-space:nowrap">'+sr.n+' 条 ('+Object.keys(sr.vias).length+' 个孔)</div>'+
+          '</div>'+
+          '<div style="margin-top:4px;font-size:11px;color:#475569">'+
+            '<span style="font-weight:600">对应孔的网络（共 '+netCount+' 个网络，全列出）：</span>'+
+            renderReasonNetBadges(sr.byNet)+
+          '</div>'+
+        '</div>';
+      });
+      detailHtml+='</div>';
+      
+      h+='<tr>'+
+        '<td style="vertical-align:top"><b>'+esc(k)+'</b></td>'+
+        '<td class="bad" style="font-size:14px;font-weight:700;vertical-align:top">'+v.n+'</td>'+
+        '<td>'+detailHtml+'</td>'+
+        '<td class="hint" style="font-size:11px;vertical-align:top">'+esc(Object.keys(v.padstacks).join('、'))+'</td>'+
+      '</tr>';
+    });
+    h+='</tbody></table>';
+  }
+
+  // ==========================================
+  // 判定依据与规则规律说明
+  // ==========================================
+  h+='<div class="hint" style="margin-top:24px;padding-top:14px;border-top:1px solid var(--line)">参数：位置容差 '+pos+' mil，数值容差 '+val+' mil。下面按「怎么配对 → 怎么推算约束 → 每层怎么判」说明本次检查的判定依据与推算规律。</div>'+
+    '<h3>1. 铜皮 × 过孔 怎么配对</h3><ol class="rules">'+
+    '<li>只配圆形铜皮：Exterior Boundary 里只有一段 Arc seg、没有 Seg，取它的 Center-xy 和 Radius。多边形铜皮不参与配对。</li>'+
+    '<li>配对条件：铜皮圆心到过孔 Origin-xy 的直线距离 ≤ 位置容差（当前 '+pos+' mil）。</li>'+
+    '<li>没配上任何过孔的圆形铜皮 = <b>未配对铜皮</b>，下表给出离它最近的过孔和距离。</li>'+
+    '<li>一个过孔可以配到多张铜皮（同位置有多张时会各算一条）；一个铜皮只归它配对到的过孔。</li>'+
+    '</ol>'+
+    '<h3>2. 怎么推算该用哪条约束</h3><ol class="rules">'+
+    '<li>从配对过孔的 Padstack Name 里提取：封装（SMA / BGA）、出线层、面（Bot / Top）、<code>D2M6</code>、<code>ring3mil</code>。</li>'+
+    '<li>出线层写法都认：<code>_L19_</code>、<code>-L19</code>、<code>L19</code>、<code>BotL21</code>。<code>_L2pad_</code> 是焊盘标记，直接跳过，不算层号。</li>'+
+    '<li>名字里出现多个层号时（如 <code>BGA_3510_l2-L8_Ring3mil</code>、<code>l8-L12</code>），逐个拿去和已生成的约束对照，对得上的优先取靠后的那个（范围写法里出线层在末尾），所以 <code>l2-L8</code> → <code>BGA-L8</code>。</li>'+
+    '<li>按 封装 + 出线层（有面时也要求面一致）在已生成的约束里找同名约束，例如提取到 SMA / Bot / L19 / D2M6 就选 <code>Bot-SMA-L19-D2M6mil</code>。</li>'+
+    '<li>找不到就是 <b>没推算到约束</b>：如果 Padstack 里没有出线层号（如 <code>BGA_GND_pad1mil_0902</code>），或现有约束里没有这一层，就只列出放宽条件后的候选约束，不硬套。</li>'+
+    '</ol>'+
+    '<h3>3. 每一层怎么判</h3><ol class="rules">'+
+    '<li>层号取自 Subset 的前导数字（<code>02G01P</code> → L2、<code>19IS08</code> → L19），<code>Top</code> → L1，<code>Bottom</code> → 叠层最底层。</li>'+
+    '<li>检查项归类：Route Keepout / 含 anti、反焊盘 → 反焊盘尺寸；含 焊盘、etch → 焊盘尺寸；含 非功能 / NF → 非功能焊盘尺寸；Padstack 层名 → Padstack层名。各项各自独立开关，关掉的行记为「未检查」。</li>'+
+    '<li>Padstack层名检查：核对该过孔的 Padstack Name 是否包含 Connections 连接层中的所有层号（例如 Connections 包含 <code>02G01P 08IS03</code> 代表 L2 和 L8，Padstack 名字须包含 <code>L2</code> 和 <code>L8</code> 关键信息；若缺少连接层则判定为不符合）。</li>'+
+    '<li>比较铜皮半径和该层在约束里的对应值：差值 ≤ 数值容差（当前 '+val+' mil）= 符合；超过 = <b>不符合</b>。</li>'+
+    '<li>约束里那一层是「无」→ 无约束；规则里没有这一类 → 规则里没有这项；没推算到约束 → 未选规则；层号识别不出来 → 层未识别。</li>'+
+    '</ol>';
+
+  // 没推算到约束分布
+  const noRuleKeys=Object.keys(noRuleMap).sort(function(a,b){return noRuleMap[b].vias-noRuleMap[a].vias;});
+  h+='<h3>没推算到约束的分布（共 '+noRuleKeys.reduce(function(n,k){return n+noRuleMap[k].vias;},0)+' 个过孔）</h3>';
+  if(!noRuleKeys.length){
+    h+='<div class="hint">本次每个配到铜皮的过孔都推算到了约束。</div>';
+  }else{
+    h+='<table><thead><tr><th>Padstack Name</th><th>过孔数</th><th>记录数</th><th>原因 / 候选约束</th></tr></thead><tbody>';
+    noRuleKeys.forEach(function(k){
+      const v=noRuleMap[k];
+      h+='<tr><td>'+esc(k)+'</td><td>'+v.vias+'</td><td>'+v.rows+'</td><td class="hint">'+esc(v.note||'')+
+        (v.cands.length?('<br>候选：'+esc(v.cands.join('、'))):'<br>没有同封装的约束可选')+'</td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+
+  // 未配对铜皮
+  h+='<h3>未配对铜皮（共 '+r.unmatchedCircles.length+' 个）</h3>';
+  if(!r.unmatchedCircles.length){
+    h+='<div class="hint">本次所有圆形铜皮都配到了过孔。</div>';
+  }else{
+    h+='<table><thead><tr><th>铜皮#</th><th>层</th><th>Subset</th><th>半径 mil</th><th>最近过孔#</th><th>距离 mil</th><th>差多少才配上</th></tr></thead><tbody>';
+    r.unmatchedCircles.slice(0,40).forEach(function(sh){
+      const nr=(sh.nearest!==undefined&&sh.nearest!==null)?sh.nearest:(r.nearestViaOf?r.nearestViaOf(sh):null);
+      const d=nr?nr.dist:null;
+      const gap=(d==null)?'':(d-pos);
+      h+='<tr><td>'+sh.id+'</td><td>L'+CopperCheck.subsetToLayer(sh.subset, layerCount())+'</td><td>'+esc(sh.subset)+'</td>'+
+        '<td>'+esc(sh.radius)+'</td><td>'+(nr?('Via '+nr.viaId):(r.viaCount?'200 mil 内没有过孔':'没有过孔'))+'</td>'+
+        '<td>'+(d==null?'—':d.toFixed(3))+'</td>'+
+        '<td class="hint">'+(gap==null?'—':(gap>0?('还差 '+gap.toFixed(3)+' mil，超过位置容差 '+pos):'在容差内（应已配上）'))+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    if(r.unmatchedCircles.length>40)h+='<div class="hint">只列出前 40 个，共 '+r.unmatchedCircles.length+' 个。</div>';
+  }
+  h+='<div class="hint" style="margin-top:10px">多边形铜皮 '+r.polygons.length+' 个不参与过孔配对。同一过孔同一层同一数值出现多条记录的位置有 '+dupGroups+' 处（数据里可能有重复的铜皮，或确实同位置有多张）。</div>';
+  h+='</div>';
+  box.innerHTML=h;
+}
+
+function ruleCountLabel(){
+  const f=UI.resFilter||'';
+  if(f==='bad')return '该约束下有不符合的过孔数';
+  if(f==='norule')return '该约束下没推算到约束的过孔数';
+  return '该约束匹配到的过孔数';
+}
+function ruleCounts(){
+  const r=UI.result, out={}, order=[];
+  const f=UI.resFilter||'';
+  (r.groups||[]).forEach(function(g){
+    if(!g.rows.length)return;
+    if(UI.resSearch&&!viaGroupMatchSearch(g, UI.resSearch))return;
+    const title=g.rule?g.rule.title:'';
+    const key=title||'未推算到约束';
+    if(!out[key]){out[key]={n:0, title:title, via:0, badVia:0, badRec:0}; order.push(key);}
+    // 计数口径跟着当前筛选走；同时记下各口径的备查数字
+    out[key].via++;
+    if(g.failCount){out[key].badVia++; out[key].badRec+=(g.failCount||0);}
+    if(f==='bad'){ if(g.failCount)out[key].n++; }
+    else if(f==='norule'){ if(!g.rule)out[key].n++; }
+    else out[key].n++;   // 全部 / 只看已配对过孔：都是「有记录的过孔数」
+  });
+  // 结果里没出现的约束也列出来（值为 0），方便知道规则存在但这次没用上
+  (S.sets||[]).forEach(function(s){
+    const key=s.title||'';
+    if(key && !out[key]){out[key]={n:0, title:key, via:0, badVia:0, badRec:0}; order.push(key);}
+  });
+  order.sort(function(a,b){
+    const na=out[a].n, nb=out[b].n;
+    if(na!==nb)return nb-na;
+    return String(a).localeCompare(String(b));
+  });
+  return {map:out, order:order};
+}
+function chipShort(name, family){
+  let s=String(name||'');
+  if(!s)return '未推算到';
+  s=s.replace(/^Top-SMA-/i,'').replace(/^Bot-SMA-/i,'').replace(/^SMA-/i,'').replace(/^BGA[-_]/i,'');
+  s=s.replace(/-?D2M\s*[0-9.]+\s*mil$/i,'').replace(/-?D2M\s*[0-9.]+$/i,'');
+  s=s.trim();
+  return s||String(name);
+}
+function chipD2M(name){
+  const m=String(name||'').match(/D2M\s*([0-9.]+)/i);
+  return m?parseFloat(m[1]):0;
+}
+function chipMeta(name){
+  const s=String(name||'');
+  const kind=/BGA/i.test(s)?'BGA':(/SMA/i.test(s)?'SMA':'其他');
+  const side=/^Bot/i.test(s)?'Bot':(/^Top/i.test(s)?'Top':'');
+  const lm=s.match(/L(\d+)/i);
+  const layer=lm?+lm[1]:0;
+  const dm=s.match(/D2M\s*([0-9.]+)/i);
+  const d2m=dm?parseFloat(dm[1]):0;
+  let g, rank;
+  if(!s){g='未推算到约束'; rank=9;}
+  else if(kind==='BGA'){g='BGA'; rank=0;}
+  else if(kind==='SMA'&&side==='Top'){g='SMA · Top 面'; rank=1;}
+  else if(kind==='SMA'&&side==='Bot'){g='SMA · bottom 面'; rank=2;}
+  else if(kind==='SMA'){g='SMA · 未标面'; rank=3;}
+  else {g='其他'; rank=4;}
+  return {name:s, kind:kind, side:side, layer:layer, d2m:d2m, group:g, rank:rank};
+}
+function orderChips(keys, map){
+  const metas=keys.map(function(k){
+    const m=chipMeta(k==='未推算到约束'?'':k);
+    m.key=k; m.n=map[k].n;
+    return m;
+  });
+  const dk=function(m){return m.d2m>0?(1e6-m.d2m):1e9;};   // D2M 大的在前，没标 D2M 的排最后
+  metas.sort(function(a,b){
+    if(a.rank!==b.rank)return a.rank-b.rank;        // BGA → Top → bottom → 未标面 → 其他 → 未推算到
+    if(a.group!==b.group)return a.group<b.group?-1:1;
+    const az=a.n>0?0:1, bz=b.n>0?0:1;
+    if(az!==bz)return az-bz;                        // 有数据的排前面
+    const da=dk(a), db=dk(b);
+    if(da!==db)return da-db;                        // 同一列里先按 D2M 分块
+    if(a.layer!==b.layer)return b.layer-a.layer;    // 再按层号从大到小
+    return String(a.name).localeCompare(String(b.name));
+  });
+  return metas;
+}
+function renderChips(){
+  const box=$('resChips');
+  if(!box)return;
+  const scope=$('chipScope');
+  if(scope)scope.textContent='（计数＝'+ruleCountLabel()+'）';
+  const cand=ruleCounts();
+  if(!cand.order.length){
+    box.innerHTML='<span class="hint">还没有可筛选的约束。先导入规则 TXT 并跑一次检查。</span>';
+    return;
+  }
+  const metas=orderChips(cand.order, cand.map);
+  // 按列（封装/面）归集，列内再按 D2M 分小标题
+  const cols=[], colIndex={};
+  metas.forEach(function(m){
+    if(!colIndex[m.group]){colIndex[m.group]={group:m.group, items:[]}; cols.push(colIndex[m.group]);}
+    colIndex[m.group].items.push(m);
+  });
+  let h='';
+  cols.forEach(function(col){
+    h+='<div class="chipcol"><div class="chipcol-h">'+esc(col.group)+
+       '<span class="cn" style="color:#94a3b8;font-weight:400"> '+col.items.reduce(function(n,m){return n+m.n;},0)+'</span></div>';
+    let lastD2M=null;
+    const multi=col.items.some(function(x){return x.name && chipD2M(x.name)>0;});
+    col.items.forEach(function(m){
+      const d2m=m.name?chipD2M(m.name):0;
+      const dkName=d2m?('D2M'+d2m+'mil'):'未标 D2M';
+      if(multi && dkName!==lastD2M){
+        h+='<div class="chipsub">'+esc(dkName)+'</div>';
+        lastD2M=dkName;
+      }
+      const on=UI.resRule===m.key;
+      const miss=(m.name==='');
+      const label=miss?'未推算到约束':chipShort(m.key, col.group);
+      const info=cand.map[m.key]||{};
+      const tip=(m.key||'未推算到约束')+'：匹配 '+((info.via!=null)?info.via:0)+' 个过孔'+
+        (info.badVia?('，其中 '+info.badVia+' 个有不符合（共 '+(info.badRec||0)+' 条不符合记录）'):'')+
+        '；当前口径：'+ruleCountLabel()+'。';
+      h+='<span class="chip'+(on?' on':'')+(miss?' miss':'')+(m.n?'':' zero')+'" data-rule="'+esc(m.key)+'" title="'+esc(tip)+'">'+
+        '<span class="cl">'+esc(label)+'</span><span class="cn">'+m.n+'</span></span>';
+    });
+    h+='</div>';
+  });
+  box.innerHTML=h;
+}
+function resultCounts(){
+  const r=UI.result;
+  let fails=0, matched=0, norule=0, rowsAll=0;
+  r.groups.forEach(function(g){
+    fails+=g.failCount||0;
+    rowsAll+=g.rows.length;
+    if(g.rows.some(function(row){return !row.missing && !row.isPadstackCheck;}))matched++;
+    if(g.rows.length&&!g.rule)norule++;
+  });
+  return {bad:fails, matched:matched, norule:norule, rows:rowsAll, total:r.groups.length};
+}
+function viaGroupMatchSearch(g, query){
+  if(!query)return true;
+  const rawQ=String(query).trim();
+  if(!rawQ)return true;
+  const q=rawQ.toLowerCase();
+  if(q==='未推算到'||q==='未推算到约束'||q==='没推算到'||q==='norule'){ if(!g.rule)return true; }
+  const qNum=q.replace(/^(?:via|v|孔|#)\s*[-_:]?\s*/i,'').trim();
+  const viaIdStr=String(g.via&&g.via.id!=null?g.via.id:'');
+  if(viaIdStr===q||(qNum&&viaIdStr===qNum))return true;
+  if(qNum&&viaIdStr.indexOf(qNum)>=0)return true;
+  const net=String((g.via&&g.via.net)||'').toLowerCase();
+  if(net&&net.indexOf(q)>=0)return true;
+  const pad=String((g.via&&g.via.padstack)||'').toLowerCase();
+  if(pad&&pad.indexOf(q)>=0)return true;
+  const ruleTitle=String((g.rule&&g.rule.title)||'').toLowerCase();
+  if(ruleTitle&&ruleTitle.indexOf(q)>=0)return true;
+  const rawKeys=String((g.keys&&g.keys.raw)||'').toLowerCase();
+  if(rawKeys&&rawKeys.indexOf(q)>=0)return true;
+  const kTxt=String(keyTxt(g)||'').toLowerCase();
+  if(kTxt&&kTxt.indexOf(q)>=0)return true;
+  const note=String(g.note||'').toLowerCase();
+  if(note&&note.indexOf(q)>=0)return true;
+  const rows=g.rows||[];
+  for(let i=0;i<rows.length;i++){
+    const row=rows[i];
+    if(row.subset&&row.subset.toLowerCase().indexOf(q)>=0)return true;
+    if(('l'+row.layer)===q||('layer'+row.layer)===q)return true;
+    if(String(row.shapeId)===q)return true;
+  }
+  return false;
+}
+function resultGroupMatch(g, f){
+  if(UI.resSearch&&!viaGroupMatchSearch(g, UI.resSearch))return false;
+  if(UI.resRule){
+    const title=g.rule?g.rule.title:'未推算到约束';
+    if(title!==UI.resRule)return false;
+  }
+  if(!f)return true;
+  if(f==='bad')return !!(g.failCount);
+  if(f==='matched')return g.rows.some(function(row){return !row.missing;});
+  if(f==='norule')return !!(g.rows.length&&!g.rule);
+  return true;
+}
+function resultGroupTotal(f){
+  const r=UI.result;
+  let n=0;
+  for(let i=0;i<r.groups.length;i++)if(resultGroupMatch(r.groups[i], f))n++;
+  return n;
+}
+function resFilterText(){
+  const f=UI.resFilter||'';
+  const byRule=UI.resRule?('只看约束 '+UI.resRule):'';
+  const bySearch=UI.resSearch?('搜索 "'+UI.resSearch+'"'):'';
+  const base=(function(){
+    if(f==='bad')return '只显示不符合项';
+    if(f==='matched')return '只看已配对过孔的记录';
+    if(f==='norule')return '只看没推算到约束的过孔';
+    return '显示全部检查项';
+  })();
+  let out=byRule?(byRule+(f?' + '+base:'')):base;
+  if(bySearch)out+=(out?' · ':'')+bySearch;
+  return out;
+}
+function renderResults(){
+  const r=UI.result;
+  const out=$('checkOut');
+  if(!r){out.innerHTML='';out.dataset.ver='';$('resStats').innerHTML='';$('legendOut').innerHTML='';$('resChips').innerHTML='';$('resHint').textContent='还没有检查结果。';return;}
+  const ver=UI.dataVer+'-'+UI.viewVer+'-'+UI.resLimit+'-'+(UI.resRule||'')+'-'+(UI.resSearch||'');
+  if(out.dataset.ver===ver)return;
+  const t0=nowMs();
+  const rc=resultCounts();
+  const bad=rc.bad, rowsAll=rc.rows, noRule=rc.norule;
+  $('resStats').innerHTML=
+    '<div class="stat click'+(UI.resFilter==='bad'?' on':'')+'" data-res="bad" title="点一下只看不符合，再点取消"><b class="'+(bad?'bad':'ok')+'">'+bad+'</b><span class="hint">不符合</span></div>'+
+    '<div class="stat"><b>'+rowsAll+'</b><span class="hint">检查记录</span></div>'+
+    '<div class="stat click'+(UI.resFilter==='matched'?' on':'')+'" data-res="matched" title="点一下只看已配对过孔的记录，再点取消"><b>'+rc.matched+'</b><span class="hint">已配对过孔</span></div>'+
+    '<div class="stat"><b>'+r.unmatchedCircles.length+'</b><span class="hint">未配对铜皮</span></div>'+
+    '<div class="stat click'+(UI.resFilter==='norule'?' on':'')+'" data-res="norule" title="点一下只看没推算到约束的过孔，再点取消"><b>'+noRule+'</b><span class="hint">没推算到约束</span></div>'+
+    '<div class="stat" id="rvStat"><b>0/0</b><span class="hint">已复核</span></div>';
+  let h='';
+  const rf=UI.resFilter||'';
+  const totalGroups=resultGroupTotal(rf);
+  if(!totalGroups){
+    h+='<div class="card"><div class="hint">按「'+resFilterText()+'」筛完没有记录。点「全部」可以看回全部检查项。</div></div>';
+  }
+  let shownGroups=0;
+  UI.groupKeys={};
+  for(let si=0;si<r.groups.length&&shownGroups<UI.resLimit;si++){
+    const g=r.groups[si];
+    if(!resultGroupMatch(g, rf))continue;
+    shownGroups++;
+    UI.groupKeys[si]=(g.failRows||[]).map(function(row){return reviewKey(g,row);});
+    const rows=(rf==='bad')?g.failRows:g.rows;
+    const failCount=(g.failRows||[]).length;
+    h+='<div class="set '+(g.keys.kind||'其他')+'" id="grp-'+si+'"><div class="hd">'+
+      '<span class="badge">Via '+g.via.id+'</span><b>'+esc(g.via.net||'无网络')+'</b>'+
+      '<span>'+esc(g.via.padstack||'无 Padstack')+'</span>'+
+      '<span class="badge rev" style="margin-left:auto" id="grv-'+si+'" title="点一下全选 / 取消本组的复核">复核 0/'+failCount+'</span>'+
+      (failCount?('<label class="grpRvw" title="把这个孔的不符合项一次全部标为已复核"><input type="checkbox" class="grpBox" data-si="'+si+'">总复核</label>'):'')+
+      '<span>约束 '+(g.rule?esc(g.rule.title):'未推算到')+'</span></div><div class="body">'+
+      '<div class="srcnote">提取：'+esc(keyTxt(g))+(g.note?' · '+esc(g.note):'')+(g.via.connections?' · '+esc(g.via.connections):'')+'</div>';
+    if(!rows.length){
+      h+='<div class="hint">'+esc('这个过孔附近没有圆形铜皮。')+'</div>';
+    }else{
+      h+='<table><thead><tr><th class="rvw">复核</th><th>层</th><th>Subset</th><th>检查项</th><th>实测</th><th>规则值</th><th>结果</th></tr></thead><tbody>';
+      rows.forEach(function(row){
+        const fail=row.status==='不符合';
+        const rk=reviewKey(g,row);
+        const rvd=fail&&!!UI.reviewed[rk];
+        const layerDisplay=(typeof row.layer==='number'&&row.layer>0)?('L'+row.layer):(String(row.layer).startsWith('L')?row.layer:(row.layer==='—'?'—':('L'+row.layer)));
+        const reasonTooltip = row.reason ? (' title="'+esc(row.reason)+'"') : '';
+        h+='<tr class="'+(fail?'fail ':'')+(rvd?'reviewed':'')+'" data-rk="'+esc(rk)+'">'+
+          '<td class="rvw">'+(fail?('<input type="checkbox" class="rvwBox" data-rk="'+esc(rk)+'"'+(rvd?' checked':'')+' title="勾选表示已经看过这一条">'):'')+'</td>'+
+          '<td>'+esc(layerDisplay)+'</td><td>'+esc(row.subset)+'</td><td>'+esc(row.checkType)+'</td>'+
+          '<td class="'+(fail?'bad':'')+'"'+reasonTooltip+'>'+esc(row.actual)+'</td><td'+reasonTooltip+'>'+esc(row.expect||'无')+'</td>'+
+          '<td class="'+(fail?'bad':(row.status==='符合'?'ok':'muted'))+'"'+reasonTooltip+'><span class="resTxt">'+esc(row.status)+'</span>'+
+          (fail?'<span class="rvTag"'+(rvd?'':' style="display:none"')+'>已复核</span>':'')+'</td></tr>';
+      });
+      h+='</tbody></table>';
+    }
+    h+='</div></div>';
+  }
+  if(totalGroups>shownGroups){
+    h+='<div class="row" style="margin:12px 0"><button type="button" class="btn gray" id="btnMoreRes">显示更多（还有 '+(totalGroups-shownGroups)+' 个过孔）</button>'+
+       '<button type="button" class="btn gray" id="btnMoreResAll">全部展开</button></div>';
+  }
+  out.innerHTML=h||'<div class="card"><div class="hint">没有可显示的结果。请先在「③ 导入数据」导入数据 TXT。</div></div>';
+  out.dataset.ver=ver;
+  renderChips();
+  UI.resMs=viewMs(t0);
+  updatePerf();
+  if(tabVisible('tab-legend'))renderLegend();
+  [['btnOnlyBad','bad'],['btnOnlyMatched','matched'],['btnOnlyNoRule','norule']].forEach(function(x){
+    const b=$(x[0]);
+    if(b)b.classList.toggle('on', UI.resFilter===x[1]);
+  });
+  $('btnAllRows').classList.toggle('on', !UI.resFilter);
+  refreshReview();
+}
+function loadDataFile(file){
+  if(!file)return;
+  const fr=new FileReader();
+  fr.onload=function(){
+    const t0=(window.performance&&performance.now)?performance.now():Date.now();
+    const dec=decodeTxt(fr.result);
+    const t1=(window.performance&&performance.now)?performance.now():Date.now();
+    UI.items=CopperCheck.parseBoardItems(dec.text);
+    UI.dataVer++; UI.viewVer++;
+    const t2=(window.performance&&performance.now)?performance.now():Date.now();
+    const via=UI.items.filter(function(it){return it.type==='via';}).length;
+    const sh=UI.items.filter(function(it){return it.type==='shape';}).length;
+    const tr=UI.items.filter(function(it){return it.type==='trace';}).length;
+    UI.decMs=Math.round(t1-t0); UI.parseMsN=Math.round(t2-t1);
+    UI.fileKB=Math.round(dec.text.length/1024);
+    const ccount={shape:sh, via:via, trace:tr};
+    UI.counts=ccount;
+    UI.parseMs='解码 '+UI.decMs+' ms，解析 '+UI.parseMsN+' ms（'+UI.fileKB+' KB）';
+    $('checkHint').textContent='已读入 '+file.name+'（'+dec.enc+'）：Item '+UI.items.length+'，Shape '+sh+'，Via '+via+'，Trace '+tr+'。'+UI.parseMs;
+    runCheck(true);
+    renderVisible();
+  };
+  fr.readAsArrayBuffer(file);
+}
+const dataDrop=$('dataDrop');
+dataDrop.onclick=function(){$('dataFile').click();};
+$('dataFile').onchange=function(e){loadDataFile(e.target.files&&e.target.files[0]);e.target.value='';};
+['dragover','dragenter'].forEach(function(ev){dataDrop.addEventListener(ev,function(e){e.preventDefault();dataDrop.classList.add('over');});});
+['dragleave','drop'].forEach(function(ev){dataDrop.addEventListener(ev,function(e){e.preventDefault();dataDrop.classList.remove('over');});});
+dataDrop.addEventListener('drop',function(e){
+  e.preventDefault();
+  if(e.dataTransfer&&e.dataTransfer.files[0])loadDataFile(e.dataTransfer.files[0]);
+});
+$('btnCheck').onclick=function(){if(runCheck(true))showTab('result');};
+document.addEventListener('click',function(e){
+  const tile=e.target.closest('#matchOut .stat.click');
+  if(!tile)return;
+  const f=tile.dataset.f;
+  UI.matchFilter=(UI.matchFilter===f)?'':f;
+  UI.viewVer++;
+  renderMatch();
+});
+function onStackChange(){
+  reexpandAll();
+  render();
+  UI.viewVer++;
+  if(UI.items.length)recheckSoon();
+  if(tabVisible('tab-legend'))renderLegend(true);
+}
+const stackInput=$('inpN');
+if(stackInput){
+  stackInput.oninput=function(){updateStackHints();};
+  stackInput.onchange=onStackChange;
+}
+$('btnAutoN').onclick=function(){stackInput.value='';onStackChange();};
+let recheckTimer=null;
+function recheckSoon(){
+  if(!UI.items.length)return;
+  if(recheckTimer)clearTimeout(recheckTimer);
+  $('checkHint').textContent='正在重新检查…';
+  recheckTimer=setTimeout(function(){recheckTimer=null; runCheck(true);},120);
+}
+['ckAnti','ckPad','ckNfp','ckPadstack','posTol','valTol'].forEach(function(id){
+  const el=$(id);
+  if(el) el.onchange=recheckSoon;
+});
+['posTol','valTol'].forEach(function(id){
+  $(id).oninput=recheckSoon;
+});
+function applyReviewKeys(keys, on){
+  (keys||[]).forEach(function(rk){
+    if(on)UI.reviewed[rk]=1; else delete UI.reviewed[rk];
+    const b=document.querySelector('.rvwBox[data-rk="'+rk.replace(/"/g,'\\"')+'"]');
+    if(!b)return;
+    b.checked=!!on;
+    const tr=b.closest('tr');
+    if(tr){
+      tr.classList.toggle('reviewed', !!on);
+      const tag=tr.querySelector('.rvTag');
+      if(tag)tag.style.display=on?'':'none';
+    }
+  });
+}
+function toggleGroup(si, force){
+  const keys=UI.groupKeys&&UI.groupKeys[si];
+  if(!keys||!keys.length)return;
+  let allOn=true;
+  keys.forEach(function(k){if(!UI.reviewed[k])allOn=false;});
+  const on=(typeof force==='boolean')?force:!allOn;
+  applyReviewKeys(keys, on);
+  refreshReview();
+}
+document.addEventListener('click',function(e){
+  const chip=e.target.closest('.badge.rev');
+  if(chip&&chip.id&&/^grv-\d+$/.test(chip.id)){toggleGroup(+chip.id.slice(4));return;}
+});
+document.addEventListener('change',function(e){
+  const master=e.target.closest&&e.target.closest('.grpBox');
+  if(master){
+    toggleGroup(+master.dataset.si, master.checked);
+    return;
+  }
+  const box=e.target.closest&&e.target.closest('.rvwBox');
+  if(!box)return;
+  const rk=box.dataset.rk;
+  if(box.checked)UI.reviewed[rk]=1; else delete UI.reviewed[rk];
+  const tr=box.closest('tr');
+  if(tr){
+    tr.classList.toggle('reviewed', box.checked);
+    const tag=tr.querySelector('.rvTag');
+    if(tag)tag.style.display=box.checked?'':'none';
+  }
+  refreshReview();
+});
+function setResFilter(f){
+  UI.resFilter=(UI.resFilter===f)?'':f;
+  UI.onlyBad=(UI.resFilter==='bad');
+  UI.viewVer++;
+  renderResults();
+}
+$('btnOnlyBad').onclick=function(){setResFilter('bad');};
+$('btnOnlyMatched').onclick=function(){setResFilter('matched');};
+$('btnOnlyNoRule').onclick=function(){setResFilter('norule');};
+document.addEventListener('click',function(e){
+  const chip=e.target.closest('#resChips .chip');
+  if(chip){
+    const k=chip.dataset.rule;
+    UI.resRule=(UI.resRule===k)?'':k;
+    UI.viewVer++;
+    renderResults();
+    return;
+  }
+  if(e.target.closest('#btnMoreMatch')){UI.matchLimit+=300;UI.limitTouched=1;UI.viewVer++;renderMatch();return;}
+  if(e.target.closest('#btnMoreMatchAll')){UI.matchLimit=1e6;UI.limitTouched=1;UI.viewVer++;renderMatch();return;}
+  if(e.target.closest('#btnMoreRes')){UI.resLimit+=120;UI.limitTouched=1;UI.viewVer++;renderResults();return;}
+  if(e.target.closest('#btnMoreResAll')){UI.resLimit=1e6;UI.limitTouched=1;UI.viewVer++;renderResults();return;}
+  const tile=e.target.closest('#resStats .stat.click');
+  if(!tile||!tile.dataset.res)return;
+  setResFilter(tile.dataset.res);
+});
+let searchDebounceTimer=null;
+function onSearchInput(){
+  const q=($('inpResSearch')?$('inpResSearch').value:'').trim();
+  if($('btnClearSearch'))$('btnClearSearch').style.display=q?'block':'none';
+  if(searchDebounceTimer)clearTimeout(searchDebounceTimer);
+  searchDebounceTimer=setTimeout(function(){
+    if(UI.resSearch===q)return;
+    UI.resSearch=q;
+    UI.viewVer++;
+    renderResults();
+    if(q){
+      const total=resultGroupTotal(UI.resFilter||'');
+      if($('searchStat'))$('searchStat').textContent='找到 '+total+' 个匹配过孔';
+    } else {
+      if($('searchStat'))$('searchStat').textContent='';
+    }
+  }, 100);
+}
+function locateVia(){
+  const query=($('inpResSearch')?$('inpResSearch').value:'').trim();
+  if(UI.resSearch!==query){
+    UI.resSearch=query;
+    if($('btnClearSearch'))$('btnClearSearch').style.display=query?'block':'none';
+    UI.viewVer++;
+    renderResults();
+  }
+  if(!query){
+    if($('searchStat'))$('searchStat').textContent='';
+    return;
+  }
+  const target=document.querySelector('#checkOut .set');
+  if(target){
+    if(typeof target.scrollIntoView==='function'){ try{ target.scrollIntoView({behavior:'smooth',block:'center'}); }catch(err){ target.scrollIntoView(); } }
+    target.classList.remove('pulse-target');
+    void target.offsetWidth;
+    target.classList.add('pulse-target');
+    setTimeout(function(){ target.classList.remove('pulse-target'); }, 1600);
+    const badge=target.querySelector('.badge');
+    const bTxt=badge?badge.textContent:'过孔';
+    const total=resultGroupTotal(UI.resFilter||'');
+    if($('searchStat'))$('searchStat').textContent='已定位到 '+bTxt+(total>1?('（共找到 '+total+' 个匹配孔）'):'（唯一定位）');
+  } else {
+    const allMatching=(UI.result&&UI.result.groups)?UI.result.groups.filter(function(g){return viaGroupMatchSearch(g,query);}).length:0;
+    if(allMatching>0){
+      if($('searchStat'))$('searchStat').textContent='该孔存在（共 '+allMatching+' 个），但在当前筛选下被隐藏。点「全部」可查看。';
+    } else {
+      if($('searchStat'))$('searchStat').textContent='未找到匹配的过孔。';
+    }
+  }
+}
+function clearSearch(){
+  if($('inpResSearch'))$('inpResSearch').value='';
+  if($('btnClearSearch'))$('btnClearSearch').style.display='none';
+  if($('searchStat'))$('searchStat').textContent='';
+  if(UI.resSearch){
+    UI.resSearch='';
+    UI.viewVer++;
+    renderResults();
+  }
+  if($('inpResSearch'))$('inpResSearch').focus();
+}
+if($('inpResSearch')){
+  $('inpResSearch').addEventListener('input', onSearchInput);
+  $('inpResSearch').addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ e.preventDefault(); locateVia(); }
+    else if(e.key==='Escape'){ e.preventDefault(); clearSearch(); }
+  });
+}
+if($('btnClearSearch')) $('btnClearSearch').onclick=clearSearch;
+if($('btnSearchGo')) $('btnSearchGo').onclick=locateVia;
+
+$('btnAllRows').onclick=function(){
+  UI.onlyBad=false;
+  UI.resFilter='';
+  UI.resRule='';
+  UI.resSearch='';
+  if($('inpResSearch'))$('inpResSearch').value='';
+  if($('btnClearSearch'))$('btnClearSearch').style.display='none';
+  if($('searchStat'))$('searchStat').textContent='';
+  UI.viewVer++;
+  renderResults();
+};
+$('btnClearReview').onclick=function(){UI.reviewed={};UI.viewVer++;renderResults();};
+$('btnReviewAll').onclick=function(){
+  if(!UI.result)return;
+  UI.result.groups.forEach(function(g){
+    (g.failRows||[]).forEach(function(row){UI.reviewed[reviewKey(g,row)]=1;});
+  });
+  UI.viewVer++;
+  renderResults();
+  $('resHint').textContent='已把全部 '+UI.result.groups.reduce(function(n,g){return n+(g.failCount||0);},0)+' 条不符合标为已复核。'+$('resHint').textContent;
+};
+$('btnCsv').onclick=function(){
+  const r=UI.result;
+  if(!r){$('resHint').textContent='还没有检查结果。';return;}
+  const lines=['铜皮,过孔,网络,Padstack,约束,层,Subset,检查项,实测,规则值,结果,复核'];
+  const rf=UI.resFilter||'';
+  r.groups.forEach(function(g){
+    if(!resultGroupMatch(g, rf))return;
+    const rows=(rf==='bad')?g.failRows:g.rows;
+    rows.forEach(function(row){
+      const layerDisplay=(typeof row.layer==='number'&&row.layer>0)?('L'+row.layer):(String(row.layer).startsWith('L')?row.layer:(row.layer==='—'?'—':('L'+row.layer)));
+      lines.push([row.shapeId, g.via.id, g.via.net||'', g.via.padstack||'', g.rule?g.rule.title:'', layerDisplay, row.subset, row.checkType, row.actual, row.expect, row.status, (UI.reviewed[reviewKey(g,row)]?'已复核':'')].map(function(x){
+        return '"'+String(x==null?'':x).replace(/"/g,'""')+'"';
+      }).join(','));
+    });
+  });
+  showBox('铜皮检查.csv', lines.join('\n'), '当前结果 '+(lines.length-1)+' 行。请点下载。');
+};
+
+syncPin();
+</script>
+</body>
+</html>

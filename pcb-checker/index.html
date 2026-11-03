@@ -1,0 +1,2746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCB 走线检查工具</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --line:#e3e8ef; --txt:#1f2937; --sub:#6b7280;
+  --pri:#2563eb; --pri-d:#1d4ed8; --ok:#16a34a; --bad:#dc2626; --warn:#d97706;
+  --bad-bg:#fef2f2; --warn-bg:#fffbeb; --ok-bg:#f0fdf4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+header{flex:none;background:#0f172a;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px;z-index:30}
+header h1{font-size:18px;font-weight:600;white-space:nowrap}
+header .sub{color:#94a3b8;font-size:12px}
+nav{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--line);padding:0 16px;z-index:29}
+nav button{border:none;background:none;padding:12px 18px;font-size:14px;cursor:pointer;color:var(--sub);border-bottom:3px solid transparent}
+nav button.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
+main{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:12px 24px 16px;max-width:1500px;width:100%;margin:0 auto}
+section.tab{display:none}
+section.tab.active{display:block;flex:1;min-height:0;overflow:auto}
+#tab-result.active{display:flex;flex-direction:column;overflow:hidden}
+#resDock{flex:none;background:var(--bg);z-index:15;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+#resLayers{flex:1;min-height:0;overflow:auto}
+#resLayers .tbl-wrap{max-height:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;margin:12px 0 6px;color:#374151}
+.hint{color:var(--sub);font-size:12px;line-height:1.7}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label.fld{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#374151}
+input[type=text],input[type=number],select,textarea{border:1px solid #cbd5e1;border-radius:6px;padding:6px 8px;font-size:13px;background:#fff;color:var(--txt)}
+input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:var(--pri)}
+button.btn{background:var(--pri);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer}
+button.btn:hover{background:var(--pri-d)}
+button.btn.ghost{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+button.btn.gray{background:#e5e7eb;color:#374151}
+button.btn.danger{background:#fee2e2;color:var(--bad)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;white-space:nowrap}
+th{background:#f1f5f9;font-weight:600;color:#334155;position:sticky;top:0}
+.tbl-wrap{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:8px}
+tr.fail td{background:var(--bad-bg)}
+tr.fail td.reason{color:var(--bad);font-weight:600}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px}
+.badge.clickable,.stat.clickable{cursor:pointer}
+.badge.clickable:hover{filter:brightness(.95)}
+.badge.on,.stat.clickable.on{box-shadow:0 0 0 2px #991b1b}
+.badge.bad{background:#fee2e2;color:var(--bad)}
+.badge.ok{background:#dcfce7;color:var(--ok)}
+.badge.warn{background:#fef3c7;color:var(--warn)}
+.badge.na{background:#e5e7eb;color:#6b7280}
+.cards{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 18px;min-width:120px}
+.stat .v{font-size:22px;font-weight:700}
+.stat .t{font-size:12px;color:var(--sub)}
+.stat.bad .v{color:var(--bad)} .stat.ok .v{color:var(--ok)} .stat.warn .v{color:var(--warn)}
+#dropzone{border:2px dashed #94a3b8;border-radius:10px;padding:28px;text-align:center;color:var(--sub);cursor:pointer;background:#f8fafc}
+#dropzone.over{border-color:var(--pri);background:#eff6ff;color:var(--pri)}
+.ruleblock{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fafbfc}
+.ruleblock .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.ruleitems{display:grid;grid-template-columns:96px minmax(200px,1fr) 78px;gap:6px 8px;align-items:center}
+.ruleitems .pair{display:flex;gap:6px;align-items:center}
+.ruleitems .pair select{width:96px;flex:none}
+.ruleitems .pair input[type=text]{flex:1;min-width:140px}
+.ruleitems .chk{font-size:12px;white-space:nowrap}
+td.badcell,tr.fail td.badcell{background:#fecaca !important;color:#991b1b;font-weight:700}
+tr.reviewed td, tr.fail.reviewed td, tr.totalrow.fail.reviewed td{background:#f8fafc !important;color:#94a3b8 !important}
+tr.reviewed td.badcell, tr.fail.reviewed td.badcell, tr.totalrow.fail.reviewed td.badcell{background:#f1f5f9 !important;color:#64748b !important}
+tr.reviewed .badge.bad, tr.fail.reviewed .badge.bad, tr.totalrow.fail.reviewed .badge.bad{background:#e2e8f0 !important;color:#64748b !important;border-color:#cbd5e1 !important}
+tr.reviewed .badge.warn, tr.fail.reviewed .badge.warn, tr.totalrow.fail.reviewed .badge.warn{background:#f1f5f9 !important;color:#94a3b8 !important}
+tr.reviewed .badval, tr.fail.reviewed .badval, tr.totalrow.fail.reviewed .badval{background:#f1f5f9 !important;color:#64748b !important}
+tr.reviewed b, tr.fail.reviewed b, tr.totalrow.fail.reviewed b{color:#64748b !important}
+.rev-chk-wrap{display:inline-flex;align-items:center;gap:3px;margin-right:6px;cursor:pointer;font-size:12px;color:#475569;user-select:none;vertical-align:middle}
+.rev-chk-wrap input[type=checkbox]{cursor:pointer;accent-color:#64748b;vertical-align:middle}
+tr.reviewed .rev-chk-wrap{color:#94a3b8}
+.badval{color:#991b1b;font-weight:700;background:#fee2e2;border-radius:3px;padding:0 3px}
+.layer-res h2{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#expMask{display:none;position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.45);align-items:center;justify-content:center;padding:16px}
+.expbox{background:#fff;border-radius:12px;padding:16px 18px;width:min(680px,100%);max-height:86vh;overflow:auto;box-shadow:0 16px 40px rgba(0,0,0,.25)}
+.expbox h2{font-size:16px;margin-bottom:6px}
+.expbox textarea{width:100%;height:240px;font-family:Consolas,Menlo,monospace;font-size:12px}
+.mono{font-family:Consolas,Menlo,monospace}
+.small{font-size:12px}
+.pager{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--sub)}
+.kv{color:var(--sub)}
+.detail-list{max-height:260px;overflow:auto;background:#f8fafc;border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:12px;line-height:1.9}
+tr.pairhead td{border-top:2px solid #94a3b8}
+tr.totalrow td{background:#f1f5f9;font-weight:600}
+.foot{color:#9aa3af;font-size:12px;text-align:center;padding:18px}
+pre.preview{background:#0f172a;color:#d1d5db;border-radius:8px;padding:12px;font-size:11px;overflow:auto;max-height:340px;font-family:Consolas,Menlo,monospace}
+</style>
+</head>
+<body>
+<header>
+  <h1>PCB 走线检查工具</h1>
+  <span class="sub">导入网络走线报告 TXT → 统计整理 → 以网络为单位规则检查标注 → 差分按层线长差分析（后续扩展过孔 / 铜皮）</span>
+  <span class="sub" id="hdrMeta" style="color:#7dd3fc"></span>
+  <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+    <a href="index.html" style="color:#fff;background:#0284c7;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px;font-weight:600">走线检查</a>
+    <a href="copper.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">约束检查</a>
+    <a href="dfm.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">加工能力检查</a>
+    <a href="fanout.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">扇出方案检查</a>
+    <a href="pour.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">铜皮检查</a>
+    <a href="unified.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">综合一体化检查</a>
+  </div>
+</header>
+<nav id="tabs">
+  <button data-tab="import" class="active">① 数据导入</button>
+  <button data-tab="overview">② 数据概览</button>
+  <button data-tab="rules">③ 检查规则</button>
+  <button data-tab="result">④ 检查结果</button>
+  <button data-tab="diff">⑤ 差分分析</button>
+</nav>
+<main>
+
+<!-- ================= 导入 ================= -->
+<section class="tab active" id="tab-import">
+  <div class="card">
+    <h2>导入走线数据（TXT）</h2>
+    <div class="hint" style="margin-bottom:10px">
+      支持「网络走线报告」格式：每个 <span class="mono">Item</span> 块 = 一个网络在某个出线层的整条走线；
+      <span class="mono">Subset</span> = 出线层，<span class="mono">Net</span> = 网络名，<span class="mono">Length</span> = 该网络该层线长；
+      块内 <span class="mono">Seg / Arc seg</span> 为线段（含线宽 Width，弧段含 Radius）。同一文件的多个 Item 块直接拼接即可。<br>
+      同时兼容旧版表格文本（Tab/逗号分隔，含 网络/层/线宽/线长 列）。编码自动识别 UTF-8 / GBK。文件只在浏览器本地处理。
+    </div>
+    <div id="dropzone">点击选择文件，或将 TXT 文件拖拽到此处<br><span class="small">（也可直接在下方粘贴文本）</span></div>
+    <input type="file" id="fileInput" accept=".txt,.csv,.log,.rep" style="display:none">
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost" id="btnSample">加载示例数据</button>
+      <span class="hint" id="fileNameLabel"></span>
+      <span class="hint" id="fmtLabel" style="font-weight:600;color:var(--pri)"></span>
+    </div>
+    <h3>或直接粘贴数据</h3>
+    <textarea id="pasteBox" placeholder="Item 1&#9;&lt; Trace &gt;&#10;Subset:&#9;02G01P&#10;Net:&#9;105_P&#10;Length:&#9;2000.068301&#10;Seg: xy [25018.93, 23592.45]  xy [24669.24, 23592.45] Width (5.6) Angle (0)"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn" id="btnParsePaste">解析粘贴的文本</button></div>
+  </div>
+
+  <div class="card" id="blockCard" style="display:none">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">识别到的走线报告（预览前 2 个 Item 块）</h2>
+      <span class="badge ok">已自动应用并统计</span>
+    </div>
+    <pre class="preview" id="blockPreview"></pre>
+  </div>
+
+  <div class="card" id="parseCard" style="display:none">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">表格文本：解析设置与列映射</h2>
+      <button class="btn" id="btnReparse">重新解析并统计</button>
+    </div>
+    <div class="row">
+      <label class="fld">分隔符
+        <select id="selDelim">
+          <option value="auto">自动识别</option>
+          <option value="&#9;">Tab</option>
+          <option value=",">逗号 ,</option>
+          <option value=";">分号 ;</option>
+          <option value=" ">空格</option>
+        </select></label>
+      <label class="fld"><input type="checkbox" id="chkHeader" checked> 第一行为表头</label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label class="fld">网络名列 <select id="mapNet" class="w150" style="width:150px"></select></label>
+      <label class="fld">层列 <select id="mapLayer" style="width:150px"></select></label>
+      <label class="fld">线宽列 <select id="mapWidth" style="width:150px"></select></label>
+      <label class="fld">线长列 <select id="mapLength" style="width:150px"></select></label>
+    </div>
+    <h3>数据预览（前 50 行）</h3>
+    <div class="tbl-wrap" style="max-height:340px"><table id="gridPreview"></table></div>
+  </div>
+
+  <div class="card">
+    <label class="fld">数据单位 <select id="selUnit"><option value="mil">mil</option><option value="mm">mm</option></select></label>
+    <span class="hint">用于规则与差值输入的显示提示（数值本身按文件原样使用）。</span>
+  </div>
+</section>
+
+<!-- ================= 概览 ================= -->
+<section class="tab" id="tab-overview">
+  <div class="cards" id="ovCards"></div>
+  <div class="card">
+    <h2>按层（Subset）统计（点击行展开该层线长/线宽明细）</h2>
+    <div class="tbl-wrap"><table id="ovLayerTbl"></table></div>
+    <div id="ovDetail" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- ================= 规则 ================= -->
+<section class="tab" id="tab-rules">
+  <div class="card" style="position:sticky;top:0;z-index:20;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <strong style="font-size:15px;color:#111827">走线规则检查</strong>
+      <span class="hint" style="margin-left:8px">配置各出线层规则后，点击运行检查查看判定结果与分层报表</span>
+    </div>
+    <button class="btn" id="btnRunCheck" style="font-size:14px;font-weight:600;padding:8px 24px;background:var(--ok)">▶ 运行检查</button>
+  </div>
+
+  <div class="card">
+    <h2>全局设置</h2>
+    <div class="row">
+      <label class="fld">数值比对容差 <input type="number" id="inpTol" style="width:70px" step="any" value="0.001"></label>
+      <span class="hint">＝判"相等"的误差范围：|差值| ≤ 容差 即视为相等（导出数据常有微小尾差）。例：容差 0.01 时，1049.9999 与 1050 判为相等、落在允许列表内；线宽/线长的列表匹配和范围边界都用它。想严格区分就填小（如 0.001），想把相近值归为同一种就填大（如 0.5）。</span>
+      <label class="fld"><input type="checkbox" id="chkWidth" checked> 线宽总开关</label>
+      <label class="fld"><input type="checkbox" id="chkLen" checked> 总线长总开关</label>
+      <label class="fld" title="对特定线宽的走线长度进行限制（如 6.9mil 线宽对应 10mil 长度）"><input type="checkbox" id="chkWidthLen" checked> 指定线宽线长总开关</label>
+      <label class="fld"><input type="checkbox" id="chkRad" checked> 弧半径总开关</label>
+      <span class="hint">总开关与下方各层「检查」开关联动：勾选/取消总开关可批量开启/关闭所有层该项检查；也可在各层单独调整。</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>分层检查规则</h2>
+    <div class="hint" style="margin-bottom:8px">
+      每个出线层（Subset）一行。线宽、总线长、指定线宽线长、弧半径各自有「检查」勾选，可以只查其中一项或任意组合。
+      线宽组合：每一层可设置多种固定的线宽变化组合（如 6.9-6-3.94, 6.9-5.7-6.9 或单线宽 5.6），检查时分析网络在各线段间的线宽变化顺序，支持正序及倒序匹配。
+      总线长：该网络在该层的整条走线 Length，列表或范围（最小,最大）。
+      指定线宽线长：限制特定线宽的走线长度，如 6.9=10（6.9mil线长等于10）或 6.9:8~12（范围）或 6.9<=10，多个用逗号/分号隔开。
+      弧半径：每个 Arc seg 的 Radius；没有弧段的网络不会因此判不符合。方式可选列表 / 范围（最小,最大）/ 最小半径（所有弧 ≥ 该值）。
+      勾选了「检查」但没填标准 = 该项不算判据。未匹配到规则的层使用“默认规则”。
+    </div>
+    <div id="ruleRows"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn ghost" id="btnAddRule">+ 添加层规则</button>
+      <button class="btn ghost" id="btnFillLayers">按数据中的层批量生成规则</button>
+      <button type="button" class="btn gray" id="btnSaveRules">保存规则到本地</button>
+      <button type="button" class="btn gray" id="btnLoadRules">从本地文件读取</button>
+      <input type="file" id="ruleFile" accept=".json,.txt,application/json" style="display:none">
+      <span class="hint" id="ruleFileLabel"></span>
+    </div>
+    <div class="hint" style="margin-top:6px">规则保存在你电脑上的 JSON 文件里，不依赖浏览器缓存。下次或换电脑时，点「从本地文件读取」打开该文件即可。</div>
+    <h3>默认规则（应用于未单独设规则的层）</h3>
+    <div class="ruleblock">
+      <div class="top">
+        <label class="fld"><input type="checkbox" id="defEnabled"> 启用默认规则</label>
+        <span class="hint">其他所有层</span>
+      </div>
+      <div class="ruleitems">
+        <span>线宽组合</span>
+        <span class="pair">
+          <input type="text" id="defWidths" placeholder="如 6.9-6-3.94, 6.9-5.7-6.9（允许倒序）" style="flex:1">
+        </span>
+        <label class="chk fld"><input type="checkbox" id="defCheckWidth" checked> 检查</label>
+        <span>总线长</span>
+        <span class="pair">
+          <select id="defLenMode"><option value="off">不检查</option><option value="list">列表</option><option value="range">范围</option></select>
+          <input type="text" id="defLengths" placeholder="列表: 1000,1500　或　范围: 800,2500">
+        </span>
+        <label class="chk fld"><input type="checkbox" id="defCheckLen"> 检查</label>
+        <span>指定线宽线长</span>
+        <span class="pair">
+          <input type="text" id="defWidthLens" placeholder="如 6.9=10或者20 或 6.9=10/20 或 6.9:8~12">
+        </span>
+        <label class="chk fld"><input type="checkbox" id="defCheckWidthLen" checked> 检查</label>
+        <span>弧半径</span>
+        <span class="pair">
+          <select id="defRadMode"><option value="off">不检查</option><option value="list">列表</option><option value="range">范围</option><option value="min">最小半径</option></select>
+          <input type="text" id="defRadii" placeholder="列表: 52.38　范围: 40,80　最小: 50">
+        </span>
+        <label class="chk fld"><input type="checkbox" id="defCheckRad"> 检查</label>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="btnRunCheckBottom">▶ 运行检查</button></div>
+  </div>
+</section>
+
+<!-- ================= 结果 ================= -->
+<section class="tab" id="tab-result">
+  <div id="resDock">
+  <div class="cards" id="resCards"></div>
+  <div id="resBanner"></div>
+  <div class="card" style="margin-bottom:0">
+    <h2>按出线层列出（每层一张按网络的表）</h2>
+    <div class="hint" style="margin-bottom:10px">不再把所有层混在一张表里。不符合的行整行标红，超标的线宽 / 线长 / 弧半径数字加深标红，鼠标悬停可看原因。原来的「按网络汇总」已按出线层扇出到下面各表，一行 = 该层上的一个网络。</div>
+    <div class="row" style="margin-bottom:8px">
+      <label class="fld">搜索网络 <input type="text" id="fltQ" style="width:150px" placeholder="网络名包含..."></label>
+      <label class="fld">只看层 <select id="fltLayer" style="width:150px"><option value="">全部</option></select></label>
+      <label class="fld">状态 <select id="fltStatus" style="width:100px"><option value="">全部</option><option value="fail">不符合</option><option value="pass">通过</option><option value="none">未检查</option></select></label>
+      <span class="hint" id="fltNote">点击红色「不符合」只显示不符合项，再点一次恢复全部。</span>
+      <button type="button" class="btn" id="btnExpReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <button type="button" class="btn ghost" id="btnExpAll">导出全部 CSV</button>
+      <button type="button" class="btn ghost" id="btnExpFail">导出不符合项 CSV</button>
+      <button type="button" class="btn ghost" id="btnClearTraceRev">清空复验标记</button>
+      <span class="hint" id="traceRevHint"></span>
+    </div>
+    <div class="row" id="resLayerNav"></div>
+  </div>
+  </div>
+  <div id="resLayers"></div>
+</section>
+
+<!-- ================= 差分 ================= -->
+<section class="tab" id="tab-diff">
+  <div class="card">
+    <h2>差分对识别设置</h2>
+    <div class="row">
+      <span class="hint">命名后缀（自动配对）：</span>
+      <label class="fld"><input type="checkbox" class="sfx" data-pos="_P" data-neg="_N" checked> _P / _N</label>
+      <label class="fld"><input type="checkbox" class="sfx" data-pos="+" data-neg="-" checked> + / −</label>
+      <label class="fld"><input type="checkbox" class="sfx" data-pos="_+" data-neg="_-"> _+ / _−</label>
+      <label class="fld"><input type="checkbox" class="sfx" data-pos=".P" data-neg=".N"> .P / .N</label>
+      <label class="fld"><input type="checkbox" class="sfx" data-pos="0" data-neg="1"> 0 / 1</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="fld">自定义后缀对 <input type="text" id="inpSfx" style="width:200px" placeholder="如 _P,_N;A,B"></label>
+      <label class="fld">逐层线长差允许值 <input type="number" id="inpDiffTol" style="width:70px" step="any" value="1"> <span class="hint">（当前单位）</span></label>
+      <label class="fld">总线长差允许值 <input type="number" id="inpTotalDiffTol" style="width:70px" step="any" value="1"> <span class="hint">（当前单位）</span></label>
+      <label class="fld" style="font-size:13px"><input type="checkbox" id="chkCheckLayerDiff" checked> 检查逐层线长差</label>
+      <label class="fld" style="font-size:13px"><input type="checkbox" id="chkCheckTotalDiff" checked> 检查总线长差</label>
+      <button class="btn" id="btnDiffRun">▶ 分析差分</button>
+    </div>
+    <h3>手动指定差分对（可选，每行一对：P网络,N网络，优先于自动识别）</h3>
+    <textarea id="manualPairs" placeholder="105_P,105_N"></textarea>
+  </div>
+  <div class="cards" id="diffCards"></div>
+  <div class="card">
+    <h2>差分线长差分析（支持逐层线长差与所有层总线长差检查）</h2>
+    <div class="row" style="margin-bottom:8px">
+      <button type="button" class="btn" id="btnExpDiffReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <label class="fld"><input type="checkbox" id="chkDiffOnlyFail"> 仅显示超差对</label>
+      <button type="button" class="btn ghost" id="btnExpDiff">导出差分分析 CSV</button>
+      <button type="button" class="btn ghost" id="btnClearDiffRev">清空复验标记</button>
+      <span class="hint" id="diffRevHint"></span>
+    </div>
+    <div class="tbl-wrap" style="max-height:600px"><table id="diffTbl"></table></div>
+    <div class="hint" style="margin-top:8px">
+      说明：每一层的差值 = |P 网络该层 Length − N 网络该层 Length|，逐层分别对比逐层允许值；“总线长差 (所有层合计)”行计算同一差分网络在所有层的总 PN 线长差 = |P 网络所有层总长 − N 网络所有层总长|，对比总线长差允许值。若逐层或总长超差则标红判定为超差；若 P/N 层分布不一致会标注 <span class="badge warn">层不一致</span>。
+    </div>
+  </div>
+</section>
+
+<div class="foot">PCB 走线检查工具 · 纯浏览器本地运行 · 单文件离线可用</div>
+</main>
+
+<script>
+"use strict";
+/* =========================================================
+   核心纯逻辑（与 DOM 无关，便于测试；后续可挂接过孔/铜皮模块）
+   ========================================================= */
+
+function countChar(s,ch){let n=0;for(let i=0;i<s.length;i++)if(s[i]===ch)n++;return n;}
+
+function detectDelimiter(text){
+  const lines=text.split(/\r?\n/).map(l=>l.replace(/\s+$/,'')).filter(l=>l.length).slice(0,20);
+  if(!lines.length)return '\t';
+  for(const d of ['\t',';',',','|']){
+    const cs=lines.map(l=>countChar(l,d));
+    const mn=Math.min.apply(null,cs);
+    if(mn>0){ if(cs.every(c=>c===cs[0]))return d; if(mn>=1)return d; }
+  }
+  const ws=lines.map(l=>l.trim().split(/\s+/).length);
+  if(ws.length&&Math.min.apply(null,ws)>=2&&ws.every(c=>c===ws[0]))return ' ';
+  return '\t';
+}
+function splitLine(line,delim){
+  if(delim===' ')return line.trim().split(/\s+/);
+  return line.split(delim).map(s=>s.trim());
+}
+function parseDelimited(text,delim,hasHeader){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  let headers=null,start=0;
+  if(hasHeader&&lines.length){headers=splitLine(lines[0],delim);start=1;}
+  const rows=[];
+  for(let i=start;i<lines.length;i++){
+    const f=splitLine(lines[i],delim);
+    if(f.some(x=>x!==''))rows.push({line:i+1,fields:f});
+  }
+  if(!headers)headers=rows.length?rows[0].fields.map((_,j)=>'列'+(j+1)):[];
+  rows.forEach(r=>{while(r.fields.length<headers.length)r.fields.push('');});
+  return {headers:headers,rows:rows};
+}
+function parseFloatNum(s){
+  if(s==null)return NaN;
+  const m=String(s).replace(/,/g,'').match(/-?\d+(\.\d+)?([eE][-+]?\d+)?/);
+  return m?parseFloat(m[0]):NaN;
+}
+function parseNumList(s){
+  if(!s)return [];
+  return String(s).split(/[,，;；/|、\s~～]+|或者为|或者|或|or/i).filter(x=>x!=='').map(parseFloatNum).filter(x=>!isNaN(x));
+}
+const KW={
+  net:/net(name)?|网络|网名|signal|信号/i,
+  layer:/layer|层|subset/i,
+  width:/width|线宽|宽/i,
+  length:/len(gth)?|线长|长度|长/i
+};
+function autoMapColumns(headers){
+  const map={net:-1,layer:-1,width:-1,length:-1};
+  const used=new Set();
+  const tryAssign=(key,re)=>{
+    for(let j=0;j<headers.length;j++){
+      if(used.has(j))continue;
+      if(re.test(headers[j])){map[key]=j;used.add(j);return;}
+    }
+  };
+  tryAssign('net',KW.net);tryAssign('layer',KW.layer);
+  tryAssign('width',KW.width);tryAssign('length',KW.length);
+  if(map.net<0&&headers.length>=4&&/^列\d+$/.test(headers[0])){map.net=0;map.layer=1;map.width=2;map.length=3;}
+  return map;
+}
+
+/* ---------- 网络走线报告（Item 块）解析 ---------- */
+function isBlockFormat(text){
+  return /Subset\s*:/i.test(text)&&/Width\s*\(/i.test(text)&&/(^|\n)\s*Net\s*:/i.test(text);
+}
+function calcSegLen(seg){
+  if(!seg||isNaN(seg.x1)||isNaN(seg.y1)||isNaN(seg.x2)||isNaN(seg.y2))return 0;
+  const chord=Math.hypot(seg.x2-seg.x1,seg.y2-seg.y1);
+  if(seg.type==='arc'){
+    const r=seg.radius;
+    if(!isNaN(r)&&r>0){
+      if(!isNaN(seg.cx)&&!isNaN(seg.cy)){
+        const a1=Math.atan2(seg.y1-seg.cy,seg.x1-seg.cx);
+        const a2=Math.atan2(seg.y2-seg.cy,seg.x2-seg.cx);
+        let da;
+        if(seg.dir==='CCW'){
+          da=a2-a1;
+          while(da<0)da+=2*Math.PI;
+          while(da>=2*Math.PI)da-=2*Math.PI;
+        }else if(seg.dir==='CW'){
+          da=a1-a2;
+          while(da<0)da+=2*Math.PI;
+          while(da>=2*Math.PI)da-=2*Math.PI;
+        }else{
+          da=Math.abs(a2-a1);
+          if(da>Math.PI)da=2*Math.PI-da;
+        }
+        return r*da;
+      }
+      const ratio=Math.min(1,Math.max(0,chord/(2*r)));
+      return r*2*Math.asin(ratio);
+    }
+  }
+  return chord;
+}
+
+function parseBlockText(text){
+  const lines=text.split(/\r?\n/);
+  const recs=[];let cur=null;
+  const flush=()=>{
+    if(cur&&cur.net){
+      cur.widthsArr=[...cur.widths.keys()].sort((a,b)=>a-b);
+      cur.radiiArr=[...(cur.radii||new Map()).keys()].sort((a,b)=>a-b);
+      cur.widthLens=new Map();
+      const wSeq=[];
+      if(cur.segs&&cur.segs.length){
+        cur.segs.forEach(s=>{
+          const sl=calcSegLen(s);
+          s.len=sl;
+          if(!isNaN(s.width)&&s.width>0){
+            cur.widthLens.set(s.width,(cur.widthLens.get(s.width)||0)+sl);
+            if(!wSeq.length||Math.abs(wSeq[wSeq.length-1]-s.width)>1e-6){
+              wSeq.push(s.width);
+            }
+          }
+        });
+      }else if(cur.widthsArr.length===1&&!isNaN(cur.length)){
+        cur.widthLens.set(cur.widthsArr[0],cur.length);
+        wSeq.push(cur.widthsArr[0]);
+      }
+      if(!wSeq.length&&cur.widthsArr.length){
+        wSeq.push(...cur.widthsArr);
+      }
+      cur.widthSeq=wSeq;
+      recs.push(cur);
+    }
+    cur=null;
+  };
+  let m;
+  for(const raw of lines){
+    const line=raw.trim();
+    if(!line)continue;
+    if(/^Item\s+\d+/i.test(line)){
+      flush();
+      m=line.match(/Item\s+(\d+)/i);
+      cur={item:m?m[1]:'',net:'',layer:'',length:NaN,widths:new Map(),widthsArr:[],widthSeq:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
+      continue;
+    }
+    if(!cur){
+      m=line.match(/^Net\s*:\s*(.+)$/i);
+      if(m)cur={item:'',net:m[1].trim(),layer:'',length:NaN,widths:new Map(),widthsArr:[],widthLens:new Map(),radii:new Map(),radiiArr:[],segCount:0,arcCount:0,minRadius:NaN,segs:[]};
+      continue;
+    }
+    if((m=line.match(/^Subset\s*:\s*(\S+)/i))){cur.layer=m[1];continue;}
+    if((m=line.match(/^Net\s*:\s*(.+)$/i))){cur.net=m[1].trim();continue;}
+    if((m=line.match(/^Length\s*:\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)/i))){cur.length=parseFloat(m[1]);continue;}
+    if((m=line.match(/^(Arc\s+seg|Seg)\s*:\s*xy\s*\[([^\]]*)\]\s*xy\s*\[([^\]]*)\]\s*Width\s*\(\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)\s*\)/i))){
+      const type=/^arc/i.test(m[1])?'arc':'seg';
+      const w=parseFloat(m[4]);
+      const p1=m[2].split(',').map(parseFloat),p2=m[3].split(',').map(parseFloat);
+      const seg={type:type,x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],width:w,radius:NaN};
+      cur.segs.push(seg);
+      if(type==='seg')cur.segCount++;else cur.arcCount++;
+      if(!isNaN(w))cur.widths.set(w,(cur.widths.get(w)||0)+1);
+      const am=line.match(/Angle\s*\(\s*([-+]?[0-9.]+)\s*\)/i);
+      if(am)seg.angle=parseFloat(am[1]);
+      continue;
+    }
+    if((m=line.match(/Center-xy\s*:\s*\[([^\]]*)\]/i))){
+      const cp=m[1].split(',').map(parseFloat);
+      if(cur&&cur.segs.length){
+        cur.segs[cur.segs.length-1].cx=cp[0];
+        cur.segs[cur.segs.length-1].cy=cp[1];
+      }
+      if(/CCW/i.test(line)&&cur&&cur.segs.length)cur.segs[cur.segs.length-1].dir='CCW';
+      else if(/CW/i.test(line)&&cur&&cur.segs.length)cur.segs[cur.segs.length-1].dir='CW';
+    }
+    if((m=line.match(/Radius\s*\(\s*([-+]?[0-9.]+([eE][-+]?[0-9]+)?)\s*\)/i))){
+      const r=parseFloat(m[1]);
+      if(cur.segs.length)cur.segs[cur.segs.length-1].radius=r;
+      if(!cur.radii)cur.radii=new Map();
+      if(!isNaN(r))cur.radii.set(r,(cur.radii.get(r)||0)+1);
+      if(isNaN(cur.minRadius)||r<cur.minRadius)cur.minRadius=r;
+      continue;
+    }
+  }
+  flush();
+  recs.forEach((r,i)=>{r.idx=i;});
+  return recs;
+}
+/* 文件头部 "Total N Item" 声明数 与 Item 块数 */
+function parseBlockMeta(text){
+  const m=text.match(/Total\s+(\d+)\s*Item/i);
+  const items=(text.match(/^Item\s+\d+/gim)||[]).length;
+  return {declared:m?parseInt(m[1],10):null,items:items};
+}
+
+/* ---------- 表格文本 → 记录（每行 = 一个网络在一个层的记录） ---------- */
+function recordsFromGrid(grid,map){
+  const recs=[];
+  grid.rows.forEach((r,i)=>{
+    const net=map.net>=0?(r.fields[map.net]||'').trim():'';
+    if(!net)return;
+    const w=map.width>=0?parseFloatNum(r.fields[map.width]):NaN;
+    const len=map.length>=0?parseFloatNum(r.fields[map.length]):NaN;
+    const widths=new Map();const wSeq=[];
+    if(!isNaN(w)){widths.set(w,1);wSeq.push(w);}
+    const widthLens=new Map();if(!isNaN(w)&&!isNaN(len))widthLens.set(w,len);
+    recs.push({idx:recs.length,line:r.line,item:'',net:net,
+      layer:map.layer>=0?(r.fields[map.layer]||'').trim():'',
+      length:len,
+      widths:widths,widthsArr:[...widths.keys()],widthSeq:wSeq,widthLens:widthLens,radii:new Map(),radiiArr:[],segCount:1,arcCount:0,minRadius:NaN,segs:[]});
+  });
+  return recs;
+}
+
+/* ---------- 汇总 ---------- */
+function aggregateRecords(records){
+  const netLens=new Map();
+  for(const r of records){
+    let nl=netLens.get(r.net);
+    if(!nl){nl=new Map();netLens.set(r.net,nl);}
+    if(!isNaN(r.length))nl.set(r.layer,(nl.get(r.layer)||0)+r.length);
+  }
+  return {netLens:netLens};
+}
+function extractWidthSeq(r){
+  if(r.widthSeq&&r.widthSeq.length)return r.widthSeq;
+  const seq=[];
+  if(r.segs&&r.segs.length){
+    for(const s of r.segs){
+      if(!isNaN(s.width)&&s.width>0){
+        if(!seq.length||Math.abs(seq[seq.length-1]-s.width)>1e-6){
+          seq.push(s.width);
+        }
+      }
+    }
+  }
+  if(!seq.length&&r.widthsArr&&r.widthsArr.length){
+    seq.push(...r.widthsArr);
+  }
+  return seq;
+}
+
+function layerStats(records){
+  const m=new Map();
+  for(const r of records){
+    let e=m.get(r.layer);
+    if(!e){e={layer:r.layer,recs:0,nets:new Set(),totalLen:0,widths:new Map(),widthSeqs:new Set(),lens:new Map(),radii:new Map(),minRadius:NaN,arcSegs:0};m.set(r.layer,e);}
+    e.recs++;e.nets.add(r.net);
+    if(!isNaN(r.length)){e.totalLen+=r.length;e.lens.set(r.length,(e.lens.get(r.length)||0)+1);}
+    r.widths.forEach((c,w)=>e.widths.set(w,(e.widths.get(w)||0)+c));
+    const seq=extractWidthSeq(r);
+    if(seq&&seq.length){
+      const s1=seq.map(fmt).join('-');
+      const s2=[...seq].reverse().map(fmt).join('-');
+      if(!e.widthSeqs.has(s1)&&!e.widthSeqs.has(s2)){
+        e.widthSeqs.add(s1);
+      }
+    }
+    if(r.radii)r.radii.forEach((c,rad)=>e.radii.set(rad,(e.radii.get(rad)||0)+c));
+    e.arcSegs+=r.arcCount;
+    if(!isNaN(r.minRadius)&&(isNaN(e.minRadius)||r.minRadius<e.minRadius))e.minRadius=r.minRadius;
+  }
+  return [...m.values()].sort((a,b)=>a.layer<b.layer?-1:1);
+}
+
+/* ---------- 规则与检查 ---------- */
+function findRule(layer,rules,defaultRule){
+  const L=(layer||'').toLowerCase();
+  for(const r of rules){
+    if(r.enabled&&(r.layer||'').trim().toLowerCase()===L)return r;
+  }
+  return (defaultRule&&defaultRule.enabled)?defaultRule:null;
+}
+function inList(v,list,tol){return list.some(a=>Math.abs(a-v)<=tol);}
+function recordRadii(r){
+  if(r.radiiArr&&r.radiiArr.length)return r.radiiArr;
+  if(r.segs&&r.segs.length)return r.segs.filter(s=>s.type==='arc'&&!isNaN(s.radius)).map(s=>s.radius);
+  return [];
+}
+/* 层规则上的 checkWidth/checkLen 缺省=检查；checkRad 缺省=不检查。全局 opts 是总开关。 */
+function parseWidthLengthRules(str){
+  if(!str||!String(str).trim())return [];
+  const res=[];
+  const clean=String(str).replace(/mil|mm/gi,'');
+  const parts=clean.split(/[;\n]+|,(?=\s*\d+(?:\.\d+)?\s*[:=<>\~])/);
+  for(let raw of parts){
+    raw=raw.trim();
+    if(!raw)continue;
+    let m=raw.match(/^([0-9.]+)\s*(<=|>=|<|>|:=|=|:)\s*(.+)$/);
+    if(!m){
+      m=raw.match(/^([0-9.]+)\s*[@]\s*(.+)$/);
+      if(m)m=[m[0],m[1],'=',m[2]];
+    }
+    if(!m)continue;
+    const w=parseFloat(m[1]);
+    const op=m[2];
+    const valStr=m[3].trim();
+    if(isNaN(w))continue;
+
+    const entry={width:w,raw:raw,mode:'list',list:[],min:NaN,max:NaN};
+    if(op==='<='||op==='<'){
+      const nums=parseNumList(valStr);
+      if(nums.length){entry.mode='max';entry.max=nums[0];res.push(entry);}
+    }else if(op==='>='||op==='>'){
+      const nums=parseNumList(valStr);
+      if(nums.length){entry.mode='min';entry.min=nums[0];res.push(entry);}
+    }else{
+      if(/^<=|<(?!=)/.test(valStr)){
+        const nums=parseNumList(valStr.replace(/^<=|</,''));
+        if(nums.length){entry.mode='max';entry.max=nums[0];res.push(entry);}
+      }else if(/^>=|>(?!=)/.test(valStr)){
+        const nums=parseNumList(valStr.replace(/^>=|>/,''));
+        if(nums.length){entry.mode='min';entry.min=nums[0];res.push(entry);}
+      }else if(/[~～]|\s*-\s*/.test(valStr)){
+        const nums=valStr.split(/[~～\s-]+/).map(parseFloatNum).filter(x=>!isNaN(x));
+        if(nums.length>=2){
+          entry.mode='range';
+          entry.min=Math.min(nums[0],nums[1]);
+          entry.max=Math.max(nums[0],nums[1]);
+          res.push(entry);
+        }
+      }else{
+        const nums=parseNumList(valStr);
+        if(nums.length){
+          entry.mode='list';
+          entry.list=nums;
+          res.push(entry);
+        }
+      }
+    }
+  }
+  const merged=[];
+  const byWidth=new Map();
+  for(const e of res){
+    const w=e.width;
+    if(e.mode==='list'&&byWidth.has(w)&&byWidth.get(w).mode==='list'){
+      const existing=byWidth.get(w);
+      e.list.forEach(v=>{if(existing.list.indexOf(v)<0)existing.list.push(v);});
+    }else{
+      byWidth.set(w,e);
+      merged.push(e);
+    }
+  }
+  return merged;
+}
+
+function parseWidthCombos(str){
+  if(!str||!String(str).trim())return [];
+  const s=String(str).trim();
+  const rawParts=s.split(/[;\n|]|(?:\s+或\s+)|[,，]/);
+  const out=[];
+  for(let raw of rawParts){
+    raw=raw.trim();
+    if(!raw)continue;
+    const nums=[];
+    const numMatches=raw.matchAll(/([0-9]+(?:\.[0-9]+)?)/g);
+    for(const nm of numMatches){
+      const v=parseFloat(nm[1]);
+      if(!isNaN(v))nums.push(v);
+    }
+    if(nums.length>0){
+      out.push({
+        raw:raw,
+        seq:nums,
+        str:nums.map(fmt).join('-')
+      });
+    }
+  }
+  return out;
+}
+
+function matchWidthCombo(actualSeq,combo,tol){
+  tol=tol!=null?tol:0.001;
+  const req=combo.seq||combo;
+  if(!actualSeq||!req||actualSeq.length!==req.length)return false;
+  // 正序匹配
+  let fwdMatch=true;
+  for(let i=0;i<req.length;i++){
+    if(Math.abs(actualSeq[i]-req[i])>tol){fwdMatch=false;break;}
+  }
+  if(fwdMatch)return true;
+  // 倒序匹配（允许倒序）
+  let revMatch=true;
+  for(let i=0;i<req.length;i++){
+    if(Math.abs(actualSeq[i]-req[req.length-1-i])>tol){revMatch=false;break;}
+  }
+  return revMatch;
+}
+
+function compressWidthSequence(widths) {
+  if (!widths || widths.length === 0) return [];
+  const res = [];
+  widths.forEach(w => {
+    const num = (typeof w === 'number') ? Math.round(w * 100) / 100 : parseFloat(w);
+    if (!isNaN(num)) {
+      if (res.length === 0 || Math.abs(res[res.length - 1] - num) > 0.01) {
+        res.push(num);
+      }
+    }
+  });
+  return res;
+}
+
+function analyzeTraceWidthDiscrepancy(compressedSeq, allowedCombosStr) {
+  if (!compressedSeq || compressedSeq.length === 0) {
+    return { pass: true, reason: '无走线线宽数据' };
+  }
+
+  const seqStr = compressedSeq.map(fmt).join('-');
+  const rawCombos = (allowedCombosStr || '').split(/[,;]+/).map(s => s.trim()).filter(Boolean);
+  
+  if (rawCombos.length === 0) {
+    return { pass: true, reason: '符合阻抗规范' };
+  }
+
+  // Parse combos into tokens
+  const parsedCombos = rawCombos.map(c => {
+    const tokens = c.split(/[-→\s]+/).map(x => parseFloat(x)).filter(x => !isNaN(x));
+    return {
+      raw: c,
+      tokens,
+      fwdStr: tokens.map(fmt).join('-'),
+      revStr: tokens.slice().reverse().map(fmt).join('-')
+    };
+  }).filter(c => c.tokens.length > 0);
+
+  // 1. Direct match check (forward, reverse, or valid single-width segment)
+  for (const c of parsedCombos) {
+    if (seqStr === c.fwdStr) {
+      return { pass: true, reason: `线宽变化顺序符合规则 [${c.raw}]` };
+    }
+    if (seqStr === c.revStr) {
+      return { pass: true, reason: `线宽变化顺序符合规则 [${c.raw}]（反向渐变）` };
+    }
+    if (compressedSeq.length === 1 && c.tokens.some(t => Math.abs(t - compressedSeq[0]) < 0.01)) {
+      return { pass: true, reason: `单一恒定线宽 (${fmt(compressedSeq[0])} mil) 符合规则 [${c.raw}]` };
+    }
+  }
+
+  // Collect all valid widths across all combos
+  const allAllowedWidths = [];
+  parsedCombos.forEach(c => {
+    c.tokens.forEach(t => {
+      if (!allAllowedWidths.some(w => Math.abs(w - t) < 0.01)) {
+        allAllowedWidths.push(t);
+      }
+    });
+  });
+
+  // Find abnormal widths not belonging to any combo
+  const foreignWidths = compressedSeq.filter(w => !allAllowedWidths.some(aw => Math.abs(aw - w) < 0.01));
+
+  let reason = '';
+  if (foreignWidths.length > 0) {
+    const mutationDetails = [];
+    for (let i = 0; i < compressedSeq.length; i++) {
+      const cur = compressedSeq[i];
+      if (foreignWidths.some(fw => Math.abs(fw - cur) < 0.01)) {
+        const prev = i > 0 ? `${fmt(compressedSeq[i-1])} mil` : '起端';
+        const next = i < compressedSeq.length - 1 ? `${fmt(compressedSeq[i+1])} mil` : '末端';
+        if (prev === '起端' && next === '末端') {
+          mutationDetails.push(`实测线宽 ${fmt(cur)} mil 不在允许集合中`);
+        } else {
+          mutationDetails.push(`在 ${prev} 与 ${next} 之间突变插入异常线宽 ${fmt(cur)} mil`);
+        }
+      }
+    }
+    const mutStr = Array.from(new Set(mutationDetails)).join('；');
+    reason = `实测线宽变化 [${seqStr}] 与规则 [${rawCombos.join(', ')}] 不符：${mutStr}（不在本层允许线宽集合 {${allAllowedWidths.map(fmt).join(', ')}} 中）`;
+  } else {
+    const transitionIssues = [];
+    for (let i = 0; i < compressedSeq.length - 1; i++) {
+      const w1 = compressedSeq[i];
+      const w2 = compressedSeq[i+1];
+      const validTransition = parsedCombos.some(c => {
+        for (let j = 0; j < c.tokens.length - 1; j++) {
+          if ((Math.abs(c.tokens[j] - w1) < 0.01 && Math.abs(c.tokens[j+1] - w2) < 0.01) ||
+              (Math.abs(c.tokens[j] - w2) < 0.01 && Math.abs(c.tokens[j+1] - w1) < 0.01)) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      if (!validTransition) {
+        transitionIssues.push(`在 ${fmt(w1)} mil 与 ${fmt(w2)} mil 之间存在非法突变阶跃`);
+      }
+    }
+
+    if (transitionIssues.length > 0) {
+      reason = `实测线宽变化 [${seqStr}] 与规则 [${rawCombos.join(', ')}] 不符：${Array.from(new Set(transitionIssues)).join('；')}`;
+    } else {
+      reason = `实测线宽变化顺序 [${seqStr}] 不在允许渐变组合 [${rawCombos.join(', ')}] 集合中（顺序或级数不匹配）`;
+    }
+  }
+
+  return { pass: false, reason };
+}
+
+function checkWidthCombos(actualSeq, combos, tol){
+  if(!combos || !combos.length) return { pass: true };
+  const compSeq = compressWidthSequence(actualSeq);
+  for(const c of combos){
+    if(matchWidthCombo(compSeq, c, tol)) return { pass: true, matchedCombo: c };
+  }
+  const combosStr = combos.map(c => c.seq ? c.seq.map(w => fmt(w)).join('-') : (c.str || String(c))).join('、');
+  const evalRes = analyzeTraceWidthDiscrepancy(compSeq, combosStr);
+  return {
+    pass: false,
+    actualStr: actualSeq.map(w => fmt(w)).join(' → '),
+    compressedStr: compSeq.map(w => fmt(w)).join('-'),
+    allowedStr: combosStr,
+    mutationReason: evalRes.reason
+  };
+}
+function wantWidth(rule,opts){
+  if(!opts||!opts.checkWidth||!rule||rule.checkWidth===false)return false;
+  if(rule.widthCombos&&rule.widthCombos.length)return true;
+  if(rule.widthsText&&String(rule.widthsText).trim())return true;
+  if(rule.widths&&rule.widths.length)return true;
+  return false;
+}
+function wantLen(rule,opts){
+  if(!opts||!opts.checkLen||!rule||rule.checkLen===false)return false;
+  if(rule.lenMode==='list'&&rule.lengths&&rule.lengths.length)return true;
+  if(rule.lenMode==='range'&&(!isNaN(rule.lenMin)||!isNaN(rule.lenMax)))return true;
+  return false;
+}
+function wantWidthLen(rule,opts){
+  if(!opts||!opts.checkWidthLen||!rule||rule.checkWidthLen===false)return false;
+  return !!(rule.widthLenRules&&rule.widthLenRules.length);
+}
+function wantRad(rule,opts){
+  if(!opts||!opts.checkRad||!rule||!rule.checkRad)return false;
+  if(rule.radMode==='list'&&rule.radii&&rule.radii.length)return true;
+  if(rule.radMode==='min'&&!isNaN(rule.radMin))return true;
+  if(rule.radMode==='range'&&(!isNaN(rule.radMin)||!isNaN(rule.radMax)))return true;
+  return false;
+}
+/* 规则是否带有实际判据：空规则(启用但无标准)不算判据，对应记录记"未检查" */
+function ruleHasCriteria(rule,opts){
+  if(!rule)return false;
+  return wantWidth(rule,opts)||wantLen(rule,opts)||wantWidthLen(rule,opts)||wantRad(rule,opts);
+}
+/* 以网络为单位：对每个(网络,层)记录分别检查线宽 / 线长 / 弧半径，再汇总到网络 */
+function runChecks(records,rules,defaultRule,opts){
+  const tol=opts.tol!=null?opts.tol:0.001;
+  const recViol=new Map();
+  for(const r of records){
+    const rule=findRule(r.layer,rules,defaultRule);
+    if(!rule||!ruleHasCriteria(rule,opts))continue;
+    const reasons=[],badWidths=[],badRadii=[];
+    let badLen=false,missW=false;
+    if(wantWidth(rule,opts)){
+      const actualSeq=extractWidthSeq(r);
+      if(!actualSeq||!actualSeq.length){
+        reasons.push('无线段线宽数据');
+        missW=true;
+      }else{
+        let combos=rule.widthCombos;
+        if(!combos||!combos.length){
+          combos=parseWidthCombos(rule.widthsText||(rule.widths||[]).join(','));
+        }
+        if(combos&&combos.length){
+          const chk=checkWidthCombos(actualSeq,combos,tol);
+          if(!chk.pass){
+            reasons.push('线宽组合不符合：实际顺序「'+chk.actualStr+'」不在允许组合 {'+chk.allowedStr+'} 中（允许倒序）' + (chk.mutationReason ? ('（' + chk.mutationReason + '）') : ''));
+            missW=true;
+            badWidths.push(...actualSeq);
+          }
+        }
+      }
+    }
+    if(wantLen(rule,opts)){
+      if(isNaN(r.length)){reasons.push('总线长缺失');badLen=true;}
+      else if(rule.lenMode==='list'){
+        if(!inList(r.length,rule.lengths,tol)){reasons.push('总线长 '+fmt(r.length)+' 不在允许列表 {'+rule.lengths.join(', ')+'}');badLen=true;}
+      }else if(rule.lenMode==='range'){
+        if(!isNaN(rule.lenMin)&&r.length<rule.lenMin-tol){reasons.push('总线长 '+fmt(r.length)+' < 下限 '+fmt(rule.lenMin));badLen=true;}
+        if(!isNaN(rule.lenMax)&&r.length>rule.lenMax+tol){reasons.push('总线长 '+fmt(r.length)+' > 上限 '+fmt(rule.lenMax));badLen=true;}
+      }
+    }
+    let badWidthLen=false;
+    const badWidthLens=[];
+    if(wantWidthLen(rule,opts)){
+      for(const wlr of (rule.widthLenRules||[])){
+        let actualLen=0;let found=false;
+        if(r.widthLens){
+          for(const [w,l] of r.widthLens.entries()){
+            if(Math.abs(w-wlr.width)<=tol){actualLen+=l;found=true;}
+          }
+        }
+        if(found){
+          let ok=true;let failMsg='';
+          if(wlr.mode==='list'){
+            if(!inList(actualLen,wlr.list,tol)){
+              ok=false;
+              failMsg='指定线宽 '+fmt(wlr.width)+'mil 实际长度 '+fmt(actualLen)+' 不在要求列表 {'+wlr.list.map(fmt).join(', ')+'}';
+            }
+          }else if(wlr.mode==='range'){
+            if(!isNaN(wlr.min)&&actualLen<wlr.min-tol){
+              ok=false;
+              failMsg='指定线宽 '+fmt(wlr.width)+'mil 实际长度 '+fmt(actualLen)+' < 下限 '+fmt(wlr.min);
+            }else if(!isNaN(wlr.max)&&actualLen>wlr.max+tol){
+              ok=false;
+              failMsg='指定线宽 '+fmt(wlr.width)+'mil 实际长度 '+fmt(actualLen)+' > 上限 '+fmt(wlr.max);
+            }
+          }else if(wlr.mode==='max'){
+            if(actualLen>wlr.max+tol){
+              ok=false;
+              failMsg='指定线宽 '+fmt(wlr.width)+'mil 实际长度 '+fmt(actualLen)+' > 最大允许值 '+fmt(wlr.max);
+            }
+          }else if(wlr.mode==='min'){
+            if(actualLen<wlr.min-tol){
+              ok=false;
+              failMsg='指定线宽 '+fmt(wlr.width)+'mil 实际长度 '+fmt(actualLen)+' < 最小要求值 '+fmt(wlr.min);
+            }
+          }
+          if(!ok){
+            reasons.push(failMsg);
+            badWidthLen=true;
+            badWidthLens.push(wlr.width);
+          }
+        }
+      }
+    }
+    if(wantRad(rule,opts)){
+      const rads=recordRadii(r);
+      rads.forEach(rad=>{
+        let bad=false;
+        if(rule.radMode==='list'){
+          if(!inList(rad,rule.radii,tol)){reasons.push('弧半径 '+fmt(rad)+' 不在允许列表 {'+rule.radii.join(', ')+'}');bad=true;}
+        }else if(rule.radMode==='min'){
+          if(rad<rule.radMin-tol){reasons.push('弧半径 '+fmt(rad)+' < 最小半径 '+fmt(rule.radMin));bad=true;}
+        }else if(rule.radMode==='range'){
+          if(!isNaN(rule.radMin)&&rad<rule.radMin-tol){reasons.push('弧半径 '+fmt(rad)+' < 下限 '+fmt(rule.radMin));bad=true;}
+          if(!isNaN(rule.radMax)&&rad>rule.radMax+tol){reasons.push('弧半径 '+fmt(rad)+' > 上限 '+fmt(rule.radMax));bad=true;}
+        }
+        if(bad)badRadii.push(rad);
+      });
+    }
+    if(reasons.length)recViol.set(r.idx,{reasons:reasons,width:badWidths.length>0||missW,length:badLen,widthLen:badWidthLen,radius:badRadii.length>0,badWidths:badWidths,badRadii:badRadii,badWidthLens:badWidthLens});
+  }
+  const netAgg=new Map();
+  for(const r of records){
+    let a=netAgg.get(r.net);
+    if(!a){a={net:r.net,checked:false,fail:false,issues:[],layers:[]};netAgg.set(r.net,a);}
+    if(a.layers.indexOf(r.layer)<0)a.layers.push(r.layer);
+    const v=recViol.get(r.idx);
+    if(v){a.checked=true;a.fail=true;v.reasons.forEach(msg=>a.issues.push('['+r.layer+'] '+msg));}
+    else if(ruleHasCriteria(findRule(r.layer,rules,defaultRule),opts))a.checked=true;
+  }
+  let pass=0,fail=0,none=0;
+  netAgg.forEach(a=>{if(a.fail)fail++;else if(a.checked)pass++;else none++;});
+  return {recViol:recViol,netAgg:netAgg,stats:{nets:netAgg.size,pass:pass,fail:fail,none:none}};
+}
+
+/* ---------- 差分 ---------- */
+function detectPairs(netNames,suffixPairs){
+  const sps=suffixPairs.slice().sort((a,b)=>Math.max(b.pos.length,b.neg.length)-Math.max(a.pos.length,a.neg.length));
+  const groups=new Map(),unmatched=[];
+  for(const net of netNames){
+    let hit=null;
+    for(const sp of sps){
+      if(sp.pos&&net.endsWith(sp.pos)){hit={base:net.slice(0,net.length-sp.pos.length),pol:'P'};break;}
+      if(sp.neg&&net.endsWith(sp.neg)){hit={base:net.slice(0,net.length-sp.neg.length),pol:'N'};break;}
+    }
+    if(hit&&hit.base){
+      if(!groups.has(hit.base))groups.set(hit.base,{base:hit.base,pos:[],neg:[]});
+      groups.get(hit.base)[hit.pol==='P'?'pos':'neg'].push(net);
+    }else unmatched.push(net);
+  }
+  const pairs=[],ambiguous=[];
+  for(const g of groups.values()){
+    if(g.pos.length===1&&g.neg.length===1)pairs.push({base:g.base,pos:g.pos[0],neg:g.neg[0],manual:false});
+    else if(g.pos.length+g.neg.length>1)ambiguous.push(g);
+  }
+  pairs.sort((a,b)=>a.base<b.base?-1:a.base>b.base?1:0);
+  return {pairs:pairs,ambiguous:ambiguous,unmatched:unmatched};
+}
+function computePairDiff(pair,netLens,opts){
+  opts=opts||{};
+  const layerTol=opts.layerTol!=null?opts.layerTol:(opts.diffTol!=null?opts.diffTol:1);
+  const totalTol=opts.totalTol!=null?opts.totalTol:layerTol;
+  const checkLayer=opts.checkLayer!==false;
+  const checkTotal=opts.checkTotal!==false;
+
+  const P=netLens.get(pair.pos)||new Map();
+  const N=netLens.get(pair.neg)||new Map();
+  const layers=[];
+  P.forEach((_,l)=>{if(layers.indexOf(l)<0)layers.push(l);});
+  N.forEach((_,l)=>{if(layers.indexOf(l)<0)layers.push(l);});
+  layers.sort();
+  let maxLayerDiff=0, layerFailCount=0;
+  const rows=layers.map(l=>{
+    const lp=P.get(l)||0,ln=N.get(l)||0;
+    const diff=Math.abs(lp-ln);
+    if(diff>maxLayerDiff)maxLayerDiff=diff;
+    const exceed=checkLayer&&(diff>layerTol+1e-9);
+    if(exceed)layerFailCount++;
+    return {layer:l,lenP:lp,lenN:ln,diff:diff,tol:layerTol,exceed:exceed,note:(P.has(l)&&N.has(l))?'':(P.has(l)?'N 缺该层':'P 缺该层')};
+  });
+  let tp=0,tn=0;
+  P.forEach(v=>tp+=v);N.forEach(v=>tn+=v);
+  const totalDiff=Math.abs(tp-tn);
+  const totalExceed=checkTotal&&(totalDiff>totalTol+1e-9);
+  const total={layer:'所有层总计',lenP:tp,lenN:tn,diff:totalDiff,tol:totalTol,exceed:totalExceed,note:''};
+  const setMismatch=layers.some(l=>!(P.has(l)&&N.has(l)));
+  const exceed=(checkLayer&&layerFailCount>0)||(checkTotal&&totalExceed);
+  return {
+    rows:rows,total:total,setMismatch:setMismatch,
+    maxLayerDiff:maxLayerDiff,totalDiff:totalDiff,
+    layerFailCount:layerFailCount,layerExceed:layerFailCount>0,
+    totalExceed:totalExceed,exceed:exceed
+  };
+}
+
+function fmt(x){
+  if(x==null||isNaN(x))return '-';
+  return String(Math.round(x*1e4)/1e4);
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toCSV(headers,rows){
+  const q=v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  return '\uFEFF'+[headers.map(q).join(',')].concat(rows.map(r=>r.map(q).join(','))).join('\r\n');
+}
+
+/* ---------- 示例数据（网络走线报告格式，与 sample/走线示例.txt 一致） ---------- */
+const SAMPLE_TEXT=[
+'Total 10 Item','',
+'Item 1                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      105_P',
+'Length:                   2000.068301','',
+'Seg: xy [25018.9300, 23592.4500]  xy [24669.2400, 23592.4500] Width (5.6000) Angle (0.000)',
+'Arc seg: xy [24669.2400, 23592.4500]  xy [24616.8500, 23940.0700] Width (5.6000)',
+'  Center-xy:  [24669.2300, 23640.0700]  Radius (52.3800) CCW',
+'Seg: xy [24616.8500, 23540.0700]  xy [24916.8500, 23456.2000] Width (5.6000) Angle (90.000)','',
+'Item 2                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      105_N',
+'Length:                   2000.401200','',
+'Seg: xy [25018.9300, 23602.4500]  xy [24669.2400, 23602.4500] Width (5.6000) Angle (0.000)',
+'Arc seg: xy [24669.2400, 23602.4500]  xy [24616.8500, 23950.0700] Width (5.6000)',
+'  Center-xy:  [24669.2300, 23650.0700]  Radius (52.3800) CCW',
+'Seg: xy [24616.8500, 23550.0700]  xy [24916.8500, 23466.2000] Width (5.6000) Angle (90.000)','',
+'Item 3                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      106_P',
+'Length:                   1500.000000','',
+'Seg: xy [10000.0000, 10000.0000]  xy [10800.0000, 10000.0000] Width (5.6000) Angle (0.000)',
+'Seg: xy [10800.0000, 10000.0000]  xy [10800.0000, 10700.0000] Width (6.0000) Angle (90.000)','',
+'Item 4                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      106_N',
+'Length:                   1500.200000','',
+'Seg: xy [10000.0000, 10100.0000]  xy [10800.0000, 10100.0000] Width (5.6000) Angle (0.000)',
+'Seg: xy [10800.0000, 10100.0000]  xy [10800.0000, 10800.2000] Width (5.6000) Angle (90.000)','',
+'Item 5                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      301_P',
+'Length:                   800.000000','',
+'Seg: xy [12000.0000, 10000.0000]  xy [12800.0000, 10000.0000] Width (5.6000) Angle (0.000)','',
+'Item 6                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G03P','',
+'Net:                      301_P',
+'Length:                   400.000000','',
+'Seg: xy [12800.0000, 10000.0000]  xy [13200.0000, 10000.0000] Width (4.0000) Angle (0.000)','',
+'Item 7                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      301_N',
+'Length:                   802.000000','',
+'Seg: xy [12000.0000, 10100.0000]  xy [12802.0000, 10100.0000] Width (5.6000) Angle (0.000)','',
+'Item 8                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G03P','',
+'Net:                      301_N',
+'Length:                   396.000000','',
+'Seg: xy [12802.0000, 10100.0000]  xy [13198.0000, 10100.0000] Width (4.0000) Angle (0.000)','',
+'Item 9                    < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G01P','',
+'Net:                      402',
+'Length:                   900.000000','',
+'Seg: xy [14000.0000, 10000.0000]  xy [14900.0000, 10000.0000] Width (5.6000) Angle (0.000)','',
+'Item 10                   < Trace >','',
+'Set:                      Trace',
+'Subset:                   02G02P','',
+'Net:                      403',
+'Length:                   700.000000','',
+'Seg: xy [15000.0000, 10000.0000]  xy [15700.0000, 10000.0000] Width (5.0000) Angle (0.000)'
+].join('\n');
+
+/* =========================================================
+   应用状态与界面
+   ========================================================= */
+const S={
+  rawText:'',fileName:'',format:'',meta:null,
+  grid:null,map:{net:0,layer:1,width:2,length:3},
+  records:[],netLens:new Map(),unit:'mil',
+  rules:[],defaultRule:null,checkRes:null,
+  tol:0.001,checkWidth:true,checkLen:true,checkRad:true,
+  diffTol:1,totalDiffTol:1,checkLayerDiff:true,checkTotalDiff:true,diffPairs:[],diffInfo:null,diffDone:false,
+  diffReviewed:new Set(),traceReviewed:new Set(),
+  page:0,pageSize:200,sort:{col:null,dir:1},ovOpenLayer:null
+};
+function $(id){return document.getElementById(id);}
+function switchTab(name){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
+}
+function loadFile(file){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const buf=new Uint8Array(fr.result);
+    let text='';
+    try{text=new TextDecoder('utf-8',{fatal:true}).decode(buf);}
+    catch(e){text=new TextDecoder('gbk').decode(buf);}
+    if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+    S.rawText=text;
+    S.fileName=file.name;
+    $('fileNameLabel').textContent='已载入：'+file.name+'（'+(file.size/1024).toFixed(1)+' KB）';
+    $('pasteBox').value='';
+    handleText();
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+/* ---------- 解析分流 ---------- */
+function handleText(){
+  if(!S.rawText.trim()){alert('内容为空');return;}
+  S.unit=$('selUnit')?$('selUnit').value:'mil';
+  if(isBlockFormat(S.rawText)){
+    S.format='block';
+    S.meta=parseBlockMeta(S.rawText);
+    $('fmtLabel').textContent='识别格式：网络走线报告 · 文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item，识别到 '+S.meta.items+' 个 Item 块';
+    if($('parseCard'))$('parseCard').style.display='none';
+    if($('blockCard'))$('blockCard').style.display='';
+    // 预览前两个 Item 块
+    const idxs=[];const re=/^Item\s+\d+/gim;let mm;
+    while((mm=re.exec(S.rawText))&&idxs.length<3)idxs.push(mm.index);
+    const end=idxs.length>2?idxs[2]:S.rawText.length;
+    if($('blockPreview'))$('blockPreview').textContent=S.rawText.slice(0,end);
+    applyData();
+  }else{
+    S.format='table';
+    $('fmtLabel').textContent='识别格式：表格文本';
+    if($('blockCard'))$('blockCard').style.display='none';
+    reparseTable(true);
+  }
+}
+function reparseTable(autoApply){
+  const v=$('selDelim')?$('selDelim').value:'auto';
+  const delim=v==='auto'?detectDelimiter(S.rawText):v;
+  const hasHdr=$('chkHeader')?$('chkHeader').checked:true;
+  S.grid=parseDelimited(S.rawText,delim,hasHdr);
+  if($('parseCard'))$('parseCard').style.display='';
+  ['mapNet','mapLayer','mapWidth','mapLength'].forEach(id=>{
+    const sel=$(id);
+    if(sel)sel.innerHTML=S.grid.headers.map((h,j)=>'<option value="'+j+'">'+esc(h||('列'+(j+1)))+'</option>').join('');
+  });
+  const am=autoMapColumns(S.grid.headers);
+  if(am.net>=0&&$('mapNet'))$('mapNet').value=am.net;
+  if(am.layer>=0&&$('mapLayer'))$('mapLayer').value=am.layer;
+  if(am.width>=0&&$('mapWidth'))$('mapWidth').value=am.width;
+  if(am.length>=0&&$('mapLength'))$('mapLength').value=am.length;
+  renderGridPreview();
+  if(autoApply===true){
+    applyData();
+  }
+}
+function renderGridPreview(){
+  const g=S.grid;if(!g)return;
+  let h='<thead><tr><th>行号</th>'+g.headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>';
+  g.rows.slice(0,50).forEach(r=>{h+='<tr><td class="kv">'+r.line+'</td>'+r.fields.map(f=>'<td>'+esc(f)+'</td>').join('')+'</tr>';});
+  $('gridPreview').innerHTML=h+'</tbody>';
+}
+function applyData(){
+  if(S.format==='block'){
+    S.records=parseBlockText(S.rawText);
+  }else{
+    S.map={net:Number($('mapNet').value),layer:Number($('mapLayer').value),width:Number($('mapWidth').value),length:Number($('mapLength').value)};
+    S.records=recordsFromGrid(S.grid,S.map);
+  }
+  S.unit=$('selUnit').value;
+  S.netLens=aggregateRecords(S.records).netLens;
+  if(S.format==='block'){
+    S.meta=parseBlockMeta(S.rawText);
+    const mismatch=S.meta.declared!=null&&S.meta.declared!==S.records.length;
+    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item / 解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络'+(mismatch?' ⚠ 声明与解析数量不符':'');
+  }else{
+    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络';
+  }
+  S.checkRes=null;S.diffDone=false;
+  renderOverview();
+  switchTab('overview');
+}
+
+/* ---------- 概览 ---------- */
+function distStr(map,limit){
+  const arr=[...map.entries()].sort((a,b)=>a[0]-b[0]);
+  const L=limit||12;
+  return arr.slice(0,L).map(([v,c])=>fmt(v)+'×'+c).join('，')+(arr.length>L?' …等'+arr.length+'种':'');
+}
+function renderOverview(){
+  const ls=layerStats(S.records);
+  const nets=new Set(S.records.map(r=>r.net));
+  const totalLen=S.records.reduce((a,r)=>a+(isNaN(r.length)?0:r.length),0);
+  const arcTotal=ls.reduce((a,e)=>a+e.arcSegs,0);
+  const decl=(S.meta&&S.meta.declared!=null)?S.meta.declared:'-';
+  $('ovCards').innerHTML=
+    '<div class="stat'+((S.meta&&S.meta.declared!=null&&S.meta.declared!==S.records.length)?' warn':'')+'"><div class="v">'+decl+'</div><div class="t">TXT 声明 Item 总数</div></div>'+
+    '<div class="stat"><div class="v">'+S.records.length+'</div><div class="t">走线记录数(网络×层)</div></div>'+
+    '<div class="stat"><div class="v">'+nets.size+'</div><div class="t">网络数</div></div>'+
+    '<div class="stat"><div class="v">'+ls.length+'</div><div class="t">层数</div></div>'+
+    '<div class="stat"><div class="v">'+fmt(totalLen)+'</div><div class="t">总线长('+S.unit+')</div></div>'+
+    '<div class="stat"><div class="v">'+arcTotal+'</div><div class="t">弧线段数</div></div>';
+  let h='<thead><tr><th>层(Subset)</th><th>网络×层数</th><th>网络数</th><th>总长('+S.unit+')</th><th>线宽分布('+S.unit+',按线段)</th><th>线长种类</th><th>线长范围('+S.unit+')</th><th>最小弧半径</th></tr></thead><tbody>';
+  ls.forEach(e=>{
+    const lens=[...e.lens.keys()].sort((a,b)=>a-b);
+    h+='<tr style="cursor:pointer" data-layer="'+esc(e.layer)+'"><td><b>'+esc(e.layer)+'</b></td><td>'+e.recs+'</td><td>'+e.nets.size+'</td><td>'+fmt(e.totalLen)+'</td><td>'+esc(distStr(e.widths,10))+'</td><td>'+e.lens.size+'</td><td>'+(lens.length?fmt(lens[0])+' ~ '+fmt(lens[lens.length-1]):'-')+'</td><td class="mono">'+fmt(e.minRadius)+'</td></tr>';
+  });
+  const tbl=$('ovLayerTbl');tbl.innerHTML=h+'</tbody>';
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    tr.onclick=()=>{S.ovOpenLayer=(S.ovOpenLayer===tr.dataset.layer)?null:tr.dataset.layer;renderOvDetail(ls);};
+  });
+  renderOvDetail(ls);
+}
+function renderOvDetail(ls){
+  const box=$('ovDetail');
+  if(!S.ovOpenLayer){box.innerHTML='';return;}
+  const e=ls.find(x=>x.layer===S.ovOpenLayer);
+  if(!e){box.innerHTML='';return;}
+  const lens=[...e.lens.entries()].sort((a,b)=>a[0]-b[0]);
+  const ws=[...e.widths.entries()].sort((a,b)=>a[0]-b[0]);
+  box.innerHTML='<h3>层「'+esc(e.layer)+'」明细　<span class="small kv">线宽(按线段)：'+esc(ws.map(([v,c])=>fmt(v)+'×'+c).join('，'))+'</span></h3>'+
+    '<div class="detail-list mono">网络线长('+S.unit+') × 记录数：<br>'+
+    (lens.length?lens.map(([v,c])=>fmt(v)+' ×'+c).join('　|　'):'无')+'</div>';
+}
+
+/* ---------- 规则 ---------- */
+function boundsFrom(mode,nums){
+  if(mode==='range')return {list:[],min:nums[0]!=null?nums[0]:NaN,max:nums[1]!=null?nums[1]:NaN};
+  if(mode==='min')return {list:[],min:nums[0]!=null?nums[0]:NaN,max:NaN};
+  if(mode==='list')return {list:nums,min:NaN,max:NaN};
+  return {list:[],min:NaN,max:NaN};
+}
+function syncMasterSwitches(){
+  function syncOne(masterId, subSelector, defId){
+    const master=$(masterId);
+    if(!master)return;
+    const subs=Array.from(document.querySelectorAll(subSelector));
+    const def=$(defId);
+    if(def)subs.push(def);
+    if(!subs.length)return;
+    const checkedCount=subs.filter(s=>s.checked).length;
+    if(checkedCount===0){
+      master.checked=false;
+      master.indeterminate=false;
+    }else if(checkedCount===subs.length){
+      master.checked=true;
+      master.indeterminate=false;
+    }else{
+      master.checked=true;
+      master.indeterminate=true;
+    }
+  }
+  syncOne('chkWidth','.rCW','defCheckWidth');
+  syncOne('chkLen','.rCL','defCheckLen');
+  syncOne('chkWidthLen','.rCWL','defCheckWidthLen');
+  syncOne('chkRad','.rCR','defCheckRad');
+}
+
+function collectRules(){
+  S.rules=[];
+  document.querySelectorAll('#ruleRows .rulegrid').forEach(el=>{
+    const lenMode=el.querySelector('.rM').value;
+    const radMode=el.querySelector('.rRM').value;
+    const ln=boundsFrom(lenMode,parseNumList(el.querySelector('.rL').value));
+    const rn=boundsFrom(radMode,parseNumList(el.querySelector('.rR').value));
+    const wInp=el.querySelector('.rW');
+    const wText=wInp?wInp.value.trim():'';
+    const wCombos=parseWidthCombos(wText);
+    const widthsList=[];
+    wCombos.forEach(c=>c.seq.forEach(w=>{if(widthsList.indexOf(w)<0)widthsList.push(w);}));
+    const wlInp=el.querySelector('.rWL');
+    const wlText=wlInp?wlInp.value.trim():'';
+    const chkWL=el.querySelector('.rCWL')?el.querySelector('.rCWL').checked:true;
+    S.rules.push({enabled:el.querySelector('.rE').checked,
+      layer:el.querySelector('.rN').value.trim(),
+      checkWidth:el.querySelector('.rCW').checked,
+      widthsText:wText,
+      widthCombos:wCombos,
+      widths:widthsList,
+      checkLen:el.querySelector('.rCL').checked,
+      lenMode:lenMode,lengths:ln.list,lenMin:ln.min,lenMax:ln.max,
+      checkWidthLen:chkWL,
+      widthLensText:wlText,
+      widthLenRules:parseWidthLengthRules(wlText),
+      checkRad:el.querySelector('.rCR').checked,
+      radMode:radMode,radii:rn.list,radMin:rn.min,radMax:rn.max});
+  });
+  const ln=boundsFrom($('defLenMode').value,parseNumList($('defLengths').value));
+  const rn=boundsFrom($('defRadMode').value,parseNumList($('defRadii').value));
+  const defWInp=$('defWidths');
+  const defWText=defWInp?defWInp.value.trim():'';
+  const defWCombos=parseWidthCombos(defWText);
+  const defWidthsList=[];
+  defWCombos.forEach(c=>c.seq.forEach(w=>{if(defWidthsList.indexOf(w)<0)defWidthsList.push(w);}));
+  const defWlText=$('defWidthLens')?$('defWidthLens').value.trim():'';
+  S.defaultRule={enabled:$('defEnabled').checked,
+    checkWidth:$('defCheckWidth').checked,
+    widthsText:defWText,
+    widthCombos:defWCombos,
+    widths:defWidthsList,
+    checkLen:$('defCheckLen').checked,lenMode:$('defLenMode').value,lengths:ln.list,lenMin:ln.min,lenMax:ln.max,
+    checkWidthLen:$('defCheckWidthLen')?$('defCheckWidthLen').checked:true,
+    widthLensText:defWlText,
+    widthLenRules:parseWidthLengthRules(defWlText),
+    checkRad:$('defCheckRad').checked,radMode:$('defRadMode').value,radii:rn.list,radMin:rn.min,radMax:rn.max};
+  S.tol=parseFloat($('inpTol').value);if(isNaN(S.tol))S.tol=0.001;
+  S.checkWidth=$('chkWidth').checked;S.checkLen=$('chkLen').checked;
+  S.checkWidthLen=$('chkWidthLen')?$('chkWidthLen').checked:true;
+  S.checkRad=$('chkRad').checked;
+}
+function addRuleRow(layer,widths,lenMode,lenText,enabled,extra){
+  extra=extra||{};
+  const masterW=$('chkWidth')?$('chkWidth').checked:true;
+  const masterL=$('chkLen')?$('chkLen').checked:true;
+  const masterWL=$('chkWidthLen')?$('chkWidthLen').checked:true;
+  const masterR=$('chkRad')?$('chkRad').checked:true;
+
+  const chkW=extra.checkWidth!=null?!!extra.checkWidth:masterW;
+  const widthsText=extra.widthsText!=null?extra.widthsText:(widths||'');
+  const chkL=extra.checkLen!=null?!!extra.checkLen:(lenMode&&lenMode!=='off'?true:masterL);
+  const widthLensText=extra.widthLensText||'';
+  const chkWL=extra.checkWidthLen!=null?!!extra.checkWidthLen:masterWL;
+  const chkR=extra.checkRad!=null?!!extra.checkRad:masterR;
+  const radMode=extra.radMode||'off';
+  const radText=extra.radText||'';
+  const wrap=document.createElement('div');
+  wrap.innerHTML='<div class="rulegrid ruleblock">'+
+    '<div class="top">'+
+      '<label class="fld"><input type="checkbox" class="rE"'+(enabled===false?'':' checked')+'> 启用</label>'+
+      '<label class="fld">层名 <input type="text" class="rN" style="width:120px" value="'+esc(layer||'')+'" placeholder="如 02G01P"></label>'+
+      '<span style="flex:1"></span>'+
+      '<button class="btn ghost small" data-act="fill">按层数据填充</button>'+
+      '<button class="btn danger small" data-act="del">删除</button>'+
+    '</div>'+
+    '<div class="ruleitems">'+
+      '<span>线宽组合</span><span class="pair"><input type="text" class="rW" value="'+esc(widthsText)+'" placeholder="如 6.9-6-3.94, 6.9-5.7-6.9（允许倒序）"></span>'+
+      '<label class="chk fld"><input type="checkbox" class="rCW"'+(chkW?' checked':'')+'> 检查</label>'+
+      '<span>总线长</span><span class="pair"><select class="rM">'+
+        '<option value="off"'+(lenMode==='off'||!lenMode?' selected':'')+'>不检查</option>'+
+        '<option value="list"'+(lenMode==='list'?' selected':'')+'>列表</option>'+
+        '<option value="range"'+(lenMode==='range'?' selected':'')+'>范围</option></select>'+
+        '<input type="text" class="rL" value="'+esc(lenText||'')+'" placeholder="列表: 1000,1500　或　范围: 800,2500"></span>'+
+      '<label class="chk fld"><input type="checkbox" class="rCL"'+(chkL?' checked':'')+'> 检查</label>'+
+      '<span>指定线宽线长</span><span class="pair">'+
+        '<input type="text" class="rWL" value="'+esc(widthLensText)+'" placeholder="如 6.9=10或者20 或 6.9=10/20 或 6.9:8~12"></span>'+
+      '<label class="chk fld"><input type="checkbox" class="rCWL"'+(chkWL?' checked':'')+'> 检查</label>'+
+      '<span>弧半径</span><span class="pair"><select class="rRM">'+
+        '<option value="off"'+(radMode==='off'?' selected':'')+'>不检查</option>'+
+        '<option value="list"'+(radMode==='list'?' selected':'')+'>列表</option>'+
+        '<option value="range"'+(radMode==='range'?' selected':'')+'>范围</option>'+
+        '<option value="min"'+(radMode==='min'?' selected':'')+'>最小半径</option></select>'+
+        '<input type="text" class="rR" value="'+esc(radText)+'" placeholder="列表: 52.38　范围: 40,80　最小: 50"></span>'+
+      '<label class="chk fld"><input type="checkbox" class="rCR"'+(chkR?' checked':'')+'> 检查</label>'+
+    '</div></div>';
+  $('ruleRows').appendChild(wrap.firstElementChild);
+}
+function genLayerRules(){
+  if(!S.records.length){alert('请先导入数据');return;}
+  $('ruleRows').innerHTML='';
+  layerStats(S.records).forEach(e=>addRuleRow(e.layer,'','off','',true));
+}
+function fillFromData(btn){
+  const el=btn.closest('.rulegrid');
+  const layer=el.querySelector('.rN').value.trim();
+  const ls=layerStats(S.records).find(x=>x.layer===layer);
+  if(!ls){alert('未找到层「'+layer+'」的数据');return;}
+  const seqs=ls.widthSeqs?[...ls.widthSeqs]:[];
+  if(seqs.length){
+    el.querySelector('.rW').value=seqs.join(', ');
+  }else{
+    el.querySelector('.rW').value=[...ls.widths.keys()].sort((a,b)=>a-b).map(fmt).join(',');
+  }
+  el.querySelector('.rCW').checked=true;
+  el.querySelector('.rM').value='list';
+  el.querySelector('.rL').value=[...ls.lens.keys()].sort((a,b)=>a-b).map(fmt).join(',');
+  el.querySelector('.rCL').checked=true;
+  const rads=[...(ls.radii||new Map()).keys()].sort((a,b)=>a-b);
+  if(rads.length){
+    el.querySelector('.rRM').value='list';
+    el.querySelector('.rR').value=rads.map(fmt).join(',');
+    el.querySelector('.rCR').checked=true;
+  }
+  syncMasterSwitches();
+}
+/* ---------- 结果 ---------- */
+function emptyStatus(st){return {st:st,reasons:[],width:false,length:false,widthLen:false,radius:false,badWidths:[],badRadii:[],badWidthLens:[]};}
+function checkOpts(){return {checkWidth:S.checkWidth,checkLen:S.checkLen,checkWidthLen:S.checkWidthLen,checkRad:S.checkRad};}
+function recStatus(r){
+  if(!S.checkRes)return emptyStatus('none');
+  const rule=findRule(r.layer,S.rules,S.defaultRule);
+  if(!rule||!ruleHasCriteria(rule,checkOpts()))return emptyStatus('none');
+  const v=S.checkRes.recViol.get(r.idx);
+  if(!v)return emptyStatus('pass');
+  const reasons=Array.isArray(v)?v:(v.reasons||[]);
+  return {st:'fail',reasons:reasons,width:!!v.width,length:!!v.length,widthLen:!!v.widthLen,radius:!!v.radius,badWidths:v.badWidths||[],badRadii:v.badRadii||[],badWidthLens:v.badWidthLens||[]};
+}
+function currentFiltered(){
+  const q=$('fltQ').value.trim().toLowerCase();
+  const layer=$('fltLayer').value;
+  const st=$('fltStatus').value;
+  let arr=S.records.map(r=>({r:r,v:recStatus(r)}));
+  if(q)arr=arr.filter(x=>x.r.net.toLowerCase().includes(q));
+  if(layer)arr=arr.filter(x=>x.r.layer===layer);
+  if(st)arr=arr.filter(x=>x.v.st===st);
+  if(S.sort.col){
+    const k=S.sort.col,d=S.sort.dir;
+    arr.sort((a,b)=>{
+      let va,vb;
+      if(k==='net'){va=a.r.net;vb=b.r.net;}
+      else if(k==='layer'){va=a.r.layer;vb=b.r.layer;}
+      else if(k==='length'){va=a.r.length;vb=b.r.length;}
+      else if(k==='widths'){
+        const sA=extractWidthSeq(a.r), sB=extractWidthSeq(b.r);
+        va=sA.map(fmt).join('-');vb=sB.map(fmt).join('-');
+      }
+      else if(k==='radius'){va=a.r.minRadius;vb=b.r.minRadius;}
+      else {va=a.v.st;vb=b.v.st;}
+      if(va<vb)return -1*d;if(va>vb)return 1*d;return (a.r.idx||0)-(b.r.idx||0);
+    });
+  }
+  return arr;
+}
+function runCheck(){
+  if(!S.records.length){alert('请先导入数据');switchTab('import');return;}
+  collectRules();
+  S.checkRes=runChecks(S.records,S.rules,S.defaultRule,{tol:S.tol,checkWidth:S.checkWidth,checkLen:S.checkLen,checkWidthLen:S.checkWidthLen,checkRad:S.checkRad});
+  renderResults();
+  switchTab('result');
+}
+function formatWidthSeq(r,v){
+  const seq=extractWidthSeq(r);
+  if(!seq||!seq.length)return '-';
+  const text=seq.map(fmt).join(' → ');
+  if(v&&v.width){
+    const widthReason=reasonOf(v.reasons,'线宽')||'线宽组合不符合';
+    return '<span class="badval" title="'+esc(widthReason)+'">'+esc(text)+'</span>';
+  }
+  return esc(text);
+}
+
+function formatWidthLens(r,v){
+  if(!r.widthLens||r.widthLens.size===0){
+    if(r.widthsArr&&r.widthsArr.length===1&&!isNaN(r.length)){
+      return fmt(r.widthsArr[0])+': '+fmt(r.length);
+    }
+    return '-';
+  }
+  const tol=(S.tol!=null?S.tol:0.001)+1e-9;
+  const entries=[...r.widthLens.entries()].sort((a,b)=>a[0]-b[0]);
+  return entries.map(([w,l])=>{
+    const isBad=v&&v.badWidthLens&&v.badWidthLens.some(bw=>Math.abs(bw-w)<=tol);
+    const text=fmt(w)+': '+fmt(l);
+    if(isBad){
+      const rsn=reasonOf(v.reasons,'指定线宽 '+fmt(w))||reasonOf(v.reasons,'指定线宽');
+      return '<span class="badval" title="'+esc(rsn)+'">'+text+'</span>';
+    }
+    return text;
+  }).join(', ');
+}
+
+function markNums(arr,bads){
+  if(!arr||!arr.length)return '-';
+  const tol=(S.tol!=null?S.tol:0.001)+1e-9;
+  return arr.map(v=>{
+    const bad=bads&&bads.some(b=>Math.abs(b-v)<=tol);
+    return bad?'<span class="badval">'+fmt(v)+'</span>':fmt(v);
+  }).join(', ');
+}
+function reasonOf(reasons,key){return (reasons||[]).filter(s=>String(s).indexOf(key)>=0).join('；');}
+function countLayer(layer){
+  let fail=0,pass=0,none=0,total=0;
+  S.records.forEach(r=>{
+    if((r.layer||'(无层)')!==layer)return;
+    total++;
+    const s=recStatus(r).st;
+    if(s==='fail')fail++;else if(s==='pass')pass++;else none++;
+  });
+  return {fail:fail,pass:pass,none:none,total:total};
+}
+function renderResults(){
+  if(!S.checkRes){
+    $('resCards').innerHTML='';
+    $('resBanner').innerHTML='';
+    if($('resLayerNav'))$('resLayerNav').innerHTML='';
+    $('resLayers').innerHTML='<div class="card"><div class="hint">尚未运行检查，请到「检查规则」页运行</div></div>';
+    return;
+  }
+  const st=S.checkRes.stats;
+  const failOn=$('fltStatus').value==='fail';
+  if($('fltNote'))$('fltNote').textContent=failOn?'正在只看不符合。再点红色「不符合」，或把状态下拉改回「全部」。':'点击红色「不符合」只显示不符合项，再点一次恢复全部。';
+  $('resCards').innerHTML=
+    '<div class="stat"><div class="v">'+st.nets+'</div><div class="t">网络总数</div></div>'+
+    '<div class="stat ok"><div class="v">'+st.pass+'</div><div class="t">符合网络</div></div>'+
+    '<div class="stat bad clickable'+(failOn&&!$('fltLayer').value?' on':'')+'" data-filter="fail" title="点击只看不符合，再点一次恢复"><div class="v">'+st.fail+'</div><div class="t">不符合网络</div></div>'+
+    '<div class="stat"><div class="v">'+st.none+'</div><div class="t">未设规则网络</div></div>'+
+    '<div class="stat bad clickable'+(failOn&&!$('fltLayer').value?' on':'')+'" data-filter="fail" title="点击只看不符合记录，再点一次恢复"><div class="v">'+S.checkRes.recViol.size+'</div><div class="t">不符合记录数(网络×层)</div></div>';
+  $('resBanner').innerHTML=st.none>0?
+    '<div class="hint" style="background:var(--warn-bg);border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:12px">⚠ '+st.none+' 个网络为「未检查」：所在层没有配置带判据的规则，或对应项未勾选检查。未作判定，既不是通过也不是不符合。<button class="btn ghost small" id="btnQuickGen" style="margin-left:10px">一键为数据中的层生成规则行</button></div>':'';
+  if(st.none>0)$('btnQuickGen').onclick=()=>{genLayerRules();switchTab('rules');};
+  const allLayers=[...new Set(S.records.map(r=>r.layer))].sort();
+  const sel=$('fltLayer');const cur=sel.value;
+  sel.innerHTML='<option value="">全部</option>'+allLayers.map(l=>'<option>'+esc(l)+'</option>').join('');
+  sel.value=allLayers.includes(cur)?cur:'';
+  const arr=currentFiltered();
+  const groups=[];const gidx=new Map();
+  arr.forEach(x=>{
+    const L=x.r.layer||'(无层)';
+    if(!gidx.has(L)){gidx.set(L,groups.length);groups.push({layer:L,rows:[]});}
+    groups[gidx.get(L)].rows.push(x);
+  });
+  groups.sort((a,b)=>a.layer<b.layer?-1:a.layer>b.layer?1:0);
+  $('resLayerNav').innerHTML=groups.map((g,i)=>{
+    const f=g.rows.filter(x=>x.v.st==='fail').length;
+    return '<button type="button" class="btn ghost small" data-jump="'+i+'">'+esc(g.layer)+(f?' · '+f+' 不符合':'')+'</button>';
+  }).join('');
+  if(!groups.length){$('resLayers').innerHTML='<div class="card"><div class="hint">没有符合筛选条件的记录</div></div>';return;}
+  const arrow=k=>S.sort.col===k?(S.sort.dir>0?' ▲':' ▼'):'';
+  let html='';
+  groups.forEach((g,i)=>{
+    const failN=g.rows.filter(x=>x.v.st==='fail').length;
+    const passN=g.rows.filter(x=>x.v.st==='pass').length;
+    const noneN=g.rows.filter(x=>x.v.st==='none').length;
+    const lc=countLayer(g.layer);
+    const layerFailOn=$('fltStatus').value==='fail'&&$('fltLayer').value===g.layer;
+    html+='<div class="card layer-res" id="resLayer'+i+'"><h2>出线层 '+esc(g.layer)+
+      ' <span class="badge bad clickable'+(layerFailOn?' on':'')+'" data-filter="fail" data-layer="'+esc(g.layer)+'" title="点击只看本层不符合项，再点一次恢复">不符合 '+lc.fail+'</span>'+
+      ' <span class="badge ok">通过 '+lc.pass+'</span> <span class="badge na">未检查 '+lc.none+'</span>'+
+      ' <span class="small kv">'+(layerFailOn?'只显示 '+g.rows.length+' 条不符合 / 共 '+lc.total+' 个网络':'共 '+lc.total+' 个网络')+'</span></h2>'+
+      '<div class="tbl-wrap"><table class="layerTbl"><thead><tr>'+
+      '<th>Item</th><th data-k="net" style="cursor:pointer">网络'+arrow('net')+'</th>'+
+      '<th data-k="length" style="cursor:pointer">总线长('+esc(S.unit)+')'+arrow('length')+'</th>'+
+      '<th data-k="widths" style="cursor:pointer">线宽组合变化顺序'+arrow('widths')+'</th>'+
+      '<th>指定线宽线长('+esc(S.unit)+')</th>'+
+      '<th>直/弧段</th><th data-k="radius" style="cursor:pointer">弧半径'+arrow('radius')+'</th>'+
+      '<th data-k="st" style="cursor:pointer">判定'+arrow('st')+'</th></tr></thead><tbody>';
+    g.rows.forEach(x=>{
+      const r=x.r,v=x.v;
+      const rowTitle=v.st==='fail'?' title="'+esc('不符合原因：\n'+v.reasons.map(s=>'• '+s).join('\n'))+'"':'';
+      const badge=v.st==='fail'?'<span class="badge bad" title="'+esc('不符合原因：\n'+v.reasons.map(s=>'• '+s).join('\n'))+'">不符合</span>':v.st==='pass'?'<span class="badge ok">通过</span>':'<span class="badge na" title="该层未配置有效检查规则，未作判定">未检查</span>';
+      const rads=(r.radiiArr&&r.radiiArr.length)?r.radiiArr:(isNaN(r.minRadius)?[]:[r.minRadius]);
+      const lenReason=reasonOf(v.reasons,'总线长')||reasonOf(v.reasons,'线长缺失')||reasonOf(v.reasons,'线长');
+      const widthReason=reasonOf(v.reasons,'线宽');
+      const widthLenReason=reasonOf(v.reasons,'指定线宽');
+      const radReason=reasonOf(v.reasons,'弧半径');
+
+      const traceKey=(r.item||r.line||'')+'__'+r.net+'__'+r.layer;
+      const isTraceRev=(v.st==='fail')&&S.traceReviewed&&S.traceReviewed.has(traceKey);
+      const traceChkBoxHtml=(v.st==='fail')
+        ? '<label class="rev-chk-wrap" title="复验勾选（勾选后该行置灰）"><input type="checkbox" class="chk-trace-rev" data-k="'+esc(traceKey)+'"'+(isTraceRev?' checked':'')+'> 复验</label>'
+        : '';
+
+      html+='<tr class="'+(v.st==='fail'?'fail ':'')+(isTraceRev?'reviewed ':'')+'"'+rowTitle+'>'+
+        '<td class="kv">'+esc(r.item||r.line||'')+'</td><td><b>'+esc(r.net)+'</b></td>'+
+        '<td class="mono'+(v.length?' badcell':'')+'" title="'+esc(lenReason)+'">'+fmt(r.length)+'</td>'+
+        '<td class="mono'+(v.width?' badcell':'')+'" title="'+esc(widthReason)+'">'+formatWidthSeq(r,v)+'</td>'+
+        '<td class="mono'+(v.widthLen?' badcell':'')+'" title="'+esc(widthLenReason)+'">'+formatWidthLens(r,v)+'</td>'+
+        '<td>'+(r.segCount||0)+'/'+(r.arcCount||0)+'</td>'+
+        '<td class="mono'+(v.radius?' badcell':'')+'" title="'+esc(radReason)+'">'+markNums(rads,v.badRadii)+'</td>'+
+        '<td>'+traceChkBoxHtml+badge+'</td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  });
+  $('resLayers').innerHTML=html;
+  if(typeof updateTraceRevHint==='function')updateTraceRevHint();
+}
+
+/* ---------- 差分 ---------- */
+function currentSuffixPairs(){
+  const list=[];
+  document.querySelectorAll('.sfx').forEach(c=>{if(c.checked)list.push({pos:c.dataset.pos,neg:c.dataset.neg});});
+  $('inpSfx').value.split(/[;；]/).forEach(part=>{
+    const p=part.split(/[,，]/);
+    if(p.length===2&&p[0].trim()&&p[1].trim())list.push({pos:p[0].trim(),neg:p[1].trim()});
+  });
+  return list;
+}
+function manualPairList(){
+  const out=[];
+  $('manualPairs').value.split(/\r?\n/).forEach(line=>{
+    const p=line.split(/[,，\t]/).map(x=>x.trim()).filter(x=>x);
+    if(p.length>=2)out.push({base:p[0]+' / '+p[1],pos:p[0],neg:p[1],manual:true});
+  });
+  return out;
+}
+function runDiff(){
+  if(!S.records.length){alert('请先导入数据');switchTab('import');return;}
+  S.diffTol=parseFloat($('inpDiffTol').value);if(isNaN(S.diffTol))S.diffTol=1;
+  const totVal=$('inpTotalDiffTol')?parseFloat($('inpTotalDiffTol').value):NaN;
+  S.totalDiffTol=isNaN(totVal)?S.diffTol:totVal;
+  S.checkLayerDiff=$('chkCheckLayerDiff')?$('chkCheckLayerDiff').checked:true;
+  S.checkTotalDiff=$('chkCheckTotalDiff')?$('chkCheckTotalDiff').checked:true;
+  const manual=manualPairList();
+  const used=new Set();manual.forEach(p=>{used.add(p.pos);used.add(p.neg);});
+  const nets=[...S.netLens.keys()].filter(n=>!used.has(n));
+  const auto=detectPairs(nets,currentSuffixPairs());
+  S.diffInfo=auto;
+  S.diffPairs=manual.concat(auto.pairs);
+  S.diffDone=true;
+  renderDiff();
+}
+function diffComputed(){
+  return S.diffPairs.map(p=>{
+    const d=computePairDiff(p,S.netLens,{
+      layerTol:S.diffTol,
+      totalTol:S.totalDiffTol,
+      checkLayer:S.checkLayerDiff!==false,
+      checkTotal:S.checkTotalDiff!==false
+    });
+    return {pair:p,d:d,exceed:d.exceed,maxLayerDiff:d.maxLayerDiff,totalDiff:d.totalDiff};
+  });
+}
+function renderDiff(){
+  if(!S.diffDone)return;
+  const all=diffComputed();
+  const fail=all.filter(x=>x.exceed);
+  const failLayer=all.filter(x=>x.d.layerExceed);
+  const failTotal=all.filter(x=>x.d.totalExceed);
+  const mism=all.filter(x=>x.d.setMismatch);
+  $('diffCards').innerHTML=
+    '<div class="stat"><div class="v">'+all.length+'</div><div class="t">差分对数</div></div>'+
+    '<div class="stat bad"><div class="v">'+fail.length+'</div><div class="t">超差对数</div></div>'+
+    '<div class="stat bad"><div class="v">'+failLayer.length+'</div><div class="t">逐层超差对数 (>'+fmt(S.diffTol)+S.unit+')</div></div>'+
+    '<div class="stat bad"><div class="v">'+failTotal.length+'</div><div class="t">总长超差对数 (>'+fmt(S.totalDiffTol)+S.unit+')</div></div>'+
+    '<div class="stat warn"><div class="v">'+mism.length+'</div><div class="t">P/N 层分布不一致</div></div>';
+  const onlyFail=$('chkDiffOnlyFail').checked;
+  let h='<thead><tr><th>差分对</th><th>P 网络</th><th>N 网络</th><th>层 / 检查项目</th><th>P 线长</th><th>N 线长</th><th>差值('+S.unit+')</th><th>允许值('+S.unit+')</th><th>判定</th></tr></thead><tbody>';
+  let shown=0;
+  all.forEach(x=>{
+    if(onlyFail&&!x.exceed)return;
+    shown++;
+    const rs=x.d.rows.length+1;
+    const badges=[];
+    if(x.pair.manual)badges.push('<span class="badge na">手动</span>');
+    if(x.d.setMismatch)badges.push('<span class="badge warn">层不一致</span>');
+    if(x.d.layerExceed&&S.checkLayerDiff)badges.push('<span class="badge bad">逐层超差</span>');
+    if(x.d.totalExceed&&S.checkTotalDiff)badges.push('<span class="badge bad">总长超差</span>');
+    const bHtml=badges.length?('<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">'+badges.join('')+'</div>'):'';
+    const head='<td rowspan="'+rs+'"><b>'+esc(x.pair.base)+'</b>'+bHtml+'</td>'+
+      '<td rowspan="'+rs+'" class="mono">'+esc(x.pair.pos)+'</td><td rowspan="'+rs+'" class="mono">'+esc(x.pair.neg)+'</td>';
+    x.d.rows.forEach((r,i)=>{
+      const bad=r.exceed;
+      const rowKey=x.pair.base+'__'+x.pair.pos+'__'+x.pair.neg+'__'+r.layer;
+      const isRev=bad&&S.diffReviewed&&S.diffReviewed.has(rowKey);
+      const statusBadge=S.checkLayerDiff
+        ?(bad?'<span class="badge bad">逐层超差</span>':'<span class="badge ok">OK</span>')
+        :'<span class="badge na">未检查</span>';
+      const chkBoxHtml=bad
+        ? '<label class="rev-chk-wrap" title="复验勾选（勾选后该行置灰）"><input type="checkbox" class="chk-diff-rev" data-k="'+esc(rowKey)+'"'+(isRev?' checked':'')+'> 复验</label>'
+        : '';
+      h+='<tr class="'+(i===0?'pairhead ':'')+(bad?'fail ':'')+(isRev?'reviewed ':'')+'">'+(i===0?head:'')+
+        '<td>'+esc(r.layer)+'</td>'+
+        '<td class="mono">'+fmt(r.lenP)+'</td><td class="mono">'+fmt(r.lenN)+'</td>'+
+        '<td class="mono '+(bad?'badcell':'')+'">'+fmt(r.diff)+'</td>'+
+        '<td class="mono hint">≤ '+fmt(r.tol)+'</td>'+
+        '<td>'+chkBoxHtml+statusBadge+(r.note?' <span class="badge warn">'+esc(r.note)+'</span>':'')+'</td></tr>';
+    });
+    const tb=x.d.total.exceed;
+    const totalKey=x.pair.base+'__'+x.pair.pos+'__'+x.pair.neg+'__total';
+    const isTotalRev=tb&&S.diffReviewed&&S.diffReviewed.has(totalKey);
+    const totalStatusBadge=S.checkTotalDiff
+      ?(tb?'<span class="badge bad">总长超差</span>':'<span class="badge ok">总长 OK</span>')
+      :'<span class="badge na">未检查</span>';
+    const totalChkBoxHtml=tb
+      ? '<label class="rev-chk-wrap" title="复验勾选（勾选后该行置灰）"><input type="checkbox" class="chk-diff-rev" data-k="'+esc(totalKey)+'"'+(isTotalRev?' checked':'')+'> 复验</label>'
+      : '';
+    h+='<tr class="totalrow'+(tb?' fail':'')+(isTotalRev?' reviewed':'')+'">'+
+      '<td><b>总线长差 (所有层合计)</b></td>'+
+      '<td class="mono" style="font-weight:700">'+fmt(x.d.total.lenP)+'</td><td class="mono" style="font-weight:700">'+fmt(x.d.total.lenN)+'</td>'+
+      '<td class="mono '+(tb?'badcell':'')+'" style="font-weight:700">'+fmt(x.d.total.diff)+'</td>'+
+      '<td class="mono hint">≤ '+fmt(x.d.total.tol)+'</td>'+
+      '<td>'+totalChkBoxHtml+totalStatusBadge+'</td></tr>';
+  });
+  if(!shown)h+='<tr><td colspan="9" class="kv">无符合条件的差分对</td></tr>';
+  $('diffTbl').innerHTML=h+'</tbody>';
+  if(typeof updateDiffRevHint==='function')updateDiffRevHint();
+}
+
+/* ---------- 导出 ---------- */
+function fileUrl(data, mime){
+  try{
+    if(typeof Blob!=='undefined' && typeof URL!=='undefined' && typeof URL.createObjectURL === 'function'){
+      if(data instanceof Blob) return URL.createObjectURL(data);
+      if(data instanceof Uint8Array || data instanceof ArrayBuffer){
+        return URL.createObjectURL(new Blob([data], { type: mime || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      }
+      return URL.createObjectURL(new Blob([data], { type: mime || 'text/csv;charset=utf-8' }));
+    }
+  }catch(e){}
+  if(typeof data === 'string'){
+    return 'data:' + (mime || 'text/csv;charset=utf-8') + ',' + encodeURIComponent(data);
+  }
+  if(data instanceof Uint8Array || data instanceof ArrayBuffer){
+    try{
+      let binary = '';
+      const bytes = new Uint8Array(data);
+      const len = bytes.byteLength;
+      for(let i = 0; i < len; i++){
+        binary += String.fromCharCode(bytes[i]);
+      }
+      if(typeof btoa !== 'undefined'){
+        return 'data:' + (mime || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') + ';base64,' + btoa(binary);
+      }
+    }catch(e){}
+  }
+  return '';
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}
+  ta.remove();return ok;
+}
+function tryTriggerDownload(name, data, mime){
+  try{
+    const url=fileUrl(data, mime);
+    if(!url) return false;
+    const a=document.createElement('a');
+    a.href=url;a.download=name;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{a.remove();if(url.indexOf('blob:')===0){try{URL.revokeObjectURL(url);}catch(e){}}},2000);
+    return true;
+  }catch(e){return false;}
+}
+/* 预览页常拦截 a.click() 下载且不报错，所以导出必须在页面上给出可见结果 */
+function showExportBox(name, data, hint, previewText){
+  const isXlsx = name.endsWith('.xlsx');
+  const plain = previewText != null ? String(previewText).replace(/^\uFEFF/,'') : (typeof data === 'string' ? String(data).replace(/^\uFEFF/,'') : '');
+  let mask=document.getElementById('expMask');
+  if(!mask){mask=document.createElement('div');mask.id='expMask';document.body.appendChild(mask);}
+  mask.style.display='flex';
+  mask.innerHTML='<div class="expbox" role="dialog">'+
+    '<h2 id="expTitle"></h2><div class="hint" id="expMsg"></div>'+
+    '<div class="row" style="margin:10px 0;gap:8px">'+
+      '<a class="btn" id="expLink">下载文件</a>'+
+      '<button type="button" class="btn ghost" id="expCopy">复制表格内容</button>'+
+      '<button type="button" class="btn gray" id="expClose">关闭</button></div>'+
+    '<textarea id="expText" readonly style="font-family:monospace;font-size:12px;height:240px"></textarea></div>';
+  document.getElementById('expTitle').textContent='已生成 '+name;
+  document.getElementById('expText').value=plain;
+  const n=Math.max(0,plain.split(/\r?\n/).filter(function(s){return s;}).length-1);
+  const msg=document.getElementById('expMsg');
+  msg.textContent=hint||(isXlsx ? ('Excel 检查报告已生成（共 '+n+' 行，含问题网络、问题原因、如何修改）。若未自动下载，点「下载 Excel 文件」，或点「复制表格内容」直接粘贴进表格。') : ('共 '+n+' 行。若没有弹出保存窗口，点「下载文件」，或「复制表格内容」后粘贴到 Excel。'));
+  const link=document.getElementById('expLink');
+  link.textContent = isXlsx ? '📥 下载 Excel 文件 (.xlsx)' : '📥 下载文件';
+  const mime = isXlsx ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : (name.endsWith('.json') ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8');
+  const url=fileUrl(data, mime);
+  link.href=url;link.download=name;
+  document.getElementById('expClose').onclick=function(){
+    mask.style.display='none';
+    if(url.indexOf('blob:')===0){try{URL.revokeObjectURL(url);}catch(e){}}
+  };
+  mask.onclick=function(e){if(e.target===mask)document.getElementById('expClose').click();};
+  document.getElementById('expCopy').onclick=function(){
+    const done=function(ok){document.getElementById('expCopy').textContent=ok?'已复制表格文本':'请在下方全选后 Ctrl+C';};
+    const ta=document.getElementById('expText');ta.focus();ta.select();
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(plain).then(function(){done(true);}).catch(function(){done(fallbackCopy(plain));});
+    else done(fallbackCopy(plain));
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText&&!isXlsx){
+    navigator.clipboard.writeText(plain).then(function(){
+      msg.textContent=hint?('已复制到剪贴板。'+hint):('已复制到剪贴板，可直接粘贴到 Excel。共 '+n+' 行。需要文件请点「下载文件」。');
+    }).catch(function(){});
+  }
+  tryTriggerDownload(name, data, mime);
+}
+
+/* =========================================================
+   Excel (.xlsx) 生成器与检查报告生成逻辑 (纯前端无依赖)
+   ========================================================= */
+
+function crc32Table(){
+  let table = [];
+  for(let n=0;n<256;n++){
+    let c=n;
+    for(let k=0;k<8;k++){
+      c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+    }
+    table[n]=c>>>0;
+  }
+  return table;
+}
+const CRC32_TABLE = crc32Table();
+
+function calcCRC32(buf){
+  let crc = 0 ^ (-1);
+  for(let i=0;i<buf.length;i++){
+    crc = (crc >>> 8) ^ CRC32_TABLE[(crc ^ buf[i]) & 0xFF];
+  }
+  return (crc ^ (-1)) >>> 0;
+}
+
+function makeZip(files){
+  const enc = new TextEncoder();
+  const fileEntries = files.map(f=>{
+    const data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+    const name = enc.encode(f.name);
+    const crc = calcCRC32(data);
+    return { name, data, crc, size: data.length };
+  });
+
+  let localParts = [];
+  let cdParts = [];
+  let offset = 0;
+
+  for(const f of fileEntries){
+    const header = new Uint8Array(30 + f.name.length);
+    const dv = new DataView(header.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0x0800, true);
+    dv.setUint16(8, 0, true);
+    dv.setUint16(10, 0, true);
+    dv.setUint16(12, 0, true);
+    dv.setUint32(14, f.crc, true);
+    dv.setUint32(18, f.size, true);
+    dv.setUint32(22, f.size, true);
+    dv.setUint16(26, f.name.length, true);
+    dv.setUint16(28, 0, true);
+    header.set(f.name, 30);
+
+    localParts.push(header);
+    localParts.push(f.data);
+
+    const cd = new Uint8Array(46 + f.name.length);
+    const cdDv = new DataView(cd.buffer);
+    cdDv.setUint32(0, 0x02014b50, true);
+    cdDv.setUint16(4, 20, true);
+    cdDv.setUint16(6, 20, true);
+    cdDv.setUint16(8, 0x0800, true);
+    cdDv.setUint16(10, 0, true);
+    cdDv.setUint16(12, 0, true);
+    cdDv.setUint16(14, 0, true);
+    cdDv.setUint32(16, f.crc, true);
+    cdDv.setUint32(20, f.size, true);
+    cdDv.setUint32(24, f.size, true);
+    cdDv.setUint16(28, f.name.length, true);
+    cdDv.setUint16(30, 0, true);
+    cdDv.setUint16(32, 0, true);
+    cdDv.setUint16(34, 0, true);
+    cdDv.setUint16(36, 0, true);
+    cdDv.setUint32(38, 0, true);
+    cdDv.setUint32(42, offset, true);
+    cd.set(f.name, 46);
+    cdParts.push(cd);
+
+    offset += header.length + f.data.length;
+  }
+
+  const cdOffset = offset;
+  let cdSize = 0;
+  for(const cd of cdParts) cdSize += cd.length;
+
+  const eocd = new Uint8Array(22);
+  const eocdDv = new DataView(eocd.buffer);
+  eocdDv.setUint32(0, 0x06054b50, true);
+  eocdDv.setUint16(4, 0, true);
+  eocdDv.setUint16(6, 0, true);
+  eocdDv.setUint16(8, fileEntries.length, true);
+  eocdDv.setUint16(10, fileEntries.length, true);
+  eocdDv.setUint32(12, cdSize, true);
+  eocdDv.setUint32(16, cdOffset, true);
+  eocdDv.setUint16(20, 0, true);
+
+  const totalLen = offset + cdSize + 22;
+  const out = new Uint8Array(totalLen);
+  let pos = 0;
+  for(const part of localParts){
+    out.set(part, pos);
+    pos += part.length;
+  }
+  for(const part of cdParts){
+    out.set(part, pos);
+    pos += part.length;
+  }
+  out.set(eocd, pos);
+  return out;
+}
+
+function xmlEscape(s){
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/\x27/g, '&apos;');
+}
+
+function colLetter(colIdx){
+  let temp = colIdx + 1;
+  let letter = '';
+  while(temp > 0){
+    let mod = (temp - 1) % 26;
+    letter = String.fromCharCode(65 + mod) + letter;
+    temp = Math.floor((temp - mod) / 26);
+  }
+  return letter;
+}
+
+function generateXLSX(sheets){
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  let wbSheetNodes = '';
+  let wbRels = '';
+  let contentTypesSheets = '';
+
+  sheets.forEach((sh, idx)=>{
+    const rId = 'rId' + (idx + 1);
+    wbSheetNodes += `<sheet name="${xmlEscape(sh.name)}" sheetId="${idx + 1}" r:id="${rId}"/>`;
+    wbRels += `<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${idx + 1}.xml"/>`;
+    contentTypesSheets += `<Override PartName="/xl/worksheets/sheet${idx + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+  });
+
+  const stylesRId = 'rId' + (sheets.length + 1);
+  wbRels += `<Relationship Id="${stylesRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  ${contentTypesSheets}
+</Types>`;
+
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${wbSheetNodes}</sheets>
+</workbook>`;
+
+  const wbRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${wbRels}
+</Relationships>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="4">
+    <font><sz val="10"/><name val="Microsoft YaHei"/></font>
+    <font><b/><color rgb="FFFFFFFF"/><sz val="11"/><name val="Microsoft YaHei"/></font>
+    <font><b/><color rgb="FFDC2626"/><sz val="10"/><name val="Microsoft YaHei"/></font>
+    <font><color rgb="FF16A34A"/><sz val="10"/><name val="Microsoft YaHei"/></font>
+  </fonts>
+  <fills count="5">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF0284C7"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFEE2E2"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF1F5F9"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFCBD5E1"/></left>
+      <right style="thin"><color rgb="FFCBD5E1"/></right>
+      <top style="thin"><color rgb="FFCBD5E1"/></top>
+      <bottom style="thin"><color rgb="FFCBD5E1"/></bottom>
+    </border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="5">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  const files = [
+    { name: '[Content_Types].xml', data: contentTypesXml },
+    { name: '_rels/.rels', data: relsXml },
+    { name: 'xl/_rels/workbook.xml.rels', data: wbRelsXml },
+    { name: 'xl/workbook.xml', data: workbookXml },
+    { name: 'xl/styles.xml', data: stylesXml },
+  ];
+
+  sheets.forEach((sh, idx)=>{
+    let sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`;
+
+    if(sh.cols && sh.cols.length){
+      sheetXml += `<cols>`;
+      sh.cols.forEach((col, cIdx)=>{
+        const w = col.width || 15;
+        sheetXml += `<col min="${cIdx + 1}" max="${cIdx + 1}" width="${w}" customWidth="1"/>`;
+      });
+      sheetXml += `</cols>`;
+    }
+
+    sheetXml += `<sheetData>`;
+    let rowNum = 1;
+
+    // Header row
+    if(sh.headers && sh.headers.length){
+      sheetXml += `<row r="${rowNum}" ht="28" customHeight="1">`;
+      sh.headers.forEach((h, cIdx)=>{
+        const cellRef = colLetter(cIdx) + rowNum;
+        sheetXml += `<c r="${cellRef}" s="1" t="inlineStr"><is><t>${xmlEscape(h)}</t></is></c>`;
+      });
+      sheetXml += `</row>`;
+      rowNum++;
+    }
+
+    // Data rows
+    (sh.rows || []).forEach(row=>{
+      sheetXml += `<row r="${rowNum}" ht="26" customHeight="1">`;
+      row.forEach((val, cIdx)=>{
+        const cellRef = colLetter(cIdx) + rowNum;
+        let sStyle = 0;
+        const valStr = String(val == null ? '' : val);
+        if(cIdx === 0 || cIdx === 2 || cIdx === row.length - 1){
+          sStyle = 3;
+        }
+        if(valStr.includes('不符合') || valStr.includes('超差') || valStr.includes('不一致') || valStr.includes('低于下限') || valStr.includes('超出上限')){
+          sStyle = 2;
+        } else if(valStr === '通过' || valStr === 'OK' || valStr === '已复验' || valStr === '全部合格'){
+          sStyle = 4;
+        }
+        if(typeof val === 'number'){
+          sheetXml += `<c r="${cellRef}" s="${sStyle}"><v>${val}</v></c>`;
+        } else {
+          sheetXml += `<c r="${cellRef}" s="${sStyle}" t="inlineStr"><is><t>${xmlEscape(valStr)}</t></is></c>`;
+        }
+      });
+      sheetXml += `</row>`;
+      rowNum++;
+    });
+
+    sheetXml += `</sheetData></worksheet>`;
+    files.push({ name: `xl/worksheets/sheet${idx + 1}.xml`, data: sheetXml });
+  });
+
+  return makeZip(files);
+}
+
+/* ---------- 建议生成算法 ---------- */
+function buildFixSuggestion(type, info){
+  if(type === 'widthCombo'){
+    const allowedStr = (info.allowedCombos || []).map(c => c.raw || c.str).join('、');
+    return '在 EDA 软件中调整 ' + info.layer + ' 层 ' + info.net + ' 网络的走线过渡线宽，修改为允许的线宽组合之一（如 ' + allowedStr + '，支持正序或倒序），调整或消除非预期的突变线宽段。';
+  }
+  if(type === 'lenMin'){
+    const diff = info.lenMin - info.actualLen;
+    return '在 EDA 软件中对 ' + info.layer + ' 层 ' + info.net + ' 网络进行蛇形绕线（Accordion）补偿，增加至少 ' + fmt(diff) + ' 走线长度，使总线长达到目标范围 [' + fmt(info.lenMin) + ' ~ ' + fmt(info.lenMax) + ']；若有允许短线场景，可调整规则下限。';
+  }
+  if(type === 'lenMax'){
+    const diff = info.actualLen - info.lenMax;
+    return '优化 ' + info.layer + ' 层 ' + info.net + ' 网络走线拓扑，拉直走线或就近打孔出线，缩减至少 ' + fmt(diff) + ' 走线长度，使总线长控制在 ≤ ' + fmt(info.lenMax) + '。';
+  }
+  if(type === 'lenList'){
+    return '在 EDA 软件中调整 ' + info.layer + ' 层 ' + info.net + ' 网络走线总长（实测 ' + fmt(info.actualLen) + '），使其精确匹配允许的目标长度之一（' + (info.lengths || []).map(fmt).join(' / ') + '）。';
+  }
+  if(type === 'widthLen'){
+    return '在 EDA 软件中调整 ' + info.layer + ' 层 ' + info.net + ' 网络中 ' + fmt(info.width) + 'mil 线宽段的布线长度（实测 ' + fmt(info.actualLen) + '），使其满足要求（' + info.reqText + '）。';
+  }
+  if(type === 'radMin'){
+    return '在 EDA 软件中增大 ' + info.layer + ' 层走线拐角处的倒角圆弧半径至 ≥ ' + fmt(info.radMin) + '（实测 ' + fmt(info.actualRad) + '），避免急折角引起的高频信号反射。';
+  }
+  if(type === 'radList'){
+    return '在 EDA 软件中修改 ' + info.layer + ' 层走线拐角处的倒角圆弧半径，使其符合允许列表规格（' + (info.radii || []).map(fmt).join(' / ') + '）。';
+  }
+  if(type === 'radRange'){
+    return '在 EDA 软件中修改 ' + info.layer + ' 层走线拐弯处的圆弧半径，使其落在目标范围 [' + fmt(info.radMin) + ' ~ ' + fmt(info.radMax) + '] 内。';
+  }
+  return '检查 EDA 软件中 ' + (info.layer || '') + ' 层的走线设计，依据问题原因进行针对性调整以符合设计规范。';
+}
+
+function buildDiffFixSuggestion(type, info){
+  if(type === 'layerDiff'){
+    const shorterNet = info.lenP < info.lenN ? info.posNet : info.negNet;
+    return '在 ' + info.layer + ' 层对较短的单端网络「' + shorterNet + '」进行局部等长蛇形微调（Accordion/Phase Tuning），补偿约 ' + fmt(info.diff) + ' 走线长度，使该层差值控制在 ≤ ±' + fmt(info.tol) + ' 范围内。';
+  }
+  if(type === 'totalDiff'){
+    const shorterNet = info.lenP < info.lenN ? info.posNet : info.negNet;
+    return '在 EDA 软件中对全板总长较短的单端网络「' + shorterNet + '」在末端扇出或过孔附近进行总长微调绕线，补偿约 ' + fmt(info.diff) + ' 长度，使整网总差值达到 ≤ ±' + fmt(info.tol) + ' 的全板时序公差要求。';
+  }
+  if(type === 'setMismatch'){
+    return '检查 EDA 原理图与 PCB 叠层过孔分配，确保差分对 ' + info.posNet + ' 与 ' + info.negNet + ' 在相同出线层进行对称布线与换层，消除单侧换层引起的阻抗突变与共模噪声。';
+  }
+  return '检查差分对走线与过孔，调整布线以满足等长与对称性要求。';
+}
+
+/* ---------- 检查汇总报告数据组装 (第④页与第⑤页汇总) ---------- */
+function generateUnifiedReportData(records, checkRes, rules, defaultRule, opts, traceReviewed, diffItemsOrPairs, netLens, diffOpts, diffReviewed){
+  opts = opts || {};
+  traceReviewed = traceReviewed || (typeof S !== 'undefined' && S.traceReviewed ? S.traceReviewed : new Set());
+  diffReviewed = diffReviewed || (typeof S !== 'undefined' && S.diffReviewed ? S.diffReviewed : new Set());
+  const tol = opts.tol != null ? opts.tol : 0.001;
+
+  const headers = ['序号', '问题网络 (网络名+所在层)', '问题原因', '如何修改', '复验状态'];
+  const cols = [
+    { width: 8 },  // 序号
+    { width: 28 }, // 问题网络 (网络名+所在层)
+    { width: 44 }, // 问题原因
+    { width: 48 }, // 如何修改
+    { width: 12 }  // 复验状态
+  ];
+  const rows = [];
+  let problemCount = 0;
+
+  // 1. 第④页：走线检查问题项
+  if(checkRes && records && records.length){
+    records.forEach(r => {
+      const v = checkRes.recViol ? checkRes.recViol.get(r.idx) : null;
+      if(!v) return;
+      const rule = findRule(r.layer, rules, defaultRule);
+      const isRev = traceReviewed.has(r.idx);
+      const revText = isRev ? '已复验' : '未复验';
+      const netWithLayer = r.net + ' (' + r.layer + ')';
+      const actualSeq = extractWidthSeq(r);
+      const seqStr = actualSeq.map(fmt).join(' → ');
+
+      if(v.width && rule && wantWidth(rule, opts)){
+        let combos = rule.widthCombos;
+        if(!combos || !combos.length){
+          combos = parseWidthCombos(rule.widthsText || (rule.widths || []).join(','));
+        }
+        const chk = checkWidthCombos(actualSeq, combos, tol);
+        const allowedStr = combos ? combos.map(c => c.raw || c.str).join(' / ') : '';
+        problemCount++;
+        rows.push([
+          problemCount,
+          netWithLayer,
+          '线宽不对：实测顺序「' + seqStr + '」，要求「' + (allowedStr || '无') + '」',
+          '将走线线宽修改为设计值（' + (allowedStr || '标准线宽') + '）',
+          revText
+        ]);
+      }
+
+      if(v.length && rule && wantLen(rule, opts)){
+        if(rule.lenMode === 'list'){
+          problemCount++;
+          rows.push([
+            problemCount,
+            netWithLayer,
+            '线长超标：实测 ' + fmt(r.length) + '，不在设计列表 {' + (rule.lengths || []).map(fmt).join(', ') + '}',
+            '调整走线总长为设计值 ' + (rule.lengths || []).map(fmt).join(' / '),
+            revText
+          ]);
+        } else if(rule.lenMode === 'range'){
+          if(!isNaN(rule.lenMin) && r.length < rule.lenMin - tol){
+            problemCount++;
+            const diff = rule.lenMin - r.length;
+            rows.push([
+              problemCount,
+              netWithLayer,
+              '线长超标：实测 ' + fmt(r.length) + '，低于下限 ' + fmt(rule.lenMin),
+              '蛇形绕线增加 ' + fmt(diff) + '，使总长达到设计值 ' + fmt(rule.lenMin),
+              revText
+            ]);
+          } else if(!isNaN(rule.lenMax) && r.length > rule.lenMax + tol){
+            problemCount++;
+            const diff = r.length - rule.lenMax;
+            rows.push([
+              problemCount,
+              netWithLayer,
+              '线长超标：实测 ' + fmt(r.length) + '，超出上限 ' + fmt(rule.lenMax),
+              '优化拉直走线缩短 ' + fmt(diff) + '，使总长控制在设计值 ' + fmt(rule.lenMax) + ' 内',
+              revText
+            ]);
+          }
+        }
+      }
+
+      if(v.widthLen && rule && wantWidthLen(rule, opts)){
+        (rule.widthLenRules || []).forEach(wlr => {
+          let actualLen = 0, found = false;
+          if(r.widthLens){
+            for(const [w, l] of r.widthLens.entries()){
+              if(Math.abs(w - wlr.width) <= tol){ actualLen += l; found = true; }
+            }
+          }
+          if(found){
+            let failMsg = '', reqStr = '';
+            if(wlr.mode === 'list'){
+              reqStr = wlr.list.map(fmt).join('/');
+              if(!inList(actualLen, wlr.list, tol)){
+                failMsg = '指定线宽线长超标：' + fmt(wlr.width) + 'mil线长实测' + fmt(actualLen) + '，要求' + reqStr;
+              }
+            } else if(wlr.mode === 'range'){
+              reqStr = fmt(wlr.min) + '~' + fmt(wlr.max);
+              if(!isNaN(wlr.min) && actualLen < wlr.min - tol){
+                failMsg = '指定线宽线长超标：' + fmt(wlr.width) + 'mil线长实测' + fmt(actualLen) + '，低于下限' + fmt(wlr.min);
+              } else if(!isNaN(wlr.max) && actualLen > wlr.max + tol){
+                failMsg = '指定线宽线长超标：' + fmt(wlr.width) + 'mil线长实测' + fmt(actualLen) + '，超出上限' + fmt(wlr.max);
+              }
+            } else if(wlr.mode === 'max' && actualLen > wlr.max + tol){
+              reqStr = '≤' + fmt(wlr.max);
+              failMsg = '指定线宽线长超标：' + fmt(wlr.width) + 'mil线长实测' + fmt(actualLen) + '，要求≤' + fmt(wlr.max);
+            } else if(wlr.mode === 'min' && actualLen < wlr.min - tol){
+              reqStr = '≥' + fmt(wlr.min);
+              failMsg = '指定线宽线长超标：' + fmt(wlr.width) + 'mil线长实测' + fmt(actualLen) + '，要求≥' + fmt(wlr.min);
+            }
+            if(failMsg){
+              problemCount++;
+              rows.push([
+                problemCount,
+                netWithLayer,
+                failMsg,
+                '将 ' + fmt(wlr.width) + 'mil 走线段长度调整为设计值 ' + reqStr,
+                revText
+              ]);
+            }
+          }
+        });
+      }
+
+      if(v.radius && rule && wantRad(rule, opts)){
+        const rads = recordRadii ? recordRadii(r) : (r.radiiArr || []);
+        rads.forEach(rad => {
+          let bad = false, failMsg = '', targetVal = '';
+          if(rule.radMode === 'list' && !inList(rad, rule.radii, tol)){
+            bad = true; targetVal = (rule.radii || []).map(fmt).join('/');
+            failMsg = '弧半径异常：实测 ' + fmt(rad) + '，不在设计列表 {' + targetVal + '}';
+          } else if(rule.radMode === 'min' && rad < rule.radMin - tol){
+            bad = true; targetVal = '≥ ' + fmt(rule.radMin);
+            failMsg = '弧半径异常：实测 ' + fmt(rad) + '，小于最小半径 ' + fmt(rule.radMin);
+          } else if(rule.radMode === 'range' && ((!isNaN(rule.radMin) && rad < rule.radMin - tol) || (!isNaN(rule.radMax) && rad > rule.radMax + tol))){
+            bad = true; targetVal = fmt(rule.radMin) + '~' + fmt(rule.radMax);
+            failMsg = '弧半径异常：实测 ' + fmt(rad) + '，不在允许范围 [' + targetVal + ']';
+          }
+          if(bad){
+            problemCount++;
+            rows.push([
+              problemCount,
+              netWithLayer,
+              failMsg,
+              '将拐角倒角圆弧半径调整为设计值 ' + targetVal,
+              revText
+            ]);
+          }
+        });
+      }
+
+      if(!v.width && !v.length && !v.widthLen && !v.radius && v.reasons && v.reasons.length){
+        v.reasons.forEach(msg => {
+          problemCount++;
+          rows.push([
+            problemCount,
+            netWithLayer,
+            '走线异常：' + msg,
+            '检查并修改走线以符合设计规范',
+            revText
+          ]);
+        });
+      }
+    });
+  }
+
+  // 2. 第⑤页：差分分析检查问题项
+  let diffItems = [];
+  if(Array.isArray(diffItemsOrPairs) && diffItemsOrPairs.length > 0 && diffItemsOrPairs[0].d){
+    diffItems = diffItemsOrPairs;
+  } else if(Array.isArray(diffItemsOrPairs) && (netLens instanceof Map || typeof netLens === 'object')){
+    diffItems = diffItemsOrPairs.map(p => ({
+      pair: p,
+      d: computePairDiff(p, netLens, diffOpts || {})
+    }));
+  }
+
+  diffItems.forEach(x => {
+    (x.d.rows || []).forEach(r => {
+      const isRev = diffReviewed.has(x.pair.base + '|' + r.layer);
+      const revText = isRev ? '已复验' : '未复验';
+      const pairNetWithLayer = x.pair.pos + ' / ' + x.pair.neg + ' (' + r.layer + ')';
+      if(r.exceed){
+        problemCount++;
+        const shorterNet = r.lenP < r.lenN ? x.pair.pos : x.pair.neg;
+        rows.push([
+          problemCount,
+          pairNetWithLayer,
+          '差分线对内长度差超标：差值 ' + fmt(r.diff) + '，允许值 ≤ ' + fmt(r.tol),
+          '在 ' + r.layer + ' 层对 ' + shorterNet + ' 绕线补偿 ' + fmt(r.diff) + '，使对内差 ≤ ' + fmt(r.tol),
+          revText
+        ]);
+      } else if(r.note){
+        problemCount++;
+        rows.push([
+          problemCount,
+          pairNetWithLayer,
+          '差分层不一致：' + r.note,
+          '将 ' + x.pair.pos + ' 与 ' + x.pair.neg + ' 调整至同一层对称布线',
+          revText
+        ]);
+      }
+    });
+
+    if(x.d.total && x.d.total.exceed){
+      problemCount++;
+      const isRev = diffReviewed.has(x.pair.base + '|TOTAL');
+      const revText = isRev ? '已复验' : '未复验';
+      const shorterNet = x.d.total.lenP < x.d.total.lenN ? x.pair.pos : x.pair.neg;
+      rows.push([
+        problemCount,
+        x.pair.pos + ' / ' + x.pair.neg + ' (跨层总长)',
+        '差分总线长差超标：总差值 ' + fmt(x.d.total.diff) + '，允许值 ≤ ' + fmt(x.d.total.tol),
+        '对 ' + shorterNet + ' 进行总长微调绕线补偿 ' + fmt(x.d.total.diff) + '，使总长差 ≤ ' + fmt(x.d.total.tol),
+        revText
+      ]);
+    }
+  });
+
+  if(rows.length === 0){
+    rows.push([
+      1,
+      '全板走线及差分网络',
+      '全部通过：未发现线宽不对、线长超标、弧半径异常或差分超差等问题',
+      '设计完全符合当前配置的约束规范，无需修改',
+      '全部合格'
+    ]);
+  }
+
+  const tsvLines = [headers.join('\t')].concat(rows.map(r => r.map(x => String(x == null ? '' : x).replace(/\t/g, ' ')).join('\t')));
+  const tsvText = tsvLines.join('\r\n');
+
+  return { headers, cols, rows, problemCount, tsvText };
+}
+
+/* ---------- 导出 Excel 汇总检查报告 (第④和⑤页汇总) ---------- */
+function exportUnifiedReportExcel(){
+  if(!S.records.length){ alert('请先导入并应用数据'); switchTab('import'); return; }
+  if(!S.checkRes){ alert('请先运行检查'); return; }
+
+  // 准备差分数据（若尚未点击差分分析，自动以当前参数分析以便汇总）
+  let diffItems = [];
+  try{
+    if(S.diffDone){
+      diffItems = diffComputed();
+    } else {
+      const manual = typeof manualPairList === 'function' ? manualPairList() : [];
+      const used = new Set();
+      manual.forEach(p => { used.add(p.pos); used.add(p.neg); });
+      const nets = [...S.netLens.keys()].filter(n => !used.has(n));
+      const auto = detectPairs(nets, typeof currentSuffixPairs === 'function' ? currentSuffixPairs() : [{pos:'_P',neg:'_N'},{pos:'+',neg:'-'}]);
+      const allPairs = manual.concat(auto.pairs);
+      const diffTol = parseFloat($('inpDiffTol') ? $('inpDiffTol').value : '1') || 1;
+      const totTol = parseFloat($('inpTotalDiffTol') ? $('inpTotalDiffTol').value : '1') || diffTol;
+      const chkL = $('chkCheckLayerDiff') ? $('chkCheckLayerDiff').checked : true;
+      const chkT = $('chkCheckTotalDiff') ? $('chkCheckTotalDiff').checked : true;
+      diffItems = allPairs.map(p => ({
+        pair: p,
+        d: computePairDiff(p, S.netLens, { layerTol: diffTol, totalTol: totTol, checkLayer: chkL, checkTotal: chkT })
+      }));
+    }
+  }catch(e){}
+
+  const rep = generateUnifiedReportData(
+    S.records,
+    S.checkRes,
+    S.rules,
+    S.defaultRule,
+    { tol: S.tol, checkWidth: S.checkWidth, checkLen: S.checkLen, checkWidthLen: S.checkWidthLen, checkRad: S.checkRad },
+    S.traceReviewed,
+    diffItems,
+    S.netLens,
+    { layerTol: S.diffTol || 1, totalTol: S.totalDiffTol || 1, checkLayer: S.checkLayerDiff !== false, checkTotal: S.checkTotalDiff !== false },
+    S.diffReviewed
+  );
+
+  const xlsxBuf = generateXLSX([{
+    name: '走线检查汇总报告',
+    headers: rep.headers,
+    cols: rep.cols,
+    rows: rep.rows
+  }]);
+
+  const filename = 'PCB走线检查汇总报告_问题网络与修改建议.xlsx';
+  const hint = rep.problemCount > 0
+    ? ('已汇总生成 ' + rep.problemCount + ' 项问题网络报告与修改建议（包含走线检查与差分分析）。若未自动下载，点「下载 Excel 文件」，或点「复制表格内容」直接粘贴进表格。')
+    : '全板走线及差分检查全部通过，已生成合格汇总报告。';
+  showExportBox(filename, xlsxBuf, hint, rep.tsvText);
+}
+
+function exportTraceReportExcel(){ exportUnifiedReportExcel(); }
+function exportDiffReportExcel(){ exportUnifiedReportExcel(); }
+
+function download(name,text,hint){showExportBox(name,text,hint);}
+function exportAll(){
+  if(!S.records.length){alert('请先导入并应用数据');switchTab('import');return;}
+  const rows=currentFiltered().map(x=>{
+    const wlStr=x.r.widthLens?[...x.r.widthLens.entries()].sort((a,b)=>a[0]-b[0]).map(([w,l])=>fmt(w)+':'+fmt(l)).join('; '):'';
+    const seqStr=extractWidthSeq(x.r).map(fmt).join('->');
+    return [x.r.item||x.r.line||'',x.r.net,x.r.layer,fmt(x.r.length),seqStr,wlStr,(x.r.radiiArr||[]).map(fmt).join('/'),(x.r.segCount||0)+'/'+(x.r.arcCount||0),x.v.st==='fail'?'不符合':x.v.st==='pass'?'通过':'未检查',(x.v.reasons||[]).join('；')];
+  });
+  if(!rows.length){alert('当前筛选下没有可导出的记录');return;}
+  download('走线检查_全部.csv',toCSV(['Item','网络','层','总线长','线宽组合顺序','指定线宽线长','弧半径','直/弧段','判定','原因'],rows));
+}
+function exportFail(){
+  if(!S.checkRes){alert('请先运行检查');return;}
+  const rows=[];
+  S.records.forEach(r=>{
+    const v=S.checkRes.recViol.get(r.idx);
+    if(!v)return;
+    const reasons=Array.isArray(v)?v:(v.reasons||[]);
+    const wlStr=r.widthLens?[...r.widthLens.entries()].sort((a,b)=>a[0]-b[0]).map(([w,l])=>fmt(w)+':'+fmt(l)).join('; '):'';
+    const seqStr=extractWidthSeq(r).map(fmt).join('->');
+    rows.push([r.item||r.line||'',r.net,r.layer,fmt(r.length),seqStr,wlStr,(r.radiiArr||[]).map(fmt).join('/'),reasons.join('；')]);
+  });
+  download('走线检查_不符合项.csv',toCSV(['Item','网络','层','总线长','线宽组合顺序','指定线宽线长','弧半径','不符合原因'],rows));
+}
+function exportDiff(){
+  if(!S.diffDone){alert('请先分析差分');return;}
+  const rows=[];
+  diffComputed().forEach(x=>{
+    x.d.rows.forEach(r=>rows.push([
+      x.pair.base,x.pair.pos,x.pair.neg,r.layer,fmt(r.lenP),fmt(r.lenN),fmt(r.diff),fmt(r.tol),
+      S.checkLayerDiff?(r.exceed?'逐层超差':'OK'):'未检查',
+      x.d.setMismatch?'层不一致':'',r.note
+    ]));
+    rows.push([
+      x.pair.base,x.pair.pos,x.pair.neg,'总线长差(所有层合计)',fmt(x.d.total.lenP),fmt(x.d.total.lenN),fmt(x.d.total.diff),fmt(x.d.total.tol),
+      S.checkTotalDiff?(x.d.total.exceed?'总长超差':'OK'):'未检查',
+      x.d.setMismatch?'层不一致':'',''
+    ]);
+  });
+  download('差分线长差分析.csv',toCSV(['差分对','P网络','N网络','层/检查项','P线长','N线长','差值','允许值','判定','层分布','备注'],rows));
+}
+
+/* ---------- 规则持久化 ---------- */
+function radTextOf(r){
+  if(!r||!r.radMode||r.radMode==='off')return '';
+  if(r.radMode==='list')return (r.radii||[]).join(',');
+  if(r.radMode==='min')return isNaN(r.radMin)?'':String(r.radMin);
+  return [r.radMin,r.radMax].filter(x=>!isNaN(x)).join(',');
+}
+function widthCombosTextOf(r){
+  if(r.widthsText!=null)return r.widthsText;
+  if(r.widthCombos&&r.widthCombos.length)return r.widthCombos.map(c=>c.raw||c.str).join(', ');
+  if(r.widths&&r.widths.length)return r.widths.join(',');
+  return '';
+}
+
+function ruleSnapshot(){
+  collectRules();
+  const pack=r=>({enabled:!!r.enabled,layer:r.layer||'',
+    checkWidth:r.checkWidth!==false,widthsText:widthCombosTextOf(r),
+    checkLen:!!r.checkLen,lenMode:r.lenMode||'off',
+    lenText:r.lenMode==='range'?[r.lenMin,r.lenMax].filter(x=>!isNaN(x)).join(','):(r.lengths||[]).join(','),
+    checkWidthLen:r.checkWidthLen!==false,widthLensText:r.widthLensText||'',
+    checkRad:!!r.checkRad,radMode:r.radMode||'off',radText:radTextOf(r)});
+  return {kind:'pcb-trace-rules',version:3,rules:S.rules.map(pack),def:pack(S.defaultRule),
+    tol:S.tol,checkWidth:S.checkWidth,checkLen:S.checkLen,checkWidthLen:S.checkWidthLen,checkRad:S.checkRad,unit:S.unit};
+}
+function applyRulePack(d){
+  if(!d||typeof d!=='object'||(!Array.isArray(d.rules)&&!d.def))throw new Error('不是本工具的规则文件');
+  $('ruleRows').innerHTML='';
+  (d.rules||[]).forEach(r=>{
+    const extra={checkRad:!!r.checkRad,radMode:r.radMode||'off',radText:r.radText||''};
+    if(r.checkWidth!=null)extra.checkWidth=r.checkWidth;
+    if(r.checkLen!=null)extra.checkLen=r.checkLen;
+    if(r.checkWidthLen!=null)extra.checkWidthLen=r.checkWidthLen;
+    if(r.widthLensText!=null)extra.widthLensText=r.widthLensText;
+    const wText=r.widthsText!=null?r.widthsText:(Array.isArray(r.widths)?r.widths.join(','):'');
+    addRuleRow(r.layer,wText,r.lenMode,r.lenText,r.enabled!==false,extra);
+  });
+  const def=d.def||{};
+  $('defEnabled').checked=!!def.enabled;
+  $('defCheckWidth').checked=def.checkWidth!==false;
+  $('defWidths').value=def.widthsText!=null?def.widthsText:(Array.isArray(def.widths)?def.widths.join(','):'');
+  $('defCheckLen').checked=def.checkLen!=null?!!def.checkLen:!!(def.lenMode&&def.lenMode!=='off');
+  $('defLenMode').value=def.lenMode||'off';
+  $('defLengths').value=def.lenText||'';
+  if($('defCheckWidthLen'))$('defCheckWidthLen').checked=def.checkWidthLen!==false;
+  if($('defWidthLens'))$('defWidthLens').value=def.widthLensText||'';
+  $('defCheckRad').checked=!!def.checkRad;
+  $('defRadMode').value=def.radMode||'off';
+  $('defRadii').value=def.radText||'';
+  if(d.tol!=null)$('inpTol').value=d.tol;
+  $('chkWidth').checked=d.checkWidth!==false;
+  $('chkLen').checked=d.checkLen!==false;
+  if($('chkWidthLen'))$('chkWidthLen').checked=d.checkWidthLen!==false;
+  $('chkRad').checked=d.checkRad!==false;
+  if(d.unit)$('selUnit').value=d.unit;
+  syncMasterSwitches();
+}
+function saveRulesFile(){
+  const data=ruleSnapshot();
+  const text=JSON.stringify(data,null,2);
+  try{localStorage.setItem('pcbTraceChecker',JSON.stringify(data));}catch(e){}
+  const n=data.rules.length;
+  if($('ruleFileLabel'))$('ruleFileLabel').textContent='已生成 '+n+' 条层规则，请在弹出窗口中下载保存';
+  download('走线检查规则.json',text,'共 '+n+' 条层规则'+(data.def&&data.def.enabled?'，含默认规则':'')+'。请点「下载文件」保存到电脑。下次点「从本地文件读取」打开这个 JSON。若浏览器拦截了下载，点「复制全部」，粘贴到记事本后另存为 .json。');
+}
+function loadRulesFile(file){
+  const fr=new FileReader();
+  fr.onload=function(){
+    try{
+      const d=JSON.parse(String(fr.result).replace(/^\uFEFF/,''));
+      applyRulePack(d);
+      const n=(d.rules||[]).length;
+      if($('ruleFileLabel'))$('ruleFileLabel').textContent='已从本地载入：'+file.name+'（'+n+' 条层规则）';
+    }catch(e){
+      alert('读取失败：请选择「保存规则到本地」生成的 JSON 文件。'+(e&&e.message?('\n'+e.message):''));
+    }
+  };
+  fr.onerror=function(){alert('无法读取该文件');};
+  fr.readAsText(file,'utf-8');
+}
+
+/* ---------- 初始化 ---------- */
+function initApp(){
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  const dz=$('dropzone');
+  dz.onclick=()=>$('fileInput').click();
+  $('fileInput').onchange=e=>{if(e.target.files[0])loadFile(e.target.files[0]);};
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
+  dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+  $('btnSample').onclick=()=>{
+    S.rawText=SAMPLE_TEXT;S.fileName='示例数据.txt';
+    $('fileNameLabel').textContent='已载入：示例数据（内置）';
+    $('selUnit').value='mil';
+    handleText();applyData();
+    $('ruleRows').innerHTML='';
+    addRuleRow('02G01P','5.6','range','1000,2500',true);
+    addRuleRow('02G03P','4.0','off','',true);
+    $('defEnabled').checked=false;
+    $('defCheckWidth').checked=true;$('defWidths').value='';
+    $('defCheckLen').checked=false;$('defLenMode').value='off';$('defLengths').value='';
+    $('defCheckRad').checked=false;$('defRadMode').value='off';$('defRadii').value='';
+    $('chkWidth').checked=true;$('chkLen').checked=true;$('chkRad').checked=true;
+    $('inpTol').value='0.001';
+    $('inpDiffTol').value='1';
+  };
+  $('btnParsePaste').onclick=()=>{
+    S.rawText=$('pasteBox').value;S.fileName='粘贴文本';
+    $('fileNameLabel').textContent='来源：粘贴文本';
+    handleText();
+  };
+  if($('btnReparse'))$('btnReparse').onclick=()=>reparseTable(true);
+  if($('btnApplyMap'))$('btnApplyMap').onclick=applyData;
+  if($('btnApplyMapBottom'))$('btnApplyMapBottom').onclick=applyData;
+  if($('btnApplyBlock'))$('btnApplyBlock').onclick=applyData;
+  if($('btnApplyBlockBottom'))$('btnApplyBlockBottom').onclick=applyData;
+  $('chkWidth').onchange=function(){
+    const val=this.checked;
+    this.indeterminate=false;
+    S.checkWidth=val;
+    if($('defCheckWidth'))$('defCheckWidth').checked=val;
+    document.querySelectorAll('.rCW').forEach(el=>{el.checked=val;});
+  };
+  $('chkLen').onchange=function(){
+    const val=this.checked;
+    this.indeterminate=false;
+    S.checkLen=val;
+    if($('defCheckLen'))$('defCheckLen').checked=val;
+    document.querySelectorAll('.rCL').forEach(el=>{el.checked=val;});
+  };
+  if($('chkWidthLen'))$('chkWidthLen').onchange=function(){
+    const val=this.checked;
+    this.indeterminate=false;
+    S.checkWidthLen=val;
+    if($('defCheckWidthLen'))$('defCheckWidthLen').checked=val;
+    document.querySelectorAll('.rCWL').forEach(el=>{el.checked=val;});
+  };
+  $('chkRad').onchange=function(){
+    const val=this.checked;
+    this.indeterminate=false;
+    S.checkRad=val;
+    if($('defCheckRad'))$('defCheckRad').checked=val;
+    document.querySelectorAll('.rCR').forEach(el=>{el.checked=val;});
+  };
+
+  $('btnAddRule').onclick=()=>{addRuleRow('','','off','',true);syncMasterSwitches();};
+  $('btnFillLayers').onclick=()=>{genLayerRules();syncMasterSwitches();};
+  $('ruleRows').addEventListener('click',e=>{
+    const btn=e.target.closest('button');if(!btn)return;
+    const el=btn.closest('.rulegrid');
+    if(btn.dataset.act==='del'){
+      el.remove();
+      syncMasterSwitches();
+    }
+    else if(btn.dataset.act==='fill')fillFromData(btn);
+  });
+  $('ruleRows').addEventListener('change',e=>{
+    if(e.target.matches('.rCW, .rCL, .rCWL, .rCR')){
+      syncMasterSwitches();
+    }
+  });
+  ['defCheckWidth','defCheckLen','defCheckWidthLen','defCheckRad'].forEach(id=>{
+    const el=$(id);
+    if(el)el.onchange=syncMasterSwitches;
+  });
+  $('btnSaveRules').onclick=guardClick(saveRulesFile);
+  $('btnLoadRules').onclick=function(){$('ruleFile').click();};
+  $('ruleFile').onchange=function(e){
+    const f=e.target.files&&e.target.files[0];
+    e.target.value='';
+    if(f)loadRulesFile(f);
+  };
+  $('btnRunCheck').onclick=runCheck;
+  if($('btnRunCheckBottom'))$('btnRunCheckBottom').onclick=runCheck;
+  ['fltQ','fltLayer','fltStatus'].forEach(id=>{const el=$(id);el.oninput=()=>{S.page=0;renderResults();};el.onchange=el.oninput;});
+  function guardClick(fn){return function(){try{fn();}catch(e){alert('操作失败：'+(e&&e.message?e.message:e));}};}
+  if($('btnExpReport')) $('btnExpReport').onclick=guardClick(exportTraceReportExcel);
+  $('btnExpAll').onclick=guardClick(exportAll);
+  $('btnExpFail').onclick=guardClick(exportFail);
+  $('btnDiffRun').onclick=runDiff;
+  function updateDiffRevHint(){
+    const el=$('diffRevHint');if(!el)return;
+    const count=S.diffReviewed?S.diffReviewed.size:0;
+    el.textContent=count>0?('已复验 '+count+' 项'):'';
+  }
+  function updateTraceRevHint(){
+    const el=$('traceRevHint');if(!el)return;
+    const count=S.traceReviewed?S.traceReviewed.size:0;
+    el.textContent=count>0?('已复验 '+count+' 项'):'';
+  }
+  $('diffTbl').addEventListener('change',e=>{
+    const cb=e.target.closest('.chk-diff-rev');if(!cb)return;
+    const k=cb.dataset.k;
+    if(!S.diffReviewed)S.diffReviewed=new Set();
+    if(cb.checked){S.diffReviewed.add(k);}else{S.diffReviewed.delete(k);}
+    const tr=cb.closest('tr');
+    if(tr)tr.classList.toggle('reviewed',cb.checked);
+    updateDiffRevHint();
+  });
+  $('tab-result').addEventListener('change',e=>{
+    const cb=e.target.closest('.chk-trace-rev');if(!cb)return;
+    const k=cb.dataset.k;
+    if(!S.traceReviewed)S.traceReviewed=new Set();
+    if(cb.checked){S.traceReviewed.add(k);}else{S.traceReviewed.delete(k);}
+    const tr=cb.closest('tr');
+    if(tr)tr.classList.toggle('reviewed',cb.checked);
+    updateTraceRevHint();
+  });
+  if($('btnClearDiffRev'))$('btnClearDiffRev').onclick=()=>{
+    if(S.diffReviewed)S.diffReviewed.clear();
+    renderDiff();
+    updateDiffRevHint();
+  };
+  if($('btnClearTraceRev'))$('btnClearTraceRev').onclick=()=>{
+    if(S.traceReviewed)S.traceReviewed.clear();
+    renderResults();
+    updateTraceRevHint();
+  };
+  $('chkDiffOnlyFail').onchange=()=>{renderDiff();updateDiffRevHint();};
+  if($('chkCheckLayerDiff'))$('chkCheckLayerDiff').onchange=()=>{S.checkLayerDiff=$('chkCheckLayerDiff').checked;renderDiff();updateDiffRevHint();};
+  if($('chkCheckTotalDiff'))$('chkCheckTotalDiff').onchange=()=>{S.checkTotalDiff=$('chkCheckTotalDiff').checked;renderDiff();updateDiffRevHint();};
+  if($('btnExpDiffReport')) $('btnExpDiffReport').onclick=guardClick(exportDiffReportExcel);
+  $('btnExpDiff').onclick=guardClick(exportDiff);
+  $('tab-result').addEventListener('click',e=>{
+    const th=e.target.closest('th[data-k]');
+    if(th&&e.target.closest('#resLayers')){
+      const k=th.dataset.k;
+      if(S.sort.col===k)S.sort.dir*=-1;else{S.sort.col=k;S.sort.dir=1;}
+      renderResults();
+      return;
+    }
+    const fb=e.target.closest('[data-filter]');
+    if(fb){
+      const layer=fb.dataset.layer||'';
+      const stEl=$('fltStatus'),lyEl=$('fltLayer');
+      if(layer){
+        if(stEl.value==='fail'&&lyEl.value===layer){stEl.value='';lyEl.value='';}
+        else{stEl.value='fail';lyEl.value=layer;}
+      }else if(stEl.value==='fail'&&!lyEl.value){stEl.value='';}
+      else{stEl.value='fail';lyEl.value='';}
+      renderResults();
+      return;
+    }
+    const jb=e.target.closest('[data-jump]');
+    if(jb){const el=document.getElementById('resLayer'+jb.dataset.jump);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+}
+
+if(typeof document!=='undefined'){initApp();}
+if(typeof module!=='undefined'&&module.exports){
+  module.exports={isBlockFormat:isBlockFormat,parseBlockText:parseBlockText,parseBlockMeta:parseBlockMeta,parseDelimited:parseDelimited,
+    detectDelimiter:detectDelimiter,autoMapColumns:autoMapColumns,recordsFromGrid:recordsFromGrid,
+    aggregateRecords:aggregateRecords,layerStats:layerStats,findRule:findRule,ruleHasCriteria:ruleHasCriteria,runChecks:runChecks,
+    detectPairs:detectPairs,computePairDiff:computePairDiff,toCSV:toCSV,SAMPLE_TEXT:SAMPLE_TEXT,fmt:fmt,
+    parseFloatNum:parseFloatNum,parseNumList:parseNumList,
+    parseWidthLengthRules:parseWidthLengthRules,calcSegLen:calcSegLen,
+    parseWidthCombos:parseWidthCombos,extractWidthSeq:extractWidthSeq,
+    matchWidthCombo:matchWidthCombo,checkWidthCombos:checkWidthCombos,
+    wantWidth:wantWidth,wantLen:wantLen,wantWidthLen:wantWidthLen,wantRad:wantRad,
+    generateXLSX:generateXLSX,buildFixSuggestion:buildFixSuggestion,buildDiffFixSuggestion:buildDiffFixSuggestion,
+    generateUnifiedReportData:generateUnifiedReportData,generateTraceReportData:generateUnifiedReportData,generateDiffReportData:generateUnifiedReportData,exportUnifiedReportExcel:exportUnifiedReportExcel,
+    exportTraceReportExcel:exportTraceReportExcel,exportDiffReportExcel:exportDiffReportExcel};
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "si-workbench",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PCB / SI 检查工作台：走线、约束、加工能力、扇出、铜皮与综合一体化检查（纯前端）",
+  "scripts": {
+    "serve": "node serve.js",
+    "test": "node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js && node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js",
+    "test:engine": "node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js",
+    "test:ui": "node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js",
+    "bench": "node pcb-checker/bench-perf.js"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
