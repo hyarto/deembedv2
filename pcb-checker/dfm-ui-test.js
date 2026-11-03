@@ -42,7 +42,9 @@ console.log('== DFM 加工能力与空间间距 UI 测试 ==');
 
 test('页面基本元素与双规则阈值/焊盘直径/一钻直径输入框存在', () => {
   const tabs = d.querySelectorAll('nav#tabs button');
-  if (tabs.length !== 4) throw new Error('页签数量应为 4，实际 ' + tabs.length);
+  if (tabs.length !== 5) throw new Error('页签数量应为 5（新增「规律分析」），实际 ' + tabs.length);
+  if (!d.querySelector('nav#tabs button[data-tab="analysis"]')) throw new Error('缺少规律分析页签');
+  if (!$('btnPatObjVia') || !$('btnPatObjTrace')) throw new Error('缺少规律分析的对象切换按钮');
   if (!$('inpThresholdGnd')) throw new Error('缺少 GND 孔阈值输入框');
   if (!$('inpThresholdSignal')) throw new Error('缺少信号孔阈值输入框');
   if (!$('inpGndPadDiam')) throw new Error('缺少 GND 焊盘直径输入框');
@@ -252,6 +254,177 @@ Item 2                < Trace >
   const hint = $('runHint').textContent;
   if (!/共核对 1 处/.test(hint)) throw new Error('应照常核对 1 处，实际提示: ' + hint);
   if (!/层名无法解析|无法解析为层号/.test(hint)) throw new Error('缺少「层名无法解析」提示，实际: ' + hint);
+});
+
+// ---------------------------------------------------------------------------
+// 规律分析（按信号孔 / 按走线）
+// ---------------------------------------------------------------------------
+console.log('\n== 规律分析：以信号孔 / 走线为对象的全板问题归纳 ==');
+
+test('切换页签可渲染规律分析：KPI、维度分布、亏欠分档与对象排行', () => {
+  const sampleTxt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  $('inpGndPadDiam').value = '7.906';
+  $('inpSignalPadDiam').value = '9.94';
+  $('inpThresholdGnd').value = '6.0';
+  $('inpThresholdSignal').value = '6.0';
+  w.eval(`loadTextData(${JSON.stringify(sampleTxt)}, "via_trace_airgap_sample.txt"); runCheck();`);
+  d.querySelector('nav#tabs button[data-tab="analysis"]').click();
+
+  const a = w.PatternState.last;
+  if (!a || !a.hasData) throw new Error('规律分析无数据');
+  if (a.object !== 'via') throw new Error('默认对象应为按信号孔/过孔');
+  if (a.objectCount !== 11) throw new Error('问题过孔对象数应为 11，实际 ' + a.objectCount);
+  if (a.kpis.defectCount !== a.allObjects.reduce((s, o) => s + o.failCount, 0)) {
+    throw new Error('缺陷处数应等于各对象缺陷数之和');
+  }
+  const sumBucket = a.deficitBuckets.reduce((s, b) => s + b.count, 0);
+  if (sumBucket !== a.kpis.defectCount) throw new Error('亏欠量分档合计应等于缺陷处数：' + sumBucket + ' vs ' + a.kpis.defectCount);
+  const dimSum = a.dimensionRows.reduce((s, r) => s + r.count, 0);
+  if (dimSum !== a.kpis.defectCount) throw new Error('维度分布合计应等于缺陷处数：' + dimSum + ' vs ' + a.kpis.defectCount);
+
+  if ($('patKpiObjects').textContent !== '11') throw new Error('KPI 对象数未渲染：' + $('patKpiObjects').textContent);
+  if (parseFloat($('patKpiMinDist').textContent) > 4.1) throw new Error('KPI 最小间距异常：' + $('patKpiMinDist').textContent);
+  if (d.querySelectorAll('#patDimChart .pat-bar-row').length === 0) throw new Error('维度条形图为空');
+  if (d.querySelectorAll('#patDeficitChart .pat-bar-row').length !== 4) throw new Error('亏欠量分档应为 4 段');
+  const rows = d.querySelectorAll('#tblPatObjectsBody tr');
+  if (rows.length !== 10) throw new Error('默认 Top10 应渲染 10 行，实际 ' + rows.length);
+});
+
+test('对象排行按缺陷处数降序，且首行是该样板最严重的过孔', () => {
+  const a = w.PatternState.last;
+  const counts = a.objects.map(o => o.failCount);
+  for (let i = 1; i < counts.length; i++) {
+    if (counts[i] > counts[i - 1]) throw new Error('未按缺陷处数降序：' + counts.join(','));
+  }
+  if (a.objects[0].failCount !== 9) throw new Error('最严重对象应有 9 处缺陷，实际 ' + a.objects[0].failCount);
+  const firstRow = d.querySelector('#tblPatObjectsBody tr').textContent;
+  if (!/Via #/.test(firstRow)) throw new Error('首行应为过孔对象：' + firstRow);
+});
+
+test('切换到「按走线」：表头与分组键随之变化，对象数按走线统计', () => {
+  $('btnPatObjTrace').click();
+  const a = w.PatternState.last;
+  if (a.object !== 'trace') throw new Error('对象未切换为走线');
+  if (a.objectCount !== 36) throw new Error('问题走线对象数应为 36，实际 ' + a.objectCount);
+  if (a.kpis.defectCount !== 42) throw new Error('走线模式缺陷处数应与过孔模式一致（同一批对偶），实际 ' + a.kpis.defectCount);
+  const head = d.querySelector('#tblPatObjectsHead').textContent;
+  if (!/出线层|线宽/.test(head)) throw new Error('走线模式表头未切换：' + head);
+  if (/Padstack/.test(head)) throw new Error('走线模式不应出现 Padstack 列：' + head);
+  if (!/问题对象排行（按走线）/.test($('patTableTitle').textContent)) throw new Error('表标题未更新：' + $('patTableTitle').textContent);
+});
+
+test('过孔范围筛选：仅信号孔 / 仅 GND 孔 / 全部三种口径互相自洽', () => {
+  $('btnPatObjVia').click();
+  const total = w.PatternState.last.kpis.defectCount;
+  $('selPatViaKind').value = 'signal'; $('selPatViaKind').dispatchEvent(new w.Event('change'));
+  const sig = w.PatternState.last.kpis.defectCount;
+  $('selPatViaKind').value = 'gnd'; $('selPatViaKind').dispatchEvent(new w.Event('change'));
+  const gnd = w.PatternState.last.kpis.defectCount;
+  $('selPatViaKind').value = 'all'; $('selPatViaKind').dispatchEvent(new w.Event('change'));
+  if (sig + gnd !== total) throw new Error(`信号孔 ${sig} + GND 孔 ${gnd} 应等于全部 ${total}`);
+  if (w.PatternState.last.objectCount !== 11) throw new Error('切回全部后对象数应为 11');
+});
+
+test('归纳维度切换：层 / 网络 / 孔型 / Padstack 均可渲染且合计不变', () => {
+  const dims = ['layer', 'net', 'kind', 'padstack'];
+  const expected = w.PatternState.last.kpis.defectCount;
+  dims.forEach(dim => {
+    $('selPatDim').value = dim; $('selPatDim').dispatchEvent(new w.Event('change'));
+    const a = w.PatternState.last;
+    if (a.dimension !== dim) throw new Error(`维度未切换：${dim}`);
+    const sum = a.dimensionRows.reduce((s, r) => s + r.count, 0);
+    if (sum !== expected) throw new Error(`${dim} 维度合计 ${sum} != ${expected}`);
+    if (d.querySelectorAll('#patDimChart .pat-bar-row').length === 0) throw new Error(`${dim} 维度条形图为空`);
+  });
+  $('selPatDim').value = 'layer'; $('selPatDim').dispatchEvent(new w.Event('change'));
+});
+
+test('排序与 TopN 联动：按最大亏欠量排序、Top 5 只渲染 5 行', () => {
+  $('selPatSort').value = 'maxDeficit'; $('selPatSort').dispatchEvent(new w.Event('change'));
+  const a = w.PatternState.last;
+  for (let i = 1; i < a.objects.length; i++) {
+    if (a.objects[i].maxDeficit > a.objects[i - 1].maxDeficit + 1e-9) throw new Error('未按最大亏欠量降序');
+  }
+  $('selPatTopN').value = '5'; $('selPatTopN').dispatchEvent(new w.Event('change'));
+  const rows = d.querySelectorAll('#tblPatObjectsBody tr');
+  if (rows.length !== 5) throw new Error('Top5 应渲染 5 行，实际 ' + rows.length);
+  $('selPatTopN').value = '10'; $('selPatTopN').dispatchEvent(new w.Event('change'));
+  $('selPatSort').value = 'failCount'; $('selPatSort').dispatchEvent(new w.Event('change'));
+});
+
+test('点击对象行「查看明细」：跳到结果页并按对象号填入搜索框', () => {
+  const firstId = w.PatternState.last.objects[0].id;
+  d.querySelector('#tblPatObjectsBody tr button').click();
+  const resultBtn = d.querySelector('nav#tabs button[data-tab="result"]');
+  if (!resultBtn.classList.contains('active')) throw new Error('未切换到检查结果明细页');
+  if ($('inpSearch').value !== 'Via ' + firstId) throw new Error('搜索框未填入对象号：' + $('inpSearch').value);
+  if (!d.getElementById('tab-result').classList.contains('active')) throw new Error('结果页未激活');
+});
+
+test('纯函数归纳：缺陷对偶按对象聚合、亏欠量与集中度计算正确', () => {
+  const fake = {
+    failCount: 3,
+    defectPairs: [
+      {via: {id: 1, net: 'GND', isGnd: true, padstack: 'P1', viaTypeLabel: '通孔'}, trace: {id: 10, subset: 'L2', net: 'A', width: 5}, evalDist: 4, threshold: 6},
+      {via: {id: 1, net: 'GND', isGnd: true, padstack: 'P1', viaTypeLabel: '通孔'}, trace: {id: 11, subset: 'L2', net: 'B', width: 5}, evalDist: 5, threshold: 6},
+      {via: {id: 2, net: 'SIG', isGnd: false, padstack: 'P2', viaTypeLabel: '盲孔'}, trace: {id: 10, subset: 'L3', net: 'A', width: 5}, evalDist: 3.5, threshold: 6}
+    ]
+  };
+  const a = w.buildDfmPatternAnalysis(fake, {object: 'via', dimension: 'layer', topN: 0});
+  if (a.objectCount !== 2) throw new Error('应聚合出 2 个过孔对象，实际 ' + a.objectCount);
+  const v1 = a.allObjects.find(o => o.id === 1);
+  if (v1.failCount !== 2) throw new Error('Via 1 应有 2 处缺陷，实际 ' + v1.failCount);
+  if (Math.abs(v1.minDist - 4) > 1e-9) throw new Error('Via 1 最小间距应为 4，实际 ' + v1.minDist);
+  if (Math.abs(v1.maxDeficit - 2) > 1e-9) throw new Error('Via 1 最大亏欠应为 2，实际 ' + v1.maxDeficit);
+  const total = a.dimensionRows.reduce((s, r) => s + r.count, 0);
+  if (total !== 3) throw new Error('维度合计应为 3，实际 ' + total);
+  if (Math.abs(a.kpis.concentration - 1) > 1e-9) throw new Error('两处缺陷同在 L2/L3 时前 3 名集中度应为 100%');
+
+  const t = w.buildDfmPatternAnalysis(fake, {object: 'trace', dimension: 'layer', topN: 0});
+  if (t.objectCount !== 2) throw new Error('按走线应聚合出 2 条走线，实际 ' + t.objectCount);
+  const tr10 = t.allObjects.find(o => o.id === 10);
+  if (tr10.failCount !== 2) throw new Error('Trace 10 应有 2 处缺陷，实际 ' + tr10.failCount);
+  if (tr10.peerList.length !== 2) throw new Error('Trace 10 应关联 2 个不同过孔');
+});
+
+test('空数据与全合格数据：规律分析给出提示而不是报错', () => {
+  const empty = w.buildDfmPatternAnalysis(null, {object: 'via'});
+  if (empty.hasData) throw new Error('无结果时 hasData 应为 false');
+  const noDefect = w.buildDfmPatternAnalysis({failCount: 0, defectPairs: []}, {object: 'trace'});
+  if (noDefect.hasData) throw new Error('无缺陷时 hasData 应为 false');
+  if (!noDefect.summary.headline) throw new Error('空状态应有提示文案');
+  const sigEmpty = w.buildDfmPatternAnalysis({failCount: 1, defectPairs: [
+    {via: {id: 9, net: 'GND', isGnd: true}, trace: {id: 1, subset: 'L2', net: 'A'}, evalDist: 5, threshold: 6}
+  ]}, {object: 'via', viaKind: 'signal'});
+  if (sigEmpty.hasData) throw new Error('仅信号孔口径下应无数据');
+  if (!/信号孔/.test(sigEmpty.summary.headline)) throw new Error('提示应说明是信号孔口径：' + sigEmpty.summary.headline);
+});
+
+test('CSV 导出：包含对象维度、维度分布与亏欠量分档三段', () => {
+  $('btnPatObjVia').click();
+  const csv = w.buildPatternCsv(w.PatternState.last);
+  const lines = csv.split('\r\n');
+  if (!/对象维度/.test(lines[0])) throw new Error('缺少对象维度表头');
+  if (!/维度分布/.test(csv)) throw new Error('缺少维度分布段');
+  if (!/亏欠量分档/.test(csv)) throw new Error('缺少亏欠量分档段');
+  const bodyRows = lines.filter(l => /^"Via#\d+"/.test(l));
+  if (bodyRows.length !== 11) throw new Error('对象行数应为 11，实际 ' + bodyRows.length);
+  if (w.buildPatternCsv({hasData: false}) !== '') throw new Error('无数据时应返回空串');
+});
+
+test('规律分析渲染不引入 HTML 注入（对象/网络名同样走转义）', () => {
+  const evil = '<img src=x onerror="window.__pwn=1">';
+  $('btnPatObjVia').click();
+  const fake = {failCount: 1, defectPairs: [
+    {via: {id: 7, net: evil, isGnd: false, padstack: evil, viaTypeLabel: '通孔'}, trace: {id: 3, subset: evil, net: evil, width: 5}, evalDist: 5, threshold: 6}
+  ]};
+  const saved = w.State.checkResult;
+  w.State.checkResult = fake;
+  w.renderPatternAnalysis();
+  const injected = d.querySelectorAll('#tab-analysis img[src="x"]');
+  if (injected.length) throw new Error('规律分析出现 ' + injected.length + ' 个注入节点');
+  w.State.checkResult = saved;
+  w.renderPatternAnalysis();
 });
 
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
