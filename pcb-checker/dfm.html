@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCB 加工能力与空间间距检查工具</title>
+<script src="dfm-check.js?v=2"></script>
+<style>
+:root{
+  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
+  --pri:#0284c7;--pri-bg:#e0f2fe;--pri-hover:#0369a1;
+  --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
+  --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
+  --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+header{background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid #1e293b}
+header h1{font-size:18px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600}
+header .sub{font-size:12px;color:#94a3b8}
+header .navlinks{margin-left:auto;display:flex;align-items:center;gap:10px}
+header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s}
+header .navlinks a:hover{background:rgba(255,255,255,.1)}
+header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+
+nav#tabs{background:#1e293b;padding:0 24px;display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid #334155}
+nav#tabs button{background:transparent;border:none;color:#94a3b8;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+nav#tabs button:hover{color:#f1f5f9;background:rgba(255,255,255,.05)}
+nav#tabs button.active{color:#38bdf8;border-bottom-color:#38bdf8;background:rgba(56,189,248,.08)}
+
+main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
+.tab{display:none}
+.tab.active{display:block}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b;display:flex;align-items:center;gap:8px}
+.card h3{font-size:13px;font-weight:700;margin:14px 0 8px 0;color:#334155}
+.hint{font-size:12px;color:var(--sub);line-height:1.6}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
+.btn.pri{background:var(--pri);color:#fff}
+.btn.pri:hover{background:var(--pri-hover)}
+.btn.sec{background:#fff;border-color:var(--line);color:#334155}
+.btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn.bad{background:var(--bad);color:#fff}
+.btn.bad:hover{background:#b91c1c}
+.btn.small{font-size:12px;padding:4px 8px}
+
+.dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all .15s}
+.dropzone:hover,.dropzone.dragover{border-color:var(--pri);background:var(--pri-bg)}
+.dropzone .t1{font-size:14px;font-weight:600;color:#1e293b}
+.dropzone .t2{font-size:12px;color:var(--sub);margin-top:4px}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
+.form-item{display:flex;flex-direction:column;gap:4px}
+.form-item label{font-size:12px;font-weight:600;color:#334155}
+.form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text)}
+.form-item input:focus, .form-item select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-bg)}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.stat-box{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s}
+.stat-box:hover{border-color:#cbd5e1;transform:translateY(-1px)}
+.stat-box.active{border-color:var(--pri);background:var(--pri-bg)}
+.stat-box .num{font-size:20px;font-weight:800;font-family:var(--mono)}
+.stat-box .lbl{font-size:11px;color:var(--sub);margin-top:2px}
+.stat-box.bad .num{color:var(--bad)}
+.stat-box.ok .num{color:var(--ok)}
+
+/* Interactive Canvas Viewer */
+.viewer-container{position:relative;background:#000000;border-radius:10px;border:1px solid #1e293b;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,.12)}
+.viewer-toolbar{background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid #334155;padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#e2e8f0;font-size:12px}
+.viewer-toolbar .tb-group{display:flex;align-items:center;gap:4px;border-right:1px solid #334155;padding-right:8px;margin-right:4px}
+.viewer-toolbar button{background:#1e293b;border:1px solid #334155;color:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.viewer-toolbar button:hover{background:#334155;border-color:#475569}
+.viewer-toolbar button.active{background:#0284c7;border-color:#38bdf8;color:#fff}
+.viewer-toolbar label{display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px}
+.viewer-toolbar input[type="checkbox"]{cursor:pointer}
+
+#pcbCanvas{display:block;width:100%;height:620px;background:#000000;cursor:grab}
+#pcbCanvas:active{cursor:grabbing}
+#pcbCanvas.measuring{cursor:crosshair}
+
+.canvas-hud{position:absolute;bottom:10px;left:12px;background:rgba(15,23,42,.85);border:1px solid #334155;padding:4px 10px;border-radius:6px;color:#94a3b8;font-size:11px;font-family:var(--mono);pointer-events:none}
+.canvas-legend{position:absolute;top:54px;right:12px;background:rgba(15,23,42,.85);border:1px solid #334155;padding:8px 12px;border-radius:6px;color:#cbd5e1;font-size:11px;pointer-events:none;display:flex;flex-direction:column;gap:5px}
+.canvas-legend-item{display:flex;align-items:center;gap:6px}
+.canvas-legend-color{width:12px;height:12px;border-radius:2px}
+
+/* Measurement Card in Canvas */
+.measure-card{position:absolute;bottom:10px;right:12px;background:rgba(15,23,42,.92);border:1px solid #38bdf8;padding:10px 14px;border-radius:8px;color:#fff;font-size:12px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.4);min-width:280px;display:none}
+.measure-card h4{font-size:13px;font-weight:700;color:#38bdf8;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.measure-card .m-row{display:flex;justify-content:space-between;margin:3px 0;font-family:var(--mono);font-size:11px}
+.measure-card .m-row b{color:#f8fafc}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{background:#f8fafc;color:#475569;font-weight:600;position:sticky;top:0;z-index:2}
+tr:hover{background:#f8fafc}
+tr.fail-row{background:#fef2f2}
+tr.fail-row:hover{background:#fee2e2}
+tr.reviewed{opacity:.6;background:#f1f5f9}
+.tag-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.tag-badge.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
+.tag-badge.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+.tag-badge.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-bar input{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
+
+.hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px}
+.hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#334155;cursor:pointer;transition:all .15s;line-height:1.3}
+.hist-chip:hover{background:#e2e8f0;border-color:#94a3b8}
+.hist-chip.active{background:#0284c7;color:#fff;border-color:#0369a1;font-weight:700}
+
+.net-card{background:#ffffff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;transition:box-shadow .15s}
+.net-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.net-card.bad{border-left:4px solid var(--bad);background:#fffbfc}
+.net-card.ok{border-left:4px solid var(--ok)}
+
+.net-defects-table{margin-top:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.net-defects-table th{background:#f1f5f9;font-size:11px;padding:6px 8px}
+.net-defects-table td{font-size:11px;padding:6px 8px}
+
+.tooltip{position:absolute;background:rgba(15,23,42,.95);border:1px solid #38bdf8;padding:8px 12px;border-radius:6px;color:#fff;font-size:11px;pointer-events:none;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3);line-height:1.4}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PCB 加工能力检查工具 <span class="tag">DFM / 空间间距与测量</span></h1>
+  <span class="sub">导入 Via &amp; Trace 坐标 → 空间几何解析与测量标尺 → 真实还原走线与过孔 → 标红超标间距 → 导出报告</span>
+  <div class="navlinks">
+    <a href="index.html">走线检查</a>
+    <a href="copper.html">约束检查</a>
+    <a href="dfm.html" class="active">加工能力检查</a>
+    <a href="fanout.html">扇出方案检查</a>
+    <a href="pour.html">铜皮检查</a>
+    <a href="unified.html">综合一体化检查</a>
+  </div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="import" class="active">① 规则与数据导入</button>
+  <button data-tab="canvas">② 空间几何可视化图与测量</button>
+  <button data-tab="result">③ 检查结果明细</button>
+  <button data-tab="legend">④ 判定原理与算法说明</button>
+</nav>
+
+<main>
+  <!-- TAB 1: 导入与规则设置 -->
+  <section class="tab active" id="tab-import">
+    <div class="card">
+      <h2>1. 导入 PCB 坐标数据文件 (Via &amp; Trace TXT)</h2>
+      <div class="hint" style="margin-bottom:12px">支持包含 <code>&lt; Via &gt;</code>（含 Circle Drill、Origin-xy）与 <code>&lt; Trace Seg &gt;</code>（含 Line 和 Arc 坐标信息）的标准 PCB 数据报告文件。</div>
+      <div class="dropzone" id="dropArea">
+        <div class="t1">📁 点击选择文件 或 将 TXT 报告拖拽至此处</div>
+        <div class="t2">支持包含 Origin-xy、Seg xy、Arc seg 等坐标信息的文本文件</div>
+        <input type="file" id="fileInput" accept=".txt,.log,.csv" style="display:none">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="btn pri small" id="btnLoadSample">⚡ 加载基础样本 (97项)</button>
+        <button type="button" class="btn sec small" id="btnClearData">清空数据</button>
+        <span class="hint" id="fileStatus">未加载文件</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <h2 style="margin:0">2. 加工能力规则与间距判定配置</h2>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">📁 常用配置方案预设：</span>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('eda_project')" title="载入当前 EDA 实测参数方案">📌 当前 EDA 工程配置</button>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('std_6mil')" title="载入 6.0 mil 标准规则">⚙️ 6.0 mil 标准规则</button>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('high_density_5mil')" title="载入 5.0 mil 高密规则">⚡ 5.0 mil 高密规则</button>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-item">
+          <label for="inpThresholdGnd">⚡ 线到 GND 孔最小间距规则阈值 (mil)</label>
+          <input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%">
+          <div class="hist-bar" id="hist_thresh_gnd"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpThresholdSignal">📡 线到信号孔最小间距规则阈值 (mil)</label>
+          <input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%">
+          <div class="hist-bar" id="hist_thresh_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="selMode">间距计算判定口径</label>
+          <select id="selMode">
+            <option value="pad_to_trace" selected>⭐ 焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
+            <option value="drill_to_trace">钻孔孔壁到走线边缘 (一钻孔径孔壁到走线，机械孔壁间距)</option>
+            <option value="center_to_trace">过孔中心到走线边缘 (Center to Trace Edge)</option>
+            <option value="center_to_center">过孔中心到走线中心 (Center to Center)</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="inpGndPadDiam">GND 焊盘直径 (mil)</label>
+          <input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1" style="width:100%" title="GND 过孔焊盘直径，默认 7.906 mil (对标 EDA 实测值)">
+          <div class="hist-bar" id="hist_pad_gnd"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpSignalPadDiam">非 GND / 信号焊盘直径 (mil)</label>
+          <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" style="width:100%" title="非 GND 信号过孔焊盘直径，如 12 mil / 9.94 mil">
+          <div class="hist-bar" id="hist_pad_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
+          <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="GND 过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_gnd"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpSignalFirstDrill">非 GND / 信号一钻直径 (mil)</label>
+          <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="非 GND 信号过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="selNetFilter">网络检查范围</label>
+          <select id="selNetFilter">
+            <option value="diff_only" selected>仅检查异网络 (Different Nets，排查短路与安全间距风险)</option>
+            <option value="all_nets">包含同网络 (All Nets，检查扇出过渡区)</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="selLayerFilter">层筛选 (Layer Filter)</label>
+          <select id="selLayerFilter">
+            <option value="" selected>全部层 (All Layers)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
+        💡 <b>历史配置记录说明：</b> 每个指标下方会自动记录最近使用的数值历史标签，点击即可快速填充；TXT 中的 <code>Circle Drill</code> 仅作为<b>完成孔径</b>展示，空间间距完全由上方配置的焊盘直径与一钻直径进行精准运算。
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+        <button type="button" class="btn pri" id="btnRunCheck" style="padding:9px 24px;font-size:14px">🚀 运行空间几何间距检查</button>
+        <span class="hint" id="runHint">请导入数据后点击运行</span>
+      </div>
+    </div>
+
+    <div class="card" id="dataSummaryCard" style="display:none">
+      <h2>3. 导入数据统计概要</h2>
+      <div id="dataSummaryContent"></div>
+    </div>
+  </section>
+
+  <!-- TAB 2: 交互式 Canvas 可视化图像与测量 -->
+  <section class="tab" id="tab-canvas">
+    <div class="card" style="padding:10px 14px">
+      <div class="viewer-container">
+        <div class="viewer-toolbar">
+          <div class="tb-group">
+            <button type="button" id="btnFitView" title="缩放到适合视窗">🔍 适应全屏</button>
+            <button type="button" id="btnZoomDefects" class="active" title="一键聚焦超标区域">🎯 聚焦超标区域</button>
+            <button type="button" id="btnZoomIn" title="放大">➕</button>
+            <button type="button" id="btnZoomOut" title="缩小">➖</button>
+            <button type="button" id="btnResetView" title="重置视角">🔄 复位</button>
+          </div>
+          
+          <div class="tb-group">
+            <button type="button" id="btnMeasureMode" title="开启交互式测量标尺模式">📏 测量标尺</button>
+            <button type="button" id="btnClearMeasure" title="清除测量标注" style="display:none">✖ 清除测量</button>
+          </div>
+
+          <div class="tb-group">
+            <label><input type="checkbox" id="ckShowVias" checked> 过孔</label>
+            <label><input type="checkbox" id="ckShowTraces" checked> 走线</label>
+            <label><input type="checkbox" id="ckShowDefects" checked> 标红超标连线</label>
+            <label><input type="checkbox" id="ckShowLabels" checked> 标签与数值</label>
+            <label><input type="checkbox" id="ckShowGrid" checked> 坐标轴网格</label>
+          </div>
+          
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button type="button" id="btnExportPng" class="pri">🖼️ 导出高清图片 (PNG)</button>
+            <button type="button" id="btnExportSvg">📐 导出矢量图 (SVG)</button>
+          </div>
+        </div>
+
+        <canvas id="pcbCanvas" width="1200" height="620"></canvas>
+        <div class="canvas-hud" id="canvasHud">X: 0.00 mil | Y: 0.00 mil | 缩放: 100%</div>
+        
+        <div class="canvas-legend" id="canvasLegend">
+          <div style="font-weight:700;margin-bottom:2px;color:#fff">图例与网络配色</div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#ef4444"></div> <span>信号孔 / ⚠️ 超标危险点</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#a855f7"></div> <span>25_N 走线 (紫色)</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#84cc16"></div> <span>25_P 走线 (棕绿)</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#22c55e"></div> <span>26_N 走线 (翠绿)</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#06b6d4"></div> <span>26_P 走线 (青色)</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#64748b"></div> <span>GND 地孔矩阵</span></div>
+        </div>
+
+        <!-- Dynamic Measurement Floating Card -->
+        <div class="measure-card" id="measureCard">
+          <h4>
+            <span>📐 空间几何测量结果</span>
+            <button type="button" onclick="$('measureCard').style.display='none'" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:14px">×</button>
+          </h4>
+          <div id="measureCardBody"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: 检查结果明细 -->
+  <section class="tab" id="tab-result">
+    <div class="stats-grid" id="resStatsGrid">
+      <div class="stat-box bad" data-filter="bad">
+        <div class="num" id="statBadCount">0</div>
+        <div class="lbl">❌ 总不满足项 (超标)</div>
+      </div>
+      <div class="stat-box" data-filter="gnd" style="border-left:3px solid #64748b">
+        <div class="num" id="statGndBadCount" style="font-size:16px">0 / 0</div>
+        <div class="lbl">⚡ 线到 GND 孔 (超标 / 检查数)</div>
+      </div>
+      <div class="stat-box" data-filter="signal" style="border-left:3px solid #0284c7">
+        <div class="num" id="statSigBadCount" style="font-size:16px">0 / 0</div>
+        <div class="lbl">📡 线到 信号孔 (超标 / 检查数)</div>
+      </div>
+      <div class="stat-box ok" data-filter="ok">
+        <div class="num" id="statPassCount">0</div>
+        <div class="lbl">✅ 满足项 (合格)</div>
+      </div>
+      <div class="stat-box" data-filter="all">
+        <div class="num" id="statTotalCount">0</div>
+        <div class="lbl">🔍 检查对数 (全部)</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statMinDist">0.00</div>
+        <div class="lbl">📏 最小实测间距 (mil)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- View Mode Switch -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn pri" id="btnViewNetGroup" style="font-weight:700">🎯 视图一：按出线层 × 走线网络目标分析 (走线超标汇总)</button>
+          <button type="button" class="btn sec" id="btnViewPairList">📋 视图二：过孔 × 走线对偶明细记录表</button>
+        </div>
+        <div style="font-size:12px;color:var(--sub)" id="viewModeHint">
+          以各出线层的走线为目标，汇总每条走线上存在多少处间距不满足
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <div class="search-bar" style="margin-bottom:0;flex:1;min-width:240px">
+          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)...">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn sec small" id="btnFilterAll">全部</button>
+          <button type="button" class="btn bad small" id="btnFilterBad">只看不满足 (超标)</button>
+          <button type="button" class="btn sec small" id="btnFilterGnd">⚡ 只看含 GND孔超标</button>
+          <button type="button" class="btn sec small" id="btnFilterSig">📡 只看含 信号孔超标</button>
+          <button type="button" class="btn sec small" id="btnFilterOk">只看满足</button>
+          <button type="button" class="btn sec small" id="btnExportCsv">📥 导出 CSV 报告</button>
+        </div>
+      </div>
+
+      <!-- VIEW A: Net & Layer Grouping View Container -->
+      <div id="netGroupViewContainer">
+        <div style="overflow-x:auto">
+          <table id="netGroupTable">
+            <thead>
+              <tr>
+                <th style="width:45px">序号</th>
+                <th style="width:90px">出线层</th>
+                <th style="width:130px">走线目标网络</th>
+                <th style="width:140px">走线段数 / 走线总长</th>
+                <th style="min-width:200px">走线间距不满足情况 (缺陷分析)</th>
+                <th style="width:110px">走线最小间距</th>
+                <th style="width:100px">最严重偏差</th>
+                <th>涉及冲突过孔清单</th>
+                <th style="width:130px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="netGroupTableBody">
+              <tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果，请在「① 规则与数据导入」页运行检查。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW B: Detailed Pair View Container -->
+      <div id="pairListViewContainer" style="display:none">
+        <div style="overflow-x:auto">
+          <table id="resTable">
+            <thead>
+              <tr>
+                <th style="width:45px">序号</th>
+                <th style="width:45px">复核</th>
+                <th style="width:65px">状态</th>
+                <th style="width:110px">判定类型</th>
+                <th>过孔 (孔号 / 网络 / 坐标)</th>
+                <th>走线 (编号 / 所在层 / 网络 / 线宽)</th>
+                <th>走线最近点坐标 [X, Y]</th>
+                <th>实测间距 (当前判定口径)</th>
+                <th>规则阈值</th>
+                <th>偏差值</th>
+                <th>一钻孔径 / 焊盘</th>
+                <th>几何说明与建议</th>
+                <th style="width:65px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="resTableBody">
+              <tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果，请在「① 规则与数据导入」页运行检查。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div id="paginationBar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;padding-top:8px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)">
+          <div id="pageInfo">显示 0 / 0 条记录</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:4px">每页显示：
+              <select id="selPageSize" style="padding:2px 6px;border:1px solid var(--line);border-radius:4px;font-size:12px">
+                <option value="50" selected>50 条</option>
+                <option value="100">100 条</option>
+                <option value="200">200 条</option>
+                <option value="500">500 条</option>
+                <option value="all">全部显示</option>
+              </select>
+            </label>
+            <button type="button" class="btn sec small" id="btnFirstPage">« 首页</button>
+            <button type="button" class="btn sec small" id="btnPrevPage">‹ 上一页</button>
+            <span id="pageCurrent" style="font-weight:700;color:var(--text);margin:0 4px">第 1 / 1 页</span>
+            <button type="button" class="btn sec small" id="btnNextPage">下一页 ›</button>
+            <button type="button" class="btn sec small" id="btnLastPage">末页 »</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: 判定原理与算法 -->
+  <section class="tab" id="tab-legend">
+    <div class="card">
+      <h2>空间几何间距判定原理与算法模型</h2>
+      <div class="hint" style="margin-bottom:16px">本工具采用严格的空间 2D 欧几里得几何点对线段与点对圆弧投影算法，精准检测过孔（Via）与走线（Trace）在各层上的物理安全间距。</div>
+      
+      <h3>1. 双判定口径与最小间距规则阈值</h3>
+      <ul class="hint" style="margin-left:20px;margin-top:6px">
+        <li><b>线到 GND 孔判定口径</b>：针对走线与地网络（GND）过孔之间的空间安全间距，应用「线到 GND 孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$）。</li>
+        <li><b>线到信号孔判定口径</b>：针对走线与其他非 GND / 信号网络过孔之间的空间安全间距，应用「线到信号孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$ 或更高隔离要求）。</li>
+        <li><b>区分意义</b>：GND 孔与信号孔在 PCB 布局中具有不同的阻抗连续性、防串扰隔离和工艺容差要求，分别配置判定阈值可精准识别不同网络属性的间距风险。</li>
+      </ul>
+
+      <h3>2. 完成孔径（Circle Drill）与一钻直径</h3>
+      <ul class="hint" style="margin-left:20px;margin-top:6px">
+        <li><b>完成孔径（Circle Drill / Finished Hole）</b>：TXT 报告中提取的 Circle Drill 仅作为<b>成品孔径展示与信息记录，不参与空间几何运算</b>。</li>
+        <li><b>一钻直径（1st Drill Diameter）</b>：钻孔孔壁在空间计算中直接采用设置的「GND 一钻直径」（默认 5.54 mil）与「信号一钻直径」（默认 5.54 mil），孔壁半径 $R_{drill1} = D_{drill1} / 2$。</li>
+        <li><b>一钻孔壁到走线 Airgap</b>：$d_{drill} = d(V_{center}, \text{Trace}) - \frac{W_{trace}}{2} - \frac{D_{drill1}}{2}$。</li>
+      </ul>
+
+      <h3>3. 焊盘直径区分与焊盘到走线 Airgap</h3>
+      <ul class="hint" style="margin-left:20px;margin-top:6px">
+        <li><b>GND 焊盘直径</b>：直接由界面配置（默认 5.94 mil），焊盘半径 $R_{pad,gnd} = 5.94 / 2 = 2.97\text{ mil}$。</li>
+        <li><b>非 GND / 信号焊盘直径</b>：直接由界面配置（默认 9.94 mil），焊盘半径 $R_{pad,sig} = 9.94 / 2 = 4.97\text{ mil}$。</li>
+        <li><b>焊盘边缘到走线 Airgap</b>：$d_{pad} = d(V_{center}, \text{Trace}) - \frac{W_{trace}}{2} - \frac{D_{pad}}{2}$。</li>
+      </ul>
+
+      <h3>4. 几何图交互式测量支持</h3>
+      <ul class="hint" style="margin-left:20px;margin-top:6px">
+        <li><b>孔到孔</b>：中心距、孔盘到孔盘 Airgap、孔盘到孔壁 Airgap、一钻孔壁到孔壁 Airgap。</li>
+        <li><b>走线到过孔</b>：线到一钻孔壁 Airgap、线到孔盘 Airgap、走线中心到孔中心距离。</li>
+        <li><b>走线到走线</b>：最近中心距与边缘铜皮间距。</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<div class="tooltip" id="canvasTooltip"></div>
+
+<script>
+// --- State Management ---
+const State = {
+  rawText: '',
+  vias: [],
+  traces: [],
+  layers: [],
+  checkResult: null,
+  activeFilter: 'bad', // 'all', 'bad', 'ok', 'gnd', 'signal'
+  searchQuery: '',
+  reviewedKeys: {},
+  // Pagination State
+  currentPage: 1,
+  pageSize: 50,
+  // Measurement Tool State
+  measureMode: false,
+  measureSelection: [], // array of selected objects [{type:'via', item:v}, {type:'trace', item:t}]
+  measurements: [],
+  resViewMode: 'net_group', // 'net_group' (出线层x走线网络聚合) | 'pair_list' (过孔对偶明细)
+  expandedNetKeys: {}, // tracking expanded net rows
+  highlightNetRoute: null, // { layer, net }
+  // Canvas Viewport State
+  viewport: {
+    zoom: 1.0,
+    panX: 0,
+    panY: 0,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    minX: 0, maxX: 100, minY: 0, maxY: 100
+  }
+};
+window.State = State;
+window.renderCanvas = renderCanvas;
+window.runCheck = runCheck;
+window.loadTextData = loadTextData;
+window.updateMeasurements = updateMeasurements;
+window.setGndThreshold = setGndThreshold;
+window.setSignalThreshold = setSignalThreshold;
+window.setThreshold = setThreshold;
+
+const $ = id => document.getElementById(id);
+
+// --- History Configuration Manager ---
+const HistoryManager = {
+  keys: {
+    thresh_gnd: 'dfm_hist_thresh_gnd',
+    thresh_sig: 'dfm_hist_thresh_sig',
+    pad_gnd: 'dfm_hist_pad_gnd',
+    pad_sig: 'dfm_hist_pad_sig',
+    drill_gnd: 'dfm_hist_drill_gnd',
+    drill_sig: 'dfm_hist_drill_sig'
+  },
+  defaults: {
+    thresh_gnd: [4.01575, 5.0, 6.0, 8.0],
+    thresh_sig: [5.04725, 5.0, 6.0, 8.0, 10.0],
+    pad_gnd: [7.906, 5.94, 8.0],
+    pad_sig: [12.0, 9.94, 7.906, 10.0],
+    drill_gnd: [6.0, 5.54],
+    drill_sig: [6.0, 5.54]
+  },
+  get(metric) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.keys[metric]);
+        if (stored) {
+          const arr = JSON.parse(stored);
+          if (Array.isArray(arr) && arr.length > 0) return arr;
+        }
+      }
+    } catch (e) {}
+    return this.defaults[metric] || [];
+  },
+  add(metric, value) {
+    if (typeof value !== 'number' || isNaN(value) || value <= 0) return;
+    const cur = this.get(metric);
+    const valClean = parseFloat(value.toFixed(5));
+    const next = [valClean, ...cur.filter(x => Math.abs(x - valClean) > 1e-4)].slice(0, 6);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.keys[metric], JSON.stringify(next));
+      }
+    } catch (e) {}
+    this.renderBar(metric);
+  },
+  renderBar(metric) {
+    const barEl = $('hist_' + metric);
+    if (!barEl) return;
+    const inputEl = this.getInputEl(metric);
+    const curVal = inputEl ? parseFloat(inputEl.value) : null;
+    const list = this.get(metric);
+    barEl.innerHTML = list.map(val => {
+      const isAct = curVal !== null && Math.abs(curVal - val) < 1e-4;
+      return `<button type="button" class="hist-chip ${isAct ? 'active' : ''}" data-metric="${metric}" data-val="${val}">${val}</button>`;
+    }).join('');
+
+    barEl.querySelectorAll('.hist-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.metric;
+        const v = btn.dataset.val;
+        const inp = HistoryManager.getInputEl(m);
+        if (inp) {
+          inp.value = v;
+          HistoryManager.renderBar(m);
+          if (State.vias.length && State.traces.length) {
+            runCheck();
+          }
+        }
+      });
+    });
+  },
+  renderAll() {
+    Object.keys(this.keys).forEach(k => this.renderBar(k));
+  },
+  getInputEl(metric) {
+    switch (metric) {
+      case 'thresh_gnd': return $('inpThresholdGnd');
+      case 'thresh_sig': return $('inpThresholdSignal');
+      case 'pad_gnd': return $('inpGndPadDiam');
+      case 'pad_sig': return $('inpSignalPadDiam');
+      case 'drill_gnd': return $('inpGndFirstDrill');
+      case 'drill_sig': return $('inpSignalFirstDrill');
+      default: return null;
+    }
+  }
+};
+window.HistoryManager = HistoryManager;
+
+function applyPresetScheme(schemeName) {
+  if (schemeName === 'eda_project') {
+    if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '4.01575';
+    if ($('inpThresholdSignal')) $('inpThresholdSignal').value = '5.04725';
+    if ($('inpGndPadDiam')) $('inpGndPadDiam').value = '7.906';
+    if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '12.0';
+    if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '6.0';
+    if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '6.0';
+    if ($('selMode')) $('selMode').value = 'pad_to_trace';
+  } else if (schemeName === 'std_6mil') {
+    if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '6.0';
+    if ($('inpThresholdSignal')) $('inpThresholdSignal').value = '6.0';
+    if ($('inpGndPadDiam')) $('inpGndPadDiam').value = '7.906';
+    if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.94';
+    if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.54';
+    if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.54';
+    if ($('selMode')) $('selMode').value = 'pad_to_trace';
+  } else if (schemeName === 'high_density_5mil') {
+    if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '5.0';
+    if ($('inpThresholdSignal')) $('inpThresholdSignal').value = '5.0';
+    if ($('inpGndPadDiam')) $('inpGndPadDiam').value = '7.0';
+    if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.0';
+    if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.0';
+    if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.0';
+    if ($('selMode')) $('selMode').value = 'pad_to_trace';
+  }
+  HistoryManager.renderAll();
+  if (State.vias.length && State.traces.length) {
+    runCheck();
+  }
+}
+window.applyPresetScheme = applyPresetScheme;
+
+// Attach input change listeners to refresh chip highlights
+['inpThresholdGnd', 'inpThresholdSignal', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
+  const el = $(id);
+  if (el) {
+    el.addEventListener('input', () => {
+      HistoryManager.renderAll();
+    });
+  }
+});
+
+// Initial history chip render
+HistoryManager.renderAll();
+
+// --- Tab Switching ---
+document.querySelectorAll('nav#tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav#tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('main .tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const tabId = 'tab-' + btn.dataset.tab;
+    const tabEl = $(tabId);
+    if (tabEl) tabEl.classList.add('active');
+    if (btn.dataset.tab === 'canvas') {
+      setTimeout(renderCanvas, 50);
+    }
+  });
+});
+
+function setGndThreshold(val) {
+  if ($('inpThresholdGnd')) $('inpThresholdGnd').value = val;
+  if ($('inpThreshold')) $('inpThreshold').value = val;
+  HistoryManager.renderBar('thresh_gnd');
+  if (State.checkResult) runCheck();
+}
+
+function setSignalThreshold(val) {
+  if ($('inpThresholdSignal')) $('inpThresholdSignal').value = val;
+  HistoryManager.renderBar('thresh_sig');
+  if (State.checkResult) runCheck();
+}
+
+function setThreshold(val) {
+  if ($('inpThresholdGnd')) $('inpThresholdGnd').value = val;
+  if ($('inpThresholdSignal')) $('inpThresholdSignal').value = val;
+  if ($('inpThreshold')) $('inpThreshold').value = val;
+  HistoryManager.renderAll();
+  if (State.checkResult) runCheck();
+}
+
+// --- Sample Data Loader ---
+$('btnLoadSample').addEventListener('click', async () => {
+  try {
+    const res = await fetch('sample/via_trace_airgap_sample.txt');
+    if (!res.ok) throw new Error('网络请求失败');
+    const txt = await res.text();
+    loadTextData(txt, 'via_trace_airgap_sample.txt (97项坐标样本)');
+    runCheck();
+  } catch (err) {
+    alert('加载示例文件失败：' + err.message);
+  }
+});
+
+$('btnClearData').addEventListener('click', () => {
+  State.rawText = '';
+  State.vias = [];
+  State.traces = [];
+  State.checkResult = null;
+  State.measureSelection = [];
+  State.measurements = [];
+  $('fileStatus').textContent = '已清空数据';
+  $('dataSummaryCard').style.display = 'none';
+  $('measureCard').style.display = 'none';
+  renderResults();
+  renderCanvas();
+});
+
+// --- File Upload & Drag-Drop ---
+const dropArea = $('dropArea');
+dropArea.addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) readFile(file);
+});
+dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+dropArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropArea.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    loadTextData(ev.target.result, file.name);
+    runCheck();
+  };
+  reader.readAsText(file);
+}
+
+function loadTextData(text, sourceName) {
+  State.rawText = text;
+  const gndPadDiam = parseFloat($('inpGndPadDiam') ? $('inpGndPadDiam').value : 7.906) || 7.906;
+  const sigPadDiam = parseFloat($('inpSignalPadDiam') ? $('inpSignalPadDiam').value : 9.94) || 9.94;
+  const gndFirstDrill = parseFloat($('inpGndFirstDrill') ? $('inpGndFirstDrill').value : 5.54) || 5.54;
+  const sigFirstDrill = parseFloat($('inpSignalFirstDrill') ? $('inpSignalFirstDrill').value : 5.54) || 5.54;
+
+  const parsed = DfmCheck.parseDfmItems(text, {
+    gndPadDiameter: gndPadDiam,
+    signalPadDiameter: sigPadDiam,
+    gndFirstDrill: gndFirstDrill,
+    signalFirstDrill: sigFirstDrill
+  });
+  State.vias = parsed.vias;
+  State.traces = parsed.traces;
+
+  // Extract layer list
+  const layerSet = new Set();
+  State.traces.forEach(t => layerSet.add(t.subset));
+  State.layers = Array.from(layerSet).sort();
+
+  // Populate layer filter dropdown
+  const selLayer = $('selLayerFilter');
+  selLayer.innerHTML = '<option value="">全部层 (All Layers)</option>' +
+    State.layers.map(l => `<option value="${l}">${l}</option>`).join('');
+
+  $('fileStatus').textContent = `已加载: ${sourceName} (${State.vias.length} 个过孔, ${State.traces.length} 段走线)`;
+  
+  // Update data summary
+  const summaryCard = $('dataSummaryCard');
+  summaryCard.style.display = 'block';
+  $('dataSummaryContent').innerHTML = `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
+      <div><b>过孔数量：</b><span class="tag-badge ok">${State.vias.length} 个 (GND: ${State.vias.filter(v=>v.isGnd).length}, 信号: ${State.vias.filter(v=>!v.isGnd).length})</span></div>
+      <div><b>走线段数：</b><span class="tag-badge ok">${State.traces.length} 段</span></div>
+      <div><b>涉及层数：</b><span class="tag-badge ok">${State.layers.length} 层 (${State.layers.join('、')})</span></div>
+      <div><b>涉及网络：</b><span class="tag-badge ok">${Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、')}</span></div>
+    </div>
+  `;
+
+  computeBoundingBox();
+}
+
+function computeBoundingBox() {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  State.vias.forEach(v => {
+    minX = Math.min(minX, v.origin[0]);
+    maxX = Math.max(maxX, v.origin[0]);
+    minY = Math.min(minY, v.origin[1]);
+    maxY = Math.max(maxY, v.origin[1]);
+  });
+  State.traces.forEach(t => {
+    minX = Math.min(minX, t.p1[0], t.p2[0]);
+    maxX = Math.max(maxX, t.p1[0], t.p2[0]);
+    minY = Math.min(minY, t.p1[1], t.p2[1]);
+    maxY = Math.max(maxY, t.p1[1], t.p2[1]);
+  });
+
+  if (minX === Infinity) {
+    minX = 0; maxX = 1000; minY = 0; maxY = 1000;
+  } else {
+    const pad = Math.max(50, (maxX - minX) * 0.1);
+    minX -= pad; maxX += pad;
+    minY -= pad; maxY += pad;
+  }
+
+  State.viewport.minX = minX;
+  State.viewport.maxX = maxX;
+  State.viewport.minY = minY;
+  State.viewport.maxY = maxY;
+  fitCanvasView();
+}
+
+// --- Run Check ---
+$('btnRunCheck').addEventListener('click', () => runCheck());
+
+function runCheck(sync) {
+  if (!State.vias.length && !State.traces.length) {
+    alert('请先导入或加载 PCB 坐标数据！');
+    return;
+  }
+
+  const btn = $('btnRunCheck');
+  const origBtnText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ 正在进行空间网格索引与高精度间距检查...';
+  $('runHint').textContent = '正在计算空间几何间距...';
+
+  const doCheck = () => {
+    const threshGnd = parseFloat($('inpThresholdGnd') ? $('inpThresholdGnd').value : ($('inpThreshold') ? $('inpThreshold').value : 6.0)) || 6.0;
+    const threshSig = parseFloat($('inpThresholdSignal') ? $('inpThresholdSignal').value : ($('inpThreshold') ? $('inpThresholdSignal').value : 6.0)) || 6.0;
+    const mode = $('selMode').value;
+    const gndPadDiam = parseFloat($('inpGndPadDiam') ? $('inpGndPadDiam').value : 7.906) || 7.906;
+    const sigPadDiam = parseFloat($('inpSignalPadDiam') ? $('inpSignalPadDiam').value : 9.94) || 9.94;
+    const gndFirstDrill = parseFloat($('inpGndFirstDrill') ? $('inpGndFirstDrill').value : 5.54) || 5.54;
+    const sigFirstDrill = parseFloat($('inpSignalFirstDrill') ? $('inpSignalFirstDrill').value : 5.54) || 5.54;
+    const diffNetOnly = $('selNetFilter').value === 'diff_only';
+    const layerFilter = $('selLayerFilter').value;
+
+    // Re-parse with updated diameters if raw text exists
+    if (State.rawText) {
+      const parsed = DfmCheck.parseDfmItems(State.rawText, {
+        gndPadDiameter: gndPadDiam,
+        signalPadDiameter: sigPadDiam,
+        gndFirstDrill: gndFirstDrill,
+        signalFirstDrill: sigFirstDrill
+      });
+      State.vias = parsed.vias;
+      State.traces = parsed.traces;
+    }
+
+    // Add to history manager
+    HistoryManager.add('thresh_gnd', threshGnd);
+    HistoryManager.add('thresh_sig', threshSig);
+    HistoryManager.add('pad_gnd', gndPadDiam);
+    HistoryManager.add('pad_sig', sigPadDiam);
+    HistoryManager.add('drill_gnd', gndFirstDrill);
+    HistoryManager.add('drill_sig', sigFirstDrill);
+    HistoryManager.renderAll();
+
+    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const result = DfmCheck.runDfmCheck(State.vias, State.traces, {
+      minClearanceGnd: threshGnd,
+      minClearanceSignal: threshSig,
+      minClearance: threshGnd, // compatibility fallback
+      mode: mode,
+      diffNetOnly: diffNetOnly,
+      layerFilter: layerFilter,
+      gndPadDiameter: gndPadDiam,
+      signalPadDiameter: sigPadDiam,
+      gndFirstDrill: gndFirstDrill,
+      signalFirstDrill: sigFirstDrill
+    });
+    const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const duration = (t1 - t0).toFixed(0);
+
+    State.checkResult = result;
+    State.currentPage = 1;
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处），发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。`;
+
+    btn.disabled = false;
+    btn.innerHTML = origBtnText;
+
+    renderResults();
+    renderCanvas();
+  };
+
+  if (sync || window.__SYNC_CHECK__) {
+    doCheck();
+  } else {
+    setTimeout(doCheck, 10);
+  }
+}
+
+// --- View Switcher between Net-Grouping (Target Analysis) & Detailed Pair List ---
+if ($('btnViewNetGroup')) {
+  $('btnViewNetGroup').addEventListener('click', () => {
+    State.resViewMode = 'net_group';
+    $('btnViewNetGroup').className = 'btn pri';
+    $('btnViewPairList').className = 'btn sec';
+    $('netGroupViewContainer').style.display = 'block';
+    $('pairListViewContainer').style.display = 'none';
+    $('viewModeHint').textContent = '以各出线层的走线为目标，汇总每条走线上存在多少处间距不满足';
+    renderNetGroupView();
+  });
+}
+if ($('btnViewPairList')) {
+  $('btnViewPairList').addEventListener('click', () => {
+    State.resViewMode = 'pair_list';
+    $('btnViewNetGroup').className = 'btn sec';
+    $('btnViewPairList').className = 'btn pri';
+    $('netGroupViewContainer').style.display = 'none';
+    $('pairListViewContainer').style.display = 'block';
+    $('viewModeHint').textContent = '逐条查看过孔与走线的几何坐标、实测间距、阈值与偏差明细';
+    renderPairListView();
+  });
+}
+
+// --- Render Result Table & Stats with Pagination ---
+function renderResults() {
+  const r = State.checkResult;
+  if (!r) {
+    $('statBadCount').textContent = '0';
+    if ($('statGndBadCount')) $('statGndBadCount').textContent = '0 / 0';
+    if ($('statSigBadCount')) $('statSigBadCount').textContent = '0 / 0';
+    $('statPassCount').textContent = '0';
+    $('statTotalCount').textContent = '0';
+    $('statMinDist').textContent = '0.00';
+    if ($('netGroupTableBody')) $('netGroupTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">暂无走线网络聚合结果</td></tr>';
+    $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果</td></tr>';
+    if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
+    if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
+    return;
+  }
+
+  $('statBadCount').textContent = r.failCount.toLocaleString();
+  if ($('statGndBadCount')) $('statGndBadCount').textContent = `${r.gndStats.fail.toLocaleString()} / ${r.gndStats.total.toLocaleString()}`;
+  if ($('statSigBadCount')) $('statSigBadCount').textContent = `${r.signalStats.fail.toLocaleString()} / ${r.signalStats.total.toLocaleString()}`;
+  $('statPassCount').textContent = r.passCount.toLocaleString();
+  $('statTotalCount').textContent = r.totalChecked.toLocaleString();
+  $('statMinDist').textContent = r.minObservedDist.toFixed(2);
+
+  renderNetGroupView();
+  renderPairListView();
+}
+
+// 1. Render Net & Layer Grouping View (出线层x走线网络 缺陷汇总)
+function renderNetGroupView() {
+  const r = State.checkResult;
+  const tbody = $('netGroupTableBody');
+  if (!tbody) return;
+  if (!r || !r.netLayerAnalysis || !r.netLayerAnalysis.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">暂无走线网络聚合结果</td></tr>';
+    return;
+  }
+
+  const query = (State.searchQuery || '').toLowerCase().trim();
+  const filter = State.activeFilter;
+
+  const filteredNets = r.netLayerAnalysis.filter(item => {
+    if (filter === 'bad' && item.failCount === 0) return false;
+    if (filter === 'ok' && item.failCount > 0) return false;
+    if (filter === 'gnd' && item.gndFailCount === 0) return false;
+    if (filter === 'signal' && item.signalFailCount === 0) return false;
+    if (query) {
+      const qText = `${item.layer} ${item.net}`.toLowerCase();
+      const matchVia = item.uniqueViaIds && item.uniqueViaIds.some(id => `via ${id} ${id}`.toLowerCase().includes(query));
+      if (!qText.includes(query) && !matchVia) return false;
+    }
+    return true;
+  });
+
+  if (!filteredNets.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">未找到符合当前筛选条件的走线网络</td></tr>';
+    return;
+  }
+
+  let html = '';
+  filteredNets.forEach((item, idx) => {
+    const isBad = item.failCount > 0;
+    const rowKey = `${item.layer}___${item.net}`;
+    const isExpanded = !!State.expandedNetKeys[rowKey];
+    const netColor = NET_COLORS[item.net] || '#38bdf8';
+
+    // Summary analysis badge
+    let failSummaryBadge = '';
+    if (isBad) {
+      failSummaryBadge = `
+        <span class="tag-badge bad" style="font-size:12.5px;padding:3px 8px">❌ 存在 <b>${item.failCount}</b> 处间距不满足</span>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">
+          ⚡ 到GND孔: <b>${item.gndFailCount}</b> 处 | 📡 到信号孔: <b>${item.signalFailCount}</b> 处 (涉及 <b>${item.uniqueViaCount}</b> 个过孔)
+        </div>
+      `;
+    } else {
+      failSummaryBadge = `
+        <span class="tag-badge ok" style="font-size:12.5px;padding:3px 8px">✅ 全部满足 (0 处超标)</span>
+        <div style="font-size:11px;color:#10b981;margin-top:4px">此网络走线无安全间距隐患</div>
+      `;
+    }
+
+    // Conflicting vias snippet
+    let viasSnippet = '<span style="color:var(--sub)">无冲突过孔</span>';
+    if (item.uniqueViaIds && item.uniqueViaIds.length > 0) {
+      const visibleIds = item.uniqueViaIds.slice(0, 6).map(id => `<span class="tag-badge" style="background:#f1f5f9;color:#334155;margin:1px 2px">Via ${id}</span>`).join('');
+      const moreCount = item.uniqueViaIds.length - 6;
+      viasSnippet = visibleIds + (moreCount > 0 ? `<span style="font-size:11px;color:var(--sub)"> 等共${item.uniqueViaIds.length}个</span>` : '');
+    }
+
+    const minClearanceHtml = item.minDist === Infinity ? '-' : `
+      <b style="color:${isBad ? 'var(--bad)' : 'var(--ok)'};font-size:13px;font-family:var(--mono)">${item.minDist.toFixed(2)} mil</b>
+    `;
+
+    const maxDevHtml = item.maxDeviation > 0 ? `
+      <b style="color:var(--bad);font-family:var(--mono)">-${item.maxDeviation.toFixed(2)} mil</b>
+    ` : `<span style="color:var(--ok);font-family:var(--mono)">0.00 mil</span>`;
+
+    html += `
+      <tr class="${isBad ? 'fail-row' : ''}" style="border-top:1px solid #cbd5e1">
+        <td style="font-weight:700">${idx + 1}</td>
+        <td><span class="tag-badge" style="background:#e2e8f0;color:#1e293b;border:1px solid #94a3b8">${item.layer}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${netColor}"></span>
+            <b style="font-size:13px">${item.net}</b>
+          </div>
+        </td>
+        <td style="font-family:var(--mono);font-size:11px">
+          <b>${item.traceSegments}</b> 段 (${item.totalLength.toFixed(1)} mil)
+        </td>
+        <td>${failSummaryBadge}</td>
+        <td>${minClearanceHtml}</td>
+        <td>${maxDevHtml}</td>
+        <td>${viasSnippet}</td>
+        <td>
+          <div style="display:flex;gap:4px;flex-direction:column">
+            ${isBad ? `
+              <button type="button" class="btn sec small btn-toggle-net-defects" data-key="${rowKey}">
+                ${isExpanded ? '▲ 收起明细' : `🔍 展开明细 (${item.failCount})`}
+              </button>
+            ` : ''}
+            <button type="button" class="btn pri small btn-locate-net-route" data-layer="${item.layer}" data-net="${item.net}">
+              📍 画布高亮走线
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+
+    // Expandable defects sub-table
+    if (isBad && isExpanded) {
+      const defectRows = item.defects.map((p, dIdx) => {
+        const pKey = `${p.via.id}_${p.trace.id}`;
+        const isRev = !!State.reviewedKeys[pKey];
+        return `
+          <tr class="${isRev ? 'reviewed' : ''}" style="background:#fff">
+            <td>${dIdx + 1}</td>
+            <td><b>Via ${p.via.id}</b> (${p.via.net}) <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
+            <td>${p.targetType}</td>
+            <td>Trace ${p.trace.id} (${p.trace.width}mil)</td>
+            <td style="font-family:var(--mono)">[${p.proj[0].toFixed(1)}, ${p.proj[1].toFixed(1)}]</td>
+            <td><b class="tag-badge bad">${p.evalDist.toFixed(2)} mil</b> <span style="font-size:10px;color:var(--sub)">(${p.mode==='pad_to_trace'?'焊盘Airgap':'一钻孔壁'})</span></td>
+            <td>≥ ${p.threshold.toFixed(2)} mil</td>
+            <td style="color:var(--bad);font-weight:700">${p.diff.toFixed(2)} mil</td>
+            <td><button type="button" class="btn sec small btn-locate" data-via="${p.via.id}" data-trace="${p.trace.id}">定位图</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      html += `
+        <tr style="background:#f8fafc">
+          <td colspan="9" style="padding:10px 16px">
+            <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px">
+              <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+                <span>走线【${item.net} @ ${item.layer}】上全部 ${item.defects.length} 处不满足间距对偶明细：</span>
+                <span style="font-weight:400;font-size:11px;color:var(--sub)">点击单项「定位图」可在画布中聚焦</span>
+              </div>
+              <table class="net-defects-table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>冲突过孔 (孔号 / 网络 / 坐标)</th>
+                    <th>判定类型</th>
+                    <th>走线段编号</th>
+                    <th>最近点坐标</th>
+                    <th>实测间距</th>
+                    <th>规则阈值</th>
+                    <th>偏差值</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${defectRows}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  });
+
+  tbody.innerHTML = html;
+
+  // Bind toggle events
+  tbody.querySelectorAll('.btn-toggle-net-defects').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.key;
+      State.expandedNetKeys[k] = !State.expandedNetKeys[k];
+      renderNetGroupView();
+    });
+  });
+
+  // Bind net route locate events
+  tbody.querySelectorAll('.btn-locate-net-route').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const l = btn.dataset.layer;
+      const n = btn.dataset.net;
+      locateNetRoute(l, n);
+    });
+  });
+
+  // Bind single defect locate buttons
+  tbody.querySelectorAll('.btn-locate').forEach(b => {
+    b.addEventListener('click', () => {
+      const viaId = parseInt(b.dataset.via, 10);
+      const traceId = parseInt(b.dataset.trace, 10);
+      locateInCanvas(viaId, traceId);
+    });
+  });
+}
+
+// 2. Render Pair List View (过孔对偶明细表)
+function renderPairListView() {
+  const r = State.checkResult;
+  if (!r) return;
+
+  const query = (State.searchQuery || '').toLowerCase().trim();
+  const filter = State.activeFilter;
+
+  const filteredPairs = r.pairs.filter(p => {
+    if (filter === 'bad' && p.status !== '不满足') return false;
+    if (filter === 'ok' && p.status !== '满足') return false;
+    if (filter === 'gnd' && !p.isGndVia) return false;
+    if (filter === 'signal' && p.isGndVia) return false;
+    if (query) {
+      const qNorm = query.replace(/^via\s*/i, '').trim();
+      const qText = `via ${p.via.id} ${p.via.id} ${p.via.net} ${p.targetType} trace ${p.trace.id} ${p.trace.id} ${p.trace.subset} ${p.trace.net}`.toLowerCase();
+      if (!qText.includes(query) && !qText.includes(qNorm)) return false;
+    }
+    return true;
+  });
+
+  const totalRecords = filteredPairs.length;
+  if (!totalRecords) {
+    $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">未找到符合当前筛选条件的记录</td></tr>';
+    if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
+    if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
+    return;
+  }
+
+  // Pagination calculation
+  const pageSize = State.pageSize === 'all' ? totalRecords : (parseInt(State.pageSize, 10) || 50);
+  const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+  if (State.currentPage > totalPages) State.currentPage = totalPages;
+  if (State.currentPage < 1) State.currentPage = 1;
+
+  const startIndex = (State.currentPage - 1) * pageSize;
+  const endIndex = Math.min(totalRecords, startIndex + pageSize);
+  const pageItems = filteredPairs.slice(startIndex, endIndex);
+
+  // Update pagination bar
+  if ($('pageInfo')) $('pageInfo').textContent = `显示第 ${startIndex + 1} - ${endIndex} 条，共 ${totalRecords.toLocaleString()} 条记录 (当前分类总计 ${totalRecords} 项)`;
+  if ($('pageCurrent')) $('pageCurrent').textContent = `第 ${State.currentPage} / ${totalPages} 页`;
+  if ($('btnFirstPage')) $('btnFirstPage').disabled = State.currentPage <= 1;
+  if ($('btnPrevPage')) $('btnPrevPage').disabled = State.currentPage <= 1;
+  if ($('btnNextPage')) $('btnNextPage').disabled = State.currentPage >= totalPages;
+  if ($('btnLastPage')) $('btnLastPage').disabled = State.currentPage >= totalPages;
+
+  const tbody = $('resTableBody');
+  tbody.innerHTML = pageItems.map((p, pIdx) => {
+    const idx = startIndex + pIdx;
+    const isBad = (p.status === '不满足');
+    const pKey = `${p.via.id}_${p.trace.id}`;
+    const isRev = !!State.reviewedKeys[pKey];
+    const diffStr = (p.diff >= 0 ? '+' : '') + p.diff.toFixed(2) + ' mil';
+    const isGnd = p.isGndVia;
+    
+    let advice = '间距满足工艺能力要求';
+    if (isBad) {
+      advice = `间距偏小 ${Math.abs(p.diff).toFixed(2)} mil（要求 ≥ ${p.threshold.toFixed(2)} mil），建议将走线绕行圆弧半径外扩 ≥ ${Math.ceil(Math.abs(p.diff) + 0.2)} mil`;
+    }
+
+    const typeBadge = isGnd 
+      ? `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1">⚡ 线到GND孔</span>`
+      : `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">📡 线到信号孔</span>`;
+
+    return `
+      <tr class="${isBad ? 'fail-row' : ''} ${isRev ? 'reviewed' : ''}" id="row-${idx}" data-via="${p.via.id}" data-trace="${p.trace.id}">
+        <td>${idx + 1}</td>
+        <td><input type="checkbox" class="ck-rev" data-key="${pKey}" ${isRev ? 'checked' : ''}></td>
+        <td><span class="tag-badge ${isBad ? 'bad' : 'ok'}">${p.status}</span></td>
+        <td>${typeBadge}</td>
+        <td>
+          <b>Via ${p.via.id}</b> (${p.via.net})<br>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">[${p.via.origin[0].toFixed(2)}, ${p.via.origin[1].toFixed(2)}]</span>
+        </td>
+        <td>
+          <b>Trace ${p.trace.id}</b> (${p.trace.subset}, ${p.trace.net})<br>
+          <span style="font-size:11px;color:var(--sub)">线宽: ${p.trace.width} mil (${p.trace.kind})</span>
+        </td>
+        <td style="font-family:var(--mono);font-size:11px">
+          [${p.proj[0].toFixed(2)}, ${p.proj[1].toFixed(2)}]
+        </td>
+        <td>
+          <b class="${isBad ? 'tag-badge bad' : 'tag-badge ok'}" style="font-size:13px">${p.evalDist.toFixed(2)} mil</b>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.35;font-family:var(--mono)">
+            ${p.mode === 'pad_to_trace' ? '<span style="color:#0284c7;font-weight:700">★ 焊盘Airgap</span>' : (p.mode === 'drill_to_trace' ? '<span style="color:#d97706;font-weight:700">★ 一钻孔壁</span>' : p.mode)}<br>
+            <span style="color:#334155" title="焊盘边缘到走线边缘 (EDA Airgap)">焊盘: <b>${p.padEdgeDist.toFixed(2)}</b> mil</span><br>
+            <span style="color:#64748b" title="一钻孔壁到走线边缘">一钻: <b>${p.drillEdgeDist.toFixed(2)}</b> mil</span>
+          </div>
+        </td>
+        <td><b>≥ ${p.threshold.toFixed(2)} mil</b></td>
+        <td style="font-family:var(--mono);font-weight:700;color:${isBad ? 'var(--bad)' : 'var(--ok)'}">${diffStr}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:#475569">
+          一钻: ${p.via.firstDrill.toFixed(2)} mil<br>
+          焊盘: ${(p.via.padDiameter || p.via.padRadius * 2).toFixed(2)} mil
+        </td>
+        <td style="font-size:11px;color:#334155">${advice}</td>
+        <td>
+          <button type="button" class="btn sec small btn-locate" data-via="${p.via.id}" data-trace="${p.trace.id}">定位图</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('.ck-rev').forEach(ck => {
+    const onToggle = e => {
+      const k = e.target.dataset.key;
+      State.reviewedKeys[k] = e.target.checked;
+      renderResults();
+    };
+    ck.addEventListener('change', onToggle);
+    ck.addEventListener('click', onToggle);
+  });
+
+  tbody.querySelectorAll('.btn-locate').forEach(b => {
+    b.addEventListener('click', () => {
+      const viaId = parseInt(b.dataset.via, 10);
+      const traceId = parseInt(b.dataset.trace, 10);
+      locateInCanvas(viaId, traceId);
+    });
+  });
+}
+
+// Pagination Event Listeners
+if ($('selPageSize')) {
+  $('selPageSize').addEventListener('change', e => {
+    State.pageSize = e.target.value;
+    State.currentPage = 1;
+    renderResults();
+  });
+}
+if ($('btnFirstPage')) {
+  $('btnFirstPage').addEventListener('click', () => {
+    State.currentPage = 1;
+    renderResults();
+  });
+}
+if ($('btnPrevPage')) {
+  $('btnPrevPage').addEventListener('click', () => {
+    if (State.currentPage > 1) {
+      State.currentPage--;
+      renderResults();
+    }
+  });
+}
+if ($('btnNextPage')) {
+  $('btnNextPage').addEventListener('click', () => {
+    State.currentPage++;
+    renderResults();
+  });
+}
+if ($('btnLastPage')) {
+  $('btnLastPage').addEventListener('click', () => {
+    State.currentPage = 999999;
+    renderResults();
+  });
+}
+
+// Result Table Filter Buttons
+$('btnFilterAll').addEventListener('click', () => { State.activeFilter = 'all'; renderResults(); });
+$('btnFilterBad').addEventListener('click', () => { State.activeFilter = 'bad'; renderResults(); });
+if ($('btnFilterGnd')) $('btnFilterGnd').addEventListener('click', () => { State.activeFilter = 'gnd'; renderResults(); });
+if ($('btnFilterSig')) $('btnFilterSig').addEventListener('click', () => { State.activeFilter = 'signal'; renderResults(); });
+$('btnFilterOk').addEventListener('click', () => { State.activeFilter = 'ok'; renderResults(); });
+document.querySelectorAll('#resStatsGrid .stat-box').forEach(b => {
+  b.addEventListener('click', () => {
+    if (b.dataset.filter) {
+      State.activeFilter = b.dataset.filter;
+      renderResults();
+    }
+  });
+});
+$('inpSearch').addEventListener('input', e => {
+  State.searchQuery = e.target.value;
+  renderResults();
+});
+
+// CSV Export
+$('btnExportCsv').addEventListener('click', () => {
+  if (!State.checkResult || !State.checkResult.pairs.length) return alert('暂无检查数据');
+  const headers = ['序号,状态,判定类型,过孔编号,过孔网络,过孔X,过孔Y,走线编号,走线层,走线网络,走线线宽,走线最近点X,走线最近点Y,实测间距(mil),规则要求(mil),偏差(mil),一钻孔径(mil),焊盘直径(mil)'];
+  const rows = State.checkResult.pairs.map((p, idx) => [
+    idx + 1,
+    p.status,
+    `"${p.targetType}"`,
+    p.via.id,
+    `"${p.via.net}"`,
+    p.via.origin[0],
+    p.via.origin[1],
+    p.trace.id,
+    `"${p.trace.subset}"`,
+    `"${p.trace.net}"`,
+    p.trace.width,
+    p.proj[0].toFixed(4),
+    p.proj[1].toFixed(4),
+    p.evalDist.toFixed(4),
+    p.threshold.toFixed(2),
+    p.diff.toFixed(4),
+    p.via.firstDrill.toFixed(2),
+    (p.via.padDiameter || p.via.padRadius * 2).toFixed(2)
+  ].join(','));
+  const blob = new Blob(['\uFEFF' + headers.concat(rows).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `PCB_加工能力间距检查报告_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+// --- Interactive 2D Canvas Viewer Engine ---
+const canvas = $('pcbCanvas');
+const ctx = canvas.getContext('2d');
+
+function fitCanvasView() {
+  const vp = State.viewport;
+  const w = canvas.width, h = canvas.height;
+  const dataW = vp.maxX - vp.minX;
+  const dataH = vp.maxY - vp.minY;
+  if (dataW <= 0 || dataH <= 0) return;
+
+  const scaleX = (w - 120) / dataW;
+  const scaleY = (h - 120) / dataH;
+  vp.zoom = Math.min(scaleX, scaleY);
+  vp.panX = (w - dataW * vp.zoom) / 2 - vp.minX * vp.zoom;
+  vp.panY = (h - dataH * vp.zoom) / 2 - vp.minY * vp.zoom;
+  renderCanvas();
+}
+
+function zoomToDefects() {
+  if (!State.checkResult) return fitCanvasView();
+  const fails = State.checkResult.pairs.filter(p => p.status === '不满足');
+  if (!fails.length) return fitCanvasView();
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  fails.forEach(p => {
+    minX = Math.min(minX, p.via.origin[0], p.proj[0]);
+    maxX = Math.max(maxX, p.via.origin[0], p.proj[0]);
+    minY = Math.min(minY, p.via.origin[1], p.proj[1]);
+    maxY = Math.max(maxY, p.via.origin[1], p.proj[1]);
+  });
+
+  const pad = Math.max(40, (maxX - minX) * 0.35);
+  minX -= pad; maxX += pad; minY -= pad; maxY += pad;
+
+  const w = canvas.width, h = canvas.height;
+  const dataW = maxX - minX, dataH = maxY - minY;
+  const vp = State.viewport;
+  vp.zoom = Math.min((w - 80) / dataW, (h - 80) / dataH);
+  vp.panX = (w - dataW * vp.zoom) / 2 - minX * vp.zoom;
+  vp.panY = (h - dataH * vp.zoom) / 2 - minY * vp.zoom;
+  renderCanvas();
+}
+
+function worldToScreen(wx, wy) {
+  const vp = State.viewport;
+  return [
+    wx * vp.zoom + vp.panX,
+    canvas.height - (wy * vp.zoom + vp.panY)
+  ];
+}
+
+function screenToWorld(sx, sy) {
+  const vp = State.viewport;
+  const wx = (sx - vp.panX) / vp.zoom;
+  const wy = (canvas.height - sy - vp.panY) / vp.zoom;
+  return [wx, wy];
+}
+
+// Trace Net Colors (Matching user's actual image-1.png layout)
+const NET_COLORS = {
+  'GND': '#475569',
+  '25_N': '#c084fc', // purple / magenta
+  '25_P': '#84cc16', // olive green
+  '26_N': '#22c55e', // bright green
+  '26_P': '#06b6d4'  // teal / cyan
+};
+
+function renderCanvas() {
+  if (!canvas || !ctx) return;
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const vp = State.viewport;
+  const showVias = $('ckShowVias').checked;
+  const showTraces = $('ckShowTraces').checked;
+  const showDefects = $('ckShowDefects').checked;
+  const showLabels = $('ckShowLabels').checked;
+  const showGrid = $('ckShowGrid').checked;
+
+  // Viewport bounds calculation for frustum culling
+  const [wMinX, wMaxY] = screenToWorld(0, 0);
+  const [wMaxX, wMinY] = screenToWorld(w, h);
+  const margin = 30 / vp.zoom;
+  const vMinX = Math.min(wMinX, wMaxX) - margin;
+  const vMaxX = Math.max(wMinX, wMaxX) + margin;
+  const vMinY = Math.min(wMinY, wMaxY) - margin;
+  const vMaxY = Math.max(wMinY, wMaxY) + margin;
+
+  // 1. Grid & Axes
+  if (showGrid) {
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 1;
+    const gridStep = Math.pow(10, Math.floor(Math.log10(100 / vp.zoom)));
+    const startW = screenToWorld(0, h);
+    const endW = screenToWorld(w, 0);
+
+    ctx.beginPath();
+    for (let gx = Math.floor(startW[0] / gridStep) * gridStep; gx <= endW[0]; gx += gridStep) {
+      const sx = worldToScreen(gx, 0)[0];
+      ctx.moveTo(sx, 0); ctx.lineTo(sx, h);
+    }
+    for (let gy = Math.floor(startW[1] / gridStep) * gridStep; gy <= endW[1]; gy += gridStep) {
+      const sy = worldToScreen(0, gy)[1];
+      ctx.moveTo(0, sy); ctx.lineTo(w, sy);
+    }
+    ctx.stroke();
+  }
+
+  // 2. Draw Trace Segments (with Viewport Culling & accurate parametric interpolation)
+  if (showTraces) {
+    State.traces.forEach(t => {
+      // Culling
+      let tMinX, tMaxX, tMinY, tMaxY;
+      if (t.kind === 'line') {
+        tMinX = Math.min(t.p1[0], t.p2[0]);
+        tMaxX = Math.max(t.p1[0], t.p2[0]);
+        tMinY = Math.min(t.p1[1], t.p2[1]);
+        tMaxY = Math.max(t.p1[1], t.p2[1]);
+      } else {
+        tMinX = t.center[0] - t.radius;
+        tMaxX = t.center[0] + t.radius;
+        tMinY = t.center[1] - t.radius;
+        tMaxY = t.center[1] + t.radius;
+      }
+      if (tMaxX < vMinX || tMinX > vMaxX || tMaxY < vMinY || tMinY > vMaxY) return;
+
+      const col = NET_COLORS[t.net] || '#94a3b8';
+      const isSelected = State.measureSelection.some(s => s.type === 'trace' && s.item.id === t.id);
+
+      const isRouteMatch = State.highlightNetRoute && (State.highlightNetRoute.layer === t.subset && State.highlightNetRoute.net === t.net);
+
+      if (isRouteMatch) {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = Math.max(4.0, t.width * vp.zoom + 6.0);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        if (t.kind === 'line') {
+          const p1 = worldToScreen(t.p1[0], t.p1[1]);
+          const p2 = worldToScreen(t.p2[0], t.p2[1]);
+          ctx.beginPath();
+          ctx.moveTo(p1[0], p1[1]);
+          ctx.lineTo(p2[0], p2[1]);
+          ctx.stroke();
+        } else if (t.kind === 'arc') {
+          const steps = vp.zoom < 0.5 ? 12 : (vp.zoom < 2.0 ? 20 : 32);
+          const pts = DfmCheck.sampleArcPoints(t.center, t.radius, t.p1, t.p2, t.dir, steps);
+          ctx.beginPath();
+          pts.forEach((pt, i) => {
+            const sPt = worldToScreen(pt[0], pt[1]);
+            if (i === 0) ctx.moveTo(sPt[0], sPt[1]);
+            else ctx.lineTo(sPt[0], sPt[1]);
+          });
+          ctx.stroke();
+        }
+      }
+
+      ctx.strokeStyle = isSelected ? '#38bdf8' : col;
+      ctx.lineWidth = Math.max(1.8, t.width * vp.zoom);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (t.kind === 'line') {
+        const p1 = worldToScreen(t.p1[0], t.p1[1]);
+        const p2 = worldToScreen(t.p2[0], t.p2[1]);
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.stroke();
+      } else if (t.kind === 'arc') {
+        const steps = vp.zoom < 0.5 ? 12 : (vp.zoom < 2.0 ? 20 : 32);
+        const pts = DfmCheck.sampleArcPoints(t.center, t.radius, t.p1, t.p2, t.dir, steps);
+        ctx.beginPath();
+        pts.forEach((pt, i) => {
+          const sPt = worldToScreen(pt[0], pt[1]);
+          if (i === 0) ctx.moveTo(sPt[0], sPt[1]);
+          else ctx.lineTo(sPt[0], sPt[1]);
+        });
+        ctx.stroke();
+      }
+    });
+  }
+
+  // 3. Draw Vias (with Viewport Culling)
+  if (showVias) {
+    State.vias.forEach(v => {
+      const vx = v.origin[0], vy = v.origin[1];
+      if (vx + v.padRadius < vMinX || vx - v.padRadius > vMaxX ||
+          vy + v.padRadius < vMinY || vy - v.padRadius > vMaxY) return;
+
+      const p = worldToScreen(vx, vy);
+      const finishDrillR = Math.max(1.5, (v.drill / 2.0) * vp.zoom);
+      const firstDrillR = Math.max(2.0, v.firstDrillRadius * vp.zoom);
+      const padR = Math.max(2.8, v.padRadius * vp.zoom);
+      const isSelected = State.measureSelection.some(s => s.type === 'via' && s.item.id === v.id);
+
+      // Pad outline (Dotted circle)
+      ctx.strokeStyle = isSelected ? '#38bdf8' : (v.isGnd ? 'rgba(148, 163, 184, 0.45)' : 'rgba(239, 68, 68, 0.7)');
+      ctx.lineWidth = isSelected ? 2 : 1;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], padR, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // First Drill Wall circle (一钻孔壁)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], firstDrillR, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Finished Drill core (Red for Signal, Gray/Blue for GND)
+      ctx.fillStyle = v.isGnd ? '#334155' : '#ef4444';
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], finishDrillR, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Border
+      ctx.strokeStyle = isSelected ? '#38bdf8' : (v.isGnd ? '#64748b' : '#f87171');
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Text label
+      if (showLabels && vp.zoom > 1.2) {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '10px ui-monospace, sans-serif';
+        ctx.fillText(`V${v.id}`, p[0] + padR + 2, p[1] - 2);
+      }
+    });
+  }
+
+  // 4. Draw Defect Highlights & Airgap Measurement Lines
+  if (showDefects && State.checkResult) {
+    const fails = State.checkResult.defectPairs || State.checkResult.pairs.filter(p => p.status === '不满足');
+    fails.forEach((p, idx) => {
+      const vx = p.via.origin[0], vy = p.via.origin[1];
+      if (vx + 50 < vMinX || vx - 50 > vMaxX || vy + 50 < vMinY || vy - 50 > vMaxY) return;
+
+      const vPt = worldToScreen(vx, vy);
+      const tPt = worldToScreen(p.proj[0], p.proj[1]);
+
+      // Danger halo on via
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(vPt[0], vPt[1], (p.via.padRadius * vp.zoom) + 4, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Measurement dashed red line
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(vPt[0], vPt[1]);
+      ctx.lineTo(tPt[0], tPt[1]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point marker on trace
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(tPt[0], tPt[1], 3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Distance Badge bubble (only when zoomed in enough or fewer than 200 defects on screen)
+      if (showLabels && vp.zoom > 0.8) {
+        const midX = (vPt[0] + tPt[0]) / 2;
+        const midY = (vPt[1] + tPt[1]) / 2;
+        const txt = `⚠️ ${p.evalDist.toFixed(2)} mil`;
+
+        ctx.font = 'bold 10px ui-monospace, sans-serif';
+        const txtW = ctx.measureText(txt).width;
+
+        ctx.fillStyle = 'rgba(220, 38, 38, 0.9)';
+        ctx.beginPath();
+        ctx.roundRect(midX - txtW/2 - 4, midY - 8, txtW + 8, 16, 4);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, midX, midY);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+      }
+    });
+  }
+
+  // 5. Draw Active Measurement Overlay
+  if (State.measureSelection.length >= 2) {
+    drawMeasurementOverlay();
+  }
+
+  // Update HUD
+  $('canvasHud').textContent = `缩放: ${(vp.zoom * 100).toFixed(0)}% | 过孔数: ${State.vias.length.toLocaleString()} | 走线条数: ${State.traces.length.toLocaleString()}` +
+    (State.measureMode ? ' | [标尺测量模式已激活]' : '');
+}
+
+// Draw Measurement Overlay between selected items
+function updateMeasurements() {
+  const sel = State.measureSelection;
+  if (sel.length < 2) return;
+
+  const s1 = sel[0], s2 = sel[1];
+  let metrics;
+
+  if (s1.type === 'via' && s2.type === 'via') {
+    metrics = DfmCheck.calcViaToViaMetrics(s1.item, s2.item);
+    showMeasureCardViaToVia(metrics);
+  } else if ((s1.type === 'via' && s2.type === 'trace') || (s1.type === 'trace' && s2.type === 'via')) {
+    const via = s1.type === 'via' ? s1.item : s2.item;
+    const trace = s1.type === 'trace' ? s1.item : s2.item;
+    metrics = DfmCheck.calcTraceToViaMetrics(via, trace);
+    showMeasureCardTraceToVia(metrics);
+  }
+}
+
+function drawMeasurementOverlay() {
+  const sel = State.measureSelection;
+  if (sel.length < 2) return;
+
+  updateMeasurements();
+
+  const s1 = sel[0], s2 = sel[1];
+  let pt1, pt2;
+
+  if (s1.type === 'via' && s2.type === 'via') {
+    pt1 = worldToScreen(s1.item.origin[0], s1.item.origin[1]);
+    pt2 = worldToScreen(s2.item.origin[0], s2.item.origin[1]);
+  } else if ((s1.type === 'via' && s2.type === 'trace') || (s1.type === 'trace' && s2.type === 'via')) {
+    const via = s1.type === 'via' ? s1.item : s2.item;
+    const trace = s1.type === 'trace' ? s1.item : s2.item;
+    const metrics = DfmCheck.calcTraceToViaMetrics(via, trace);
+    pt1 = worldToScreen(via.origin[0], via.origin[1]);
+    pt2 = worldToScreen(metrics.proj[0], metrics.proj[1]);
+  }
+
+  if (pt1 && pt2) {
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 2]);
+    ctx.beginPath();
+    ctx.moveTo(pt1[0], pt1[1]);
+    ctx.lineTo(pt2[0], pt2[1]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Endpoint crosses
+    [pt1, pt2].forEach(p => {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], 4, 0, 2*Math.PI);
+      ctx.stroke();
+    });
+  }
+}
+
+function showMeasureCardViaToVia(m) {
+  const card = $('measureCard');
+  card.style.display = 'block';
+  $('measureCardBody').innerHTML = `
+    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.v1.id} (${m.v1.net}) ↔ Via ${m.v2.id} (${m.v2.net})</div>
+    <div class="m-row"><span>孔中心到中心距：</span><b>${m.centerDist.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>孔盘到孔盘 Airgap：</span><b style="color:#38bdf8">${m.padAirgap.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>孔盘到一钻孔壁 Airgap：</span><b>${m.padToDrillAirgap.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>一钻孔壁到孔壁 Airgap：</span><b>${m.drillAirgap.toFixed(3)} mil</b></div>
+  `;
+}
+
+function showMeasureCardTraceToVia(m) {
+  const card = $('measureCard');
+  card.style.display = 'block';
+  $('measureCardBody').innerHTML = `
+    <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.via.id} (${m.via.net}) ↔ Trace ${m.trace.id} (${m.trace.subset})</div>
+    <div class="m-row"><span>孔中心到走线中心距：</span><b>${m.centerDist.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>孔盘到走线边缘 Airgap：</span><b style="color:#38bdf8">${m.padAirgap.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>一钻孔壁到走线边缘 Airgap：</span><b>${m.drillAirgap.toFixed(3)} mil</b></div>
+    <div class="m-row"><span>走线最近点坐标：</span><b>[${m.proj[0].toFixed(2)}, ${m.proj[1].toFixed(2)}]</b></div>
+  `;
+}
+
+// Measurement Mode Button
+$('btnMeasureMode').addEventListener('click', () => {
+  State.measureMode = !State.measureMode;
+  $('btnMeasureMode').classList.toggle('active', State.measureMode);
+  canvas.classList.toggle('measuring', State.measureMode);
+  $('btnClearMeasure').style.display = State.measureMode ? 'inline-flex' : 'none';
+  if (!State.measureMode) {
+    State.measureSelection = [];
+    $('measureCard').style.display = 'none';
+  }
+  renderCanvas();
+});
+
+$('btnClearMeasure').addEventListener('click', () => {
+  State.measureSelection = [];
+  $('measureCard').style.display = 'none';
+  renderCanvas();
+});
+
+// Canvas Pan & Zoom Handlers
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+
+  const vp = State.viewport;
+  const wBefore = screenToWorld(mx, my);
+
+  vp.zoom = Math.max(0.1, Math.min(25, vp.zoom * zoomFactor));
+  
+  vp.panX = mx - wBefore[0] * vp.zoom;
+  vp.panY = (canvas.height - my) - wBefore[1] * vp.zoom;
+  renderCanvas();
+});
+
+canvas.addEventListener('mousedown', e => {
+  if (State.measureMode) {
+    // Measurement element selection
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const [wx, wy] = screenToWorld(mx, my);
+
+    // 1. Check if clicking on Via
+    let clickedVia = null, minVD = Infinity;
+    State.vias.forEach(v => {
+      const d = Math.hypot(v.origin[0] - wx, v.origin[1] - wy);
+      if (d < (v.padRadius + 15 / State.viewport.zoom) && d < minVD) {
+        minVD = d;
+        clickedVia = v;
+      }
+    });
+
+    if (clickedVia) {
+      if (State.measureSelection.length >= 2) State.measureSelection = [];
+      State.measureSelection.push({ type: 'via', item: clickedVia });
+      renderCanvas();
+      return;
+    }
+
+    // 2. Check if clicking on Trace
+    let clickedTrace = null, minTD = Infinity;
+    State.traces.forEach(t => {
+      let d;
+      if (t.kind === 'line') {
+        d = DfmCheck.ptToSegDist([wx, wy], t.p1, t.p2).dist;
+      } else {
+        d = DfmCheck.ptToArcDist([wx, wy], t.center, t.radius, t.p1, t.p2, t.dir).dist;
+      }
+      if (d < (t.width/2 + 10 / State.viewport.zoom) && d < minTD) {
+        minTD = d;
+        clickedTrace = t;
+      }
+    });
+
+    if (clickedTrace) {
+      if (State.measureSelection.length >= 2) State.measureSelection = [];
+      State.measureSelection.push({ type: 'trace', item: clickedTrace });
+      renderCanvas();
+      return;
+    }
+  }
+
+  State.viewport.isDragging = true;
+  State.viewport.dragStartX = e.clientX;
+  State.viewport.dragStartY = e.clientY;
+});
+
+window.addEventListener('mousemove', e => {
+  if (State.viewport.isDragging) {
+    const dx = e.clientX - State.viewport.dragStartX;
+    const dy = e.clientY - State.viewport.dragStartY;
+    State.viewport.dragStartX = e.clientX;
+    State.viewport.dragStartY = e.clientY;
+    State.viewport.panX += dx;
+    State.viewport.panY -= dy;
+    renderCanvas();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  State.viewport.isDragging = false;
+});
+
+// Hover Tooltip
+canvas.addEventListener('mousemove', e => {
+  if (State.viewport.isDragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const [wx, wy] = screenToWorld(mx, my);
+
+  let nearestVia = null, minDist = Infinity;
+  State.vias.forEach(v => {
+    const d = Math.hypot(v.origin[0] - wx, v.origin[1] - wy);
+    if (d < minDist && d < (v.padRadius + 15 / State.viewport.zoom)) {
+      minDist = d;
+      nearestVia = v;
+    }
+  });
+
+  const tip = $('canvasTooltip');
+  if (nearestVia) {
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+    tip.innerHTML = `
+      <b>Via ${nearestVia.id}</b> (${nearestVia.net})<br>
+      坐标: [${nearestVia.origin[0].toFixed(2)}, ${nearestVia.origin[1].toFixed(2)}]<br>
+      完成孔径: ${nearestVia.drill.toFixed(2)} mil | 一钻孔径: ${nearestVia.firstDrill.toFixed(2)} mil<br>
+      环宽: ${nearestVia.padRing.toFixed(2)} mil | 焊盘直径: ${nearestVia.padDiameter.toFixed(2)} mil<br>
+      Padstack: ${nearestVia.padstack}
+    `;
+  } else {
+    tip.style.display = 'none';
+  }
+});
+
+// Canvas Toolbar Buttons
+$('btnFitView').addEventListener('click', fitCanvasView);
+$('btnZoomDefects').addEventListener('click', zoomToDefects);
+$('btnZoomIn').addEventListener('click', () => {
+  State.viewport.zoom *= 1.25;
+  renderCanvas();
+});
+$('btnZoomOut').addEventListener('click', () => {
+  State.viewport.zoom *= 0.8;
+  renderCanvas();
+});
+$('btnResetView').addEventListener('click', fitCanvasView);
+
+['ckShowVias', 'ckShowTraces', 'ckShowDefects', 'ckShowLabels', 'ckShowGrid'].forEach(id => {
+  $(id).addEventListener('change', renderCanvas);
+});
+
+// Export Canvas Image (PNG)
+$('btnExportPng').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = `PCB_空间间距与加工能力分析图_${new Date().toISOString().slice(0,10)}.png`;
+  link.href = canvas.toDataURL('image/png', 1.0);
+  link.click();
+});
+
+// Export Vector SVG
+$('btnExportSvg').addEventListener('click', () => {
+  const w = canvas.width, h = canvas.height;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n`;
+  svg += `<rect width="${w}" height="${h}" fill="#000000"/>\n`;
+
+  // Draw Traces in SVG
+  State.traces.forEach(t => {
+    const col = NET_COLORS[t.net] || '#94a3b8';
+    const lw = Math.max(1.8, t.width * State.viewport.zoom);
+    if (t.kind === 'line') {
+      const p1 = worldToScreen(t.p1[0], t.p1[1]);
+      const p2 = worldToScreen(t.p2[0], t.p2[1]);
+      svg += `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="${col}" stroke-width="${lw}" stroke-linecap="round"/>\n`;
+    } else {
+      const pts = DfmCheck.sampleArcPoints(t.center, t.radius, t.p1, t.p2, t.dir, 32);
+      const dStr = pts.map((p, i) => {
+        const s = worldToScreen(p[0], p[1]);
+        return (i === 0 ? 'M' : 'L') + `${s[0].toFixed(1)},${s[1].toFixed(1)}`;
+      }).join(' ');
+      svg += `<path d="${dStr}" stroke="${col}" stroke-width="${lw}" fill="none" stroke-linecap="round"/>\n`;
+    }
+  });
+
+  // Draw Vias in SVG
+  State.vias.forEach(v => {
+    const p = worldToScreen(v.origin[0], v.origin[1]);
+    const r = (v.drill / 2.0) * State.viewport.zoom;
+    const col = v.isGnd ? '#334155' : '#ef4444';
+    svg += `<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${col}" stroke="#ffffff" stroke-width="1"/>\n`;
+  });
+
+  // Draw Defects in SVG
+  if (State.checkResult) {
+    State.checkResult.pairs.filter(p => p.status === '不满足').forEach(p => {
+      const vPt = worldToScreen(p.via.origin[0], p.via.origin[1]);
+      const tPt = worldToScreen(p.proj[0], p.proj[1]);
+      svg += `<line x1="${vPt[0]}" y1="${vPt[1]}" x2="${tPt[0]}" y2="${tPt[1]}" stroke="#ef4444" stroke-width="2" stroke-dasharray="3,3"/>\n`;
+      svg += `<circle cx="${vPt[0]}" cy="${vPt[1]}" r="8" fill="none" stroke="#ef4444" stroke-width="2"/>\n`;
+    });
+  }
+
+  svg += `</svg>`;
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `PCB_空间间距分析矢量图_${new Date().toISOString().slice(0,10)}.svg`;
+  a.click();
+});
+
+function locateInCanvas(viaId, traceId) {
+  State.highlightNetRoute = null;
+  const tabBtn = document.querySelector('nav#tabs button[data-tab="canvas"]');
+  if (tabBtn) tabBtn.click();
+
+  const via = State.vias.find(v => v.id === viaId);
+  if (!via) return;
+
+  const w = canvas.width, h = canvas.height;
+  const vp = State.viewport;
+  vp.zoom = 8.0;
+  vp.panX = w/2 - via.origin[0] * vp.zoom;
+  vp.panY = h/2 - via.origin[1] * vp.zoom;
+  renderCanvas();
+}
+
+function locateNetRoute(layer, net) {
+  State.highlightNetRoute = { layer, net };
+
+  const traces = State.traces.filter(t => t.subset === layer && t.net === net);
+  if (!traces.length) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  traces.forEach(t => {
+    minX = Math.min(minX, t.p1[0], t.p2[0]);
+    maxX = Math.max(maxX, t.p1[0], t.p2[0]);
+    minY = Math.min(minY, t.p1[1], t.p2[1]);
+    maxY = Math.max(maxY, t.p1[1], t.p2[1]);
+  });
+
+  if (State.checkResult && State.checkResult.defectPairs) {
+    State.checkResult.defectPairs.forEach(p => {
+      if (p.trace.subset === layer && p.trace.net === net) {
+        minX = Math.min(minX, p.via.origin[0]);
+        maxX = Math.max(maxX, p.via.origin[0]);
+        minY = Math.min(minY, p.via.origin[1]);
+        maxY = Math.max(maxY, p.via.origin[1]);
+      }
+    });
+  }
+
+  const pad = Math.max(40, (maxX - minX) * 0.2);
+  State.viewport.minX = minX - pad;
+  State.viewport.maxX = maxX + pad;
+  State.viewport.minY = minY - pad;
+  State.viewport.maxY = maxY + pad;
+
+  const tabBtn = document.querySelector('nav#tabs button[data-tab="canvas"]');
+  if (tabBtn) tabBtn.click();
+
+  fitCanvasView();
+}
+window.locateNetRoute = locateNetRoute;
+
+// Auto-load sample on startup
+window.addEventListener('DOMContentLoaded', () => {
+  $('btnLoadSample').click();
+});
+</script>
+</body>
+</html>
