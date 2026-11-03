@@ -950,6 +950,132 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
 .dash-card .cat-title { font-size: 15.5px !important; }
 .dash-score { font-size: 26px !important; }
 
+/* Global Display: Full-Width & Fullscreen Workbench */
+.global-display-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(148, 163, 184, 0.35);
+}
+.global-display-ctrl .gdisp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px !important;
+  border-radius: 5px;
+  font-size: 12.5px !important;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(15, 23, 42, 0.65);
+  color: #e0f2fe !important;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  line-height: 1.3;
+}
+.global-display-ctrl .gdisp-btn:hover {
+  background: rgba(2, 132, 199, 0.4) !important;
+  border-color: #38bdf8;
+  color: #ffffff !important;
+}
+.global-display-ctrl .gdisp-btn.active {
+  background: #0284c7 !important;
+  border-color: #38bdf8;
+  color: #ffffff !important;
+}
+.global-display-ctrl .gdisp-btn.fs-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border-color: #7dd3fc;
+  color: #ffffff !important;
+}
+.global-display-ctrl .gdisp-btn.fs-active {
+  background: #059669 !important;
+  border-color: #34d399;
+  color: #ffffff !important;
+}
+html:fullscreen, html:-webkit-full-screen {
+  background: var(--bg, #f8fafc);
+  overflow-y: auto;
+}
+html.pcb-global-wide .container,
+html:fullscreen .container,
+html:-webkit-full-screen .container {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+html.pcb-global-wide #modalViewFanoutScheme .modal-box,
+html:fullscreen #modalViewFanoutScheme .modal-box {
+  max-width: 96vw !important;
+  width: 96vw !important;
+  max-height: 94vh !important;
+}
+@media (min-width: 1600px) {
+  html.pcb-global-wide #pnlFanoutSchemeGrid,
+  html:fullscreen #pnlFanoutSchemeGrid {
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)) !important;
+  }
+}
+
+/* 4-Category TXT Data Ingestion Grid */
+.data-ingest-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 10px;
+}
+@media (max-width: 1200px) {
+  .data-ingest-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .data-ingest-grid { grid-template-columns: 1fr; }
+}
+.data-cat-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.data-cat-box.loaded {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+.data-cat-drop {
+  border: 1.5px dashed #94a3b8;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.data-cat-drop:hover, .data-cat-drop.dragover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+.data-cat-box.loaded .data-cat-drop {
+  border-style: solid;
+  border-color: #86efac;
+  background: #ffffff;
+}
+
 </style>
 </head>
 <body>
@@ -961,13 +1087,27 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
       <h1>PCB 综合检查一体化工作台</h1>
       <span class="tag">5-in-1 UNIFIED SUITE</span>
     </div>
-    <div class="navlinks">
+    <div class="navlinks" style="display:flex;align-items:center;flex-wrap:wrap">
       <a href="index.html">走线检查</a>
       <a href="copper.html">约束检查</a>
       <a href="dfm.html">加工能力检查</a>
       <a href="fanout.html">扇出方案检查</a>
       <a href="pour.html">铜皮检查</a>
       <a href="unified.html" class="active">综合一体化检查</a>
+      <div class="global-display-ctrl">
+        <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
+          <span id="lblGlobalWide">铺满宽屏</span>
+        </button>
+        <button type="button" class="gdisp-btn fs-btn" id="btnGlobalFullscreen" onclick="toggleGlobalFullscreen()" title="一键将检查工作台全屏独占整个显示屏（按 Esc 可退出）">
+          <svg id="icoGlobalFs" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+          <span id="lblGlobalFs">全屏工作台</span>
+        </button>
+        <a class="gdisp-btn" id="btnGlobalPopout" href="unified.html?wide=1" target="_blank" rel="noopener" style="display:none" title="在独立浏览器新标签页 100% 大屏打开工作台">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h5v5M14 2L7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5"/></svg>
+          <span>独立大屏</span>
+        </a>
+      </div>
     </div>
   </div>
   <div class="header-desc">
@@ -1016,43 +1156,131 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
   <!-- TAB 1: 综合数据与规则配置 (上下分布布局) -->
   <div id="tabData" class="tab-pane active">
     
-    <!-- 顶部数据导入区 (Top: EDA TXT Data Ingestion) -->
+    <!-- 顶部数据导入区 (Top: 四分类 EDA TXT 数据导入，仅支持 .txt 文件导入) -->
     <div class="card" style="margin-bottom:0">
       <div class="card-header">
         <div>
-          <div class="card-title">EDA TXT 综合数据导入 (Data Ingestion)</div>
-          <div class="card-subtitle">支持导入 TXT/REP 报告文件、拖拽上传或直接粘贴包含 Shape、Via、Trace、Keepout 的 EDA 报告数据</div>
+          <div class="card-title">EDA TXT 四分类检查数据导入 (Categorized TXT Data Ingestion)</div>
+          <div class="card-subtitle">按检查模块划分为四类独立数据框，仅支持导入 <code>.txt</code> 格式文件（点击选择或拖拽 <code>.txt</code> 文件入框；可按需导入单类或多类数据）</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn success" onclick="loadUnifiedSampleData()">载入全套综合示例数据</button>
-          <button class="btn sec" onclick="$('fileDataUpload').click()">导入 TXT 数据文件</button>
-          <button class="btn sec" onclick="clearUnifiedData()">清空数据</button>
+          <button class="btn sec" onclick="clearUnifiedData()">清空全部数据</button>
           <button class="btn primary large" style="margin-left:6px;box-shadow:0 0 12px rgba(2,132,199,0.4)" onclick="runMasterInspection()">
             启动 5 大类全项综合体检 (Run All)
           </button>
         </div>
       </div>
 
-      <!-- Compact Drag & Drop Zone + Input Grid -->
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:12px;margin-bottom:8px">
-        <!-- Left: Drag & Drop Box -->
-        <div class="drag-zone" id="dragDropZone" style="margin-bottom:0;min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 10px;text-align:center" onclick="$('fileDataUpload').click()">
-          
-          <span style="font-size:12px;color:#38bdf8;font-weight:600">点击选择或将 EDA TXT 文件拖拽至此</span>
-          <span style="font-size:10.5px;color:#94a3b8;margin-top:2px">支持 .txt / .rep / .rpt 格式</span>
-          <input type="file" id="fileDataUpload" accept=".txt,.rep,.rpt" style="display:none" onchange="handleDataFileUpload(event)">
+      <!-- 四个独立 TXT 数据导入框 (无粘贴框，仅限 .txt 文件) -->
+      <div class="data-ingest-grid" id="gridCategorizedDataBoxes">
+        <!-- Box 1: 走线检查所需的数据 -->
+        <div class="data-cat-box" id="dataBox_trace" style="border-top:3px solid #0284c7">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
+              <span style="font-size:13.5px;font-weight:700;color:#0f172a">① 走线检查数据</span>
+              <span id="badgeData_trace" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+            </div>
+            <div style="font-size:11.5px;color:#64748b;line-height:1.4">走线检查所需的网络走线报告数据（线宽组合 / 线长 / 差分线长差 / 弧半径）</div>
+          </div>
+          <div class="data-cat-drop" id="dropZone_trace" onclick="$('fileData_trace').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div id="statusData_trace" style="font-size:12px;font-weight:600;color:#0284c7">点击选择或拖拽 .txt 文件至此</div>
+            <div id="metaData_trace" style="font-size:11px;color:#94a3b8;font-family:var(--mono)">仅支持 .txt 格式（可多选合并）</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <div style="display:flex;gap:5px">
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_trace').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_trace" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_trace').click()">+ 追加 .txt</button>
+            </div>
+            <button type="button" class="btn sec small" id="btnClear_trace" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('trace', event)">清空</button>
+          </div>
+          <input type="file" id="fileData_trace" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('trace', event, false)">
+          <input type="file" id="fileAppend_trace" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('trace', event, true)">
         </div>
 
-        <!-- Right: Textarea for pasting or showing loaded status -->
-        <textarea id="txtUnifiedInput" rows="4" style="margin-bottom:0;height:92px;min-height:92px" placeholder="在此粘贴包含 Shape / Via / Trace 的 EDA TXT 报告内容，或点击左侧「拖拽导入」/ 上方「载入全套综合示例数据」..."></textarea>
+        <!-- Box 2: 约束检查所需的数据 -->
+        <div class="data-cat-box" id="dataBox_constraint" style="border-top:3px solid #7c3aed">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
+              <span style="font-size:13.5px;font-weight:700;color:#0f172a">② 约束检查数据</span>
+              <span id="badgeData_constraint" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+            </div>
+            <div style="font-size:11.5px;color:#64748b;line-height:1.4">约束检查所需的过孔与反焊盘铜皮数据（反焊盘尺寸 / Padstack 层名核对）</div>
+          </div>
+          <div class="data-cat-drop" id="dropZone_constraint" onclick="$('fileData_constraint').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div id="statusData_constraint" style="font-size:12px;font-weight:600;color:#7c3aed">点击选择或拖拽 .txt 文件至此</div>
+            <div id="metaData_constraint" style="font-size:11px;color:#94a3b8;font-family:var(--mono)">仅支持 .txt 格式（可多选合并）</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <div style="display:flex;gap:5px">
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_constraint').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_constraint" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_constraint').click()">+ 追加 .txt</button>
+            </div>
+            <button type="button" class="btn sec small" id="btnClear_constraint" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('constraint', event)">清空</button>
+          </div>
+          <input type="file" id="fileData_constraint" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('constraint', event, false)">
+          <input type="file" id="fileAppend_constraint" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('constraint', event, true)">
+        </div>
+
+        <!-- Box 3: DFM 和扇出方案所需的数据 -->
+        <div class="data-cat-box" id="dataBox_dfmFanout" style="border-top:3px solid #0d9488">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
+              <span style="font-size:13.5px;font-weight:700;color:#0f172a">③ DFM 与扇出方案数据</span>
+              <span id="badgeData_dfmFanout" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+            </div>
+            <div style="font-size:11.5px;color:#64748b;line-height:1.4">DFM 加工能力与扇出方案检查共用的过孔与走线数据（线孔间距 / 扇出拓扑）</div>
+          </div>
+          <div class="data-cat-drop" id="dropZone_dfmFanout" onclick="$('fileData_dfmFanout').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div id="statusData_dfmFanout" style="font-size:12px;font-weight:600;color:#0d9488">点击选择或拖拽 .txt 文件至此</div>
+            <div id="metaData_dfmFanout" style="font-size:11px;color:#94a3b8;font-family:var(--mono)">仅支持 .txt 格式（可多选合并）</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <div style="display:flex;gap:5px">
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_dfmFanout').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_dfmFanout" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_dfmFanout').click()">+ 追加 .txt</button>
+            </div>
+            <button type="button" class="btn sec small" id="btnClear_dfmFanout" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('dfmFanout', event)">清空</button>
+          </div>
+          <input type="file" id="fileData_dfmFanout" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('dfmFanout', event, false)">
+          <input type="file" id="fileAppend_dfmFanout" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('dfmFanout', event, true)">
+        </div>
+
+        <!-- Box 4: 铜皮检查所需的数据 -->
+        <div class="data-cat-box" id="dataBox_pour" style="border-top:3px solid #d97706">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
+              <span style="font-size:13.5px;font-weight:700;color:#0f172a">④ 铜皮检查数据</span>
+              <span id="badgeData_pour" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+            </div>
+            <div style="font-size:11.5px;color:#64748b;line-height:1.4">铜皮检查所需的 Shape / Via / Trace 数据（铺铜覆盖 / 异型铜皮 / 参考层超宽）</div>
+          </div>
+          <div class="data-cat-drop" id="dropZone_pour" onclick="$('fileData_pour').click()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div id="statusData_pour" style="font-size:12px;font-weight:600;color:#d97706">点击选择或拖拽 .txt 文件至此</div>
+            <div id="metaData_pour" style="font-size:11px;color:#94a3b8;font-family:var(--mono)">仅支持 .txt 格式（可多选合并）</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <div style="display:flex;gap:5px">
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_pour').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_pour" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_pour').click()">+ 追加 .txt</button>
+            </div>
+            <button type="button" class="btn sec small" id="btnClear_pour" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('pour', event)">清空</button>
+          </div>
+          <input type="file" id="fileData_pour" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('pour', event, false)">
+          <input type="file" id="fileAppend_pour" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('pour', event, true)">
+        </div>
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:4px">
         <div id="lblDataSummary" style="font-size:11.5px;color:var(--sub);font-family:var(--mono)">
-          已解析: 0 孔 | 0 线段 | 0 铜皮
+          已导入模块: 0 / 4 类 | 汇总元素: 0 孔 | 0 走线段 | 0 铜皮
         </div>
         <div style="font-size:11px;color:#64748b">
-          提示：导入数据后系统自动解析过孔、走线及铜皮 Shape 元素，点击右上角「启动 5 大类全项综合体检」即可执行全量检查并生成综合报告。
+          提示：各框仅接收 <code>.txt</code> 文件，导入后自动针对已载入数据的模块执行检查（未导入数据的模块不误报）。
         </div>
       </div>
     </div>
@@ -1360,6 +1588,9 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
               </div>
             </div>
 
+            <!-- Global Library Padstack Unified Color Legend -->
+            <div id="pnlUnifiedPadstackLegendBar" style="margin-bottom:10px"></div>
+
             <!-- 2-Column Scheme Cards Grid matching image-2.png -->
             <div id="pnlFanoutSchemeGrid" style="display:grid;grid-template-columns:repeat(2, 1fr);gap:12px">
               <!-- Dynamically populated scheme cards with dark SVG constellation thumbnails -->
@@ -1658,6 +1889,15 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
         </div>
 
         <div class="canvas-hud" id="canvasHud">比例: 1.0x | 视口: [0, 0]</div>
+
+        <!-- 空间透视定位缺陷同步复核面板 -->
+        <div id="unifiedCanvasReviewBox" style="display:none;position:absolute;top:56px;right:14px;width:320px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.4);border-radius:10px;padding:12px 14px;color:#f1f5f9;z-index:20;box-shadow:0 12px 28px rgba(0,0,0,0.45)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(148,163,184,0.2)">
+            <strong id="unifiedCanvasRevTitle" style="font-size:13px;color:#38bdf8">缺陷空间定位详情</strong>
+            <span onclick="closeUnifiedCanvasReviewBox()" style="cursor:pointer;color:#94a3b8;font-size:14px">✕</span>
+          </div>
+          <div id="unifiedCanvasRevBody"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1847,8 +2087,8 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
 <!-- Scripts -->
 <script src="pad-geom.js"></script>
 <script src="copper-check.js"></script>
-<script src="dfm-check.js"></script>
-<script src="fanout-check.js"></script>
+<script src="dfm-check.js?v=3"></script>
+<script src="fanout-check.js?v=4"></script>
 <script src="pour-check.js"></script>
 <script>
 /**
@@ -2521,6 +2761,12 @@ function getDefaultFanoutPresets() {
 
 const State = {
   rawText: '',
+  dataInputs: {
+    trace:      { text: '', fileNames: [], totalBytes: 0, statsText: '' },
+    constraint: { text: '', fileNames: [], totalBytes: 0, statsText: '' },
+    dfmFanout:  { text: '', fileNames: [], totalBytes: 0, statsText: '' },
+    pour:       { text: '', fileNames: [], totalBytes: 0, statsText: '' }
+  },
   elements: { vias: [], traces: [], shapes: [], layers: [] },
   rules: {
     // 1. 走线检查规则 (按层表格 + 差分按层/总长允许值)
@@ -2643,67 +2889,208 @@ function toggleAcc(headerEl) {
   if (acc) acc.classList.toggle('collapsed');
 }
 
-// Drag & drop EDA TXT File
+// 4-Category TXT Data Ingestion (仅支持 .txt 文件选择或拖拽，不含粘贴输入)
+const DATA_CAT_META = {
+  trace:      { label: '① 走线检查数据', color: '#0284c7' },
+  constraint: { label: '② 约束检查数据', color: '#7c3aed' },
+  dfmFanout:  { label: '③ DFM 与扇出方案数据', color: '#0d9488' },
+  pour:       { label: '④ 铜皮检查数据', color: '#d97706' }
+};
+
+function formatFileBytes(bytes) {
+  if (!bytes || bytes <= 0) return '0 KB';
+  if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  return Math.max(0.1, bytes / 1024).toFixed(1) + ' KB';
+}
+
+function summarizeCategoryElements(catKey, text) {
+  if (!text || !text.trim()) return '';
+  if (typeof PourChecker !== 'undefined' && PourChecker.parsePcbElements) {
+    const p = PourChecker.parsePcbElements(text);
+    if (catKey === 'trace') return `${p.traces.length} 走线段 · ${p.layers.length} 层`;
+    if (catKey === 'constraint') return `${p.vias.length} 过孔 · ${p.shapes.length} 块铜皮/反焊盘`;
+    if (catKey === 'dfmFanout') return `${p.vias.length} 过孔 · ${p.traces.length} 走线段`;
+    if (catKey === 'pour') return `${p.shapes.length} 铜皮 · ${p.vias.length} 孔 · ${p.traces.length} 线段`;
+  }
+  return `文本长度 ${text.length} 字符`;
+}
+
+function renderDataIngestionBoxes() {
+  const keys = ['trace', 'constraint', 'dfmFanout', 'pour'];
+  let loadedCount = 0;
+
+  keys.forEach(k => {
+    const slot = State.dataInputs[k] || { text: '', fileNames: [], totalBytes: 0, statsText: '' };
+    const meta = DATA_CAT_META[k];
+    const hasData = Boolean(slot.text && slot.text.trim());
+    if (hasData) loadedCount++;
+
+    const boxEl = $(`dataBox_${k}`);
+    const badgeEl = $(`badgeData_${k}`);
+    const statusEl = $(`statusData_${k}`);
+    const metaEl = $(`metaData_${k}`);
+    const btnAppend = $(`btnAppend_${k}`);
+    const btnClear = $(`btnClear_${k}`);
+
+    if (boxEl && boxEl.classList) {
+      if (hasData) boxEl.classList.add('loaded');
+      else boxEl.classList.remove('loaded');
+    }
+    if (badgeEl) {
+      badgeEl.textContent = hasData ? '✓ 已导入' : '未导入';
+      badgeEl.style.background = hasData ? '#dcfce7' : '#e2e8f0';
+      badgeEl.style.color = hasData ? '#15803d' : '#475569';
+    }
+    if (statusEl) {
+      if (hasData) {
+        const fLabel = (slot.fileNames && slot.fileNames.length) ? slot.fileNames.join(' + ') : '已导入 TXT 数据';
+        statusEl.textContent = fLabel;
+        statusEl.style.color = '#0f172a';
+      } else {
+        statusEl.textContent = '点击选择或拖拽 .txt 文件至此';
+        statusEl.style.color = meta.color;
+      }
+    }
+    if (metaEl) {
+      if (hasData) {
+        const sizePart = slot.totalBytes > 0 ? ` (${formatFileBytes(slot.totalBytes)})` : '';
+        metaEl.textContent = `${slot.statsText || summarizeCategoryElements(k, slot.text)}${sizePart}`;
+        metaEl.style.color = '#15803d';
+      } else {
+        metaEl.textContent = '仅支持 .txt 格式（可多选合并）';
+        metaEl.style.color = '#94a3b8';
+      }
+    }
+    if (btnAppend && btnAppend.style) btnAppend.style.display = hasData ? 'inline-flex' : 'none';
+    if (btnClear && btnClear.style) btnClear.style.display = hasData ? 'inline-flex' : 'none';
+  });
+
+  const sumEl = $('lblDataSummary');
+  if (sumEl) {
+    const el = State.elements || { vias: [], traces: [], shapes: [] };
+    sumEl.textContent = `已导入模块: ${loadedCount} / 4 类 | 汇总元素: ${el.vias.length} 孔 | ${el.traces.length} 走线段 | ${el.shapes.length} 铜皮`;
+  }
+}
+
 function initDragAndDrop() {
-  const zone = $('dragDropZone');
-  const txtArea = $('txtUnifiedInput');
-  if (!zone) return;
+  ['trace', 'constraint', 'dfmFanout', 'pour'].forEach(catKey => {
+    const zone = $(`dropZone_${catKey}`);
+    if (!zone || !zone.addEventListener) return;
 
-  ['dragenter', 'dragover'].forEach(evName => {
-    zone.addEventListener(evName, e => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.add('dragover');
+    ['dragenter', 'dragover'].forEach(evName => {
+      zone.addEventListener(evName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        zone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evName => {
+      zone.addEventListener(evName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        zone.classList.remove('dragover');
+      });
+    });
+
+    zone.addEventListener('drop', e => {
+      const files = e.dataTransfer ? e.dataTransfer.files : null;
+      if (files && files.length > 0) {
+        readCategoryTxtFiles(catKey, files, false);
+      }
     });
   });
+  renderDataIngestionBoxes();
+}
 
-  ['dragleave', 'drop'].forEach(evName => {
-    zone.addEventListener(evName, e => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.remove('dragover');
-    });
-  });
+function handleCategoryTxtUpload(catKey, e, appendMode = false) {
+  const files = e && e.target ? e.target.files : null;
+  if (files && files.length > 0) {
+    readCategoryTxtFiles(catKey, files, appendMode);
+  }
+  if (e && e.target) e.target.value = '';
+}
 
-  zone.addEventListener('drop', e => {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    if (files && files.length > 0) {
-      readFileContentToInput(files[0]);
-    }
+function readCategoryTxtFiles(catKey, fileList, appendMode = false) {
+  if (!State.dataInputs[catKey]) return;
+  const allFiles = Array.from(fileList || []);
+  const txtFiles = allFiles.filter(f => /\.txt$/i.test(String(f.name || '')));
+  if (txtFiles.length === 0) {
+    alert('仅支持导入 .txt 格式的数据文件！');
+    return;
+  }
+  if (txtFiles.length < allFiles.length && typeof showToast === 'function') {
+    showToast(`已自动过滤非 .txt 文件，仅读取 ${txtFiles.length} 个 .txt 文件`, false);
+  }
+
+  // 同时兼容单元测试同步 mock 文件对象 (f.content) 与真实浏览器异步 FileReader
+  if (txtFiles.every(f => typeof f.content === 'string')) {
+    const combined = txtFiles.map(f => f.content).join('\n');
+    const names = txtFiles.map(f => f.name || 'data.txt');
+    const bytes = txtFiles.reduce((s, f) => s + (f.size || f.content.length), 0);
+    applyCategoryTxtData(catKey, combined, names, bytes, appendMode);
+    return;
+  }
+
+  Promise.all(txtFiles.map(file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const decoded = decodeTxt(ev.target.result);
+      resolve({ name: file.name, size: file.size || 0, text: decoded.text });
+    };
+    reader.onerror = () => reject(new Error(`读取文件 ${file.name} 失败`));
+    reader.readAsArrayBuffer(file);
+  }))).then(results => {
+    const combined = results.map(r => r.text).join('\n');
+    const names = results.map(r => r.name);
+    const bytes = results.reduce((s, r) => s + r.size, 0);
+    applyCategoryTxtData(catKey, combined, names, bytes, appendMode);
+  }).catch(err => {
+    alert(err.message || '读取 .txt 文件失败');
   });
 }
 
-function handleDataFileUpload(e) {
-  const file = e.target.files[0];
-  if (file) readFileContentToInput(file);
-  e.target.value = '';
-}
+function applyCategoryTxtData(catKey, text, names, bytes, appendMode = false) {
+  const prev = State.dataInputs[catKey];
+  const mergedText = (appendMode && prev && prev.text) ? (prev.text + '\n' + text) : text;
+  const mergedNames = (appendMode && prev && prev.fileNames && prev.fileNames.length)
+    ? prev.fileNames.concat(names)
+    : names;
+  const mergedBytes = (appendMode && prev ? (prev.totalBytes || 0) : 0) + (bytes || 0);
 
-function readFileContentToInput(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const decoded = decodeTxt(ev.target.result);
-    const raw = decoded.text;
-    State.rawText = raw;
-
-    const ta = $('txtUnifiedInput');
-    if (raw.length > 100000) {
-      const previewLines = raw.split(/\r?\n/).slice(0, 15).join('\n');
-      ta.value = `[📁 已成功加载大型 EDA 数据文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB，数据已在后台内存就绪)]\n\n数据预览（前 15 行）：\n${previewLines}\n\n...（全量数据在后台内存高效处理）`;
-    } else {
-      ta.value = raw;
-    }
-
-    showToast(`成功导入文件 ${file.name}，正在极速执行全量检查...`);
-    setTimeout(() => {
-      runMasterInspection();
-    }, 40);
+  State.dataInputs[catKey] = {
+    text: mergedText,
+    fileNames: mergedNames,
+    totalBytes: mergedBytes,
+    statsText: summarizeCategoryElements(catKey, mergedText)
   };
-  reader.readAsArrayBuffer(file);
+
+  renderDataIngestionBoxes();
+  if (typeof showToast === 'function') {
+    showToast(`已导入 ${DATA_CAT_META[catKey].label} (${names.join(', ')})，正在执行检查...`);
+  }
+  runMasterInspection();
 }
 
-// 综合全套样本数据 (Via + Trace + Shape)
+function clearCategoryData(catKey, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  if (!State.dataInputs[catKey]) return;
+  State.dataInputs[catKey] = { text: '', fileNames: [], totalBytes: 0, statsText: '' };
+
+  const anyLeft = ['trace', 'constraint', 'dfmFanout', 'pour'].some(k => Boolean(State.dataInputs[k].text && State.dataInputs[k].text.trim()));
+  if (anyLeft) {
+    runMasterInspection();
+  } else {
+    clearUnifiedData();
+  }
+}
+
+// 兼容旧接口名称：默认映射到 DFM与扇出数据框（仅接收 .txt）
+function handleDataFileUpload(e) {
+  handleCategoryTxtUpload('dfmFanout', e, false);
+}
+
+// 综合全套样本数据 (分别载入四类 TXT 数据框并执行全量体检)
 function loadUnifiedSampleData() {
   const sampleTxt = `EDA REPORT DATA - 5-IN-1 UNIFIED SUITE
 Total 18 Items
@@ -2884,13 +3271,47 @@ Exterior Boundary:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~End~ ~ ~ ~ ~ ~ ~ ~ ~ ~`;
 
-  $('txtUnifiedInput').value = sampleTxt;
+  const samplePresets = [
+    { key: 'trace',      name: '01_走线检查示例数据.txt',      text: sampleTxt },
+    { key: 'constraint', name: '02_约束检查示例数据.txt',      text: sampleTxt },
+    { key: 'dfmFanout',  name: '03_DFM与扇出方案示例数据.txt', text: sampleTxt },
+    { key: 'pour',       name: '04_铜皮检查示例数据.txt',      text: sampleTxt }
+  ];
+  samplePresets.forEach(item => {
+    State.dataInputs[item.key] = {
+      text: item.text,
+      fileNames: [item.name],
+      totalBytes: item.text.length,
+      statsText: summarizeCategoryElements(item.key, item.text)
+    };
+  });
+  renderDataIngestionBoxes();
   runMasterInspection();
 }
 
 function clearUnifiedData() {
-  $('txtUnifiedInput').value = '';
-  $('lblDataSummary').textContent = '已解析: 0 孔 | 0 线段 | 0 铜皮';
+  ['trace', 'constraint', 'dfmFanout', 'pour'].forEach(k => {
+    State.dataInputs[k] = { text: '', fileNames: [], totalBytes: 0, statsText: '' };
+  });
+  State.rawText = '';
+  State.elements = { vias: [], traces: [], shapes: [], layers: [] };
+  State.allChecks = [];
+  State.results = {
+    trace:  { pass: true, checks: [], score: 100, hasData: false },
+    copper: { pass: true, checks: [], score: 100, hasData: false },
+    dfm:    { pass: true, checks: [], score: 100, hasData: false },
+    fanout: { pass: true, checks: [], score: 100, hasData: false },
+    pour:   { pass: true, checks: [], score: 100, hasData: false }
+  };
+  if ($('kpiViaCount')) $('kpiViaCount').textContent = '0';
+  if ($('kpiTraceCount')) $('kpiTraceCount').textContent = '0';
+  if ($('kpiShapeCount')) $('kpiShapeCount').textContent = '0';
+  renderDataIngestionBoxes();
+  updateMasterKPIs();
+  renderDashboard();
+  renderMasterDefectsTable();
+  renderModularViews();
+  safeRAF(() => renderCanvas());
 }
 
 function jumpItems() {
@@ -3172,7 +3593,7 @@ function recordHistoryChip(key, val) {
 
 function generateConstellationSVG(vias) {
   if (!vias || vias.length === 0) {
-    return `<svg width="120" height="120" viewBox="0 0 120 120" style="background:#0b1329;border-radius:6px"><rect width="120" height="120" fill="#0b1329"/><text x="60" y="65" fill="#64748b" font-size="11" text-anchor="middle">无过孔数据</text></svg>`;
+    return `<svg width="120" height="120" viewBox="0 0 120 120" style="background:#0f172a;border-radius:6px"><rect width="120" height="120" fill="#0f172a"/><text x="60" y="65" fill="#64748b" font-size="11" text-anchor="middle">无过孔数据</text></svg>`;
   }
 
   const xs = vias.map(v => parseFloat(v.x) || 0);
@@ -3195,27 +3616,34 @@ function generateConstellationSVG(vias) {
       const dx = (parseFloat(vias[i].x)||0) - (parseFloat(vias[j].x)||0);
       const dy = (parseFloat(vias[i].y)||0) - (parseFloat(vias[j].y)||0);
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= span * 1.05) {
-        lines += `<line x1="${tx(vias[i].x).toFixed(1)}" y1="${ty(vias[i].y).toFixed(1)}" x2="${tx(vias[j].x).toFixed(1)}" y2="${ty(vias[j].y).toFixed(1)}" stroke="#334155" stroke-dasharray="2,2" stroke-width="1"/>`;
+      if (vias.length <= 10 || dist <= span * 0.65) {
+        lines += `<line x1="${tx(vias[i].x).toFixed(1)}" y1="${ty(vias[i].y).toFixed(1)}" x2="${tx(vias[j].x).toFixed(1)}" y2="${ty(vias[j].y).toFixed(1)}" stroke="rgba(56, 189, 248, 0.28)" stroke-dasharray="2,2" stroke-width="1"/>`;
       }
     }
   }
 
   let circles = '';
+  const allSchemes = (State && State.rules && Array.isArray(State.rules.fanoutSchemes)) ? State.rules.fanoutSchemes : [];
+  if (typeof FanoutChecker !== 'undefined' && FanoutChecker.syncLibraryPadstackColors) {
+    FanoutChecker.syncLibraryPadstackColors(allSchemes);
+  }
+  const padColorMap = (typeof FanoutChecker !== 'undefined' && FanoutChecker.buildPadstackColorMap)
+    ? FanoutChecker.buildPadstackColorMap(vias, allSchemes).map
+    : {};
   vias.forEach(v => {
     const cx = tx(v.x).toFixed(1);
     const cy = ty(v.y).toFixed(1);
-    const isSig = (v.type === 'signal' || (v.role && v.role.toLowerCase().includes('sig')));
-    if (isSig) {
-      circles += `<circle cx="${cx}" cy="${cy}" r="7.5" fill="none" stroke="#38bdf8" stroke-width="2"/>`;
-      circles += `<circle cx="${cx}" cy="${cy}" r="3.5" fill="#0284c7"/>`;
-    } else {
-      circles += `<circle cx="${cx}" cy="${cy}" r="6.5" fill="none" stroke="#10b981" stroke-width="2"/>`;
-      circles += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#10b981"/>`;
-    }
+    const isSig = (typeof FanoutChecker !== 'undefined' && FanoutChecker.isSignalVia)
+      ? FanoutChecker.isSignalVia(v)
+      : (v.type === 'signal' || (v.role && v.role.toLowerCase().includes('sig')));
+    const pCol = padColorMap[String(v.padstack || 'VIA_PAD')]
+      || ((typeof FanoutChecker !== 'undefined' && FanoutChecker.getPadstackColorEntry) ? FanoutChecker.getPadstackColorEntry(v.padstack) : null);
+    const fillCol = pCol ? pCol.fill : (isSig ? '#38bdf8' : '#10b981');
+    circles += `<circle cx="${cx}" cy="${cy}" r="6.5" fill="${fillCol}" stroke="#ffffff" stroke-width="1.3"/>`;
+    circles += `<circle cx="${cx}" cy="${cy}" r="2.6" fill="#0f172a"/>`;
   });
 
-  return `<svg width="120" height="120" viewBox="0 0 120 120" style="background:#0b1329;border-radius:6px;flex-shrink:0"><rect width="120" height="120" fill="#0b1329"/>${lines}${circles}</svg>`;
+  return `<svg width="120" height="120" viewBox="0 0 120 120" style="background:#0f172a;border-radius:6px;flex-shrink:0"><rect width="120" height="120" fill="#0f172a"/>${lines}${circles}</svg>`;
 }
 
 function calculatePitchRange(vias) {
@@ -3245,6 +3673,21 @@ function summarizePadstacks(vias) {
   return Object.entries(counts).map(([name, count]) => `${name} (×${count})`).join(', ');
 }
 
+function summarizePadstacksRich(vias) {
+  if (!vias || !vias.length) return '无焊盘定义';
+  const counts = {};
+  vias.forEach(v => {
+    const p = v.padstack || 'VIA_PAD';
+    counts[p] = (counts[p] || 0) + 1;
+  });
+  return Object.entries(counts).map(([name, count]) => {
+    const pc = (typeof FanoutChecker !== 'undefined' && FanoutChecker.getPadstackColorEntry)
+      ? FanoutChecker.getPadstackColorEntry(name)
+      : { fill: '#38bdf8' };
+    return `<span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px"><span style="width:8px;height:8px;border-radius:50%;background:${pc.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span><span>${name} (×${count})</span></span>`;
+  }).join('');
+}
+
 function renderFanoutSchemesGrid() {
   const container = $('pnlFanoutSchemeGrid');
   if (!container) return;
@@ -3253,9 +3696,36 @@ function renderFanoutSchemesGrid() {
     State.rules.fanoutSchemes = getDefaultFanoutPresets();
   }
 
+  if (typeof FanoutChecker !== 'undefined' && FanoutChecker.syncLibraryPadstackColors) {
+    FanoutChecker.syncLibraryPadstackColors(State.rules.fanoutSchemes);
+  }
+
+  const legendBar = $('pnlUnifiedPadstackLegendBar');
+  if (legendBar) {
+    const legendItems = (typeof FanoutChecker !== 'undefined' && FanoutChecker.getLibraryPadstackColorLegend && State.rules.fanoutSchemes.length > 0)
+      ? FanoutChecker.getLibraryPadstackColorLegend(State.rules.fanoutSchemes)
+      : [];
+    if (!legendItems.length) {
+      legendBar.innerHTML = '';
+    } else {
+      legendBar.innerHTML = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
+          ${legendItems.map(item => `
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#0f172a" title="Padstack: ${item.padstack} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
+              <span style="width:9px;height:9px;border-radius:50%;background:${item.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span>
+              <span style="font-weight:600">${item.padstack}</span>
+              <span style="font-size:10px;color:#64748b">(${item.schemeCount}方案/${item.totalVias}孔)</span>
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+  }
+
   container.innerHTML = State.rules.fanoutSchemes.map((sc, idx) => {
     const pitchStr = calculatePitchRange(sc.vias);
-    const padStr = summarizePadstacks(sc.vias);
+    const padStrRich = summarizePadstacksRich(sc.vias);
     const svgThumb = generateConstellationSVG(sc.vias);
     const vCount = sc.vias ? sc.vias.length : (sc.viaCount || 0);
 
@@ -3263,17 +3733,20 @@ function renderFanoutSchemesGrid() {
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
         <div>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
-            <div style="font-size:14.5px;font-weight:700;color:#0f172a">${sc.name}</div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <div onclick="openUnifiedQuickRenameModal(${idx})" style="font-size:14.5px;font-weight:700;color:#0f172a;cursor:pointer" title="点击通过关键词快捷修改方案名称">${sc.name}</div>
+              <span onclick="openUnifiedQuickRenameModal(${idx})" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:1px 6px;white-space:nowrap">✎ 改名</span>
+            </div>
             <span style="background:#f1f5f9;color:#475569;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;white-space:nowrap">${sc.tag || '扇出方案'}</span>
           </div>
           <div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.4">${sc.desc || ''}</div>
 
           <div style="display:flex;gap:12px;align-items:center;background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #f1f5f9">
-            ${svgThumb}
+            <div onclick="viewFanoutScheme(${idx})" style="cursor:zoom-in;flex-shrink:0;display:flex" title="点击放大查看方案效果图与逐孔 Padstack 标注">${svgThumb}</div>
             <div style="flex:1;font-size:13px;color:#475569;line-height:1.6">
               <div>过孔总数: <b style="color:#0f172a">${vCount} 个孔</b></div>
               <div>孔中心距范围: <b style="color:#0f172a">${pitchStr}</b></div>
-              <div style="font-size:12px;color:#64748b;margin-top:2px;word-break:break-all">焊盘: ${padStr}</div>
+              <div style="font-size:12px;color:#64748b;margin-top:2px;word-break:break-all">焊盘: ${padStrRich}</div>
             </div>
           </div>
         </div>
@@ -3281,6 +3754,7 @@ function renderFanoutSchemesGrid() {
         <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid #f1f5f9">
           <button class="btn sec small" style="padding:4px 12px" onclick="editFanoutScheme(${idx})">编辑</button>
           <button class="btn danger small" style="padding:4px 12px" onclick="deleteFanoutScheme(${idx})">删除</button>
+          <button class="btn primary small" style="padding:4px 12px" onclick="viewFanoutScheme(${idx})">查看</button>
         </div>
       </div>
     `;
@@ -3804,6 +4278,9 @@ function openFanoutSchemeModal(idx = -1) {
   if ($('modalFanoutViaTxt')) {
     $('modalFanoutViaTxt').value = formatViasToEdaTxt(g_modalFanoutVias);
   }
+  const initName = $('modalFanoutInpName') ? $('modalFanoutInpName').value : '';
+  UnifiedNameBuilder.seq.modal = (idx >= 0 && initName.includes('_')) ? initName.split('_').filter(Boolean) : [];
+  renderUnifiedKwUI('modal');
   setFanoutViaInputMode('txt');
   renderModalFanoutViasTable();
   updateModalFanoutPreview();
@@ -3853,10 +4330,590 @@ function editFanoutScheme(idx) {
 }
 
 function deleteFanoutScheme(idx) {
-  if (confirm(`确定要删除扇出方案【${State.rules.fanoutSchemes[idx].name}】吗？`)) {
+  if (!State.rules.fanoutSchemes || !State.rules.fanoutSchemes[idx]) return;
+  const ok = (typeof confirm === 'function')
+    ? confirm(`确定要删除扇出方案【${State.rules.fanoutSchemes[idx].name}】吗？`)
+    : true;
+  if (ok) {
     State.rules.fanoutSchemes.splice(idx, 1);
-    renderFanoutSchemesGrid();
-    showToast('删除 已删除该扇出方案');
+    renderRulesUI();
+    showToast('已删除该扇出方案');
+  }
+}
+
+const U_KW_STORAGE_KEY = 'pcb_fanout_name_keywords_v1';
+const UnifiedNameBuilder = {
+  presetKeywords: (typeof FanoutChecker !== 'undefined' && FanoutChecker.DEFAULT_SCHEME_NAME_KEYWORDS)
+    ? FanoutChecker.DEFAULT_SCHEME_NAME_KEYWORDS.slice()
+    : ['BGA', 'SMA', 'TZ', 'top', 'bottom', 'L2', 'L3', 'L4', 'L11', 'L12', 'L13', 'diff', 'single', '05pitch', '06pitch', '07pitch', '08pitch'],
+  customKeywords: [],
+  seq: { quick: [], modal: [] },
+  quickIdx: -1,
+  loaded: false
+};
+
+function loadUnifiedCustomKws() {
+  if (UnifiedNameBuilder.loaded) return;
+  UnifiedNameBuilder.loaded = true;
+  try {
+    const raw = (typeof localStorage !== 'undefined') ? localStorage.getItem(U_KW_STORAGE_KEY) : null;
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        UnifiedNameBuilder.customKeywords = arr.map(s => String(s).trim()).filter(s => s && !UnifiedNameBuilder.presetKeywords.includes(s));
+      }
+    }
+  } catch (e) {}
+}
+
+function saveUnifiedCustomKws() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(U_KW_STORAGE_KEY, JSON.stringify(UnifiedNameBuilder.customKeywords));
+    }
+  } catch (e) {}
+}
+
+function getAllUnifiedKws() {
+  loadUnifiedCustomKws();
+  return UnifiedNameBuilder.presetKeywords.concat(UnifiedNameBuilder.customKeywords);
+}
+
+function syncUnifiedNameFromSeq(ctx) {
+  const tokens = UnifiedNameBuilder.seq[ctx] || [];
+  const inp = $(ctx === 'quick' ? 'inpUQuickRenameName' : 'modalFanoutInpName');
+  if (inp) {
+    if (tokens.length > 0) inp.value = tokens.join('_');
+    else if (ctx === 'quick') inp.value = '';
+  }
+  renderUnifiedKwUI(ctx);
+}
+
+function clickUnifiedKw(ctx, kw) {
+  const clean = String(kw || '').trim();
+  if (!clean) return;
+  if (!UnifiedNameBuilder.seq[ctx]) UnifiedNameBuilder.seq[ctx] = [];
+  UnifiedNameBuilder.seq[ctx].push(clean);
+  syncUnifiedNameFromSeq(ctx);
+}
+
+function removeUnifiedKwAt(ctx, idx) {
+  const arr = UnifiedNameBuilder.seq[ctx] || [];
+  if (idx >= 0 && idx < arr.length) {
+    arr.splice(idx, 1);
+    syncUnifiedNameFromSeq(ctx);
+  }
+}
+
+function undoUnifiedKw(ctx) {
+  const arr = UnifiedNameBuilder.seq[ctx] || [];
+  if (arr.length > 0) {
+    arr.pop();
+    syncUnifiedNameFromSeq(ctx);
+  }
+}
+
+function clearUnifiedKws(ctx) {
+  UnifiedNameBuilder.seq[ctx] = [];
+  const inp = $(ctx === 'quick' ? 'inpUQuickRenameName' : 'modalFanoutInpName');
+  if (inp) inp.value = '';
+  renderUnifiedKwUI(ctx);
+}
+
+function addUnifiedCustomKw(ctx) {
+  loadUnifiedCustomKws();
+  const inp = $(ctx === 'quick' ? 'inpUAddKwQuick' : 'inpUAddKwModal');
+  if (!inp) return;
+  const val = String(inp.value || '').trim().replace(/\s+/g, '');
+  if (!val) return;
+  if (!getAllUnifiedKws().includes(val)) {
+    UnifiedNameBuilder.customKeywords.push(val);
+    saveUnifiedCustomKws();
+  }
+  inp.value = '';
+  renderUnifiedKwUI('quick');
+  renderUnifiedKwUI('modal');
+}
+
+function deleteUnifiedCustomKw(kw, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  loadUnifiedCustomKws();
+  UnifiedNameBuilder.customKeywords = UnifiedNameBuilder.customKeywords.filter(k => k !== kw);
+  saveUnifiedCustomKws();
+  renderUnifiedKwUI('quick');
+  renderUnifiedKwUI('modal');
+}
+
+function renderUnifiedKwUI(ctx) {
+  loadUnifiedCustomKws();
+  const seqBar = $(ctx === 'quick' ? 'uQuickKwSeqBar' : 'uModalKwSeqBar');
+  const chipsWrap = $(ctx === 'quick' ? 'uQuickKwChips' : 'uModalKwChips');
+  if (!seqBar || !chipsWrap) return;
+
+  const seq = UnifiedNameBuilder.seq[ctx] || [];
+  const counts = {};
+  seq.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+
+  if (seq.length === 0) {
+    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:11.5px">尚未点选关键词 — 请按顺序点击下方关键词自动以 <code>_</code> 连接生成名称</span>`;
+  } else {
+    seqBar.innerHTML = seq.map((tok, idx) => `
+      <span onclick="removeUnifiedKwAt('${ctx}', ${idx})" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:11.5px;font-weight:700">
+        <span style="font-size:9.5px;color:#0284c7">${idx + 1}.</span>${tok}<span style="color:#0284c7;font-weight:900">×</span>
+      </span>
+    `).join('<span style="color:#94a3b8;font-family:var(--mono);font-weight:700">_</span>');
+  }
+
+  chipsWrap.innerHTML = getAllUnifiedKws().map(kw => {
+    const cnt = counts[kw] || 0;
+    const isCustom = UnifiedNameBuilder.customKeywords.includes(kw);
+    const activeStyle = cnt > 0
+      ? 'background:#0284c7;color:#ffffff;border:1px solid #0369a1'
+      : 'background:#ffffff;color:#1e293b;border:1px solid #cbd5e1';
+    const kwSafe = String(kw).replace(/'/g, "\\'");
+    return `
+      <button type="button" onclick="clickUnifiedKw('${ctx}', '${kwSafe}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;${activeStyle}">
+        <span>${kw}</span>
+        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800">×${cnt}</span>` : ''}
+        ${isCustom ? `<span onclick="deleteUnifiedCustomKw('${kwSafe}', event)" style="margin-left:2px;font-size:11px;opacity:0.75">✕</span>` : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+function openUnifiedQuickRenameModal(idx) {
+  const list = State.rules.fanoutSchemes || [];
+  if (!list[idx]) return;
+  UnifiedNameBuilder.quickIdx = idx;
+  const sc = list[idx];
+  UnifiedNameBuilder.seq.quick = (sc.name && sc.name.includes('_')) ? sc.name.split('_').filter(Boolean) : [];
+  if ($('lblUQuickRenameOld')) $('lblUQuickRenameOld').textContent = sc.name || '';
+  if ($('lblUQuickRenameIdx')) $('lblUQuickRenameIdx').textContent = `方案 ${idx + 1} / ${list.length}`;
+  if ($('inpUQuickRenameName')) $('inpUQuickRenameName').value = sc.name || '';
+  renderUnifiedKwUI('quick');
+  const modal = $('modalUnifiedQuickRename');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeUnifiedQuickRenameModal() {
+  const modal = $('modalUnifiedQuickRename');
+  if (modal) modal.style.display = 'none';
+  UnifiedNameBuilder.quickIdx = -1;
+}
+
+function saveUnifiedQuickRename(goNext = false) {
+  const idx = UnifiedNameBuilder.quickIdx;
+  const list = State.rules.fanoutSchemes || [];
+  if (idx < 0 || !list[idx]) return;
+  const newName = ($('inpUQuickRenameName') ? $('inpUQuickRenameName').value : '').trim();
+  if (!newName) {
+    alert('新方案名称不能为空！');
+    return;
+  }
+  list[idx].name = newName;
+  renderRulesUI();
+  if (UnifiedViewFanoutState.idx === idx && $('uViewFanoutTitle')) {
+    $('uViewFanoutTitle').textContent = newName;
+  }
+  if (typeof showToast === 'function') showToast(`已更新方案名称为【${newName}】`);
+  if (goNext && list.length > 1) {
+    openUnifiedQuickRenameModal((idx + 1) % list.length);
+  } else {
+    closeUnifiedQuickRenameModal();
+  }
+}
+
+const UnifiedViewFanoutState = {
+  idx: -1,
+  zoom: 1.0,
+  panX: 0,
+  panY: 0,
+  hoveredIndex: -1,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  downClientX: 0,
+  downClientY: 0,
+  measureMode: false,
+  measureStartIndex: -1,
+  measuredPairs: [],
+  cursorPos: null,
+  lastLayout: null,
+  eventsBound: false
+};
+if (typeof window !== 'undefined') {
+  window.UnifiedViewFanoutState = UnifiedViewFanoutState;
+  window.UnifiedNameBuilder = UnifiedNameBuilder;
+}
+
+function hitTestUnifiedViewedVia(layout, mx, my) {
+  if (!layout || !layout.vias) return -1;
+  let best = -1, bestD = Infinity;
+  for (let i = 0; i < layout.vias.length; i++) {
+    const v = layout.vias[i];
+    const d = Math.hypot(mx - v.sx, my - v.sy);
+    if (d <= layout.padR + 9 && d < bestD) { bestD = d; best = i; }
+  }
+  if (best < 0 && layout.callouts) {
+    for (let i = 0; i < layout.callouts.length; i++) {
+      const c = layout.callouts[i];
+      if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) return c.index;
+    }
+  }
+  return best;
+}
+
+function toggleUnifiedViewMeasureMode(forceVal) {
+  UnifiedViewFanoutState.measureMode = (typeof forceVal === 'boolean') ? forceVal : !UnifiedViewFanoutState.measureMode;
+  if (!UnifiedViewFanoutState.measureMode) {
+    UnifiedViewFanoutState.measureStartIndex = -1;
+    UnifiedViewFanoutState.cursorPos = null;
+  }
+  const c = $('uViewFanoutCanvas');
+  if (c && c.style) c.style.cursor = UnifiedViewFanoutState.measureMode ? 'crosshair' : 'grab';
+  renderUnifiedViewMeasureUI();
+  renderUnifiedViewedFanoutCanvas();
+}
+
+function clearUnifiedViewMeasurements() {
+  UnifiedViewFanoutState.measureStartIndex = -1;
+  UnifiedViewFanoutState.measuredPairs = [];
+  UnifiedViewFanoutState.cursorPos = null;
+  renderUnifiedViewMeasureUI();
+  renderUnifiedViewedFanoutCanvas();
+}
+
+function removeUnifiedViewMeasuredPair(pIdx) {
+  if (pIdx >= 0 && pIdx < UnifiedViewFanoutState.measuredPairs.length) {
+    UnifiedViewFanoutState.measuredPairs.splice(pIdx, 1);
+    renderUnifiedViewMeasureUI();
+    renderUnifiedViewedFanoutCanvas();
+  }
+}
+
+function handleUnifiedViewViaClick(viaIdx) {
+  if (viaIdx == null || viaIdx < 0 || !UnifiedViewFanoutState.measureMode) return;
+  if (UnifiedViewFanoutState.measureStartIndex < 0) {
+    UnifiedViewFanoutState.measureStartIndex = viaIdx;
+  } else if (UnifiedViewFanoutState.measureStartIndex === viaIdx) {
+    UnifiedViewFanoutState.measureStartIndex = -1;
+  } else {
+    const i1 = UnifiedViewFanoutState.measureStartIndex, i2 = viaIdx;
+    const exists = UnifiedViewFanoutState.measuredPairs.some(p => (p.i1 === i1 && p.i2 === i2) || (p.i1 === i2 && p.i2 === i1));
+    if (!exists) UnifiedViewFanoutState.measuredPairs.push({ i1, i2 });
+    UnifiedViewFanoutState.measureStartIndex = -1;
+  }
+  renderUnifiedViewMeasureUI();
+  renderUnifiedViewedFanoutCanvas();
+}
+
+function renderUnifiedViewMeasureUI() {
+  const btn = $('btnUViewMeasure');
+  const clearBtn = $('btnUViewClearMeasure');
+  const panel = $('uViewFanoutMeasurePanel');
+  if (btn) {
+    btn.className = UnifiedViewFanoutState.measureMode ? 'btn primary small' : 'btn sec small';
+    btn.textContent = UnifiedViewFanoutState.measureMode ? '⇔ 测孔中心距 (开启中)' : '⇔ 测孔中心距';
+  }
+  const hasAny = UnifiedViewFanoutState.measuredPairs.length > 0 || UnifiedViewFanoutState.measureStartIndex >= 0;
+  if (clearBtn) clearBtn.style.display = hasAny ? 'inline-flex' : 'none';
+  if (!panel) return;
+  if (!UnifiedViewFanoutState.measureMode && UnifiedViewFanoutState.measuredPairs.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+  const list = State.rules.fanoutSchemes || [];
+  const sc = list[UnifiedViewFanoutState.idx];
+  const layout = UnifiedViewFanoutState.lastLayout || (sc && typeof FanoutChecker !== 'undefined' ? FanoutChecker.computeSchemeViewLayout(sc, 760, 520, { showPadstack: true }) : null);
+  const vias = layout ? layout.vias : [];
+
+  let statusHtml = '';
+  if (UnifiedViewFanoutState.measureMode) {
+    if (UnifiedViewFanoutState.measureStartIndex < 0) {
+      statusHtml = `<div style="color:#0369a1;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】</div>`;
+    } else {
+      const sv = vias[UnifiedViewFanoutState.measureStartIndex];
+      statusHtml = `<div style="color:#0284c7;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : UnifiedViewFanoutState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
+    }
+  }
+
+  const pairRows = UnifiedViewFanoutState.measuredPairs.map((mp, idx) => {
+    const v1 = vias[mp.i1], v2 = vias[mp.i2];
+    if (!v1 || !v2 || typeof FanoutChecker === 'undefined') return '';
+    const m = FanoutChecker.calcSchemeViaPairDistance(v1, v2);
+    return `
+      <div style="margin-top:6px;padding:6px 8px;background:#fff;border:1px solid #bfdbfe;border-radius:6px;font-family:var(--mono);font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;color:#0f172a">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-weight:800;font-size:12.5px;color:#0284c7">${m.distMil.toFixed(2)} mil</span>
+            <span style="color:#475569">(${m.distMm.toFixed(3)} mm)</span>
+            <span onclick="removeUnifiedViewMeasuredPair(${idx})" style="cursor:pointer;color:#ef4444;font-weight:700">✕</span>
+          </div>
+        </div>
+        <div style="color:#64748b;font-size:10.5px;margin-top:2px">|ΔX| = ${m.absDx.toFixed(2)} mil · |ΔY| = ${m.absDy.toFixed(2)} mil</div>
+      </div>
+    `;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-weight:700;color:#1e3a8a">⇔ 孔到孔中心距测量</span>
+      ${hasAny ? `<span onclick="clearUnifiedViewMeasurements()" style="cursor:pointer;font-size:11px;color:#dc2626;font-weight:600">清空全部</span>` : ''}
+    </div>
+    ${statusHtml}
+    ${pairRows}
+  `;
+}
+
+function bindUnifiedViewFanoutCanvasEvents() {
+  if (UnifiedViewFanoutState.eventsBound) return;
+  const canvas = $('uViewFanoutCanvas');
+  if (!canvas || !canvas.addEventListener) return;
+  UnifiedViewFanoutState.eventsBound = true;
+
+  canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    zoomUnifiedViewFanout(e.deltaY < 0 ? 1.15 : (1 / 1.15));
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', function(e) {
+    UnifiedViewFanoutState.downClientX = e.clientX;
+    UnifiedViewFanoutState.downClientY = e.clientY;
+    if (canvas.getBoundingClientRect) {
+      const rect = canvas.getBoundingClientRect();
+      const hit = hitTestUnifiedViewedVia(UnifiedViewFanoutState.lastLayout, e.clientX - rect.left, e.clientY - rect.top);
+      if (UnifiedViewFanoutState.measureMode && hit >= 0) return;
+    }
+    UnifiedViewFanoutState.isDragging = true;
+    UnifiedViewFanoutState.dragStartX = e.clientX - UnifiedViewFanoutState.panX;
+    UnifiedViewFanoutState.dragStartY = e.clientY - UnifiedViewFanoutState.panY;
+    if (!UnifiedViewFanoutState.measureMode) canvas.style.cursor = 'grabbing';
+  });
+
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('mouseup', function(e) {
+      const moved = Math.hypot((e.clientX || 0) - UnifiedViewFanoutState.downClientX, (e.clientY || 0) - UnifiedViewFanoutState.downClientY);
+      if (UnifiedViewFanoutState.isDragging) {
+        UnifiedViewFanoutState.isDragging = false;
+        const c = $('uViewFanoutCanvas');
+        if (c) c.style.cursor = UnifiedViewFanoutState.measureMode ? 'crosshair' : 'grab';
+      }
+      if (UnifiedViewFanoutState.measureMode && moved < 6) {
+        const c = $('uViewFanoutCanvas');
+        const modal = $('modalViewFanoutScheme');
+        if (c && modal && modal.style.display === 'flex' && e.target === c && c.getBoundingClientRect) {
+          const rect = c.getBoundingClientRect();
+          const hit = hitTestUnifiedViewedVia(UnifiedViewFanoutState.lastLayout, e.clientX - rect.left, e.clientY - rect.top);
+          if (hit >= 0) handleUnifiedViewViaClick(hit);
+        }
+      }
+    });
+  }
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (UnifiedViewFanoutState.isDragging) {
+      UnifiedViewFanoutState.panX = e.clientX - UnifiedViewFanoutState.dragStartX;
+      UnifiedViewFanoutState.panY = e.clientY - UnifiedViewFanoutState.dragStartY;
+      renderUnifiedViewedFanoutCanvas();
+      return;
+    }
+    const layout = UnifiedViewFanoutState.lastLayout;
+    if (!layout || !canvas.getBoundingClientRect) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    UnifiedViewFanoutState.cursorPos = { x: mx, y: my };
+
+    const hit = hitTestUnifiedViewedVia(layout, mx, my);
+    if (hit !== UnifiedViewFanoutState.hoveredIndex) {
+      setUnifiedViewFanoutHoveredVia(hit);
+    } else if (UnifiedViewFanoutState.measureMode && UnifiedViewFanoutState.measureStartIndex >= 0) {
+      renderUnifiedViewedFanoutCanvas();
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    UnifiedViewFanoutState.cursorPos = null;
+    if (!UnifiedViewFanoutState.isDragging && UnifiedViewFanoutState.hoveredIndex !== -1) {
+      setUnifiedViewFanoutHoveredVia(-1);
+    } else if (UnifiedViewFanoutState.measureMode && UnifiedViewFanoutState.measureStartIndex >= 0) {
+      renderUnifiedViewedFanoutCanvas();
+    }
+  });
+}
+
+function setUnifiedViewFanoutHoveredVia(vIdx) {
+  UnifiedViewFanoutState.hoveredIndex = vIdx;
+  renderUnifiedViewedFanoutCanvas();
+  if (typeof document !== 'undefined' && document.querySelectorAll) {
+    const rows = document.querySelectorAll('#uViewFanoutViaTableBody tr');
+    rows.forEach((tr, rIdx) => {
+      tr.style.background = (rIdx === vIdx) ? '#fef9c3' : '';
+      tr.style.outline = (rIdx === vIdx) ? '1.5px solid #eab308' : '';
+    });
+  }
+}
+
+function viewFanoutScheme(idx) {
+  const list = State.rules.fanoutSchemes || [];
+  if (!list[idx]) return;
+
+  UnifiedViewFanoutState.idx = idx;
+  UnifiedViewFanoutState.zoom = 1.0;
+  UnifiedViewFanoutState.panX = 0;
+  UnifiedViewFanoutState.panY = 0;
+  UnifiedViewFanoutState.hoveredIndex = -1;
+  UnifiedViewFanoutState.measureStartIndex = -1;
+  UnifiedViewFanoutState.measuredPairs = [];
+  UnifiedViewFanoutState.cursorPos = null;
+
+  bindUnifiedViewFanoutCanvasEvents();
+  const modal = $('modalViewFanoutScheme');
+  if (modal) modal.style.display = 'flex';
+
+  populateUnifiedViewedFanoutDetails(idx);
+  renderUnifiedViewMeasureUI();
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => renderUnifiedViewedFanoutCanvas());
+  } else {
+    renderUnifiedViewedFanoutCanvas();
+  }
+}
+
+function closeViewFanoutSchemeModal() {
+  const modal = $('modalViewFanoutScheme');
+  if (modal) modal.style.display = 'none';
+}
+
+function stepUnifiedViewFanoutScheme(delta) {
+  const list = State.rules.fanoutSchemes || [];
+  if (!list.length) return;
+  const nextIdx = ((UnifiedViewFanoutState.idx < 0 ? 0 : UnifiedViewFanoutState.idx) + delta + list.length) % list.length;
+  viewFanoutScheme(nextIdx);
+}
+
+function editCurrentUnifiedViewedFanout() {
+  const idx = UnifiedViewFanoutState.idx;
+  closeViewFanoutSchemeModal();
+  if (idx >= 0) editFanoutScheme(idx);
+}
+
+function zoomUnifiedViewFanout(factor) {
+  UnifiedViewFanoutState.zoom = Math.max(0.4, Math.min(5.0, UnifiedViewFanoutState.zoom * factor));
+  renderUnifiedViewedFanoutCanvas();
+}
+
+function resetUnifiedViewFanoutTransform() {
+  UnifiedViewFanoutState.zoom = 1.0;
+  UnifiedViewFanoutState.panX = 0;
+  UnifiedViewFanoutState.panY = 0;
+  renderUnifiedViewedFanoutCanvas();
+}
+
+function populateUnifiedViewedFanoutDetails(idx) {
+  const list = State.rules.fanoutSchemes || [];
+  const sc = list[idx];
+  if (!sc || typeof FanoutChecker === 'undefined') return;
+
+  if ($('uViewFanoutTitle')) $('uViewFanoutTitle').textContent = sc.name || `扇出方案_${idx + 1}`;
+  if ($('uViewFanoutTag')) $('uViewFanoutTag').textContent = sc.tag || sc.category || '扇出方案';
+  if ($('uViewFanoutIndexBadge')) $('uViewFanoutIndexBadge').textContent = `(${idx + 1} / ${list.length})`;
+  if ($('uViewFanoutDesc')) $('uViewFanoutDesc').textContent = sc.desc || sc.description || '标准扇出几何拓扑与焊盘定义';
+
+  const layout = FanoutChecker.computeSchemeViewLayout(sc, 760, 520, { showPadstack: true, librarySchemes: list });
+  const { summary, vias } = layout;
+  const padColorList = layout.padstackColors || [];
+  const pitchRange = summary.viaCount >= 2 ? `${summary.minDist.toFixed(1)} ~ ${summary.maxDist.toFixed(1)} mil` : '单孔';
+
+  if ($('uViewFanoutPadLegend')) {
+    $('uViewFanoutPadLegend').innerHTML = padColorList.map(pc =>
+      `<span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono)" title="Padstack: ${pc.padstack}"><span style="width:10px;height:10px;border-radius:50%;background:${pc.fill};border:1.5px solid #0f172a;display:inline-block"></span><span style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pc.padstack}</span></span>`
+    ).join('');
+  }
+
+  const padTags = padColorList.map(pc =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#0f172a;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${pc.padstack}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
+  ).join('');
+
+  if ($('uViewFanoutSummaryBox')) {
+    $('uViewFanoutSummaryBox').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px">
+        <div>过孔总数: <b style="color:#0f172a">${summary.viaCount} 个孔</b></div>
+        <div>信号 / 地孔: <b style="color:#0284c7">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
+        <div style="grid-column:1/-1">孔心距范围: <b style="color:#0f172a;font-family:var(--mono)">${pitchRange}</b></div>
+      </div>
+      <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #cbd5e1">
+        <div style="font-weight:700;color:#334155;font-size:11.5px">焊盘 (Padstack) 专属颜色汇总：</div>
+        ${padTags || '<div style="color:#94a3b8">无焊盘定义</div>'}
+      </div>
+    `;
+  }
+
+  if ($('uViewFanoutViaTableBody')) {
+    $('uViewFanoutViaTableBody').innerHTML = vias.map((v, i) => `
+      <tr onmouseenter="setUnifiedViewFanoutHoveredVia(${i})" onmouseleave="setUnifiedViewFanoutHoveredVia(-1)" onclick="if(!UnifiedViewFanoutState.measureMode) toggleUnifiedViewMeasureMode(true); handleUnifiedViewViaClick(${i});" title="点击可选取该孔测量中心距" style="cursor:pointer;transition:background .12s">
+        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#0f172a">
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:${v.padColor};border:1px solid #0f172a;display:inline-block"></span>#${v.labelNum}</span>
+        </td>
+        <td style="padding:6px 8px">
+          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#e0f2fe' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#0369a1' : '#15803d')}">
+            ${v.isSig ? '信号' : 'GND'}
+          </span>
+        </td>
+        <td style="padding:6px 8px">
+          <div style="font-family:var(--mono);font-weight:700;color:#0f172a;word-break:break-all;font-size:11.5px">${v.padstack}</div>
+          <div style="font-size:10.5px;color:#64748b;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${v.role}</div>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+function renderUnifiedViewedFanoutCanvas() {
+  const list = State.rules.fanoutSchemes || [];
+  const sc = list[UnifiedViewFanoutState.idx];
+  const canvas = $('uViewFanoutCanvas');
+  const wrap = $('uViewFanoutCanvasWrap');
+  if (!sc || !canvas || typeof FanoutChecker === 'undefined') return;
+
+  const w = (wrap && wrap.clientWidth > 100) ? wrap.clientWidth : 760;
+  const h = (wrap && wrap.clientHeight > 100) ? wrap.clientHeight : 520;
+  const showPadstack = $('chkUViewPadstack') ? $('chkUViewPadstack').checked : true;
+  const showCoords = $('chkUViewCoords') ? $('chkUViewCoords').checked : false;
+  const showDistances = $('chkUViewDistances') ? $('chkUViewDistances').checked : false;
+
+  UnifiedViewFanoutState.lastLayout = FanoutChecker.renderSchemeEnlargedCanvas(canvas, sc, {
+    width: w,
+    height: h,
+    zoom: UnifiedViewFanoutState.zoom,
+    panX: UnifiedViewFanoutState.panX,
+    panY: UnifiedViewFanoutState.panY,
+    showPadstack,
+    showCoords,
+    showDistances,
+    librarySchemes: list,
+    hoveredIndex: UnifiedViewFanoutState.hoveredIndex,
+    measureMode: UnifiedViewFanoutState.measureMode,
+    measureStartIndex: UnifiedViewFanoutState.measureStartIndex,
+    measuredPairs: UnifiedViewFanoutState.measuredPairs,
+    cursorPos: UnifiedViewFanoutState.cursorPos
+  });
+}
+
+function exportUnifiedViewedFanoutPng() {
+  const list = State.rules.fanoutSchemes || [];
+  const sc = list[UnifiedViewFanoutState.idx];
+  const canvas = $('uViewFanoutCanvas');
+  if (!sc || !canvas || !canvas.toDataURL) return;
+  try {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${sc.name || '扇出方案'}_Padstack效果图.png`;
+    a.click();
+  } catch (e) {
+    showToast('导出图片失败: ' + e.message, false);
   }
 }
 
@@ -3869,8 +4926,16 @@ function loadFanoutPresets() {
 function clearFanoutLibrary() {
   if (confirm('确定要清空扇出方案库吗？')) {
     State.rules.fanoutSchemes = [];
-    renderFanoutSchemesGrid();
-    showToast('删除 方案库已清空');
+    if (typeof FanoutChecker !== 'undefined' && FanoutChecker.resetPadstackColorRegistry) {
+      FanoutChecker.resetPadstackColorRegistry();
+    }
+    const container = $('pnlFanoutSchemeGrid');
+    if (container) {
+      container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:24px;background:#fff;border:1px dashed #cbd5e1;border-radius:8px;color:#94a3b8">方案库已清空。点击上方「载入标准预设库」或「新建扇出方案」添加模板。</div>`;
+    }
+    const legendBar = $('pnlUnifiedPadstackLegendBar');
+    if (legendBar) legendBar.innerHTML = '';
+    showToast('方案库已清空');
   }
 }
 
@@ -4173,6 +5238,7 @@ function renderRulesUI() {
             <span class="tag-badge info">${sc.category || '通用扇出'}</span>
             <span class="tag-badge ok" style="font-size:11px">${viaCnt} 孔</span>
             <button class="btn danger small" style="padding:2px 8px;font-size:12px" onclick="deleteFanoutScheme(${i})">删除</button>
+            <button class="btn primary small" style="padding:2px 8px;font-size:12px" onclick="viewFanoutScheme(${i})">查看</button>
           </div>
         `;
       }).join('');
@@ -4319,20 +5385,18 @@ function deletePourRule3(i) {
   renderRulesUI();
 }
 
-function deleteFanoutScheme(i) {
-  if (State.rules.fanoutSchemes) {
-    State.rules.fanoutSchemes.splice(i, 1);
-    renderRulesUI();
-  }
-}
-
 function extractLayerCombosFromData() {
-  if (!State.elements.traces.length) {
-    alert('请先导入或载入包含走线 (Trace) 的 EDA 数据！');
+  const traceTxt = (State.dataInputs && State.dataInputs.trace && State.dataInputs.trace.text) ? State.dataInputs.trace.text.trim() : '';
+  const parsedTraceOnly = (traceTxt && typeof PourChecker !== 'undefined' && PourChecker.parsePcbElements)
+    ? PourChecker.parsePcbElements(traceTxt)
+    : null;
+  const traces = (parsedTraceOnly && parsedTraceOnly.traces.length) ? parsedTraceOnly.traces : State.elements.traces;
+  if (!traces || !traces.length) {
+    alert('请先在「① 走线检查数据」框中导入包含走线 (Trace) 的 .txt 文件！');
     return;
   }
   const map = {};
-  State.elements.traces.forEach(t => {
+  traces.forEach(t => {
     if (!map[t.layer]) map[t.layer] = new Set();
     const widths = t.segments.map(s => s.width).filter(Boolean);
     if (widths.length) map[t.layer].add(widths.join('-'));
@@ -4346,7 +5410,7 @@ function extractLayerCombosFromData() {
     minArc: 18.0
   }));
   renderRulesUI();
-  showToast('成功从导入数据中提取各层实际线宽组合并填充规则！');
+  showToast('成功从走线检查数据中提取各层实际线宽组合并填充规则！');
 }
 
 /**
@@ -4471,32 +5535,75 @@ function analyzeTraceWidthDiscrepancy(compressedSeq, allowedCombosStr) {
   return { pass: false, reason };
 }
 
-function runMasterInspection() {
-  const rawInMemory = State.rawText || '';
-  const taVal = ($('txtUnifiedInput') ? $('txtUnifiedInput').value : '').trim();
-  const text = (rawInMemory && taVal.startsWith('[📁 已成功加载大型 EDA 数据文件:')) ? rawInMemory : taVal;
+function parsePcbElementsSafe(txt) {
+  if (!txt || !txt.trim()) return { vias: [], traces: [], shapes: [], layers: [] };
+  if (typeof PourChecker !== 'undefined' && PourChecker.parsePcbElements) {
+    return PourChecker.parsePcbElements(txt);
+  }
+  return { vias: [], traces: [], shapes: [], layers: [] };
+}
 
-  if (!text) {
-    alert('请先在输入框中粘贴或载入 EDA TXT 数据！');
+function mergeUniquePcbElements(parsedList) {
+  const vias = [], traces = [], shapes = [];
+  const layerSet = new Set();
+  const seenVias = new Set(), seenTraces = new Set(), seenShapes = new Set();
+
+  (parsedList || []).forEach(p => {
+    if (!p) return;
+    (p.layers || []).forEach(l => layerSet.add(l));
+    (p.vias || []).forEach(v => {
+      const ox = v.origin ? v.origin[0] : (v.x || 0);
+      const oy = v.origin ? v.origin[1] : (v.y || 0);
+      const key = `${v.id}_${Number(ox).toFixed(2)}_${Number(oy).toFixed(2)}_${v.padstack || ''}`;
+      if (!seenVias.has(key)) { seenVias.add(key); vias.push(v); }
+    });
+    (p.traces || []).forEach(t => {
+      const s0 = (t.segments && t.segments[0]) ? `${t.segments[0].x1}_${t.segments[0].y1}` : '';
+      const key = `${t.id}_${t.layer || ''}_${t.net || ''}_${s0}`;
+      if (!seenTraces.has(key)) { seenTraces.add(key); traces.push(t); }
+    });
+    (p.shapes || []).forEach(sh => {
+      const b0 = (sh.boundary && sh.boundary[0]) ? `${sh.boundary[0].x1}_${sh.boundary[0].y1}` : '';
+      const key = `${sh.id}_${sh.layer || ''}_${sh.area || 0}_${b0}`;
+      if (!seenShapes.has(key)) { seenShapes.add(key); shapes.push(sh); }
+    });
+  });
+
+  return { vias, traces, shapes, layers: Array.from(layerSet) };
+}
+
+function runMasterInspection() {
+  const tTrace = (State.dataInputs.trace.text || '').trim();
+  const tConstraint = (State.dataInputs.constraint.text || '').trim();
+  const tDfmFanout = (State.dataInputs.dfmFanout.text || '').trim();
+  const tPour = (State.dataInputs.pour.text || '').trim();
+
+  const nonEmptyTexts = [tTrace, tConstraint, tDfmFanout, tPour].filter(Boolean);
+  if (nonEmptyTexts.length === 0) {
+    alert('请先在上方四个数据导入框中选择或拖入至少一个 .txt 格式的数据文件！');
     return;
   }
 
-  State.rawText = text;
+  State.rawText = nonEmptyTexts.join('\n');
 
-  // 1. Parse unified elements via PourChecker / DfmCheck
-  const parsed = (typeof PourChecker !== 'undefined' && PourChecker.parsePcbElements) ?
-    PourChecker.parsePcbElements(text) : { vias: [], traces: [], shapes: [], layers: [] };
-  
-  State.elements = parsed;
-  $('lblDataSummary').textContent = `已解析: ${parsed.vias.length} 孔 | ${parsed.traces.length} 走线段 | ${parsed.shapes.length} 铜皮 | ${parsed.layers.length} 物理层`;
-  $('kpiViaCount').textContent = parsed.vias.length;
-  $('kpiTraceCount').textContent = parsed.traces.length;
-  $('kpiShapeCount').textContent = parsed.shapes.length;
+  // 分别解析四类独立数据源，并去重汇总至全局 2D 视图元素库
+  const parsedTrace = parsePcbElementsSafe(tTrace);
+  const parsedConstraint = parsePcbElementsSafe(tConstraint);
+  const parsedDfmFanout = parsePcbElementsSafe(tDfmFanout);
+  const parsedPour = parsePcbElementsSafe(tPour);
+
+  const mergedParsed = mergeUniquePcbElements([parsedTrace, parsedConstraint, parsedDfmFanout, parsedPour]);
+  State.elements = mergedParsed;
+
+  $('kpiViaCount').textContent = mergedParsed.vias.length;
+  $('kpiTraceCount').textContent = mergedParsed.traces.length;
+  $('kpiShapeCount').textContent = mergedParsed.shapes.length;
+  renderDataIngestionBoxes();
 
   State.allChecks = [];
 
-    // ==========================================
-  // ENGINE 1: 走线检查 (Trace Engine: 线宽 + 长度 + 差分逐层/总长)
+  // ==========================================
+  // ENGINE 1: 走线检查 (仅使用 ① 走线检查数据框 tTrace)
   // ==========================================
   const traceChecks = [];
   const checkLayerDiff = $('cfgCheckLayerDiff') ? $('cfgCheckLayerDiff').checked : true;
@@ -4506,7 +5613,7 @@ function runMasterInspection() {
 
   // 1.1 Line width combinations & length ranges (Grouped by Net & Layer for complete trace line evaluation)
   const netLayerTraces = new Map();
-  parsed.traces.forEach(t => {
+  if (tTrace) parsedTrace.traces.forEach(t => {
     const k = `${t.net || 'UNKNOWN'}__${t.layer || 'UNKNOWN'}`;
     if (!netLayerTraces.has(k)) {
       netLayerTraces.set(k, {
@@ -4555,7 +5662,7 @@ function runMasterInspection() {
 
   // 1.2 Differential Length Checks (逐层线长差 + 总线长差)
   const diffPairsMap = new Map();
-  parsed.traces.forEach(t => {
+  if (tTrace) parsedTrace.traces.forEach(t => {
     const net = t.net || '';
     let base = '', isP = false, isN = false;
     if (net.endsWith('_P') || net.endsWith('.P') || net.endsWith('P')) {
@@ -4629,6 +5736,7 @@ function runMasterInspection() {
   });
 
   State.results.trace = {
+    hasData: Boolean(tTrace),
     pass: traceChecks.every(c => c.pass),
     checks: traceChecks,
     score: traceChecks.length ? Math.round((traceChecks.filter(c => c.pass).length / traceChecks.length) * 100) : 100
@@ -4636,7 +5744,7 @@ function runMasterInspection() {
   State.allChecks.push(...traceChecks);
 
   // ==========================================
-  // ENGINE 2: 约束检查 (Constraint Engine: 反焊盘尺寸 + Padstack层名核对)
+  // ENGINE 2: 约束检查 (仅使用 ② 约束检查数据框 tConstraint)
   // ==========================================
   const copperChecks = [];
   const chkAnti = $('cfgCheckAntiPad') ? $('cfgCheckAntiPad').checked : true;
@@ -4644,8 +5752,8 @@ function runMasterInspection() {
   const antiTol = parseFloat($('cfgAntiPadTol')?.value) || 0.5;
   const layerN = parseInt($('cfgLayerCount')?.value, 10) || 21;
 
-  if (typeof CopperCheck !== 'undefined' && CopperCheck.runCopperCheck) {
-    const boardItems = CopperCheck.parseBoardItems(text);
+  if (tConstraint && typeof CopperCheck !== 'undefined' && CopperCheck.runCopperCheck) {
+    const boardItems = CopperCheck.parseBoardItems(tConstraint);
     const sets = State.rules.constraintSets || [];
     const checkRes = CopperCheck.runCopperCheck(boardItems, sets, {
       layerCount: layerN,
@@ -4691,9 +5799,9 @@ function runMasterInspection() {
     });
   }
 
-  // Fallback Padstack check if no groups generated
-  if (copperChecks.length === 0) {
-    parsed.vias.forEach(v => {
+  // Fallback Padstack check if tConstraint was provided but no groups generated
+  if (tConstraint && copperChecks.length === 0) {
+    parsedConstraint.vias.forEach(v => {
       const padName = v.padstack || '';
       const connLayers = v.connectedLayers || [];
       const missingLayers = connLayers.filter(l => !padName.toUpperCase().includes(l.toUpperCase().replace(/^0+/, '')));
@@ -4718,6 +5826,7 @@ function runMasterInspection() {
   }
 
   State.results.copper = {
+    hasData: Boolean(tConstraint),
     pass: copperChecks.every(c => c.pass),
     checks: copperChecks,
     score: copperChecks.length ? Math.round((copperChecks.filter(c => c.pass).length / copperChecks.length) * 100) : 100
@@ -4725,11 +5834,11 @@ function runMasterInspection() {
   State.allChecks.push(...copperChecks);
 
   // ==========================================
-  // ENGINE 3: DFM 制造能力检查 (DFM Engine)
+  // ENGINE 3: DFM 制造能力检查 (使用 ③ DFM 与扇出方案数据框 tDfmFanout)
   // ==========================================
   const dfmChecks = [];
-  if (typeof DfmCheck !== 'undefined' && DfmCheck.parseDfmItems) {
-    const dfmData = DfmCheck.parseDfmItems(text, {
+  if (tDfmFanout && typeof DfmCheck !== 'undefined' && DfmCheck.parseDfmItems) {
+    const dfmData = DfmCheck.parseDfmItems(tDfmFanout, {
       gndPadDiameter: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
       signalPadDiameter: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
       gndFirstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54,
@@ -4743,11 +5852,12 @@ function runMasterInspection() {
 
     const defectList = dfmRun.defectPairs || [];
     defectList.forEach(d => {
+      const spanTag = d.via.spanLabel || '通孔 (Top~Bottom)';
       dfmChecks.push({
         id: `dfm_pair_${d.via.id}_${d.trace.id}`,
         category: 'dfm',
         categoryName: '加工能力检查',
-        target: `Trace #${d.trace.id} (${d.trace.net}) × Via #${d.via.id}`,
+        target: `Trace #${d.trace.id} (${d.trace.net}) × Via #${d.via.id} [${d.via.spanShort || '通孔'}]`,
         targetType: '过孔/走线对',
         layer: d.trace.subset || '未知层',
         item: d.isGndVia ? '线到 GND 孔盘间距 (Airgap)' : '线到信号孔盘间距 (Airgap)',
@@ -4755,14 +5865,16 @@ function runMasterInspection() {
         rule: `≥ ${d.threshold.toFixed(1)} mil`,
         pass: false,
         deviation: `${(d.evalDist - d.threshold).toFixed(2)} mil`,
-        reason: `实测焊盘间隙 ${d.evalDist.toFixed(2)} mil 低于安全阈值 ${d.threshold.toFixed(1)} mil，存在蚀刻短路隐患`,
+        reason: `过孔 [${spanTag}] 穿过走线层 ${d.trace.subset}，实测焊盘间隙 ${d.evalDist.toFixed(2)} mil 低于安全阈值 ${d.threshold.toFixed(1)} mil，存在蚀刻短路隐患`,
         objId: d.trace.id,
         viaId: d.via.id,
         viaCoord: d.via.origin
       });
     });
+    State.dfmSkippedPairs = dfmRun.skippedNonSpanningPairs || 0;
   }
   State.results.dfm = {
+    hasData: Boolean(tDfmFanout),
     pass: dfmChecks.length === 0,
     checks: dfmChecks,
     score: dfmChecks.length === 0 ? 100 : Math.max(40, 100 - dfmChecks.length * 2)
@@ -4770,11 +5882,11 @@ function runMasterInspection() {
   State.allChecks.push(...dfmChecks);
 
   // ==========================================
-  // ENGINE 4: 扇出方案检查 (Fanout Engine)
+  // ENGINE 4: 扇出方案检查 (共用 ③ DFM 与扇出方案数据框 tDfmFanout)
   // ==========================================
   const fanoutChecks = [];
   const fanoutEngine = (typeof FanoutChecker !== 'undefined') ? FanoutChecker : null;
-  if (fanoutEngine && parsed.vias.length > 0) {
+  if (tDfmFanout && fanoutEngine && parsedDfmFanout.vias.length > 0) {
     const clusterDistMil = (parseFloat($('cfgClusterDist')?.value) || 2.0) * 39.37007874;
     const geomTolMil = parseFloat($('cfgGeomTol')?.value) || 0.5;
     const centerDistTolMil = parseFloat($('cfgCenterDistTol')?.value) || 1.0;
@@ -4789,7 +5901,7 @@ function runMasterInspection() {
     const allowSubset = $('cfgAllowSubsetMatch') ? $('cfgAllowSubsetMatch').checked : true;
     const redundantPolicy = $('cfgRedundantPolicy') ? $('cfgRedundantPolicy').value : 'ANY_GND_REDUNDANT';
 
-    const fRes = fanoutEngine.runFanoutInspection(parsed.vias, fanoutLib, {
+    const fRes = fanoutEngine.runFanoutInspection(parsedDfmFanout.vias, fanoutLib, {
       clusterThreshold: clusterDistMil,
       distanceTolerance: centerDistTolMil,
       allowRotation: true,
@@ -4837,6 +5949,7 @@ function runMasterInspection() {
     });
   }
   State.results.fanout = {
+    hasData: Boolean(tDfmFanout),
     pass: fanoutChecks.every(c => c.pass),
     checks: fanoutChecks,
     score: fanoutChecks.length === 0 ? 100 : Math.round((fanoutChecks.filter(c => c.pass).length / fanoutChecks.length) * 100)
@@ -4844,11 +5957,11 @@ function runMasterInspection() {
   State.allChecks.push(...fanoutChecks);
 
   // ==========================================
-  // ENGINE 5: 铜皮五项检查 (Pour Engine)
+  // ENGINE 5: 铜皮五项检查 (仅使用 ④ 铜皮检查数据框 tPour)
   // ==========================================
   const pourChecks = [];
-  if (typeof PourChecker !== 'undefined' && PourChecker.runAllCopperChecks) {
-    const pourRun = PourChecker.runAllCopperChecks(text, {
+  if (tPour && typeof PourChecker !== 'undefined' && PourChecker.runAllCopperChecks) {
+    const pourRun = PourChecker.runAllCopperChecks(tPour, {
       viaCoverageRules: State.rules.pourRule1.map(r => ({ id: r.id, padstack: r.padstack, layers: r.layers.split(/[,;\s]+/).filter(Boolean), coverageRadius: r.radius })),
       specialShapeTemplates: State.rules.specialShapeTemplates || [],
       traceMarginRules: State.rules.pourRule3.map(r => ({ id: r.id, traceLayer: r.traceLayer, upperRefLayer: r.upperRef, lowerRefLayer: r.lowerRef, minMargin: r.margin })),
@@ -4905,6 +6018,7 @@ function runMasterInspection() {
     }
   }
   State.results.pour = {
+    hasData: Boolean(tPour),
     pass: pourChecks.length === 0,
     checks: pourChecks,
     score: pourChecks.length === 0 ? 100 : Math.max(50, 100 - pourChecks.length * 10)
@@ -4934,14 +6048,26 @@ function updateMasterKPIs() {
   $('kpiDefectCount').textContent = fails.length;
   $('kpiReviewProgress').textContent = `${reviewed} / ${fails.length}`;
 
-  const scores = [
-    State.results.trace.score,
-    State.results.copper.score,
-    State.results.dfm.score,
-    State.results.fanout.score,
-    State.results.pour.score
-  ];
-  const avgScore = total ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 100;
+  const activeEngineList = [
+    State.results.trace,
+    State.results.copper,
+    State.results.dfm,
+    State.results.fanout,
+    State.results.pour
+  ].filter(r => r && r.hasData !== false);
+
+  if (activeEngineList.length === 0 && total === 0) {
+    $('kpiHealthScore').textContent = '未评估';
+    const circle = $('kpiScoreCircle');
+    if (circle) {
+      circle.textContent = '--';
+      circle.className = 'score-circle a';
+    }
+    return;
+  }
+
+  const scores = activeEngineList.length > 0 ? activeEngineList.map(r => r.score) : [100];
+  const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
   
   $('kpiHealthScore').textContent = `${avgScore} 分 (${getGrade(avgScore)})`;
   const circle = $('kpiScoreCircle');
@@ -5003,46 +6129,42 @@ function getGradeLetter(score) {
 
 function renderDashboard() {
   const res = State.results;
-  
+  const fillCard = (scoreId, barId, badgeId, detailId, r, okDetailFn, badLabel) => {
+    if (r && r.hasData === false) {
+      $(scoreId).textContent = '--';
+      $(barId).style.width = '0%';
+      $(badgeId).className = 'tag-badge';
+      $(badgeId).textContent = '未导入数据';
+      $(detailId).textContent = '未导入对应 .txt 检查数据';
+      return;
+    }
+    const bad = r.checks.filter(c => !c.pass).length;
+    $(scoreId).textContent = `${r.score}%`;
+    $(barId).style.width = `${r.score}%`;
+    $(badgeId).className = `tag-badge ${bad ? 'bad' : 'ok'}`;
+    $(badgeId).textContent = bad ? `${bad} ${badLabel}` : '合格';
+    $(detailId).textContent = okDetailFn(r, bad);
+  };
+
   // 1. Trace Card
-  $('dashTraceScore').textContent = `${res.trace.score}%`;
-  $('barTrace').style.width = `${res.trace.score}%`;
-  const traceBad = res.trace.checks.filter(c => !c.pass).length;
-  $('dashTraceBadge').className = `tag-badge ${traceBad ? 'bad' : 'ok'}`;
-  $('dashTraceBadge').textContent = traceBad ? `${traceBad} 处不符合` : '合格';
-  $('dashTraceDetail').textContent = `总 ${res.trace.checks.length} 项检查 | 不符合 ${traceBad}`;
+  fillCard('dashTraceScore', 'barTrace', 'dashTraceBadge', 'dashTraceDetail', res.trace,
+    (r, bad) => `总 ${r.checks.length} 项检查 | 不符合 ${bad}`, '处不符合');
 
   // 2. Copper Card
-  $('dashCopperScore').textContent = `${res.copper.score}%`;
-  $('barCopper').style.width = `${res.copper.score}%`;
-  const copperBad = res.copper.checks.filter(c => !c.pass).length;
-  $('dashCopperBadge').className = `tag-badge ${copperBad ? 'bad' : 'ok'}`;
-  $('dashCopperBadge').textContent = copperBad ? `${copperBad} 处不符合` : '合格';
-  $('dashCopperDetail').textContent = `总 ${res.copper.checks.length} 项检查 | 不符合 ${copperBad}`;
+  fillCard('dashCopperScore', 'barCopper', 'dashCopperBadge', 'dashCopperDetail', res.copper,
+    (r, bad) => `总 ${r.checks.length} 项检查 | 不符合 ${bad}`, '处不符合');
 
   // 3. DFM Card
-  $('dashDfmScore').textContent = `${res.dfm.score}%`;
-  $('barDfm').style.width = `${res.dfm.score}%`;
-  const dfmBad = res.dfm.checks.filter(c => !c.pass).length;
-  $('dashDfmBadge').className = `tag-badge ${dfmBad ? 'bad' : 'ok'}`;
-  $('dashDfmBadge').textContent = dfmBad ? `${dfmBad} 处超标` : '合格';
-  $('dashDfmDetail').textContent = `焊盘 Airgap 间隙检查 | 超标 ${dfmBad}`;
+  fillCard('dashDfmScore', 'barDfm', 'dashDfmBadge', 'dashDfmDetail', res.dfm,
+    (r, bad) => `焊盘 Airgap 间隙检查 | 超标 ${bad}`, '处超标');
 
   // 4. Fanout Card
-  $('dashFanoutScore').textContent = `${res.fanout.score}%`;
-  $('barFanout').style.width = `${res.fanout.score}%`;
-  const fanoutBad = res.fanout.checks.filter(c => !c.pass).length;
-  $('dashFanoutBadge').className = `tag-badge ${fanoutBad ? 'bad' : 'ok'}`;
-  $('dashFanoutBadge').textContent = fanoutBad ? `${fanoutBad} 处不符合` : '合格';
-  $('dashFanoutDetail').textContent = `聚类 ${res.fanout.checks.length} 组 | 匹配通过 ${res.fanout.checks.length - fanoutBad} 组`;
+  fillCard('dashFanoutScore', 'barFanout', 'dashFanoutBadge', 'dashFanoutDetail', res.fanout,
+    (r, bad) => `聚类 ${r.checks.length} 组 | 匹配通过 ${r.checks.length - bad} 组`, '处不符合');
 
   // 5. Pour Card
-  $('dashPourScore').textContent = `${res.pour.score}%`;
-  $('barPour').style.width = `${res.pour.score}%`;
-  const pourBad = res.pour.checks.filter(c => !c.pass).length;
-  $('dashPourBadge').className = `tag-badge ${pourBad ? 'bad' : 'ok'}`;
-  $('dashPourBadge').textContent = pourBad ? `${pourBad} 处缺陷` : '合格';
-  $('dashPourDetail').textContent = `铺铜覆盖五项检查 | 检出缺陷 ${pourBad}`;
+  fillCard('dashPourScore', 'barPour', 'dashPourBadge', 'dashPourDetail', res.pour,
+    (r, bad) => `铺铜覆盖五项检查 | 检出缺陷 ${bad}`, '处缺陷');
 
   // Risk Radar
   const fails = State.allChecks.filter(c => !c.pass);
@@ -5137,17 +6259,25 @@ function filterDefects(categoryKey) {
   renderMasterDefectsTable();
 }
 
-function toggleReview(checkId) {
-  if (State.reviewedSet.has(checkId)) State.reviewedSet.delete(checkId);
-  else State.reviewedSet.add(checkId);
+function toggleReview(checkId, explicitVal) {
+  const shouldReview = explicitVal !== undefined ? Boolean(explicitVal) : !State.reviewedSet.has(checkId);
+  if (shouldReview) State.reviewedSet.add(checkId);
+  else State.reviewedSet.delete(checkId);
   updateMasterKPIs();
   renderMasterDefectsTable();
+  if (typeof renderAnalysisGuidance === 'function') renderAnalysisGuidance();
+  if (State.canvas.activeReviewCheckId === checkId) {
+    renderUnifiedCanvasReviewBox(checkId);
+  }
+  renderCanvas();
 }
 
 function batchReviewAll() {
   State.allChecks.filter(c => !c.pass).forEach(c => State.reviewedSet.add(c.id));
   updateMasterKPIs();
   renderMasterDefectsTable();
+  if (typeof renderAnalysisGuidance === 'function') renderAnalysisGuidance();
+  if (State.canvas.activeReviewCheckId) renderUnifiedCanvasReviewBox(State.canvas.activeReviewCheckId);
   showToast('已将当前所有检出缺陷标记为已复核！');
 }
 
@@ -5155,14 +6285,16 @@ function clearAllReviews() {
   State.reviewedSet.clear();
   updateMasterKPIs();
   renderMasterDefectsTable();
+  if (typeof renderAnalysisGuidance === 'function') renderAnalysisGuidance();
+  if (State.canvas.activeReviewCheckId) renderUnifiedCanvasReviewBox(State.canvas.activeReviewCheckId);
 }
 
 function renderModularViews() {
-  $('pnlModTrace').innerHTML = `走线线宽组合检查已执行，总线长超差与差分逐层/总长线长分析就绪。当前走线健康分 <b>${State.results.trace.score}%</b>。`;
-  $('pnlModCopper').innerHTML = `叠层约束检查已完成，反焊盘尺寸与 Padstack 连接层核对就绪。当前约束健康分 <b>${State.results.copper.score}%</b>。`;
-  $('pnlModDfm').innerHTML = `DFM 制造加工能力间距检查已完成，共检出 <b>${State.results.dfm.checks.length}</b> 处间隙隐患。当前 DFM 健康分 <b>${State.results.dfm.score}%</b>。`;
-  $('pnlModFanout').innerHTML = `扇出拓扑方案比对已完成，聚类分析 <b>${State.results.fanout.checks.length}</b> 个孔群。当前扇出健康分 <b>${State.results.fanout.score}%</b>。`;
-  $('pnlModPour').innerHTML = `铜皮五项检查已完成，包括孔铺铜覆盖、异型铜皮、走线参考层超宽。当前铜皮健康分 <b>${State.results.pour.score}%</b>。`;
+  if ($('pnlModTrace')) $('pnlModTrace').innerHTML = `走线线宽组合检查已执行，总线长超差与差分逐层/总长线长分析就绪。当前走线健康分 <b>${State.results.trace.score}%</b>。`;
+  if ($('pnlModCopper')) $('pnlModCopper').innerHTML = `叠层约束检查已完成，反焊盘尺寸与 Padstack 连接层核对就绪。当前约束健康分 <b>${State.results.copper.score}%</b>。`;
+  if ($('pnlModDfm')) $('pnlModDfm').innerHTML = `DFM 制造加工能力间距检查已完成（已启用盲埋孔 Padstack Defined 穿层过滤${State.dfmSkippedPairs ? `，排除 ${State.dfmSkippedPairs} 处非穿层对偶` : ''}），共检出 <b>${State.results.dfm.checks.length}</b> 处间隙隐患。当前 DFM 健康分 <b>${State.results.dfm.score}%</b>。`;
+  if ($('pnlModFanout')) $('pnlModFanout').innerHTML = `扇出拓扑方案比对已完成，聚类分析 <b>${State.results.fanout.checks.length}</b> 个孔群。当前扇出健康分 <b>${State.results.fanout.score}%</b>。`;
+  if ($('pnlModPour')) $('pnlModPour').innerHTML = `铜皮五项检查已完成，包括孔铺铜覆盖、异型铜皮、走线参考层超宽。当前铜皮健康分 <b>${State.results.pour.score}%</b>。`;
 }
 
 function renderAnalysisGuidance() {
@@ -5831,10 +6963,62 @@ function renderCanvas() {
   }
 }
 
+function closeUnifiedCanvasReviewBox() {
+  const box = $('unifiedCanvasReviewBox');
+  if (box) box.style.display = 'none';
+  State.canvas.activeReviewCheckId = null;
+}
+
+function renderUnifiedCanvasReviewBox(checkId) {
+  const box = $('unifiedCanvasReviewBox');
+  const titleEl = $('unifiedCanvasRevTitle');
+  const bodyEl = $('unifiedCanvasRevBody');
+  if (!box || !bodyEl) return;
+
+  const chk = State.allChecks.find(c => c.id == checkId || c.objId == checkId);
+  if (!chk) {
+    box.style.display = 'none';
+    return;
+  }
+
+  State.canvas.activeReviewCheckId = chk.id;
+  const isReviewed = State.reviewedSet.has(chk.id);
+  if (titleEl) {
+    titleEl.textContent = `[${chk.categoryName || '检查项'}] ${chk.target || chk.id}`;
+  }
+
+  const barBg = isReviewed
+    ? 'background:rgba(16,185,129,.18);border:1px solid rgba(52,211,153,.55);'
+    : 'background:rgba(245,158,11,.15);border:1px solid rgba(251,191,36,.45);';
+
+  bodyEl.innerHTML = `
+    ${!chk.pass ? `
+      <div style="${barBg}border-radius:6px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:${isReviewed ? '#6ee7b7' : '#fde68a'};margin:0">
+          <input type="checkbox" id="chkUnifiedSpatialReview" ${isReviewed ? 'checked' : ''} onchange="toggleReview('${chk.id}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
+          <span>${isReviewed ? '已复核 (清单已同步勾选)' : '勾选复核此异常'}</span>
+        </label>
+        <button class="btn small" onclick="toggleReview('${chk.id}', ${!isReviewed})" style="padding:3px 9px;font-size:11px;border:none;background:${isReviewed ? 'rgba(51,65,85,.9)' : '#10b981'};color:#fff">
+          ${isReviewed ? '取消复核' : '✓ 确认复核'}
+        </button>
+      </div>
+    ` : ''}
+    <div style="font-size:11.5px;color:#cbd5e1;line-height:1.55;margin-bottom:8px">
+      <div>物理层: <strong style="color:#7dd3fc">${chk.layer || '-'}</strong> | 检查项: <strong>${chk.item || '-'}</strong></div>
+      <div>实测 vs 规则: <strong style="font-family:var(--mono);color:#fef08a">${chk.actual || '-'}</strong> / <span style="font-family:var(--mono)">${chk.rule || '-'}</span></div>
+      <div style="margin-top:4px;color:#94a3b8">${chk.reason || ''}</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn sec small" onclick="switchTab('tabDefects')" style="padding:4px 10px;font-size:11.5px">返回检查结果清单</button>
+    </div>
+  `;
+  box.style.display = 'block';
+}
+
 function locateDefectInCanvas(category, id) {
   // 1. Find target defect item or object in State.allChecks or elements
   const fails = State.allChecks.filter(c => !c.pass);
-  const target = fails.find(f => f.objId == id || f.id == id) || State.allChecks.find(f => f.objId == id || f.id == id);
+  const target = fails.find(f => f.id == id) || State.allChecks.find(f => f.id == id) || fails.find(f => f.objId == id) || State.allChecks.find(f => f.objId == id);
   const searchId = (target && target.objId != null) ? target.objId : id;
 
   let targetX = null, targetY = null;
@@ -5894,9 +7078,11 @@ function locateDefectInCanvas(category, id) {
     };
 
     renderCanvas();
+    if (target) renderUnifiedCanvasReviewBox(target.id);
     showToast(`已精准放大定位至缺陷几何位置 (X: ${targetX.toFixed(1)}, Y: ${targetY.toFixed(1)})`);
   } else {
     fitCanvasToLayout();
+    if (target) renderUnifiedCanvasReviewBox(target.id);
   }
 }
 
@@ -6435,6 +7621,10 @@ window.loadUnifiedSampleData = loadUnifiedSampleData;
 window.clearUnifiedData = clearUnifiedData;
 window.switchTab = switchTab;
 window.filterDefects = filterDefects;
+window.toggleReview = toggleReview;
+window.locateDefectInCanvas = locateDefectInCanvas;
+window.closeUnifiedCanvasReviewBox = closeUnifiedCanvasReviewBox;
+window.renderUnifiedCanvasReviewBox = renderUnifiedCanvasReviewBox;
 window.batchReviewAll = batchReviewAll;
 window.clearAllReviews = clearAllReviews;
 window.toggleLayer = toggleLayer;
@@ -6452,6 +7642,9 @@ window.handleFanoutRulesFile = handleFanoutRulesFile;
 window.handlePourRulesFile = handlePourRulesFile;
 window.handlePourShapeTxtFile = handlePourShapeTxtFile;
 window.handleDataFileUpload = handleDataFileUpload;
+window.handleCategoryTxtUpload = handleCategoryTxtUpload;
+window.clearCategoryData = clearCategoryData;
+window.renderDataIngestionBoxes = renderDataIngestionBoxes;
 window.importMasterRulesPrompt = importMasterRulesPrompt;
 window.importTraceRulesPrompt = importTraceRulesPrompt;
 window.exportTraceRulesPrompt = exportTraceRulesPrompt;
@@ -6474,6 +7667,16 @@ window.editPourShapeTemplate = editPourShapeTemplate;
 window.addPourRule3Row = addPourRule3Row;
 window.deletePourRule3 = deletePourRule3;
 window.deleteFanoutScheme = deleteFanoutScheme;
+window.editFanoutScheme = editFanoutScheme;
+window.viewFanoutScheme = viewFanoutScheme;
+window.closeViewFanoutSchemeModal = closeViewFanoutSchemeModal;
+window.stepUnifiedViewFanoutScheme = stepUnifiedViewFanoutScheme;
+window.editCurrentUnifiedViewedFanout = editCurrentUnifiedViewedFanout;
+window.zoomUnifiedViewFanout = zoomUnifiedViewFanout;
+window.resetUnifiedViewFanoutTransform = resetUnifiedViewFanoutTransform;
+window.renderUnifiedViewedFanoutCanvas = renderUnifiedViewedFanoutCanvas;
+window.exportUnifiedViewedFanoutPng = exportUnifiedViewedFanoutPng;
+window.setUnifiedViewFanoutHoveredVia = setUnifiedViewFanoutHoveredVia;
 window.extractLayerCombosFromData = extractLayerCombosFromData;
 window.addCustomConstraintSet = addCustomConstraintSet;
 window.resetDefaultConstraintSets = resetDefaultConstraintSets;
@@ -6491,6 +7694,161 @@ window.parseConstraintText = parseConstraintText;
 window.normalizeTraceRule = normalizeTraceRule;
 window.parseTraceRulesJson = parseTraceRulesJson;
 window.decodeTxt = decodeTxt;
+
+// =========================================================================
+// Global Display Controller: 100% Full-Width & Fullscreen Workbench
+// =========================================================================
+const PCB_WIDE_STORAGE_KEY = 'pcb_workbench_wide_v1';
+
+function isBrowserFullscreenActive() {
+  if (typeof document === 'undefined') return false;
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+
+function syncGlobalDisplayUI() {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  const isWide = document.documentElement.classList.contains('pcb-global-wide');
+  const isFs = isBrowserFullscreenActive();
+  const btnWide = $('btnGlobalWide');
+  const lblWide = $('lblGlobalWide');
+  const btnFs = $('btnGlobalFullscreen');
+  const lblFs = $('lblGlobalFs');
+  const icoFs = $('icoGlobalFs');
+  const btnPop = $('btnGlobalPopout');
+
+  if (btnWide && btnWide.classList) {
+    if (isWide) btnWide.classList.add('active'); else btnWide.classList.remove('active');
+  }
+  if (lblWide) lblWide.textContent = isWide ? '已铺满宽屏' : '铺满宽屏';
+
+  if (btnFs && btnFs.classList) {
+    if (isFs) btnFs.classList.add('fs-active'); else btnFs.classList.remove('fs-active');
+  }
+  if (lblFs) lblFs.textContent = isFs ? '退出全屏' : '全屏工作台';
+  if (icoFs) {
+    icoFs.innerHTML = isFs
+      ? '<path d="M6 2v4H2M10 2v4h4M10 14v-4h4M6 14v-4H2"/>'
+      : '<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>';
+  }
+  if (btnPop && btnPop.style) {
+    try {
+      const inIframe = (typeof window !== 'undefined') && (window.self !== window.top);
+      btnPop.style.display = (inIframe && !isFs) ? 'inline-flex' : 'none';
+      if (typeof window !== 'undefined' && window.location && window.location.href) {
+        const u = new URL(window.location.href);
+        u.searchParams.set('wide', '1');
+        btnPop.href = u.toString();
+      }
+    } catch (e) {
+      btnPop.style.display = 'inline-flex';
+    }
+  }
+}
+
+function triggerWorkbenchResize() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(() => {
+      try {
+        window.dispatchEvent(new Event('resize'));
+        if (typeof renderUnifiedViewedFanoutCanvas === 'function' && $('modalViewFanoutScheme') && $('modalViewFanoutScheme').style.display !== 'none') {
+          renderUnifiedViewedFanoutCanvas();
+        }
+      } catch (e) {}
+    }, 120);
+  } catch (e) {}
+}
+
+function setGlobalWideMode(enable, persist = true) {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  if (enable) {
+    document.documentElement.classList.add('pcb-global-wide');
+  } else {
+    document.documentElement.classList.remove('pcb-global-wide');
+  }
+  if (persist) {
+    try { localStorage.setItem(PCB_WIDE_STORAGE_KEY, enable ? '1' : '0'); } catch (e) {}
+  }
+  syncGlobalDisplayUI();
+  triggerWorkbenchResize();
+}
+
+function toggleGlobalWideMode() {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  const next = !document.documentElement.classList.contains('pcb-global-wide');
+  setGlobalWideMode(next, true);
+}
+
+function toggleGlobalFullscreen() {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  if (isBrowserFullscreenActive()) {
+    const exitFn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exitFn) {
+      try { Promise.resolve(exitFn.call(document)).finally(() => { syncGlobalDisplayUI(); triggerWorkbenchResize(); }); } catch (e) {}
+    }
+    return;
+  }
+
+  // 进入全屏时自动开启 100% 铺满宽屏，彻底消除左右留白
+  setGlobalWideMode(true, true);
+
+  const docEl = document.documentElement;
+  const reqFn = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+  const handleFallback = () => {
+    try {
+      if (typeof window !== 'undefined' && window.self !== window.top && window.location) {
+        const u = new URL(window.location.href);
+        u.searchParams.set('wide', '1');
+        window.open(u.toString(), '_blank', 'noopener');
+        if (typeof showToast === 'function') {
+          showToast('当前内嵌预览框限制了系统全屏，已为您铺满当前区域并在独立窗口打开大屏工作台');
+        }
+      }
+    } catch (e) {}
+    syncGlobalDisplayUI();
+  };
+
+  if (!reqFn) {
+    handleFallback();
+    return;
+  }
+  try {
+    const p = reqFn.call(docEl);
+    if (p && typeof p.then === 'function') {
+      p.then(() => { syncGlobalDisplayUI(); triggerWorkbenchResize(); }).catch(() => handleFallback());
+    } else {
+      syncGlobalDisplayUI();
+      triggerWorkbenchResize();
+    }
+  } catch (err) {
+    handleFallback();
+  }
+}
+
+(function initGlobalDisplay() {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  let initWide = false;
+  try {
+    if (typeof window !== 'undefined' && window.location && window.location.search.indexOf('wide=1') >= 0) {
+      initWide = true;
+      localStorage.setItem(PCB_WIDE_STORAGE_KEY, '1');
+    } else if (localStorage.getItem(PCB_WIDE_STORAGE_KEY) === '1') {
+      initWide = true;
+    }
+  } catch (e) {}
+  if (initWide) document.documentElement.classList.add('pcb-global-wide');
+  if (document.addEventListener) {
+    document.addEventListener('fullscreenchange', () => { syncGlobalDisplayUI(); triggerWorkbenchResize(); });
+    document.addEventListener('webkitfullscreenchange', () => { syncGlobalDisplayUI(); triggerWorkbenchResize(); });
+    document.addEventListener('DOMContentLoaded', () => syncGlobalDisplayUI());
+  }
+  syncGlobalDisplayUI();
+})();
+
+window.toggleGlobalWideMode = toggleGlobalWideMode;
+window.toggleGlobalFullscreen = toggleGlobalFullscreen;
+window.setGlobalWideMode = setGlobalWideMode;
 </script>
 
 <!-- Modal: Add/Edit Fanout Scheme (Matching image-2.png) -->
@@ -6521,6 +7879,23 @@ window.decodeTxt = decodeTxt;
             <span class="hist-chip" onclick="fillInput('modalFanoutInpTag','BGA地孔阵列')">BGA地孔阵列</span>
             <span class="hist-chip" onclick="fillInput('modalFanoutInpTag','通用扇出')">通用扇出</span>
           </div>
+        </div>
+      </div>
+
+      <!-- 快捷点选关键词生成方案名称面板 -->
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#0f172a">🏷️ 关键词快捷组合命名 <span style="font-weight:400;color:#64748b;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoUnifiedKw('modal')">⌫ 撤销上一个</button>
+            <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearUnifiedKws('modal')">清空词序</button>
+          </div>
+        </div>
+        <div id="uModalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
+        <div id="uModalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:11.5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}">
+          <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addUnifiedCustomKw('modal')">+ 新增关键词</button>
         </div>
       </div>
 
@@ -6679,6 +8054,134 @@ window.decodeTxt = decodeTxt;
     <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;background:#f8fafc">
       <button class="btn sec" onclick="closePourShapeModal()">取消</button>
       <button class="btn" style="background:#b45309;color:#ffffff;font-weight:600;border:none" onclick="savePourShapeFromModal()">保存异型铜皮模板</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Quick Rename Fanout Scheme in Unified Workbench -->
+<div class="modal-overlay" id="modalUnifiedQuickRename" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);z-index:10020;align-items:center;justify-content:center;padding:20px">
+  <div class="modal-box" style="background:#ffffff;border-radius:10px;width:96%;max-width:680px;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.28);overflow:hidden">
+    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:14px;font-weight:700;color:#0f172a">🏷️ 快捷修改扇出方案名称</div>
+      <button class="btn sec small" onclick="closeUnifiedQuickRenameModal()">✕ 关闭</button>
+    </div>
+    <div class="modal-body" style="padding:14px 18px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#64748b">
+        <span>原方案名称：<b id="lblUQuickRenameOld" style="color:#0f172a;font-family:var(--mono)">-</b></span>
+        <span id="lblUQuickRenameIdx" style="font-family:var(--mono);color:#0284c7"></span>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-weight:700;color:#0f172a;display:block;margin-bottom:4px">新方案名称（按点选顺序自动用 <code>_</code> 连接，也可手动编辑）*</label>
+        <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff;padding:6px 10px;border-radius:6px">
+      </div>
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-weight:700;color:#334155">已点选词序 <span style="font-weight:400;color:#64748b;font-size:11px">（同一关键词可点选两次或多次）</span></span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn sec small" style="padding:2px 8px" onclick="undoUnifiedKw('quick')">⌫ 撤销上一个</button>
+            <button type="button" class="btn sec small" style="padding:2px 8px" onclick="clearUnifiedKws('quick')">清空重选</button>
+          </div>
+        </div>
+        <div id="uQuickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;align-items:center;padding:5px 8px;background:#fff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px"></div>
+        <div id="uQuickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px dashed #cbd5e1">
+          <input type="text" id="inpUAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;padding:5px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('quick');}">
+          <button type="button" class="btn sec small" onclick="addUnifiedCustomKw('quick')">+ 增加新关键词</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;background:#f8fafc">
+      <button type="button" class="btn sec small" onclick="saveUnifiedQuickRename(true)">✓ 保存并改下一个 ▶</button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn sec" onclick="closeUnifiedQuickRenameModal()">取消</button>
+        <button type="button" class="btn primary" onclick="saveUnifiedQuickRename(false)">✓ 确认修改名称</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: View / Enlarge Fanout Scheme & Padstack Annotations -->
+<div class="modal-overlay" id="modalViewFanoutScheme" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div class="modal-box" style="background:#ffffff;border-radius:10px;width:96%;max-width:1140px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.28);overflow:hidden">
+    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="font-size:15px;font-weight:700;color:#0f172a" id="uViewFanoutTitle">扇出方案放大预览</div>
+        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px;color:#0369a1;border-color:#7dd3fc;background:#f0f9ff" onclick="openUnifiedQuickRenameModal(UnifiedViewFanoutState.idx)">✎ 快捷改名</button>
+        <span style="background:#e0f2fe;color:#0369a1;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600" id="uViewFanoutTag">扇出方案</span>
+        <span id="uViewFanoutIndexBadge" style="font-size:11.5px;color:#64748b;font-family:var(--mono)"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button class="btn sec small" onclick="stepUnifiedViewFanoutScheme(-1)">◀ 上一方案</button>
+        <button class="btn sec small" onclick="stepUnifiedViewFanoutScheme(1)">下一方案 ▶</button>
+        <button class="btn sec small" onclick="editCurrentUnifiedViewedFanout()">编辑方案</button>
+        <button class="btn sec small" onclick="closeViewFanoutSchemeModal()" style="font-weight:700">✕ 关闭</button>
+      </div>
+    </div>
+
+    <div class="modal-body" style="padding:14px 18px;overflow-y:auto;flex:1;display:flex;flex-direction:column">
+      <div id="uViewFanoutDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#334155">
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
+            <input type="checkbox" id="chkUViewPadstack" checked onchange="renderUnifiedViewedFanoutCanvas()">
+            <span>标注每个孔 Padstack</span>
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer">
+            <input type="checkbox" id="chkUViewCoords" onchange="renderUnifiedViewedFanoutCanvas()">
+            <span>显示相对坐标 (mil)</span>
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer">
+            <input type="checkbox" id="chkUViewDistances" onchange="renderUnifiedViewedFanoutCanvas()">
+            <span>显示孔心距 (mil)</span>
+          </label>
+          <span id="uViewFanoutPadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#475569"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn sec small" id="btnUViewMeasure" onclick="toggleUnifiedViewMeasureMode()" style="border-color:#0284c7;color:#0369a1;font-weight:700">⇔ 测孔中心距</button>
+          <button type="button" class="btn sec small" id="btnUViewClearMeasure" onclick="clearUnifiedViewMeasurements()" style="display:none">清除测量</button>
+          <button class="btn sec small" onclick="zoomUnifiedViewFanout(1.2)">放大 +</button>
+          <button class="btn sec small" onclick="zoomUnifiedViewFanout(1/1.2)">缩小 -</button>
+          <button class="btn sec small" onclick="resetUnifiedViewFanoutTransform()">适应窗口</button>
+          <button class="btn primary small" onclick="exportUnifiedViewedFanoutPng()">导出效果图</button>
+        </div>
+      </div>
+
+      <!-- Canvas + Side Per-Via Padstack Table -->
+      <div style="display:grid;grid-template-columns:minmax(0, 1fr) 340px;gap:14px;flex:1;min-height:480px">
+        <div style="display:flex;flex-direction:column;gap:6px;min-height:500px">
+          <div id="uViewFanoutCanvasWrap" style="position:relative;flex:1;min-height:490px;background:#0f172a;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.22);border:1px solid #1e293b">
+            <canvas id="uViewFanoutCanvas" width="760" height="520" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
+          </div>
+          <div style="font-size:11px;color:#64748b;text-align:right;font-family:var(--mono)">
+            滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">
+          <div id="uViewFanoutMeasurePanel" style="display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:11.5px;line-height:1.55"></div>
+          <div id="uViewFanoutSummaryBox" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65"></div>
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff">
+            <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+              <span>逐孔 Padstack 明细清单</span>
+              <span style="font-size:11px;font-weight:400;color:#64748b">悬停联动高亮</span>
+            </div>
+            <div style="flex:1;overflow-y:auto">
+              <table style="font-size:11.5px;margin:0;width:100%">
+                <thead>
+                  <tr>
+                    <th style="padding:7px 8px;width:48px;white-space:nowrap">孔号</th>
+                    <th style="padding:7px 8px;width:62px;white-space:nowrap">类型</th>
+                    <th style="padding:7px 8px">Padstack Name</th>
+                  </tr>
+                </thead>
+                <tbody id="uViewFanoutViaTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

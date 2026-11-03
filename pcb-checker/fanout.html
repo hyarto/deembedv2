@@ -54,7 +54,7 @@ main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
 .btn.purple:hover{background:#6d28d9}
 .btn.small{font-size:12px;padding:4px 8px}
 
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
 .stat-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden}
 .stat-box .lbl{font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
 .stat-box .val{font-size:20px;font-weight:800;color:#0f172a;margin-top:2px;font-family:var(--mono)}
@@ -146,20 +146,49 @@ canvas#mainCanvas:active{cursor:grabbing}
 
 .code-box{background:#0f172a;color:#f8fafc;font-family:var(--mono);font-size:11px;padding:10px 12px;border-radius:6px;max-height:220px;overflow-y:auto;white-space:pre-wrap;line-height:1.4}
 .text-mono{font-family:var(--mono)}
+.canvas-info-box table th{background:rgba(30,41,59,.96);color:#93c5fd;border-bottom:1px solid rgba(148,163,184,.28);padding:5px 6px;font-size:10.5px}
+.canvas-info-box table td{color:#f1f5f9;border-bottom:1px solid rgba(148,163,184,.14);padding:5px 6px;font-size:10.5px;background:transparent}
+.canvas-info-box table tr:hover td{background:rgba(56,189,248,.12)}
+
+/* Global Display: Full-Width & Fullscreen Workbench */
+.global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.fs-btn{background:linear-gradient(135deg,#0284c7,#0369a1);border-color:#7dd3fc;color:#fff !important}
+.global-display-ctrl .gdisp-btn.fs-active{background:#059669 !important;border-color:#34d399;color:#fff !important}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg,#f8fafc);overflow-y:auto}
+html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
+html.pcb-global-wide .canvas-container,html:fullscreen .canvas-container{height:calc(100vh - 230px) !important;min-height:580px !important}
+html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewScheme .modal-box{max-width:96vw !important;width:96vw !important;max-height:94vh !important}
 </style>
 </head>
 <body>
 
-<header>
+<header style="flex-wrap:wrap">
   <h1>PCB 扇出方案检查工具 <span class="tag">Fanout Scheme &amp; Pattern Checker</span></h1>
   <span class="sub">定义扇出方案库 (孔间距 &amp; Padstack) → 2mm 空间连通聚类 → 刚体旋转不变性比对 → 2D 可视化与缺陷定位</span>
-  <div class="navlinks">
+  <div class="navlinks" style="display:flex;align-items:center;flex-wrap:wrap">
     <a href="index.html">走线检查</a>
     <a href="copper.html">约束检查</a>
     <a href="dfm.html">加工能力检查</a>
     <a href="fanout.html" class="active">扇出方案检查</a>
     <a href="pour.html">铜皮检查</a>
     <a href="unified.html">综合一体化检查</a>
+    <div class="global-display-ctrl">
+      <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
+        <span id="lblGlobalWide">铺满宽屏</span>
+      </button>
+      <button type="button" class="gdisp-btn fs-btn" id="btnGlobalFullscreen" onclick="toggleGlobalFullscreen()" title="一键将检查工作台全屏独占整个显示屏（按 Esc 可退出）">
+        <svg id="icoGlobalFs" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+        <span id="lblGlobalFs">全屏工作台</span>
+      </button>
+      <a class="gdisp-btn" id="btnGlobalPopout" href="fanout.html?wide=1" target="_blank" rel="noopener" style="display:none" title="在独立浏览器新标签页 100% 大屏打开工作台">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h5v5M14 2L7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5"/></svg>
+        <span>独立大屏</span>
+      </a>
+    </div>
   </div>
 </header>
 
@@ -178,6 +207,10 @@ canvas#mainCanvas:active{cursor:grabbing}
     <div class="stat-box">
       <div class="lbl">导入过孔总数</div>
       <div class="val"><span id="statTotalVias">0</span> <span style="font-size:12px;font-weight:normal;color:#64748b">个孔</span></div>
+    </div>
+    <div class="stat-box" style="border-color:#bae6fd;background:#f0f9ff">
+      <div class="lbl" style="color:#0369a1">导入走线数据 (Trace)</div>
+      <div class="val" style="color:#0284c7"><span id="statTotalTraces">0</span> <span style="font-size:12px;font-weight:normal;color:#0369a1" id="statTraceMeta">段 (0层/0网络)</span></div>
     </div>
     <div class="stat-box">
       <div class="lbl">分割孔群数 (连通分量)</div>
@@ -218,6 +251,9 @@ canvas#mainCanvas:active{cursor:grabbing}
         </div>
       </div>
 
+      <!-- Global Library Padstack Unified Color Legend -->
+      <div id="libraryPadstackLegendBar" style="margin-top:12px"></div>
+
       <!-- Scheme Cards List -->
       <div class="scheme-grid" id="schemeContainer">
         <!-- Rendered by JS -->
@@ -225,11 +261,11 @@ canvas#mainCanvas:active{cursor:grabbing}
     </div>
   </section>
 
-  <!-- TAB 2: 检查数据导入 (Import Via Data & Parameters) -->
+  <!-- TAB 2: 检查数据导入 (Import Via & Trace Data & Parameters) -->
   <section id="tabImport" class="tab">
     <div class="card">
-      <h2>📥 导入待检查的 PCB 过孔数据 (Allegro/EDA TXT 格式)</h2>
-      <p class="hint">导入待检查工程的全板或局部过孔坐标数据。检查引擎首先根据孔与孔中心距不超过 <strong>2mm</strong>（支持自定义）作为依据，将全板过孔分割为一个一个独立的扇出孔整体，随后与扇出方案库逐一进行刚体旋转几何与 Padstack 比对。</p>
+      <h2>📥 导入待检查的 PCB 过孔与走线数据 (Allegro/EDA Via &amp; Trace TXT)</h2>
+      <p class="hint">导入待检查工程的全板或局部过孔与走线数据。系统将<strong>同时解析读取 <code>&lt; Via &gt;</code> 过孔与 <code>&lt; Trace &gt; / &lt; Trace Seg &gt;</code> 走线（含直线段 <code>Seg</code>、圆弧段 <code>Arc seg</code>、层别 <code>Subset</code>、线宽 <code>Width</code> 与网络 <code>Net</code>）</strong>：一方面按中心距阈值将过孔聚类并与方案库做刚体几何/Padstack 比对，另一方面自动关联扇出走线并在 2D 空间画布中真实还原渲染。</p>
 
       <div class="form-grid" style="margin-top:14px">
         <div class="form-item">
@@ -299,13 +335,13 @@ canvas#mainCanvas:active{cursor:grabbing}
 
       <div class="dropzone" id="dropzoneVia" onclick="document.getElementById('fileViaInput').click()">
         <input type="file" id="fileViaInput" accept=".txt,.csv,.dat" style="display:none" onchange="handleViaFileUpload(event)">
-        <div class="t1">📁 点击上传或将 EDA 过孔 TXT 文件拖拽至此</div>
-        <div class="t2">支持 Allegro Item 块格式、Via 坐标报告或通用 CSV/TSV 坐标清单</div>
+        <div class="t1">📁 点击上传或将 EDA 过孔 + 走线 (Via &amp; Trace) TXT 文件拖拽至此</div>
+        <div class="t2">支持同时读取 &lt; Via &gt;、&lt; Trace &gt;、&lt; Trace Seg &gt; 块（含直线段与 CW/CCW 圆弧段）或通用 CSV/TSV 清单</div>
       </div>
 
       <div class="form-item" style="margin-top:12px">
-        <label>或直接粘贴过孔 TXT 文本数据：</label>
-        <textarea id="txtViaInput" rows="6" placeholder="Total 97 Items&#10;Item 1  < Via >&#10;  Origin-xy: [22401.6900, 35517.7700]&#10;  Padstack Name: BGA_GND_pad1mil_0902&#10;  Net: GND&#10;..."></textarea>
+        <label>或直接粘贴过孔与走线 (Via &amp; Trace) TXT 文本数据：</label>
+        <textarea id="txtViaInput" rows="6" oninput="scheduleImportPreviewUpdate()" placeholder="Total 97 Items&#10;Item 25  < Via >&#10;  Origin-xy: [22376.4900, 35559.1100]&#10;  Padstack Name: test_BGA_3510_L8_L2_ring3mil&#10;  Net: 26_N&#10;Item 89  < Trace Seg >&#10;  Subset: 08IS03&#10;  Net: 26_P&#10;  Arc seg: xy [22377.6600, 35535.4900] xy [22383.6794, 35533.7374] Width (8.0000)&#10;    Center-xy: [22377.6613, 35524.2813] Radius (11.2087) CW"></textarea>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
@@ -313,8 +349,54 @@ canvas#mainCanvas:active{cursor:grabbing}
           <span style="font-size:14px">🚀</span> 立即运行扇出方案检查
         </button>
         <button class="btn sec" onclick="loadSample26Vias()">
-          <span>⚡</span> 载入 26孔测试数据
+          <span>⚡</span> 载入 26孔+71段走线测试数据
         </button>
+        <button class="btn sec" onclick="loadSampleTraceOnly()">
+          <span>⚡</span> 载入纯走线示例 (10条 Trace)
+        </button>
+      </div>
+    </div>
+
+    <!-- 已读取过孔与走线 (Via & Trace) 数据概览与走线清单 -->
+    <div class="card" id="cardImportedTraceOverview" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <div>
+          <h2 style="margin-bottom:4px">📐 已读取过孔与走线 (Via &amp; Trace) 数据解析概览</h2>
+          <p class="hint" id="lblImportParseHint">已从导入文本中实时提取过孔与走线几何信息（直线段与圆弧段均已解析）。</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="selImportTraceLayer" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;background:#fff" onchange="renderImportedTraceTable()">
+            <option value="">全部走线层 (Subset)</option>
+          </select>
+          <input type="text" id="inpImportTraceSearch" placeholder="搜索走线网络/层别/Item..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:180px" oninput="renderImportedTraceTable()">
+          <button class="btn sec small" onclick="switchTab('tabCanvas')">在 2D 画布查看走线</button>
+        </div>
+      </div>
+
+      <!-- Summary badges -->
+      <div id="pnlImportTraceMetrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px"></div>
+
+      <!-- Layer breakdown chips -->
+      <div id="pnlImportTraceLayers" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+
+      <!-- Parsed Trace Table -->
+      <div class="table-wrap" id="wrapImportTraceTable" style="max-height:300px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:72px">Item #</th>
+              <th style="width:105px">元素类型</th>
+              <th>层别 (Subset)</th>
+              <th>网络 (Net)</th>
+              <th>段数构成</th>
+              <th>线宽 (mil)</th>
+              <th>长度 (mil / mm)</th>
+              <th>起点 → 终点坐标 (mil)</th>
+              <th style="width:86px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tblImportedTracesBody"></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -327,7 +409,8 @@ canvas#mainCanvas:active{cursor:grabbing}
           <h2>📋 扇出孔群分割与比对检查结果明细</h2>
           <p class="hint">所有中心距 ≤ 2mm 的过孔已自动划分为独立孔群整体，并与方案库中的孔心距及 Padstack Name 进行了严格校验。</p>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span class="badge-tag ok" id="badgeResultsReviewProgress" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:4px 10px;font-size:12px">已复核: 0 / 0</span>
           <button class="btn sec small" onclick="exportResultsCSV()">📥 导出检查结果 (CSV)</button>
           <button class="btn sec small" onclick="switchTab('tabCanvas')">🔍 切换至 2D 空间可视化画布</button>
         </div>
@@ -399,6 +482,10 @@ canvas#mainCanvas:active{cursor:grabbing}
           <button onclick="resetCanvasView()" title="重置并自动居中视野">🎯 居中重置</button>
           <button onclick="zoomCanvas(1.2)" title="放大">➕ 放大</button>
           <button onclick="zoomCanvas(0.8)" title="缩小">➖ 缩小</button>
+          <button id="btnToggleTraces" class="active" onclick="toggleCanvasLayer('traces')">扇出走线</button>
+          <select id="selCanvasTraceLayer" onchange="onCanvasTraceLayerChange()" style="background:rgba(15,23,42,0.88);color:#e2e8f0;border:1px solid rgba(148,163,184,0.35);border-radius:6px;padding:4px 8px;font-size:11.5px;cursor:pointer" title="按层别筛选显示走线">
+            <option value="">全部走线层</option>
+          </select>
           <button id="btnToggleHulls" class="active" onclick="toggleCanvasLayer('hulls')">🟩 孔群轮廓</button>
           <button id="btnToggleLabels" class="active" onclick="toggleCanvasLayer('labels')">🏷️ 过孔标号</button>
           <button id="btnToggleDims" class="active" onclick="toggleCanvasLayer('dims')">📏 尺寸标注</button>
@@ -418,6 +505,10 @@ canvas#mainCanvas:active{cursor:grabbing}
           <div class="legend-item">
             <div class="legend-color" style="background:#10b981;box-shadow:0 0 6px #10b981"></div>
             <span>🟢 正常伴随地孔</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:linear-gradient(90deg,#f59e0b,#a855f7);height:4px;border-radius:2px;box-shadow:0 0 6px #f59e0b"></div>
+            <span>扇出走线 (直线/圆弧)</span>
           </div>
           <div class="legend-item">
             <div class="legend-color" style="background:#ef4444;box-shadow:0 0 8px #ef4444"></div>
@@ -606,8 +697,8 @@ canvas#mainCanvas:active{cursor:grabbing}
 
     <div class="form-grid">
       <div class="form-item">
-        <label>方案名称 (如 "SMA-Bot-L19-5孔十字扇出") *</label>
-        <input type="text" id="modalInpName" placeholder="输入扇出方案名称">
+        <label>方案名称 (支持直接输入或下方点选关键词自动拼接) *</label>
+        <input type="text" id="modalInpName" placeholder="输入扇出方案名称，或点击下方关键词按顺序生成">
       </div>
       <div class="form-item">
         <label>所属类别</label>
@@ -618,6 +709,23 @@ canvas#mainCanvas:active{cursor:grabbing}
           <option value="高速差分扇出">高速差分扇出</option>
           <option value="自定义扇出">自定义扇出</option>
         </select>
+      </div>
+    </div>
+
+    <!-- 快捷点选关键词生成方案名称面板 (Modal 内嵌版) -->
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:#0f172a">✎ 关键词快捷组合命名 <span style="font-weight:400;color:#64748b;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('modal')">⌫ 撤销上一个</button>
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearSchemeKeywords('modal')">清空词序</button>
+        </div>
+      </div>
+      <div id="modalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
+      <div id="modalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="inpAddKwModal" placeholder="输入新关键词 (如 bottom / 10pitch / L5)..." style="width:220px;padding:4px 8px;font-size:11.5px;border:1px solid #cbd5e1;border-radius:5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('modal');}">
+        <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addCustomSchemeKeyword('modal')">+ 新增关键词</button>
       </div>
     </div>
 
@@ -706,6 +814,138 @@ canvas#mainCanvas:active{cursor:grabbing}
   </div>
 </div>
 
+<!-- Modal: Quick Rename Scheme via Keyword Clicking -->
+<div class="modal-mask" id="modalQuickRename">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-header">
+      <h3 id="quickRenameTitle">✎ 快捷修改扇出方案名称</h3>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeQuickRenameModal()">✕</span>
+    </div>
+
+    <div style="font-size:12px;color:#64748b;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>原方案名称：<b id="lblQuickRenameOld" style="color:#0f172a;font-family:var(--mono)">-</b></span>
+      <span id="lblQuickRenameIdx" style="font-family:var(--mono);font-size:11px;color:#0284c7"></span>
+    </div>
+
+    <div class="form-item" style="margin-bottom:10px">
+      <label style="font-weight:700;color:#0f172a">新方案名称（点选下方关键词按顺序自动用 <code>_</code> 分隔生成，也可手动微调）*</label>
+      <input type="text" id="inpQuickRenameName" style="font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff" placeholder="请点选下方关键词自动生成名称...">
+    </div>
+
+    <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:#334155">已点选词序 <span style="font-weight:400;color:#64748b;font-size:11px">（同一关键词可点选两次或多次；点击单个词块可移除）</span></span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('quick')">⌫ 撤销上一个</button>
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearSchemeKeywords('quick')">清空重选</button>
+        </div>
+      </div>
+
+      <div id="quickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center;padding:6px 8px;background:#ffffff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px;font-size:12px;color:#64748b"></div>
+
+      <div style="font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px">点选关键词（点击即按顺序追加）：</div>
+      <div id="quickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px dashed #cbd5e1">
+        <input type="text" id="inpAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;min-width:200px;padding:5px 10px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('quick');}">
+        <button type="button" class="btn sec small" onclick="addCustomSchemeKeyword('quick')">+ 增加新关键词</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button type="button" class="btn sec small" onclick="saveQuickRename(true)" title="保存当前方案名称并直接切换到下一个方案继续改名">✓ 保存并改下一个方案 ▶</button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn sec" onclick="closeQuickRenameModal()">取消</button>
+        <button type="button" class="btn pri" onclick="saveQuickRename(false)">✓ 确认修改名称</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: View / Enlarge Scheme & Padstack Annotations -->
+<div class="modal-mask" id="modalViewScheme">
+  <div class="modal-box" style="max-width:1140px;width:96%;max-height:92vh;padding:16px 20px;display:flex;flex-direction:column;overflow:hidden">
+    <div class="modal-header" style="margin-bottom:10px;padding-bottom:10px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <h3 id="viewSchemeTitle" style="font-size:16px;color:#0f172a">扇出方案放大预览</h3>
+        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px;color:#0369a1;border-color:#7dd3fc;background:#f0f9ff" onclick="openQuickRenameModal(ViewSchemeState.schemeId)">✎ 快捷改名</button>
+        <span class="scheme-cat" id="viewSchemeCat">扇出方案</span>
+        <span id="viewSchemeIndexBadge" style="font-size:11px;color:#64748b;font-family:var(--mono)"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button class="btn sec small" id="btnViewPrevScheme" onclick="stepViewScheme(-1)">◀ 上一方案</button>
+        <button class="btn sec small" id="btnViewNextScheme" onclick="stepViewScheme(1)">下一方案 ▶</button>
+        <button class="btn sec small" onclick="editCurrentViewedScheme()">编辑方案</button>
+        <button class="btn sec small" onclick="closeViewSchemeModal()" style="font-weight:700">✕ 关闭</button>
+      </div>
+    </div>
+
+    <div id="viewSchemeDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#334155">
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
+          <input type="checkbox" id="chkViewPadstack" checked onchange="onViewSchemeOptionChange()">
+          <span>标注每个孔 Padstack</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="chkViewCoords" onchange="onViewSchemeOptionChange()">
+          <span>显示相对坐标 (mil)</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="chkViewDistances" onchange="onViewSchemeOptionChange()">
+          <span>显示孔心距 (mil)</span>
+        </label>
+        <span id="viewSchemePadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#475569"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn sec small" id="btnViewSchemeMeasure" onclick="toggleViewSchemeMeasureMode()" style="border-color:#0284c7;color:#0369a1;font-weight:700">⇔ 测孔中心距</button>
+        <button type="button" class="btn sec small" id="btnViewSchemeClearMeasure" onclick="clearViewSchemeMeasurements()" style="display:none">清除测量</button>
+        <button class="btn sec small" onclick="zoomViewScheme(1.2)">放大 +</button>
+        <button class="btn sec small" onclick="zoomViewScheme(1/1.2)">缩小 -</button>
+        <button class="btn sec small" onclick="resetViewSchemeTransform()">适应窗口</button>
+        <button class="btn pri small" onclick="exportViewedSchemePng()">导出效果图</button>
+      </div>
+    </div>
+
+    <!-- Main Content: Left Enlarged Dark Constellation Canvas + Right Per-Via Padstack List -->
+    <div style="display:grid;grid-template-columns:minmax(0, 1fr) 340px;gap:14px;flex:1;min-height:0;overflow:auto">
+      <div style="display:flex;flex-direction:column;min-height:480px;gap:6px">
+        <div id="viewSchemeCanvasWrap" style="position:relative;flex:1;min-height:500px;background:#0f172a;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.22);border:1px solid #1e293b">
+          <canvas id="viewSchemeCanvas" width="760" height="520" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
+        </div>
+        <div id="viewSchemeBottomHint" style="font-size:11px;color:#64748b;text-align:right;font-family:var(--mono)">
+          滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">
+        <div id="viewSchemeMeasurePanel" style="display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:11.5px;line-height:1.55"></div>
+        <div id="viewSchemeSummaryBox" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65"></div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff">
+          <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+            <span>逐孔 Padstack 明细清单</span>
+            <span style="font-size:11px;font-weight:400;color:#64748b">悬停联动高亮</span>
+          </div>
+          <div style="flex:1;overflow-y:auto">
+            <table style="font-size:11.5px;margin:0">
+              <thead>
+                <tr>
+                  <th style="padding:7px 8px;width:48px;white-space:nowrap">孔号</th>
+                  <th style="padding:7px 8px;width:62px;white-space:nowrap">类型</th>
+                  <th style="padding:7px 8px">Padstack Name</th>
+                </tr>
+              </thead>
+              <tbody id="viewSchemeViaTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Load Core Engine -->
 <script src="fanout-check.js"></script>
 
@@ -716,6 +956,8 @@ canvas#mainCanvas:active{cursor:grabbing}
 const State = {
   library: new FanoutChecker.FanoutLibrary(),
   vias: [],
+  traces: [],
+  traceSummary: null,
   clusters: [],
   summary: null,
   clusterDist: 2.0, // in mm
@@ -731,6 +973,7 @@ const State = {
   pageSize: 20,
   reviewedClusters: new Set(),
   selectedClusterId: null,
+  selectedTraceId: null,
   // Analysis Table State
   analysisFilter: 'all',
   analysisSearch: '',
@@ -745,6 +988,8 @@ const State = {
     dragStartX: 0,
     dragStartY: 0,
     hoveredCluster: null,
+    showTraces: true,
+    traceLayerFilter: '',
     showHulls: true,
     showLabels: true,
     showDims: true,
@@ -783,7 +1028,7 @@ function switchTab(tabId) {
   if (tabId === 'tabCanvas') {
     requestAnimationFrame(() => {
       resizeCanvas();
-      if (!State.canvas.hasInitialFit && State.clusters.length > 0) {
+      if (!State.canvas.hasInitialFit && (State.clusters.length > 0 || (State.traces && State.traces.length > 0))) {
         fitCanvasToLayout();
         State.canvas.hasInitialFit = true;
       } else {
@@ -805,8 +1050,34 @@ function renderSchemeCards() {
   const selFilter = document.getElementById('selSchemeFilter');
 
   const schemes = State.library.schemes;
+  if (FanoutChecker.syncLibraryPadstackColors) {
+    FanoutChecker.syncLibraryPadstackColors(schemes);
+  }
   if (countBadge) countBadge.textContent = schemes.length;
   if (statSchemeCount) statSchemeCount.textContent = schemes.length;
+
+  const globalLegendEl = document.getElementById('libraryPadstackLegendBar');
+  if (globalLegendEl) {
+    const legendItems = (FanoutChecker.getLibraryPadstackColorLegend && schemes.length > 0)
+      ? FanoutChecker.getLibraryPadstackColorLegend(schemes)
+      : [];
+    if (legendItems.length === 0) {
+      globalLegendEl.innerHTML = '';
+    } else {
+      globalLegendEl.innerHTML = `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
+          ${legendItems.map(item => `
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#0f172a" title="Padstack: ${escapeHtml(item.padstack)} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
+              <span style="width:9px;height:9px;border-radius:50%;background:${item.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span>
+              <span style="font-weight:600">${escapeHtml(item.padstack)}</span>
+              <span style="font-size:10px;color:#64748b">(${item.schemeCount}方案/${item.totalVias}孔)</span>
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+  }
 
   // Update dropdown filter in tab 3
   if (selFilter) {
@@ -825,34 +1096,43 @@ function renderSchemeCards() {
   }
 
   container.innerHTML = schemes.map(s => {
-    const pCounts = Object.entries(s.padstackCounts || {}).map(([p, cnt]) => `${p} (×${cnt})`).join(', ');
+    const pEntries = Object.entries(s.padstackCounts || {});
+    const pCountsPlain = pEntries.map(([p, cnt]) => `${p} (×${cnt})`).join(', ');
+    const pCountsRich = pEntries.map(([p, cnt]) => {
+      const pc = FanoutChecker.getPadstackColorEntry ? FanoutChecker.getPadstackColorEntry(p) : { fill: '#38bdf8' };
+      return `<span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px"><span style="width:8px;height:8px;border-radius:50%;background:${pc.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span><span>${escapeHtml(p)} (×${cnt})</span></span>`;
+    }).join('');
     const minD = s.pairwiseDistances.length > 0 ? s.pairwiseDistances[0].dist.toFixed(1) : '-';
     const maxD = s.pairwiseDistances.length > 0 ? s.pairwiseDistances[s.pairwiseDistances.length - 1].dist.toFixed(1) : '-';
 
     return `
       <div class="scheme-card" id="card_${s.id}">
         <div class="scheme-header">
-          <div>
-            <div class="scheme-title">${escapeHtml(s.name)}</div>
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <div class="scheme-title" onclick="openQuickRenameModal('${s.id}')" style="cursor:pointer" title="点击通过关键词快捷修改方案名称">${escapeHtml(s.name)}</div>
+              <span onclick="openQuickRenameModal('${s.id}')" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:1px 6px;white-space:nowrap">✎ 改名</span>
+            </div>
             <div style="font-size:11px;color:#64748b;margin-top:2px">${escapeHtml(s.description || '标准扇出拓扑')}</div>
           </div>
           <span class="scheme-cat">${escapeHtml(s.category)}</span>
         </div>
         <div class="scheme-body">
-          <div class="scheme-canvas-wrap">
+          <div class="scheme-canvas-wrap" onclick="viewScheme('${s.id}')" style="cursor:zoom-in" title="点击放大查看方案效果图与逐孔 Padstack 标注">
             <canvas id="thumb_${s.id}" width="110" height="110"></canvas>
           </div>
           <div class="scheme-info">
             <div>过孔总数: <span class="metric">${s.viaCount} 个孔</span></div>
             <div>孔中心距范围: <span class="metric">${minD} ~ ${maxD} mil</span></div>
-            <div style="font-size:11px;color:#475569;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escapeHtml(pCounts)}">
-              焊盘: ${escapeHtml(pCounts)}
+            <div style="font-size:11px;color:#475569;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escapeHtml(pCountsPlain)}">
+              焊盘: ${pCountsRich}
             </div>
           </div>
         </div>
         <div class="scheme-actions">
           <button class="btn sec small" onclick="editScheme('${s.id}')">✏️ 编辑</button>
           <button class="btn bad small" onclick="deleteScheme('${s.id}')">🗑️ 删除</button>
+          <button class="btn pri small" onclick="viewScheme('${s.id}')">查看</button>
         </div>
       </div>
     `;
@@ -904,16 +1184,21 @@ function drawSchemeThumbnail(canvasId, scheme) {
   }
   ctx.setLineDash([]);
 
-  // Draw vias
+  // Draw vias (colored by library-wide unified Padstack color)
+  if (FanoutChecker.syncLibraryPadstackColors) {
+    FanoutChecker.syncLibraryPadstackColors(State.library.schemes);
+  }
+  const padColorMap = (FanoutChecker.buildPadstackColorMap ? FanoutChecker.buildPadstackColorMap(scheme.vias, State.library.schemes).map : {});
   scheme.normalizedVias.forEach((v, idx) => {
     const vx = cx + v.nx * scale;
     const vy = cy - v.ny * scale;
-    const isSig = (v.net && !v.net.toUpperCase().includes('GND')) || (v.padstack && v.padstack.toUpperCase().includes('SMA'));
+    const isSig = FanoutChecker.isSignalVia(v);
+    const pCol = padColorMap[String(v.padstack || 'VIA_PAD')] || (FanoutChecker.getPadstackColorEntry ? FanoutChecker.getPadstackColorEntry(v.padstack) : null);
 
     // Outer pad
     ctx.beginPath();
     ctx.arc(vx, vy, 6, 0, Math.PI * 2);
-    ctx.fillStyle = isSig ? '#38bdf8' : '#10b981';
+    ctx.fillStyle = pCol ? pCol.fill : (isSig ? '#38bdf8' : '#10b981');
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1.2;
@@ -1165,6 +1450,677 @@ function editScheme(id) {
   const scheme = State.library.getScheme(id);
   if (!scheme) return;
   openSchemeModal(scheme);
+}
+
+/**
+ * 扇出方案快捷关键词组合命名器 (支持按点选顺序以 '_' 连接、同一关键词重复点选两次或多次、新增自定义关键词)
+ */
+const KW_STORAGE_KEY = 'pcb_fanout_name_keywords_v1';
+const SchemeNameBuilder = {
+  presetKeywords: (FanoutChecker.DEFAULT_SCHEME_NAME_KEYWORDS || [
+    'BGA', 'SMA', 'TZ', 'top', 'bottom', 'L2', 'L3', 'L4', 'L11', 'L12', 'L13', 'diff', 'single', '05pitch', '06pitch', '07pitch', '08pitch'
+  ]).slice(),
+  customKeywords: [],
+  seq: {
+    quick: [],
+    modal: []
+  },
+  quickTargetSchemeId: null,
+  loaded: false
+};
+
+function loadCustomSchemeKeywords() {
+  if (SchemeNameBuilder.loaded) return;
+  SchemeNameBuilder.loaded = true;
+  try {
+    const raw = localStorage.getItem(KW_STORAGE_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        SchemeNameBuilder.customKeywords = arr.map(s => String(s).trim()).filter(s => s && !SchemeNameBuilder.presetKeywords.includes(s));
+      }
+    }
+  } catch (e) {}
+}
+
+function saveCustomSchemeKeywords() {
+  try {
+    localStorage.setItem(KW_STORAGE_KEY, JSON.stringify(SchemeNameBuilder.customKeywords));
+  } catch (e) {}
+}
+
+function getAllSchemeKeywords() {
+  loadCustomSchemeKeywords();
+  return SchemeNameBuilder.presetKeywords.concat(SchemeNameBuilder.customKeywords);
+}
+
+function getSchemeNameTargetInput(ctx) {
+  return document.getElementById(ctx === 'quick' ? 'inpQuickRenameName' : 'modalInpName');
+}
+
+function syncSchemeNameFromSeq(ctx) {
+  const tokens = SchemeNameBuilder.seq[ctx] || [];
+  const inp = getSchemeNameTargetInput(ctx);
+  if (inp && tokens.length > 0) {
+    inp.value = FanoutChecker.buildSchemeNameFromKeywords(tokens);
+  } else if (inp && tokens.length === 0 && ctx === 'quick') {
+    inp.value = '';
+  }
+  renderSchemeKeywordUI(ctx);
+}
+
+function clickSchemeKeyword(ctx, kw) {
+  const clean = String(kw || '').trim();
+  if (!clean) return;
+  if (!SchemeNameBuilder.seq[ctx]) SchemeNameBuilder.seq[ctx] = [];
+  // 允许同一关键词点选两次或多次，严格按点选先后顺序追加
+  SchemeNameBuilder.seq[ctx].push(clean);
+  syncSchemeNameFromSeq(ctx);
+}
+
+function removeSchemeKeywordAt(ctx, index) {
+  const arr = SchemeNameBuilder.seq[ctx] || [];
+  if (index >= 0 && index < arr.length) {
+    arr.splice(index, 1);
+    syncSchemeNameFromSeq(ctx);
+  }
+}
+
+function undoSchemeKeyword(ctx) {
+  const arr = SchemeNameBuilder.seq[ctx] || [];
+  if (arr.length > 0) {
+    arr.pop();
+    syncSchemeNameFromSeq(ctx);
+  }
+}
+
+function clearSchemeKeywords(ctx) {
+  SchemeNameBuilder.seq[ctx] = [];
+  const inp = getSchemeNameTargetInput(ctx);
+  if (inp) inp.value = '';
+  renderSchemeKeywordUI(ctx);
+}
+
+function addCustomSchemeKeyword(ctx) {
+  loadCustomSchemeKeywords();
+  const inpId = ctx === 'quick' ? 'inpAddKwQuick' : 'inpAddKwModal';
+  const inp = document.getElementById(inpId);
+  if (!inp) return;
+  const val = inp.value.trim().replace(/\s+/g, '');
+  if (!val) return;
+  const all = getAllSchemeKeywords();
+  if (!all.includes(val)) {
+    SchemeNameBuilder.customKeywords.push(val);
+    saveCustomSchemeKeywords();
+  }
+  inp.value = '';
+  renderSchemeKeywordUI('quick');
+  renderSchemeKeywordUI('modal');
+}
+
+function deleteCustomSchemeKeyword(kw, ev) {
+  if (ev) ev.stopPropagation();
+  loadCustomSchemeKeywords();
+  SchemeNameBuilder.customKeywords = SchemeNameBuilder.customKeywords.filter(k => k !== kw);
+  saveCustomSchemeKeywords();
+  renderSchemeKeywordUI('quick');
+  renderSchemeKeywordUI('modal');
+}
+
+function renderSchemeKeywordUI(ctx) {
+  loadCustomSchemeKeywords();
+  const seqBar = document.getElementById(ctx === 'quick' ? 'quickKwSeqBar' : 'modalKwSeqBar');
+  const chipsWrap = document.getElementById(ctx === 'quick' ? 'quickKwChips' : 'modalKwChips');
+  if (!seqBar || !chipsWrap) return;
+
+  const seq = SchemeNameBuilder.seq[ctx] || [];
+  const counts = {};
+  seq.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+
+  if (seq.length === 0) {
+    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:11.5px">尚未点选关键词 — 请按顺序点击下方关键词按钮自动用 <code>_</code> 拼接生成名称</span>`;
+  } else {
+    seqBar.innerHTML = seq.map((tok, idx) => `
+      <span onclick="removeSchemeKeywordAt('${ctx}', ${idx})" title="点击移除该词块" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:11.5px;font-weight:700">
+        <span style="font-size:9.5px;color:#0284c7;opacity:0.8">${idx + 1}.</span>${escapeHtml(tok)}<span style="color:#0284c7;font-weight:900;margin-left:1px">×</span>
+      </span>
+    `).join('<span style="color:#94a3b8;font-family:var(--mono);font-weight:700">_</span>');
+  }
+
+  const allKeywords = getAllSchemeKeywords();
+  chipsWrap.innerHTML = allKeywords.map(kw => {
+    const cnt = counts[kw] || 0;
+    const isCustom = SchemeNameBuilder.customKeywords.includes(kw);
+    const activeStyle = cnt > 0
+      ? 'background:#0284c7;color:#ffffff;border:1px solid #0369a1;box-shadow:0 1px 3px rgba(2,132,199,0.25)'
+      : 'background:#ffffff;color:#1e293b;border:1px solid #cbd5e1';
+    const kwEsc = escapeHtml(kw).replace(/'/g, "\\'");
+    return `
+      <button type="button" onclick="clickSchemeKeyword('${ctx}', '${kwEsc}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;transition:all .12s;${activeStyle}" title="点击追加「${escapeHtml(kw)}」（可重复点击两次或多次）">
+        <span>${escapeHtml(kw)}</span>
+        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800">×${cnt}</span>` : ''}
+        ${isCustom ? `<span onclick="deleteCustomSchemeKeyword('${kwEsc}', event)" title="删除此自定义关键词" style="margin-left:2px;font-size:11px;opacity:0.75;padding:0 2px">✕</span>` : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+function openQuickRenameModal(schemeId) {
+  const sc = State.library.getScheme(schemeId);
+  if (!sc) return;
+  SchemeNameBuilder.quickTargetSchemeId = sc.id;
+
+  // 若现有名称本身由 '_' 分隔，智能回填初始词序，否则保持空词序方便直接点选覆盖
+  const existingParts = sc.name.includes('_') ? sc.name.split('_').filter(Boolean) : [];
+  SchemeNameBuilder.seq.quick = existingParts;
+
+  const schemes = State.library.schemes;
+  const idx = schemes.findIndex(s => s.id === sc.id);
+  const oldEl = document.getElementById('lblQuickRenameOld');
+  const idxEl = document.getElementById('lblQuickRenameIdx');
+  const inpEl = document.getElementById('inpQuickRenameName');
+
+  if (oldEl) oldEl.textContent = sc.name;
+  if (idxEl) idxEl.textContent = schemes.length > 0 ? `方案 ${idx + 1} / ${schemes.length}` : '';
+  if (inpEl) inpEl.value = sc.name;
+
+  renderSchemeKeywordUI('quick');
+  const modal = document.getElementById('modalQuickRename');
+  if (modal) modal.classList.add('open');
+}
+
+function closeQuickRenameModal() {
+  const modal = document.getElementById('modalQuickRename');
+  if (modal) modal.classList.remove('open');
+  SchemeNameBuilder.quickTargetSchemeId = null;
+}
+
+function saveQuickRename(goNext = false) {
+  const id = SchemeNameBuilder.quickTargetSchemeId;
+  if (!id) return;
+  const inp = document.getElementById('inpQuickRenameName');
+  const newName = inp ? inp.value.trim() : '';
+  if (!newName) {
+    alert('新方案名称不能为空，请点选关键词或输入名称！');
+    return;
+  }
+
+  const updated = State.library.renameScheme(id, newName);
+  if (!updated) return;
+
+  renderSchemeCards();
+
+  // 如果放大预览窗口也正打开着当前方案，同步刷新标题
+  if (ViewSchemeState.schemeId === id) {
+    const viewTitle = document.getElementById('viewSchemeTitle');
+    if (viewTitle) viewTitle.textContent = updated.name;
+  }
+
+  // 如果已有检查结果引用了该方案，同步刷新显示名称
+  if (State.clusters && State.clusters.length > 0) {
+    State.clusters.forEach(c => {
+      if (c.matchResult && c.matchResult.bestScheme && c.matchResult.bestScheme.id === id) {
+        c.matchResult.bestScheme.name = updated.name;
+        c.matchResult.schemeName = updated.name;
+      }
+    });
+    renderResultsTable();
+  }
+
+  if (goNext && State.library.schemes.length > 1) {
+    const curIdx = State.library.schemes.findIndex(s => s.id === id);
+    const nextIdx = (curIdx + 1) % State.library.schemes.length;
+    openQuickRenameModal(State.library.schemes[nextIdx].id);
+  } else {
+    closeQuickRenameModal();
+  }
+}
+
+/**
+ * Modal: View / Enlarge Scheme & Padstack Annotations + Hole-to-Hole Center Distance Ruler
+ */
+const ViewSchemeState = {
+  schemeId: null,
+  zoom: 1.0,
+  panX: 0,
+  panY: 0,
+  hoveredIndex: -1,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  downClientX: 0,
+  downClientY: 0,
+  measureMode: false,
+  measureStartIndex: -1,
+  measuredPairs: [],
+  cursorPos: null,
+  lastLayout: null,
+  eventsBound: false
+};
+window.ViewSchemeState = ViewSchemeState;
+window.SchemeNameBuilder = SchemeNameBuilder;
+
+function hitTestViewedSchemeVia(layout, mx, my) {
+  if (!layout || !layout.vias) return -1;
+  let bestIdx = -1;
+  let bestDist = Infinity;
+  for (let i = 0; i < layout.vias.length; i++) {
+    const v = layout.vias[i];
+    const d = Math.hypot(mx - v.sx, my - v.sy);
+    if (d <= layout.padR + 9 && d < bestDist) {
+      bestDist = d;
+      bestIdx = i;
+    }
+  }
+  if (bestIdx < 0 && layout.callouts) {
+    for (let i = 0; i < layout.callouts.length; i++) {
+      const c = layout.callouts[i];
+      if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) {
+        return c.index;
+      }
+    }
+  }
+  return bestIdx;
+}
+
+function handleViewSchemeViaClick(viaIndex) {
+  if (viaIndex == null || viaIndex < 0) return;
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  if (!scheme || !scheme.vias[viaIndex]) return;
+
+  if (!ViewSchemeState.measureMode) {
+    // 若未开启测距模式但在右侧表格点击，开启测距模式并以该孔为起点
+    return;
+  }
+
+  if (ViewSchemeState.measureStartIndex < 0) {
+    ViewSchemeState.measureStartIndex = viaIndex;
+  } else if (ViewSchemeState.measureStartIndex === viaIndex) {
+    // 再次点击同一起点则取消当前起点选择
+    ViewSchemeState.measureStartIndex = -1;
+  } else {
+    const i1 = ViewSchemeState.measureStartIndex;
+    const i2 = viaIndex;
+    const exists = ViewSchemeState.measuredPairs.some(p => (p.i1 === i1 && p.i2 === i2) || (p.i1 === i2 && p.i2 === i1));
+    if (!exists) {
+      ViewSchemeState.measuredPairs.push({ i1, i2 });
+    }
+    ViewSchemeState.measureStartIndex = -1;
+  }
+
+  renderViewSchemeMeasureUI();
+  renderViewedSchemeCanvas();
+}
+
+function toggleViewSchemeMeasureMode(forceVal) {
+  ViewSchemeState.measureMode = (typeof forceVal === 'boolean') ? forceVal : !ViewSchemeState.measureMode;
+  if (!ViewSchemeState.measureMode) {
+    ViewSchemeState.measureStartIndex = -1;
+    ViewSchemeState.cursorPos = null;
+  }
+  const canvas = document.getElementById('viewSchemeCanvas');
+  if (canvas) {
+    canvas.style.cursor = ViewSchemeState.measureMode ? 'crosshair' : 'grab';
+  }
+  renderViewSchemeMeasureUI();
+  renderViewedSchemeCanvas();
+}
+
+function clearViewSchemeMeasurements() {
+  ViewSchemeState.measureStartIndex = -1;
+  ViewSchemeState.measuredPairs = [];
+  ViewSchemeState.cursorPos = null;
+  renderViewSchemeMeasureUI();
+  renderViewedSchemeCanvas();
+}
+
+function removeViewSchemeMeasuredPair(pairIdx) {
+  if (pairIdx >= 0 && pairIdx < ViewSchemeState.measuredPairs.length) {
+    ViewSchemeState.measuredPairs.splice(pairIdx, 1);
+    renderViewSchemeMeasureUI();
+    renderViewedSchemeCanvas();
+  }
+}
+
+function measureBetweenSchemeVias(i1, i2) {
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  if (!scheme || !scheme.vias[i1] || !scheme.vias[i2] || i1 === i2) return null;
+  ViewSchemeState.measureMode = true;
+  ViewSchemeState.measureStartIndex = -1;
+  const exists = ViewSchemeState.measuredPairs.some(p => (p.i1 === i1 && p.i2 === i2) || (p.i1 === i2 && p.i2 === i1));
+  if (!exists) {
+    ViewSchemeState.measuredPairs.push({ i1, i2 });
+  }
+  renderViewSchemeMeasureUI();
+  renderViewedSchemeCanvas();
+  const layout = ViewSchemeState.lastLayout || FanoutChecker.computeSchemeViewLayout(scheme, 760, 520, { showPadstack: true });
+  return FanoutChecker.calcSchemeViaPairDistance(layout.vias[i1], layout.vias[i2]);
+}
+
+function renderViewSchemeMeasureUI() {
+  const btn = document.getElementById('btnViewSchemeMeasure');
+  const clearBtn = document.getElementById('btnViewSchemeClearMeasure');
+  const panel = document.getElementById('viewSchemeMeasurePanel');
+  if (btn) {
+    btn.className = ViewSchemeState.measureMode ? 'btn pri small' : 'btn sec small';
+    btn.textContent = ViewSchemeState.measureMode ? '⇔ 测孔中心距 (开启中)' : '⇔ 测孔中心距';
+  }
+  const hasAny = ViewSchemeState.measuredPairs.length > 0 || ViewSchemeState.measureStartIndex >= 0;
+  if (clearBtn) {
+    clearBtn.style.display = hasAny ? 'inline-flex' : 'none';
+  }
+  if (!panel) return;
+
+  if (!ViewSchemeState.measureMode && ViewSchemeState.measuredPairs.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  const layout = ViewSchemeState.lastLayout || (scheme ? FanoutChecker.computeSchemeViewLayout(scheme, 760, 520, { showPadstack: true }) : null);
+  const vias = layout ? layout.vias : [];
+
+  let statusHtml = '';
+  if (ViewSchemeState.measureMode) {
+    if (ViewSchemeState.measureStartIndex < 0) {
+      statusHtml = `<div style="color:#0369a1;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】作为测量起点</div>`;
+    } else {
+      const sv = vias[ViewSchemeState.measureStartIndex];
+      statusHtml = `<div style="color:#0284c7;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : ViewSchemeState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
+    }
+  }
+
+  const pairRows = ViewSchemeState.measuredPairs.map((mp, idx) => {
+    const v1 = vias[mp.i1], v2 = vias[mp.i2];
+    if (!v1 || !v2) return '';
+    const m = FanoutChecker.calcSchemeViaPairDistance(v1, v2);
+    return `
+      <div style="margin-top:6px;padding:6px 8px;background:#ffffff;border:1px solid #bfdbfe;border-radius:6px;font-family:var(--mono);font-size:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;color:#0f172a">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-weight:800;font-size:12.5px;color:#0284c7">${m.distMil.toFixed(2)} mil</span>
+            <span style="color:#475569">(${m.distMm.toFixed(3)} mm)</span>
+            <span onclick="removeViewSchemeMeasuredPair(${idx})" title="移除此条测量" style="cursor:pointer;color:#ef4444;font-weight:700;padding:0 3px">✕</span>
+          </div>
+        </div>
+        <div style="color:#64748b;font-size:10.5px;margin-top:2px">
+          |ΔX| = ${m.absDx.toFixed(2)} mil (${m.absDxMm.toFixed(3)} mm) · |ΔY| = ${m.absDy.toFixed(2)} mil (${m.absDyMm.toFixed(3)} mm)
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-weight:700;color:#1e3a8a">⇔ 孔到孔中心距测量</span>
+      ${hasAny ? `<span onclick="clearViewSchemeMeasurements()" style="cursor:pointer;font-size:11px;color:#dc2626;font-weight:600">清空全部</span>` : ''}
+    </div>
+    ${statusHtml}
+    ${pairRows}
+  `;
+}
+
+function bindViewSchemeCanvasEvents() {
+  if (ViewSchemeState.eventsBound) return;
+  const canvas = document.getElementById('viewSchemeCanvas');
+  if (!canvas) return;
+  ViewSchemeState.eventsBound = true;
+
+  canvas.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : (1 / 1.15);
+    zoomViewScheme(factor);
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', function(e) {
+    ViewSchemeState.downClientX = e.clientX;
+    ViewSchemeState.downClientY = e.clientY;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const hit = hitTestViewedSchemeVia(ViewSchemeState.lastLayout, mx, my);
+    if (ViewSchemeState.measureMode && hit >= 0) {
+      // 测距模式下点中过孔不启动拖拽，等待 mouseup 触发选孔
+      return;
+    }
+    ViewSchemeState.isDragging = true;
+    ViewSchemeState.dragStartX = e.clientX - ViewSchemeState.panX;
+    ViewSchemeState.dragStartY = e.clientY - ViewSchemeState.panY;
+    if (!ViewSchemeState.measureMode) canvas.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mouseup', function(e) {
+    const moved = Math.hypot((e.clientX || 0) - ViewSchemeState.downClientX, (e.clientY || 0) - ViewSchemeState.downClientY);
+    if (ViewSchemeState.isDragging) {
+      ViewSchemeState.isDragging = false;
+      const c = document.getElementById('viewSchemeCanvas');
+      if (c) c.style.cursor = ViewSchemeState.measureMode ? 'crosshair' : 'grab';
+    }
+    if (ViewSchemeState.measureMode && moved < 6) {
+      const c = document.getElementById('viewSchemeCanvas');
+      const modal = document.getElementById('modalViewScheme');
+      if (c && modal && modal.classList.contains('open') && e.target === c) {
+        const rect = c.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const hit = hitTestViewedSchemeVia(ViewSchemeState.lastLayout, mx, my);
+        if (hit >= 0) {
+          handleViewSchemeViaClick(hit);
+        }
+      }
+    }
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (ViewSchemeState.isDragging) {
+      ViewSchemeState.panX = e.clientX - ViewSchemeState.dragStartX;
+      ViewSchemeState.panY = e.clientY - ViewSchemeState.dragStartY;
+      renderViewedSchemeCanvas();
+      return;
+    }
+    const layout = ViewSchemeState.lastLayout;
+    if (!layout) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    ViewSchemeState.cursorPos = { x: mx, y: my };
+    const hit = hitTestViewedSchemeVia(layout, mx, my);
+    if (hit !== ViewSchemeState.hoveredIndex) {
+      setViewSchemeHoveredVia(hit);
+    } else if (ViewSchemeState.measureMode && ViewSchemeState.measureStartIndex >= 0) {
+      renderViewedSchemeCanvas();
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    ViewSchemeState.cursorPos = null;
+    if (!ViewSchemeState.isDragging && ViewSchemeState.hoveredIndex !== -1) {
+      setViewSchemeHoveredVia(-1);
+    } else if (ViewSchemeState.measureMode && ViewSchemeState.measureStartIndex >= 0) {
+      renderViewedSchemeCanvas();
+    }
+  });
+}
+
+function setViewSchemeHoveredVia(idx) {
+  ViewSchemeState.hoveredIndex = idx;
+  renderViewedSchemeCanvas();
+  const rows = document.querySelectorAll('#viewSchemeViaTableBody tr');
+  rows.forEach((tr, rIdx) => {
+    tr.style.background = (rIdx === idx) ? '#fef9c3' : '';
+    tr.style.outline = (rIdx === idx) ? '1.5px solid #eab308' : '';
+  });
+}
+
+function viewScheme(id) {
+  const scheme = State.library.getScheme(id);
+  if (!scheme) return;
+
+  ViewSchemeState.schemeId = scheme.id;
+  ViewSchemeState.zoom = 1.0;
+  ViewSchemeState.panX = 0;
+  ViewSchemeState.panY = 0;
+  ViewSchemeState.hoveredIndex = -1;
+  ViewSchemeState.measureStartIndex = -1;
+  ViewSchemeState.measuredPairs = [];
+  ViewSchemeState.cursorPos = null;
+
+  bindViewSchemeCanvasEvents();
+  const modal = document.getElementById('modalViewScheme');
+  if (modal) modal.classList.add('open');
+
+  populateViewedSchemeDetails(scheme);
+  renderViewSchemeMeasureUI();
+  requestAnimationFrame(() => renderViewedSchemeCanvas());
+}
+
+function closeViewSchemeModal() {
+  const modal = document.getElementById('modalViewScheme');
+  if (modal) modal.classList.remove('open');
+}
+
+function stepViewScheme(delta) {
+  const schemes = State.library.schemes;
+  if (!schemes.length) return;
+  const curIdx = schemes.findIndex(s => s.id === ViewSchemeState.schemeId);
+  const nextIdx = ((curIdx < 0 ? 0 : curIdx) + delta + schemes.length) % schemes.length;
+  viewScheme(schemes[nextIdx].id);
+}
+
+function editCurrentViewedScheme() {
+  const id = ViewSchemeState.schemeId;
+  closeViewSchemeModal();
+  if (id) editScheme(id);
+}
+
+function zoomViewScheme(factor) {
+  ViewSchemeState.zoom = Math.max(0.4, Math.min(5.0, ViewSchemeState.zoom * factor));
+  renderViewedSchemeCanvas();
+}
+
+function resetViewSchemeTransform() {
+  ViewSchemeState.zoom = 1.0;
+  ViewSchemeState.panX = 0;
+  ViewSchemeState.panY = 0;
+  renderViewedSchemeCanvas();
+}
+
+function onViewSchemeOptionChange() {
+  renderViewedSchemeCanvas();
+}
+
+function populateViewedSchemeDetails(scheme) {
+  const schemes = State.library.schemes;
+  const idx = schemes.findIndex(s => s.id === scheme.id);
+
+  const titleEl = document.getElementById('viewSchemeTitle');
+  const catEl = document.getElementById('viewSchemeCat');
+  const badgeEl = document.getElementById('viewSchemeIndexBadge');
+  const descEl = document.getElementById('viewSchemeDesc');
+  const summaryEl = document.getElementById('viewSchemeSummaryBox');
+  const tbodyEl = document.getElementById('viewSchemeViaTableBody');
+
+  if (titleEl) titleEl.textContent = scheme.name;
+  if (catEl) catEl.textContent = scheme.category || '扇出方案';
+  if (badgeEl) badgeEl.textContent = schemes.length > 0 ? `(${idx + 1} / ${schemes.length})` : '';
+  if (descEl) descEl.textContent = scheme.description || '标准扇出几何拓扑与焊盘定义';
+
+  const layout = FanoutChecker.computeSchemeViewLayout(scheme, 760, 520, { showPadstack: true, librarySchemes: State.library.schemes });
+  const { summary, vias } = layout;
+  const padColorList = layout.padstackColors || [];
+  const pitchRange = summary.viaCount >= 2 ? `${summary.minDist.toFixed(1)} ~ ${summary.maxDist.toFixed(1)} mil` : '单孔';
+
+  const legendEl = document.getElementById('viewSchemePadLegend');
+  if (legendEl) {
+    legendEl.innerHTML = padColorList.map(pc =>
+      `<span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono)" title="Padstack: ${escapeHtml(pc.padstack)}"><span style="width:10px;height:10px;border-radius:50%;background:${pc.fill};border:1.5px solid #0f172a;display:inline-block"></span><span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(pc.padstack)}</span></span>`
+    ).join('');
+  }
+
+  const padTags = padColorList.map(pc =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#0f172a;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${escapeHtml(pc.padstack)}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
+  ).join('');
+
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px">
+        <div>过孔总数: <b style="color:#0f172a">${summary.viaCount} 个孔</b></div>
+        <div>信号 / 地孔: <b style="color:#0284c7">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
+        <div style="grid-column:1/-1">孔心距范围: <b style="color:#0f172a;font-family:var(--mono)">${pitchRange}</b></div>
+      </div>
+      <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #cbd5e1">
+        <div style="font-weight:700;color:#334155;font-size:11.5px">焊盘 (Padstack) 专属颜色汇总：</div>
+        ${padTags || '<div style="color:#94a3b8">无焊盘定义</div>'}
+      </div>
+    `;
+  }
+
+  if (tbodyEl) {
+    tbodyEl.innerHTML = vias.map((v, i) => `
+      <tr onmouseenter="setViewSchemeHoveredVia(${i})" onmouseleave="setViewSchemeHoveredVia(-1)" onclick="if(!ViewSchemeState.measureMode) toggleViewSchemeMeasureMode(true); handleViewSchemeViaClick(${i});" title="点击可选取该孔测量中心距" style="cursor:pointer;transition:background .12s">
+        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#0f172a">
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:${v.padColor};border:1px solid #0f172a;display:inline-block"></span>#${v.labelNum}</span>
+        </td>
+        <td style="padding:6px 8px">
+          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#e0f2fe' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#0369a1' : '#15803d')}">
+            ${v.isSig ? '信号' : 'GND'}
+          </span>
+        </td>
+        <td style="padding:6px 8px">
+          <div style="font-family:var(--mono);font-weight:700;color:#0f172a;word-break:break-all;font-size:11.5px">${escapeHtml(v.padstack)}</div>
+          <div style="font-size:10.5px;color:#64748b;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${escapeHtml(v.role)}</div>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+function renderViewedSchemeCanvas() {
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  const canvas = document.getElementById('viewSchemeCanvas');
+  const wrap = document.getElementById('viewSchemeCanvasWrap');
+  if (!scheme || !canvas) return;
+
+  const w = (wrap && wrap.clientWidth > 100) ? wrap.clientWidth : 760;
+  const h = (wrap && wrap.clientHeight > 100) ? wrap.clientHeight : 520;
+
+  const showPadstack = document.getElementById('chkViewPadstack') ? document.getElementById('chkViewPadstack').checked : true;
+  const showCoords = document.getElementById('chkViewCoords') ? document.getElementById('chkViewCoords').checked : false;
+  const showDistances = document.getElementById('chkViewDistances') ? document.getElementById('chkViewDistances').checked : false;
+
+  ViewSchemeState.lastLayout = FanoutChecker.renderSchemeEnlargedCanvas(canvas, scheme, {
+    width: w,
+    height: h,
+    zoom: ViewSchemeState.zoom,
+    panX: ViewSchemeState.panX,
+    panY: ViewSchemeState.panY,
+    showPadstack,
+    showCoords,
+    showDistances,
+    librarySchemes: State.library.schemes,
+    hoveredIndex: ViewSchemeState.hoveredIndex,
+    measureMode: ViewSchemeState.measureMode,
+    measureStartIndex: ViewSchemeState.measureStartIndex,
+    measuredPairs: ViewSchemeState.measuredPairs,
+    cursorPos: ViewSchemeState.cursorPos
+  });
+}
+
+function exportViewedSchemePng() {
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  const canvas = document.getElementById('viewSchemeCanvas');
+  if (!scheme || !canvas) return;
+  try {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${scheme.name || '扇出方案'}_Padstack效果图.png`;
+    a.click();
+  } catch (e) {
+    alert('导出图片失败: ' + e.message);
+  }
 }
 
 /**
@@ -1510,11 +2466,13 @@ function openSchemeModal(schemeToEdit = null) {
     document.getElementById('modalSelCategory').value = schemeToEdit.category;
     document.getElementById('modalInpDesc').value = schemeToEdit.description;
     State.modalVias = schemeToEdit.vias.map(v => ({ ...v }));
+    SchemeNameBuilder.seq.modal = schemeToEdit.name.includes('_') ? schemeToEdit.name.split('_').filter(Boolean) : [];
   } else {
     title.textContent = '➕ 新建扇出方案模板';
     document.getElementById('modalInpName').value = '新扇出方案_' + (State.library.schemes.length + 1);
     document.getElementById('modalSelCategory').value = '通用扇出';
     document.getElementById('modalInpDesc').value = '';
+    SchemeNameBuilder.seq.modal = [];
     State.modalVias = [
       { id: 1, x: 0, y: 0, padstack: 'SMA_Bot-L19_d2m6mil_via-0902', net: 'SIG', role: '中心信号孔' },
       { id: 2, x: 0, y: 20, padstack: 'BGA_GND_pad1mil_0902', net: 'GND', role: '伴随地孔1' },
@@ -1524,6 +2482,7 @@ function openSchemeModal(schemeToEdit = null) {
     ];
   }
 
+  renderSchemeKeywordUI('modal');
   switchModalInputMode('table');
   renderModalTable();
   modal.classList.add('open');
@@ -1725,10 +2684,231 @@ function loadSample26Vias() {
   fetch('sample/via_trace_airgap_sample.txt')
     .then(r => r.text())
     .then(txt => {
+      State.rawText = '';
       document.getElementById('txtViaInput').value = txt;
       executeFanoutCheck();
     })
     .catch(() => alert('无法载入示例文件'));
+}
+
+function loadSampleTraceOnly() {
+  fetch('sample/走线示例.txt')
+    .then(r => r.text())
+    .then(txt => {
+      State.rawText = '';
+      document.getElementById('txtViaInput').value = txt;
+      executeFanoutCheck();
+    })
+    .catch(() => alert('无法载入走线示例文件'));
+}
+
+
+const TRACE_LAYER_PALETTE = [
+  '#f59e0b', // Amber
+  '#a855f7', // Purple
+  '#22d3ee', // Cyan
+  '#fb7185', // Rose
+  '#4ade80', // Green
+  '#60a5fa', // Blue
+  '#f97316', // Orange
+  '#e879f9'  // Fuchsia
+];
+const traceLayerColorCache = new Map();
+
+function getTraceLayerColor(layerName) {
+  const key = (layerName || 'UNKNOWN_LAYER').trim();
+  if (traceLayerColorCache.has(key)) return traceLayerColorCache.get(key);
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
+  }
+  const idx = traceLayerColorCache.size < TRACE_LAYER_PALETTE.length
+    ? traceLayerColorCache.size
+    : Math.abs(hash) % TRACE_LAYER_PALETTE.length;
+  const col = TRACE_LAYER_PALETTE[idx];
+  traceLayerColorCache.set(key, col);
+  return col;
+}
+
+let importPreviewTimer = null;
+function scheduleImportPreviewUpdate() {
+  if (importPreviewTimer) clearTimeout(importPreviewTimer);
+  importPreviewTimer = setTimeout(() => {
+    const rawInMemory = State.rawText || '';
+    const ta = document.getElementById('txtViaInput');
+    const taVal = ta ? ta.value.trim() : '';
+    const txt = (rawInMemory && taVal.startsWith('[📁 已成功加载大型文件:')) ? rawInMemory : taVal;
+    if (!txt) {
+      const card = document.getElementById('cardImportedTraceOverview');
+      if (card) card.style.display = 'none';
+      return;
+    }
+    if (txt.length <= 350000 && FanoutChecker.parseFanoutInputData) {
+      const parsed = FanoutChecker.parseFanoutInputData(txt);
+      State.previewTraces = parsed.traces;
+      renderImportedTraceOverview(parsed.vias, parsed.traces, parsed.traceSummary);
+    }
+  }, 180);
+}
+
+function syncTraceLayerSelectors(traceSummary) {
+  const layers = (traceSummary && Array.isArray(traceSummary.layers)) ? traceSummary.layers : [];
+  const selImport = document.getElementById('selImportTraceLayer');
+  if (selImport) {
+    const prev = selImport.value;
+    selImport.innerHTML = `<option value="">全部走线层 (${layers.length})</option>` +
+      layers.map(l => `<option value="${escapeHtml(l.layer)}">${escapeHtml(l.layer)} (${l.segmentCount}段)</option>`).join('');
+    if (layers.some(l => l.layer === prev)) selImport.value = prev;
+  }
+
+  const selCanvas = document.getElementById('selCanvasTraceLayer');
+  if (selCanvas) {
+    const prevC = selCanvas.value;
+    selCanvas.innerHTML = `<option value="">全部走线层${layers.length ? ' (' + layers.length + ')' : ''}</option>` +
+      layers.map(l => `<option value="${escapeHtml(l.layer)}">${escapeHtml(l.layer)} (${l.segmentCount}段)</option>`).join('');
+    if (layers.some(l => l.layer === prevC)) {
+      selCanvas.value = prevC;
+      State.canvas.traceLayerFilter = prevC;
+    } else {
+      selCanvas.value = '';
+      State.canvas.traceLayerFilter = '';
+    }
+  }
+}
+
+function filterImportTraceByLayer(layerName) {
+  const sel = document.getElementById('selImportTraceLayer');
+  if (!sel) return;
+  sel.value = sel.value === layerName ? '' : layerName;
+  renderImportedTraceTable();
+}
+
+function renderImportedTraceOverview(vias, traces, traceSummary) {
+  const card = document.getElementById('cardImportedTraceOverview');
+  if (!card) return;
+  const vList = Array.isArray(vias) ? vias : [];
+  const tList = Array.isArray(traces) ? traces : [];
+  const ts = traceSummary || (FanoutChecker.summarizeTraceData ? FanoutChecker.summarizeTraceData(tList) : null);
+
+  if (vList.length === 0 && tList.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  State.previewTraces = tList;
+  syncTraceLayerSelectors(ts);
+
+  const sigViaCnt = vList.filter(v => !v.net || !v.net.toUpperCase().includes('GND')).length;
+  const gndViaCnt = vList.length - sigViaCnt;
+  const hint = document.getElementById('lblImportParseHint');
+  if (hint) {
+    hint.textContent = tList.length > 0
+      ? `共读取 ${vList.length} 个过孔（信号孔 ${sigViaCnt} / 地孔 ${gndViaCnt}）与 ${ts.totalTraces} 个走线对象（共 ${ts.totalTraceSegments} 段：直线 ${ts.traceLineCount} 段 + 圆弧 ${ts.traceArcCount} 段）。`
+      : `共读取 ${vList.length} 个过孔（信号孔 ${sigViaCnt} / 地孔 ${gndViaCnt}），当前文件未包含 < Trace > / < Trace Seg > 走线块。`;
+  }
+
+  const metricsEl = document.getElementById('pnlImportTraceMetrics');
+  if (metricsEl && ts) {
+    metricsEl.innerHTML = `
+      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#64748b">读取过孔 (Via)</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${vList.length} <span style="font-size:11px;font-weight:500;color:#64748b">信号${sigViaCnt}/地${gndViaCnt}</span></div>
+      </div>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#0369a1">走线对象 (Trace Item)</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0284c7">${ts.totalTraces} <span style="font-size:11px;font-weight:500;color:#0369a1">条/块</span></div>
+      </div>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#0369a1">几何线段构成</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0284c7">${ts.totalTraceSegments} <span style="font-size:11px;font-weight:500;color:#0369a1">直${ts.traceLineCount} / 弧${ts.traceArcCount}</span></div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#64748b">走线层 / 网络数</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${ts.layers.length} 层 <span style="font-size:11px;font-weight:500;color:#64748b">/ ${ts.nets.length} 网络</span></div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#64748b">走线累计总长</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${ts.totalTraceLength.toFixed(1)} <span style="font-size:11px;font-weight:500;color:#64748b">mil (${(ts.totalTraceLength * 0.0254).toFixed(2)}mm)</span></div>
+      </div>
+    `;
+  }
+
+  const layersEl = document.getElementById('pnlImportTraceLayers');
+  if (layersEl && ts) {
+    layersEl.innerHTML = ts.layers.length > 0
+      ? ts.layers.map(l => {
+          const col = getTraceLayerColor(l.layer);
+          const wTxt = l.widths.length ? ` | 线宽 ${l.widths.join('/')} mil` : '';
+          return `<span class="chip" onclick="filterImportTraceByLayer('${escapeHtml(l.layer)}')" title="点击按该层过滤走线表">
+            <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
+            <strong>${escapeHtml(l.layer)}</strong>: ${l.segmentCount}段 (直${l.lineCount}/弧${l.arcCount})${escapeHtml(wTxt)}
+          </span>`;
+        }).join('')
+      : '';
+  }
+
+  const wrapTbl = document.getElementById('wrapImportTraceTable');
+  if (wrapTbl) wrapTbl.style.display = tList.length > 0 ? 'block' : 'none';
+  renderImportedTraceTable();
+}
+
+function renderImportedTraceTable() {
+  const tbody = document.getElementById('tblImportedTracesBody');
+  if (!tbody) return;
+  const source = (State.traces && State.traces.length > 0) ? State.traces : (State.previewTraces || []);
+  const layerFilter = (document.getElementById('selImportTraceLayer') || {}).value || '';
+  const q = ((document.getElementById('inpImportTraceSearch') || {}).value || '').trim().toLowerCase();
+
+  const filtered = source.filter(t => {
+    if (layerFilter && t.layer !== layerFilter) return false;
+    if (q) {
+      const mId = String(t.id).includes(q);
+      const mNet = (t.net || '').toLowerCase().includes(q);
+      const mLyr = (t.layer || '').toLowerCase().includes(q);
+      const mType = (t.type || '').toLowerCase().includes(q);
+      if (!mId && !mNet && !mLyr && !mType) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:18px;color:#94a3b8">无匹配的走线记录</td></tr>`;
+    return;
+  }
+
+  const displaySlice = filtered.slice(0, 300);
+  tbody.innerHTML = displaySlice.map(t => {
+    const col = getTraceLayerColor(t.layer);
+    const widthsStr = (t.widths && t.widths.length) ? t.widths.join(' / ') : String(t.width || '-');
+    const segDesc = t.arcCount > 0 && t.lineCount > 0
+      ? `${t.segmentCount}段 (直${t.lineCount}+弧${t.arcCount})`
+      : (t.arcCount > 0 ? `${t.arcCount}段圆弧` : `${t.lineCount}段直线`);
+    const pStart = t.start ? `[${t.start[0].toFixed(1)}, ${t.start[1].toFixed(1)}]` : '-';
+    const pEnd = t.end ? `[${t.end[0].toFixed(1)}, ${t.end[1].toFixed(1)}]` : '-';
+    return `
+      <tr>
+        <td style="font-family:var(--mono);font-weight:700">#${t.id}</td>
+        <td><span class="badge-tag" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">&lt;${escapeHtml(t.tag)}&gt;</span></td>
+        <td>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-weight:600">
+            <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
+            ${escapeHtml(t.layer)}
+          </span>
+        </td>
+        <td style="font-family:var(--mono);font-weight:700;color:#0369a1">${escapeHtml(t.net)}</td>
+        <td style="font-size:11.5px">${segDesc}</td>
+        <td style="font-family:var(--mono)">${escapeHtml(widthsStr)}</td>
+        <td style="font-family:var(--mono)">${t.length.toFixed(2)} <span style="color:#94a3b8;font-size:10.5px">(${(t.length * 0.0254).toFixed(2)}mm)</span></td>
+        <td style="font-family:var(--mono);font-size:11px;color:#475569">${pStart} → ${pEnd}</td>
+        <td>
+          <button class="btn small sec" onclick="locateTraceInCanvas(${t.id})">定位</button>
+        </td>
+      </tr>
+    `;
+  }).join('') + (filtered.length > 300
+    ? `<tr><td colspan="9" style="text-align:center;color:#64748b;font-size:11px">仅展示前 300 条（共 ${filtered.length} 条走线记录，可通过上方层别或搜索框过滤）</td></tr>`
+    : '');
 }
 
 /**
@@ -1740,7 +2920,7 @@ function executeFanoutCheck() {
   const txt = (rawInMemory && taVal.startsWith('[📁 已成功加载大型文件:')) ? rawInMemory : taVal;
 
   if (!txt) {
-    alert('请先上传或粘贴 PCB 过孔数据 TXT！');
+    alert('请先上传或粘贴 PCB 过孔 / 走线数据 TXT！');
     return;
   }
 
@@ -1788,21 +2968,32 @@ function executeFanoutCheck() {
     }
 
     State.vias = res.vias;
+    State.traces = res.traces || [];
+    State.traceSummary = res.traceSummary || null;
     State.clusters = res.clusters;
     State.summary = res.summary;
+    State.selectedTraceId = null;
     buildCanvasSpatialGrid();
     State.page = 1;
     State.canvas.hasInitialFit = false;
 
+    renderImportedTraceOverview(State.vias, State.traces, State.traceSummary);
     updateTopKPIs();
     applyFilters();
-    switchTab('tabResults');
+
+    if (res.pureTraceMode) {
+      switchTab('tabCanvas');
+    } else {
+      switchTab('tabResults');
+    }
   }, 40);
 }
 
 function updateTopKPIs() {
   const s = State.summary;
   const elTotalVias = document.getElementById('statTotalVias');
+  const elTotalTraces = document.getElementById('statTotalTraces');
+  const elTraceMeta = document.getElementById('statTraceMeta');
   const elTotalClusters = document.getElementById('statTotalClusters');
   const elPassClusters = document.getElementById('statPassClusters');
   const elPassRate = document.getElementById('statPassRate');
@@ -1811,6 +3002,8 @@ function updateTopKPIs() {
 
   if (!s) {
     if (elTotalVias) elTotalVias.textContent = '0';
+    if (elTotalTraces) elTotalTraces.textContent = '0';
+    if (elTraceMeta) elTraceMeta.textContent = '段 (0层/0网络)';
     if (elTotalClusters) elTotalClusters.textContent = '0';
     if (elPassClusters) elPassClusters.textContent = '0';
     if (elPassRate) elPassRate.textContent = '(0%)';
@@ -1819,7 +3012,13 @@ function updateTopKPIs() {
     return;
   }
 
+  const segCount = s.totalTraceSegments != null ? s.totalTraceSegments : (State.traces ? State.traces.length : 0);
+  const lyrCnt = Array.isArray(s.traceLayers) ? s.traceLayers.length : 0;
+  const netCnt = Array.isArray(s.traceNets) ? s.traceNets.length : 0;
+
   if (elTotalVias) elTotalVias.textContent = s.totalVias.toLocaleString();
+  if (elTotalTraces) elTotalTraces.textContent = segCount.toLocaleString();
+  if (elTraceMeta) elTraceMeta.textContent = `段 (${lyrCnt}层/${netCnt}网络)`;
   if (elTotalClusters) elTotalClusters.textContent = String(s.totalClusters);
   if (elPassClusters) elPassClusters.textContent = String(s.passCount);
   if (elPassRate) elPassRate.textContent = `(${s.passRate}%)`;
@@ -1900,7 +3099,9 @@ function applyFilters() {
       );
       const matchScheme = (res.schemeName && res.schemeName.toLowerCase().includes(query)) || false;
       const matchMsg = (res.message && res.message.toLowerCase().includes(query)) || false;
-      if (!matchId && !matchVia && !matchScheme && !matchMsg) return false;
+      const matchTraceLayer = (c.traceSummary && Array.isArray(c.traceSummary.layers) &&
+        c.traceSummary.layers.some(l => l.toLowerCase().includes(query))) || false;
+      if (!matchId && !matchVia && !matchScheme && !matchMsg && !matchTraceLayer) return false;
     }
 
     return true;
@@ -1918,16 +3119,20 @@ function renderResultsTable() {
   document.getElementById('lblTotalCount').textContent = total;
 
   if (total === 0) {
+    const hasTracesOnly = State.clusters.length === 0 && State.traces && State.traces.length > 0;
     tbody.innerHTML = `
       <tr>
         <td colspan="10" style="text-align:center;padding:30px;color:#94a3b8">
-          ${State.clusters.length === 0 ? '请先导入并运行检查' : '无符合当前筛选条件的孔群'}
+          ${hasTracesOnly
+            ? `已读取 ${State.traces.length} 条走线（无过孔块），可前往 <a href="javascript:void(0)" onclick="switchTab('tabImport')" style="color:#0284c7;font-weight:700">检查数据导入</a> 查看走线明细，或前往 <a href="javascript:void(0)" onclick="switchTab('tabCanvas')" style="color:#0284c7;font-weight:700">2D 空间可视化</a> 浏览走线轨迹`
+            : (State.clusters.length === 0 ? '请先导入并运行检查' : '无符合当前筛选条件的孔群')}
         </td>
       </tr>
     `;
     document.getElementById('lblPageStart').textContent = '0';
     document.getElementById('lblPageEnd').textContent = '0';
     document.getElementById('lblCurrentPage').textContent = '1 / 1';
+    syncResultsReviewHeader();
     return;
   }
 
@@ -1965,6 +3170,13 @@ function renderResultsTable() {
     const sigVias = c.signalVias || c.vias.filter(v => v.net && !v.net.toUpperCase().includes('GND'));
     const sigStr = sigVias.map(v => `#${v.id} (${v.net})`).join(', ');
     const gndCount = c.vias.length - sigVias.length;
+    const ts = c.traceSummary || null;
+    const traceInfoHtml = (ts && (ts.segmentCount > 0 || (ts.layers && ts.layers.length > 0)))
+      ? `<div style="margin-top:3px;padding:2px 6px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;color:#0369a1;font-size:10px;line-height:1.4">
+           出线层: <strong style="font-family:var(--mono)">${escapeHtml(ts.layers.join(', ') || '-')}</strong>
+           ${ts.segmentCount > 0 ? `<br>走线: ${ts.segmentCount}段${ts.arcCount > 0 ? `(含${ts.arcCount}弧)` : ''} | 宽 ${escapeHtml(ts.widths.join('/'))} mil` : ''}
+         </div>`
+      : '';
 
     return `
       <tr class="${rowClass}" id="row_${c.id}">
@@ -1977,10 +3189,11 @@ function renderResultsTable() {
           <div style="font-family:var(--mono);font-size:11px">[${c.centroid.x.toFixed(1)}, ${c.centroid.y.toFixed(1)}]</div>
           <div style="font-size:11px;color:#64748b">跨度: ${(((c.bbox&&c.bbox.maxSpan!=null)?c.bbox.maxSpan:Math.hypot(c.bbox?.spanX||0,c.bbox?.spanY||0))*0.0254).toFixed(2)}mm</div>
         </td>
-        <td style="max-width:180px;font-size:11px" title="${c.vias.map(v => `#${v.id} ${v.net} ${v.padstack}`).join('; ')}">
+        <td style="max-width:210px;font-size:11px" title="${c.vias.map(v => `#${v.id} ${v.net} ${v.padstack}`).join('; ')}">
           <div style="font-weight:700;color:#0369a1">${c.signalNet || sigStr}</div>
           <div style="color:#64748b;font-size:10.5px">信号孔: ${sigStr}</div>
           <div style="color:#94a3b8;font-size:10px">伴随地孔: ${gndCount} 个</div>
+          ${traceInfoHtml}
         </td>
         <td>${badgeHtml}</td>
         <td style="font-size:11px;line-height:1.5">
@@ -2003,6 +3216,8 @@ function renderResultsTable() {
       </tr>
     `;
   }).join('');
+
+  syncResultsReviewHeader();
 }
 
 function changePage(delta) {
@@ -2010,14 +3225,62 @@ function changePage(delta) {
   renderResultsTable();
 }
 
+function syncResultsReviewHeader() {
+  const badge = document.getElementById('badgeResultsReviewProgress');
+  if (badge) {
+    const failList = State.clusters.filter(c => !(c.matchResult && c.matchResult.pass));
+    const targetTotal = failList.length > 0 ? failList.length : State.clusters.length;
+    const reviewedFailCnt = failList.length > 0
+      ? failList.filter(c => State.reviewedClusters.has(c.id)).length
+      : State.reviewedClusters.size;
+    badge.textContent = failList.length > 0
+      ? `异常已复核: ${reviewedFailCnt} / ${targetTotal}`
+      : `已复核: ${State.reviewedClusters.size} / ${targetTotal}`;
+  }
+
+  const masterChk = document.getElementById('chkSelectAll');
+  if (masterChk) {
+    if (filteredClusters.length === 0) {
+      masterChk.checked = false;
+      masterChk.indeterminate = false;
+    } else {
+      const checkedCount = filteredClusters.filter(c => State.reviewedClusters.has(c.id)).length;
+      masterChk.checked = checkedCount === filteredClusters.length;
+      masterChk.indeterminate = checkedCount > 0 && checkedCount < filteredClusters.length;
+    }
+  }
+}
+
 function toggleReviewCluster(clusterId, reviewed) {
-  if (reviewed) {
+  const nextVal = reviewed !== undefined ? Boolean(reviewed) : !State.reviewedClusters.has(clusterId);
+  if (nextVal) {
     State.reviewedClusters.add(clusterId);
   } else {
     State.reviewedClusters.delete(clusterId);
   }
   renderResultsTable();
   renderAnalysisTab();
+
+  if (State.selectedClusterId === clusterId) {
+    const activeCluster = State.clusters.find(c => c.id === clusterId);
+    if (activeCluster) {
+      openClusterDeepDive(activeCluster);
+    }
+  } else {
+    requestCanvasRender();
+  }
+}
+
+function stepCanvasAbnormalCluster(delta) {
+  const failList = State.clusters.filter(c => !(c.matchResult && c.matchResult.pass));
+  const pool = failList.length > 0 ? failList : State.clusters;
+  if (pool.length === 0) return;
+
+  const curIdx = pool.findIndex(c => c.id === State.selectedClusterId);
+  const nextIdx = curIdx === -1
+    ? 0
+    : (curIdx + delta + pool.length) % pool.length;
+  locateClusterInCanvas(pool[nextIdx].id);
 }
 
 function toggleSelectAll(masterChk) {
@@ -2176,12 +3439,20 @@ function initCanvas() {
       return;
     }
 
-    // Find clicked cluster
+    // Find clicked cluster or trace
     const clicked = findClusterAtWorldPos(worldPos.x, worldPos.y);
     if (clicked) {
       openClusterDeepDive(clicked);
     } else {
-      closeInfoBox();
+      const hitTrace = findTraceAtWorldPos(worldPos.x, worldPos.y);
+      if (hitTrace) {
+        State.selectedTraceId = hitTrace.id;
+        State.selectedClusterId = null;
+        openTraceDeepDive(hitTrace);
+        requestCanvasRender();
+      } else {
+        closeInfoBox();
+      }
     }
   });
 
@@ -2216,10 +3487,13 @@ function screenToWorld(sx, sy) {
 }
 
 function fitCanvasToLayout() {
-  if (State.vias.length === 0) return;
+  const hasVias = State.vias && State.vias.length > 0;
+  const hasTraces = State.traces && State.traces.length > 0;
+  if (!hasVias && !hasTraces) return;
+
   const canvas = document.getElementById('mainCanvas');
-  const w = canvas.width;
-  const h = canvas.height;
+  const w = canvas.width || 900;
+  const h = canvas.height || 600;
 
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
@@ -2231,8 +3505,23 @@ function fitCanvasToLayout() {
     if (v.y > maxY) maxY = v.y;
   });
 
-  const spanX = Math.max(maxX - minX, 100);
-  const spanY = Math.max(maxY - minY, 100);
+  if (hasTraces && State.canvas.showTraces) {
+    const lyrFilter = State.canvas.traceLayerFilter || '';
+    State.traces.forEach(t => {
+      if (lyrFilter && t.layer !== lyrFilter) return;
+      if (t.bbox) {
+        if (t.bbox.minX < minX) minX = t.bbox.minX;
+        if (t.bbox.maxX > maxX) maxX = t.bbox.maxX;
+        if (t.bbox.minY < minY) minY = t.bbox.minY;
+        if (t.bbox.maxY > maxY) maxY = t.bbox.maxY;
+      }
+    });
+  }
+
+  if (!isFinite(minX) || !isFinite(maxX)) return;
+
+  const spanX = Math.max(maxX - minX, 80);
+  const spanY = Math.max(maxY - minY, 80);
 
   const zoomX = (w * 0.85) / spanX;
   const zoomY = (h * 0.85) / spanY;
@@ -2248,6 +3537,7 @@ function fitCanvasToLayout() {
 }
 
 function resetCanvasView() {
+  State.selectedTraceId = null;
   fitCanvasToLayout();
 }
 
@@ -2265,17 +3555,109 @@ function zoomCanvas(factor) {
 }
 
 function toggleCanvasLayer(layerKey) {
+  if (layerKey === 'traces') State.canvas.showTraces = !State.canvas.showTraces;
   if (layerKey === 'hulls') State.canvas.showHulls = !State.canvas.showHulls;
   if (layerKey === 'labels') State.canvas.showLabels = !State.canvas.showLabels;
   if (layerKey === 'dims') State.canvas.showDims = !State.canvas.showDims;
   if (layerKey === 'badges') State.canvas.showBadges = !State.canvas.showBadges;
 
+  const btnTraces = document.getElementById('btnToggleTraces');
+  if (btnTraces) btnTraces.className = State.canvas.showTraces ? 'active' : '';
   document.getElementById('btnToggleHulls').className = State.canvas.showHulls ? 'active' : '';
   document.getElementById('btnToggleLabels').className = State.canvas.showLabels ? 'active' : '';
   document.getElementById('btnToggleDims').className = State.canvas.showDims ? 'active' : '';
   document.getElementById('btnToggleBadges').className = State.canvas.showBadges ? 'active' : '';
 
   requestCanvasRender();
+}
+
+function onCanvasTraceLayerChange() {
+  const sel = document.getElementById('selCanvasTraceLayer');
+  State.canvas.traceLayerFilter = sel ? sel.value : '';
+  requestCanvasRender();
+}
+
+function locateTraceInCanvas(traceId) {
+  const source = (State.traces && State.traces.length > 0) ? State.traces : (State.previewTraces || []);
+  const trace = source.find(t => t.id === traceId);
+  if (!trace) return;
+
+  // 若用户在还未点击「运行检查」前直接点预览表里的定位，同步预载走线到画布
+  if ((!State.traces || State.traces.length === 0) && State.previewTraces && State.previewTraces.length > 0) {
+    State.traces = State.previewTraces;
+  }
+
+  State.selectedTraceId = trace.id;
+  State.selectedClusterId = null;
+  State.canvas.showTraces = true;
+  const btnTraces = document.getElementById('btnToggleTraces');
+  if (btnTraces) btnTraces.className = 'active';
+
+  switchTab('tabCanvas');
+
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    const canvas = document.getElementById('mainCanvas');
+    const w = canvas.width || 900;
+    const h = canvas.height || 600;
+    const bb = trace.bbox || { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+    const spanX = Math.max(bb.maxX - bb.minX, 60);
+    const spanY = Math.max(bb.maxY - bb.minY, 60);
+    State.canvas.zoom = Math.min(18.0, Math.max(1.5, Math.min((w * 0.55) / spanX, (h * 0.55) / spanY)));
+    const midX = (bb.minX + bb.maxX) / 2;
+    const midY = (bb.minY + bb.maxY) / 2;
+    State.canvas.panX = w / 2 - midX * State.canvas.zoom;
+    State.canvas.panY = h / 2 + midY * State.canvas.zoom;
+
+    openTraceDeepDive(trace);
+    requestCanvasRender();
+  });
+}
+
+function openTraceDeepDive(trace) {
+  const box = document.getElementById('canvasInfoBox');
+  const title = document.getElementById('infoBoxTitle');
+  const content = document.getElementById('infoBoxContent');
+  if (!box || !title || !content) return;
+
+  const col = getTraceLayerColor(trace.layer);
+  title.innerHTML = `走线 Item #${trace.id} <span class="badge-tag" style="background:rgba(56,189,248,.2);color:#7dd3fc;border:1px solid rgba(56,189,248,.4)">${escapeHtml(trace.layer)}</span>`;
+
+  const segRows = (trace.segments || []).map((s, idx) => {
+    const kind = s.type === 'arc' ? `圆弧 (${s.dir || 'CCW'}, R=${(s.radius || 0).toFixed(2)})` : '直线段';
+    return `
+      <tr>
+        <td>#${idx + 1}</td>
+        <td>${escapeHtml(kind)}</td>
+        <td style="font-family:var(--mono)">${(s.width || 0).toFixed(2)}</td>
+        <td style="font-family:var(--mono)">${(s.length || 0).toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  content.innerHTML = `
+    <div style="font-size:11.5px;color:#e2e8f0;line-height:1.65;margin-bottom:8px">
+      <div>网络 (Net): <strong style="color:#38bdf8;font-family:var(--mono)">${escapeHtml(trace.net)}</strong></div>
+      <div>走线层 (Subset): <span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>${escapeHtml(trace.layer)}</span></div>
+      <div>总长度: <strong style="font-family:var(--mono)">${trace.length.toFixed(3)} mil</strong> (${(trace.length * 0.0254).toFixed(3)} mm)</div>
+      <div>线宽规格: <strong style="font-family:var(--mono)">${escapeHtml((trace.widths || []).join(' / '))} mil</strong></div>
+    </div>
+    <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">几何分段明细 (${trace.segmentCount} 段):</div>
+    <div style="max-height:150px;overflow-y:auto;border:1px solid rgba(255,255,255,.15);border-radius:4px">
+      <table style="width:100%;font-size:10px;color:#f8fafc">
+        <thead>
+          <tr style="background:rgba(255,255,255,.1)">
+            <th>段号</th>
+            <th>类型/半径</th>
+            <th>线宽(mil)</th>
+            <th>长度(mil)</th>
+          </tr>
+        </thead>
+        <tbody>${segRows}</tbody>
+      </table>
+    </div>
+  `;
+  box.classList.add('active');
 }
 
 function toggleMeasureMode() {
@@ -2320,6 +3702,48 @@ function findClusterAtWorldPos(wx, wy) {
     }
   }
   return null;
+}
+
+function pointToSegDist2D(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len2 = dx * dx + dy * dy;
+  if (len2 <= 1e-9) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+  if (t < 0) t = 0;
+  else if (t > 1) t = 1;
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function findTraceAtWorldPos(wx, wy) {
+  if (!State.canvas.showTraces || !State.traces || State.traces.length === 0) return null;
+  const lyrFilter = State.canvas.traceLayerFilter || '';
+  const hitTol = Math.max(8.0, 10.0 / Math.max(0.05, State.canvas.zoom));
+  let best = null;
+  let bestDist = hitTol;
+
+  for (const t of State.traces) {
+    if (lyrFilter && t.layer !== lyrFilter) continue;
+    if (t.bbox) {
+      if (wx < t.bbox.minX - hitTol || wx > t.bbox.maxX + hitTol ||
+          wy < t.bbox.minY - hitTol || wy > t.bbox.maxY + hitTol) {
+        continue;
+      }
+    }
+    for (const seg of (t.segments || [])) {
+      const pts = seg.points;
+      if (!pts || pts.length < 2) continue;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const d = pointToSegDist2D(wx, wy, pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+        const effDist = Math.max(0, d - (seg.width || 5.0) * 0.5);
+        if (effDist <= bestDist) {
+          bestDist = effDist;
+          best = t;
+        }
+      }
+    }
+  }
+  return best;
 }
 
 function locateClusterInCanvas(clusterId) {
@@ -2369,11 +3793,11 @@ function renderCanvas() {
     readout.textContent = `比例: ${State.canvas.zoom.toFixed(2)}x | 视口中心: [${(-State.canvas.panX/State.canvas.zoom).toFixed(0)}, ${(State.canvas.panY/State.canvas.zoom).toFixed(0)}]`;
   }
 
-  if (State.clusters.length === 0 && State.vias.length === 0) {
+  if (State.clusters.length === 0 && State.vias.length === 0 && (!State.traces || State.traces.length === 0)) {
     ctx.fillStyle = '#64748b';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('暂无数据，请在「📥 检查数据导入」中载入过孔数据', w / 2, h / 2);
+    ctx.fillText('暂无数据，请在「检查数据导入」中载入过孔或走线数据', w / 2, h / 2);
     return;
   }
 
@@ -2402,6 +3826,11 @@ function renderCanvas() {
         drawClusterHull(ctx, c, res, isHovered || isSelected);
       }
     });
+  }
+
+  // 1b. Render Imported Fanout Traces (Straight Lines & Sampled Circular Arcs)
+  if (State.canvas.showTraces && State.traces && State.traces.length > 0) {
+    renderTracesOnCanvas(ctx, viewMinX, viewMaxX, viewMinY, viewMaxY);
   }
 
   // 2. Render Distance Lines (LOD Optimized)
@@ -2509,6 +3938,124 @@ function renderCanvas() {
   if (State.canvas.measurePoints.length > 0) {
     drawMeasureLine(ctx);
   }
+}
+
+/**
+ * High-Performance Frustum-Culled Trace Renderer (Lines & World-Sampled Circular Arcs)
+ */
+function renderTracesOnCanvas(ctx, viewMinX, viewMaxX, viewMinY, viewMaxY) {
+  const traces = State.traces;
+  if (!traces || traces.length === 0) return;
+
+  const lyrFilter = State.canvas.traceLayerFilter || '';
+  const selectedCluster = State.selectedClusterId
+    ? State.clusters.find(c => c.id === State.selectedClusterId)
+    : null;
+  const highlightedTraceIds = new Set();
+  if (State.selectedTraceId != null) highlightedTraceIds.add(State.selectedTraceId);
+  if (selectedCluster && Array.isArray(selectedCluster.connectedTraces)) {
+    selectedCluster.connectedTraces.forEach(t => highlightedTraceIds.add(t.id));
+  }
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const traceLabels = [];
+  const occupiedLabelBoxes = [];
+  const showTraceLabels = State.canvas.showLabels && State.canvas.zoom >= 3.2;
+
+  for (let i = 0; i < traces.length; i++) {
+    const t = traces[i];
+    if (lyrFilter && t.layer !== lyrFilter) continue;
+
+    if (t.bbox) {
+      if (t.bbox.maxX < viewMinX || t.bbox.minX > viewMaxX ||
+          t.bbox.maxY < viewMinY || t.bbox.minY > viewMaxY) {
+        continue;
+      }
+    }
+
+    const isHighlight = highlightedTraceIds.has(t.id);
+    const baseColor = getTraceLayerColor(t.layer);
+    const segs = t.segments || [];
+
+    for (let sIdx = 0; sIdx < segs.length; sIdx++) {
+      const seg = segs[sIdx];
+      const pts = seg.points;
+      if (!pts || pts.length < 2) continue;
+
+      const physPx = Math.max(1.8, (seg.width || t.width || 5.0) * State.canvas.zoom);
+
+      ctx.beginPath();
+      const p0 = worldToScreen(pts[0][0], pts[0][1]);
+      ctx.moveTo(p0.x, p0.y);
+      for (let k = 1; k < pts.length; k++) {
+        const pk = worldToScreen(pts[k][0], pts[k][1]);
+        ctx.lineTo(pk.x, pk.y);
+      }
+
+      if (isHighlight) {
+        ctx.save();
+        ctx.strokeStyle = '#fde047';
+        ctx.globalAlpha = 0.42;
+        ctx.lineWidth = physPx + 5;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.strokeStyle = baseColor;
+      ctx.globalAlpha = isHighlight ? 0.98 : 0.82;
+      ctx.lineWidth = physPx;
+      ctx.stroke();
+
+      // 仅对足够长的走线段标注，并进行屏幕空间防重叠检测，避免短渐变段文字堆叠
+      const segScreenLen = (seg.length || 0) * State.canvas.zoom;
+      if (showTraceLabels && segScreenLen >= 52 && traceLabels.length < 80) {
+        const midPt = pts[Math.floor(pts.length / 2)];
+        const sm = worldToScreen(midPt[0], midPt[1]);
+        const lblText = `${t.net} (${t.layer}, ${(seg.width || t.width || 0).toFixed(1)}mil)`;
+        const approxW = lblText.length * 6.2 + 10;
+        const boxX = sm.x - approxW / 2;
+        const boxY = sm.y - Math.max(6, physPx / 2 + 4) - 10;
+        const boxH = 15;
+        let collides = false;
+        for (let b = 0; b < occupiedLabelBoxes.length; b++) {
+          const ob = occupiedLabelBoxes[b];
+          if (boxX < ob.x + ob.w + 8 && boxX + approxW + 8 > ob.x &&
+              boxY < ob.y + ob.h + 5 && boxY + boxH + 5 > ob.y) {
+            collides = true;
+            break;
+          }
+        }
+        if (!collides) {
+          occupiedLabelBoxes.push({ x: boxX, y: boxY, w: approxW, h: boxH });
+          traceLabels.push({
+            text: lblText,
+            x: sm.x,
+            y: sm.y - Math.max(6, physPx / 2 + 4),
+            color: isHighlight ? '#fef08a' : '#e2e8f0'
+          });
+        }
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1.0;
+  if (traceLabels.length > 0) {
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < traceLabels.length; i++) {
+      const lb = traceLabels[i];
+      const tw = ctx.measureText(lb.text).width;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+      ctx.fillRect(lb.x - tw / 2 - 3, lb.y - 9, tw + 6, 12);
+      ctx.fillStyle = lb.color;
+      ctx.fillText(lb.text, lb.x, lb.y);
+    }
+  }
+
+  ctx.restore();
 }
 
 /**
@@ -2645,16 +4192,25 @@ function drawClusterHull(ctx, cluster, res, isHighlight) {
   const vias = cluster.vias;
   if (vias.length < 2) return;
 
-  const pass = res.pass;
+  const isReviewed = State.reviewedClusters.has(cluster.id);
+  const pass = res.pass || isReviewed;
   const isPadMismatch = res.status === 'PADSTACK_MISMATCH';
   const isDistMismatch = res.status === 'DISTANCE_MISMATCH';
 
-  let fillColor = pass ? 'rgba(16, 185, 129, 0.12)' : (isPadMismatch ? 'rgba(239, 68, 68, 0.16)' : 'rgba(217, 119, 6, 0.16)');
-  let strokeColor = pass ? '#10b981' : (isPadMismatch ? '#ef4444' : '#f59e0b');
+  let fillColor = isReviewed
+    ? 'rgba(20, 184, 166, 0.16)'
+    : (res.pass ? 'rgba(16, 185, 129, 0.12)' : (isPadMismatch ? 'rgba(239, 68, 68, 0.16)' : 'rgba(217, 119, 6, 0.16)'));
+  let strokeColor = isReviewed
+    ? '#14b8a6'
+    : (res.pass ? '#10b981' : (isPadMismatch ? '#ef4444' : '#f59e0b'));
 
   if (isHighlight) {
-    fillColor = pass ? 'rgba(16, 185, 129, 0.28)' : 'rgba(239, 68, 68, 0.3)';
-    strokeColor = pass ? '#34d399' : '#f87171';
+    fillColor = isReviewed
+      ? 'rgba(20, 184, 166, 0.28)'
+      : (res.pass ? 'rgba(16, 185, 129, 0.28)' : 'rgba(239, 68, 68, 0.3)');
+    strokeColor = isReviewed
+      ? '#2dd4bf'
+      : (res.pass ? '#34d399' : '#f87171');
   }
 
   ctx.save();
@@ -2770,12 +4326,16 @@ function drawViaOnCanvas(ctx, via, sp) {
 
 function drawClusterBadge(ctx, cluster) {
   const res = cluster.matchResult || {};
+  const isReviewed = State.reviewedClusters.has(cluster.id);
   const cp = worldToScreen(cluster.centroid.x, cluster.centroid.y);
 
   let text = '';
   let fillStyle = 'rgba(239, 68, 68, 0.9)';
 
-  if (res.pass) {
+  if (isReviewed) {
+    text = `✓ 已复核: ${cluster.signalNet || cluster.id}`;
+    fillStyle = 'rgba(13, 148, 136, 0.95)';
+  } else if (res.pass) {
     text = `✅ ${cluster.signalNet || '信号'}: ${res.schemeName}`;
     fillStyle = 'rgba(16, 185, 129, 0.95)';
   } else if (res.status === 'PADSTACK_MISMATCH') {
@@ -2850,21 +4410,29 @@ function drawMeasureLine(ctx) {
  */
 function openClusterDeepDive(cluster) {
   State.selectedClusterId = cluster.id;
+  State.selectedTraceId = null;
   const box = document.getElementById('canvasInfoBox');
   const title = document.getElementById('infoBoxTitle');
   const content = document.getElementById('infoBoxContent');
 
   const res = cluster.matchResult || {};
+  const isReviewed = State.reviewedClusters.has(cluster.id);
+  const failClusters = State.clusters.filter(c => !(c.matchResult && c.matchResult.pass));
+  const failIdx = failClusters.findIndex(c => c.id === cluster.id);
+
   title.innerHTML = `${cluster.id} 深度分析 <span class="badge-tag purple">${cluster.viaCount} 孔</span>`;
 
   let statusBadge = res.pass 
     ? `<span class="badge-tag ok">✅ 完全匹配 [${escapeHtml(res.schemeName)}]</span>`
     : `<span class="badge-tag bad">❌ ${escapeHtml(res.statusText || '不匹配')}</span>`;
+  if (isReviewed) {
+    statusBadge += ` <span class="badge-tag ok" style="background:#ccfbf1;color:#0f766e;border:1px solid #5eead4">✓ 已复核</span>`;
+  }
 
   let auditRows = '';
   if (res.viaAudit && res.viaAudit.length > 0) {
     auditRows = res.viaAudit.map(a => `
-      <tr style="${a.isMatch === false ? 'background:#fef2f2;color:#dc2626' : ''}">
+      <tr style="${a.isMatch === false ? 'background:rgba(239,68,68,.18);color:#fca5a5' : ''}">
         <td>#${a.viaId}</td>
         <td>${escapeHtml(a.net || 'GND')}</td>
         <td style="font-family:var(--mono);font-size:10px">${escapeHtml(a.actualPadstack)}</td>
@@ -2874,12 +4442,52 @@ function openClusterDeepDive(cluster) {
     `).join('');
   }
 
+  const ts = cluster.traceSummary || null;
+  const traceBlockHtml = (ts && (ts.segmentCount > 0 || (ts.layers && ts.layers.length > 0)))
+    ? `
+      <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">关联扇出走线 (Trace):</div>
+      <div style="background:rgba(15,23,42,.55);border:1px solid rgba(56,189,248,.28);border-radius:4px;padding:6px 8px;margin-bottom:10px;font-size:10.5px;color:#e2e8f0;line-height:1.55">
+        <div>走线层 (Subset): <strong style="color:#7dd3fc;font-family:var(--mono)">${escapeHtml(ts.layers.join(', ') || '-')}</strong></div>
+        ${ts.segmentCount > 0 ? `
+          <div>关联走线段: <strong>${ts.segmentCount} 段</strong> (${ts.arcCount > 0 ? `含圆弧 ${ts.arcCount} 段` : '全直线段'})</div>
+          <div>线宽规格: <strong style="font-family:var(--mono)">${escapeHtml(ts.widths.join(' / '))} mil</strong> | 总长: <strong style="font-family:var(--mono)">${ts.totalLength.toFixed(1)} mil</strong></div>
+        ` : `<div style="color:#94a3b8">仅过孔 Connections 声明层别，未导入对应走线段</div>`}
+      </div>
+    `
+    : '';
+
+  const reviewBarStyle = isReviewed
+    ? 'background:rgba(16,185,129,.18);border:1px solid rgba(52,211,153,.55);'
+    : 'background:rgba(245,158,11,.14);border:1px solid rgba(251,191,36,.42);';
+
+  const navFailHtml = failClusters.length > 1
+    ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;font-size:10.5px;color:#94a3b8">
+        <button class="btn small sec" style="padding:2px 7px;font-size:10.5px;background:rgba(30,41,59,.9);color:#e2e8f0;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(-1)">◀ 上一异常</button>
+        <span>${failIdx !== -1 ? `异常 ${failIdx + 1} / ${failClusters.length}` : `共 ${failClusters.length} 处异常`}</span>
+        <button class="btn small sec" style="padding:2px 7px;font-size:10.5px;background:rgba(30,41,59,.9);color:#e2e8f0;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(1)">下一异常 ▶</button>
+      </div>
+    `
+    : '';
+
   content.innerHTML = `
-    <div style="margin-bottom:8px">${statusBadge}</div>
+    ${navFailHtml}
+    <!-- 空间几何视图同步复核操作栏 -->
+    <div id="boxCanvasClusterReview" style="${reviewBarStyle}border-radius:6px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11.5px;font-weight:700;color:${isReviewed ? '#6ee7b7' : '#fde68a'};margin:0">
+        <input type="checkbox" id="chkCanvasClusterReview" ${isReviewed ? 'checked' : ''} onchange="toggleReviewCluster('${cluster.id}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
+        <span>${isReviewed ? '已复核 (明细表已同步勾选)' : '勾选复核此孔群'}</span>
+      </label>
+      <button class="btn small" id="btnCanvasToggleReview" onclick="toggleReviewCluster('${cluster.id}', ${!isReviewed})" style="padding:3px 9px;font-size:11px;border:none;background:${isReviewed ? 'rgba(51,65,85,.85)' : '#10b981'};color:#fff">
+        ${isReviewed ? '取消复核' : '✓ 确认复核'}
+      </button>
+    </div>
+
+    <div style="margin-bottom:8px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">${statusBadge}</div>
     <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:10px">
       ${escapeHtml(res.message || '无详细说明')}
     </div>
-    
+    ${traceBlockHtml}
     <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">过孔 Padstack 对照表:</div>
     <div style="max-height:150px;overflow-y:auto;border:1px solid rgba(255,255,255,.15);border-radius:4px;margin-bottom:10px">
       <table style="width:100%;font-size:10px;color:#f8fafc">
@@ -2911,6 +4519,7 @@ function openClusterDeepDive(cluster) {
 function closeInfoBox() {
   document.getElementById('canvasInfoBox').classList.remove('active');
   State.selectedClusterId = null;
+  State.selectedTraceId = null;
   renderCanvas();
 }
 
@@ -3247,6 +4856,100 @@ function escapeHtml(str) {
 
 // Expose State globally for tests & debug
 window.State = State;
+
+// Global Display Controller: 100% Full-Width & Fullscreen Workbench
+(function() {
+  const KEY = 'pcb_workbench_wide_v1';
+  function isFs() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+  function syncUI() {
+    const wide = document.documentElement.classList.contains('pcb-global-wide');
+    const fs = isFs();
+    const bW = document.getElementById('btnGlobalWide');
+    const lW = document.getElementById('lblGlobalWide');
+    const bF = document.getElementById('btnGlobalFullscreen');
+    const lF = document.getElementById('lblGlobalFs');
+    const iF = document.getElementById('icoGlobalFs');
+    const bP = document.getElementById('btnGlobalPopout');
+    if (bW) bW.classList.toggle('active', wide);
+    if (lW) lW.textContent = wide ? '已铺满宽屏' : '铺满宽屏';
+    if (bF) bF.classList.toggle('fs-active', fs);
+    if (lF) lF.textContent = fs ? '退出全屏' : '全屏工作台';
+    if (iF) {
+      iF.innerHTML = fs
+        ? '<path d="M6 2v4H2M10 2v4h4M10 14v-4h4M6 14v-4H2"/>'
+        : '<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>';
+    }
+    if (bP) {
+      try {
+        const inIframe = window.self !== window.top;
+        bP.style.display = (inIframe && !fs) ? 'inline-flex' : 'none';
+        const u = new URL(window.location.href);
+        u.searchParams.set('wide', '1');
+        bP.href = u.toString();
+      } catch (e) { bP.style.display = 'inline-flex'; }
+    }
+  }
+  function triggerResize() {
+    try {
+      window.dispatchEvent(new Event('resize'));
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+        if (typeof renderViewedSchemeCanvas === 'function' && document.getElementById('modalViewScheme') && document.getElementById('modalViewScheme').classList.contains('open')) {
+          renderViewedSchemeCanvas();
+        }
+      }, 120);
+    } catch (e) {}
+  }
+  window.setGlobalWideMode = function(enable, persist = true) {
+    document.documentElement.classList.toggle('pcb-global-wide', !!enable);
+    if (persist) { try { localStorage.setItem(KEY, enable ? '1' : '0'); } catch (e) {} }
+    syncUI();
+    triggerResize();
+  };
+  window.toggleGlobalWideMode = function() {
+    window.setGlobalWideMode(!document.documentElement.classList.contains('pcb-global-wide'), true);
+  };
+  window.toggleGlobalFullscreen = function() {
+    if (isFs()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) { try { Promise.resolve(exit.call(document)).finally(() => { syncUI(); triggerResize(); }); } catch (e) {} }
+      return;
+    }
+    window.setGlobalWideMode(true, true);
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    const fallback = () => {
+      try {
+        if (window.self !== window.top) {
+          const u = new URL(window.location.href);
+          u.searchParams.set('wide', '1');
+          window.open(u.toString(), '_blank', 'noopener');
+        }
+      } catch (e) {}
+      syncUI();
+    };
+    if (!req) { fallback(); return; }
+    try {
+      const p = req.call(el);
+      if (p && typeof p.then === 'function') p.then(() => { syncUI(); triggerResize(); }).catch(fallback);
+      else { syncUI(); triggerResize(); }
+    } catch (e) { fallback(); }
+  };
+  try {
+    if (window.location.search.indexOf('wide=1') >= 0) {
+      document.documentElement.classList.add('pcb-global-wide');
+      localStorage.setItem(KEY, '1');
+    } else if (localStorage.getItem(KEY) === '1') {
+      document.documentElement.classList.add('pcb-global-wide');
+    }
+  } catch (e) {}
+  document.addEventListener('fullscreenchange', () => { syncUI(); triggerResize(); });
+  document.addEventListener('webkitfullscreenchange', () => { syncUI(); triggerResize(); });
+  document.addEventListener('DOMContentLoaded', syncUI);
+  syncUI();
+})();
 </script>
 
 </body>
