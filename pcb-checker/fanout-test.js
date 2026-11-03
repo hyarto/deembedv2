@@ -406,3 +406,44 @@ Item 4 < Via >
 
   console.log('  PASS  信号孔定位与伴随地孔方案精准匹配');
 }
+
+// 9. 导入 Trace (走线) 数据解析与孔群关联测试
+{
+  const fs = require('fs');
+  const path = require('path');
+
+  // 9a. 混合过孔 + 单段走线 (< Via > + < Trace Seg >，含直线 Seg 与 CW/CCW 圆弧 Arc seg)
+  const sampleMixed = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  const lib = new FanoutChecker.FanoutLibrary();
+  lib.loadStandardPresets();
+  const resMixed = FanoutChecker.runFanoutInspection(sampleMixed, lib);
+
+  assert.strictEqual(resMixed.success, true);
+  assert.strictEqual(resMixed.vias.length, 26, '应读取 26 个过孔');
+  assert.strictEqual(resMixed.traces.length, 71, '应同时读取 71 个 < Trace Seg > 走线块');
+  assert.strictEqual(resMixed.summary.totalTraceSegments, 71, '总走线段数应为 71');
+  assert.strictEqual(resMixed.summary.traceArcCount, 33, '应精确识别 33 段圆弧走线');
+  assert.strictEqual(resMixed.summary.traceLineCount, 38, '应精确识别 38 段直线走线');
+  assert.deepStrictEqual(
+    [...resMixed.summary.traceLayers].sort(),
+    ['02G01P', '04IS01', '08IS03', '19IS08'],
+    '应提取全部 4 个走线层 Subset'
+  );
+  assert.ok(
+    resMixed.clusters.every(c => c.traceSummary && c.traceSummary.segmentCount > 0 && c.traceSummary.layers.length >= 2),
+    '每个差分扇出孔群均应成功关联其扇出走线与出线层'
+  );
+
+  // 9b. 纯多段走线 (< Trace > 块内含多条 Seg 与 Arc seg，无过孔)
+  const samplePureTrace = fs.readFileSync(path.join(__dirname, 'sample/走线示例.txt'), 'utf8');
+  const resPure = FanoutChecker.runFanoutInspection(samplePureTrace, lib);
+  assert.strictEqual(resPure.success, true, '纯走线文件也应成功读取而不报错');
+  assert.strictEqual(resPure.pureTraceMode, true, '应标记为 pureTraceMode');
+  assert.strictEqual(resPure.vias.length, 0);
+  assert.strictEqual(resPure.traces.length, 10, '应解析 10 条 < Trace > 多段走线');
+  assert.strictEqual(resPure.summary.totalTraceSegments, 16, '10 条走线合计应包含 16 个几何分段');
+  assert.strictEqual(resPure.summary.traceArcCount, 2, '应包含 2 段圆弧');
+
+  console.log('  PASS  导入 Trace / Trace Seg (直线+圆弧) 解析、纯走线模式与扇出孔群关联');
+}
+

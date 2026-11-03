@@ -289,5 +289,137 @@ test('非圆焊盘性能：2300 组对偶的矩形焊盘检查 < 2s', () => {
   console.log(`        ${res.totalChecked.toLocaleString()} 对偶 / ${ms} ms`);
 });
 
+test('叠层编号与 Padstack Defined 解析：精准识别通孔 / 顶底盲孔 / 内层埋孔', () => {
+  if (DfmCheck.parseLayerIndex('Top') !== 1) throw new Error('Top 层号应为 1');
+  if (DfmCheck.parseLayerIndex('Bottom') !== DfmCheck.BOTTOM_LAYER_INDEX) throw new Error('Bottom 层号应为 BOTTOM_LAYER_INDEX');
+  if (DfmCheck.parseLayerIndex('10G07P') !== 10) throw new Error('10G07P 层号应为 10');
+  if (DfmCheck.parseLayerIndex('13G09P') !== 13) throw new Error('13G09P 层号应为 13');
+  if (DfmCheck.parseLayerIndex('L12') !== 12) throw new Error('L12 层号应为 12');
+  if (DfmCheck.parseLayerIndex('12IS05') !== 12) throw new Error('12IS05 层号应为 12');
+
+  const buried = DfmCheck.parseViaLayerSpan('  Padstack Defined from 10G07P to 13G09P\n');
+  if (buried.viaSpanType !== 'buried' || buried.minLayerNum !== 10 || buried.maxLayerNum !== 13) {
+    throw new Error('10G07P to 13G09P 应识别为 L10-L13 埋孔');
+  }
+
+  const topBlind1 = DfmCheck.parseViaLayerSpan('  Padstack Defined from Top to 03G02P\n');
+  if (topBlind1.viaSpanType !== 'blind' || topBlind1.minLayerNum !== 1 || topBlind1.maxLayerNum !== 3) {
+    throw new Error('Top to 03G02P 应识别为 L1-L3 盲孔');
+  }
+
+  const topBlind2 = DfmCheck.parseViaLayerSpan('  Padstack Defined from L1-3\n');
+  if (topBlind2.viaSpanType !== 'blind' || topBlind2.minLayerNum !== 1 || topBlind2.maxLayerNum !== 3) {
+    throw new Error('L1-3 应识别为 L1-L3 盲孔');
+  }
+
+  const botBlind = DfmCheck.parseViaLayerSpan('  Padstack Defined from 18IS08 to Bottom\n');
+  if (botBlind.viaSpanType !== 'blind' || botBlind.minLayerNum !== 18 || botBlind.maxLayerNum !== DfmCheck.BOTTOM_LAYER_INDEX) {
+    throw new Error('18IS08 to Bottom 应识别为底层盲孔');
+  }
+});
+
+test('盲埋孔穿层判定核心场景：L12 走线对 10G07P~13G09P 埋孔执行检查，对 L1~3 盲孔与 L18~Bottom 盲孔自动跳过不误报', () => {
+  const sampleTxt = `
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 101   < Via >
+
+  Origin-xy:          [100.0000, 100.0000]
+  Net:                GND
+  Padstack Name:      VIA_BURIED_10_13
+  Circle Drill:       3.9400
+  Usage:              BBVia
+  Padstack Defined from 10G07P to 13G09P
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 102   < Via >
+
+  Origin-xy:          [120.0000, 100.0000]
+  Net:                GND
+  Padstack Name:      VIA_BLIND_1_3_A
+  Circle Drill:       3.9400
+  Usage:              BBVia
+  Padstack Defined from Top to 03G02P
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 103   < Via >
+
+  Origin-xy:          [140.0000, 100.0000]
+  Net:                GND
+  Padstack Name:      VIA_BLIND_L1_L3
+  Circle Drill:       3.9400
+  Usage:              BBVia
+  Padstack Defined from L1 to L3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 104   < Via >
+
+  Origin-xy:          [160.0000, 100.0000]
+  Net:                GND
+  Padstack Name:      VIA_BLIND_18_BOT
+  Circle Drill:       3.9400
+  Usage:              BBVia
+  Padstack Defined from 18IS08 to Bottom
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 105   < Via >
+
+  Origin-xy:          [180.0000, 100.0000]
+  Net:                GND
+  Padstack Name:      VIA_THRU_ALL
+  Circle Drill:       3.9400
+  Usage:              Thru Via
+  Padstack Defined from Top to Bottom
+  Backdrill:
+    Start Layer: Top
+    End Layer:   03G02P
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 201   < Trace seg >
+
+  Subset:             L12
+  Net:                PCI_TX_P
+  Segment:xy [80.0000, 108.0000] xy [200.0000, 108.0000] width 4.0000
+  Length:             120.0000 mil
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`;
+
+  // 所有 5 个孔距离 L12 走线中心均为 8.0 mil -> 走线半宽 2.0 + GND焊盘半径 3.0 = 5.0 -> Airgap = 3.0 mil (< 6.0 mil 阈值)
+  const parsed = DfmCheck.parseDfmItems(sampleTxt, {
+    gndPadDiameter: 6.0,
+    signalPadDiameter: 10.0,
+    gndFirstDrill: 5.5,
+    signalFirstDrill: 5.5
+  });
+
+  if (parsed.vias.length !== 5 || parsed.traces.length !== 1) {
+    throw new Error('解析数量不符');
+  }
+
+  const res = DfmCheck.runDfmCheck(parsed.vias, parsed.traces, {
+    minClearanceGnd: 6.0,
+    minClearanceSignal: 6.0,
+    mode: 'pad_to_trace',
+    diffNetOnly: true
+  });
+
+  // 仅 Via 101 (10G07P~13G09P 埋孔穿过 L12) 和 Via 105 (Top~Bottom 通孔穿过 L12) 参与核对并检出超标
+  // Via 102 (Top~03G02P)、Via 103 (L1~L3)、Via 104 (18IS08~Bottom) 均未穿过 L12，必须跳过！
+  if (res.totalChecked !== 2) {
+    throw new Error('有效同穿层核对数应为 2 (仅 Via 101 与 Via 105)，实际 ' + res.totalChecked);
+  }
+  if (res.skippedNonSpanningPairs !== 3) {
+    throw new Error('应跳过 3 个未穿过 L12 的盲孔对偶，实际 ' + res.skippedNonSpanningPairs);
+  }
+  if (res.failCount !== 2) {
+    throw new Error('超标数应精准为 2（绝不误报 L1-3 / L18-Bot 盲孔下穿走线），实际 ' + res.failCount);
+  }
+
+  const defectViaIds = res.defectPairs.map(p => p.via.id).sort((a, b) => a - b);
+  if (defectViaIds.join(',') !== '101,105') {
+    throw new Error('检出超标的过孔应仅为 101 和 105，实际: ' + defectViaIds.join(','));
+  }
+
+  // 验证交互式测量计算器的 spansTraceLayer 标记
+  const m101 = DfmCheck.calcTraceToViaMetrics(parsed.vias.find(v => v.id === 101), parsed.traces[0]);
+  const m102 = DfmCheck.calcTraceToViaMetrics(parsed.vias.find(v => v.id === 102), parsed.traces[0]);
+  if (m101.spansTraceLayer !== true) throw new Error('Via 101 (10G07P~13G09P) 应标记为穿过 L12');
+  if (m102.spansTraceLayer !== false) throw new Error('Via 102 (Top~03G02P) 应标记为未穿过 L12');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

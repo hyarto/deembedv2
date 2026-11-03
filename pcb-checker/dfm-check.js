@@ -16,14 +16,190 @@
   const RE_VIA_NET = /Net:\s*([^\n\r]+)/i;
   const RE_VIA_PAD = /Padstack Name:\s*([^\n\r]+)/i;
   const RE_VIA_DRILL = /Circle Drill:\s*([-\d.]+)/i;
+  const RE_VIA_USAGE = /Usage:\s*([^\n\r]+)/i;
+  const RE_VIA_PADSTACK_DEF = /Padstack\s+Defined\s*(?:from|:)?\s*([^\s\r\n\-~]+?)\s*(?:\s+to\s+|\s*[\-~]\s*)\s*([^\s\r\n]+)/i;
   const RE_VIA_CONN_TRACE = /Connections:[\s\S]*?Trace:\s*\d+\s*\(([^)]+)\)/i;
+
+  const BOTTOM_LAYER_INDEX = 9999;
+
+  /**
+   * 将 PCB 叠层名解析为单调递增的物理层序号:
+   * - Top / 表层 / L1 -> 1
+   * - 02G01P / 10G07P / 13G09P / 19IS08 -> 前导层号 2 / 10 / 13 / 19
+   * - L12 / Layer_12 / Inner12 / 12 -> 12
+   * - Bottom / BOT / 底层 -> 9999 (BOTTOM_LAYER_INDEX)
+   */
+  function parseLayerIndex(layerName) {
+    if (layerName == null) return null;
+    if (typeof layerName === 'number' && !isNaN(layerName)) return layerName;
+    const s = String(layerName).trim();
+    if (!s) return null;
+
+    if (/^(?:top|表层|top_layer)$/i.test(s)) return 1;
+    if (/^(?:bottom|bot|底层|bottom_layer)$/i.test(s)) return BOTTOM_LAYER_INDEX;
+
+    // Allegro 标准叠层命名: 02G01P -> 2, 10G07P -> 10, 13G09P -> 13, 19IS08 -> 19, 或纯数字 "12" -> 12
+    const mLead = s.match(/^0*(\d{1,3})(?:$|[^0-9])/);
+    if (mLead) {
+      const n = parseInt(mLead[1], 10);
+      if (n > 0) return n;
+    }
+
+    // L12 / L03 / Layer12 / Inner_12 / SIG12 等命名
+    const mPref = s.match(/^(?:L|LAYER|INNER|SIGNAL|SIG|GND|PLN|S)[_\-\s]*0*(\d{1,3})(?:$|[^0-9])/i)
+      || s.match(/\bL0*(\d{1,3})(?:$|[^0-9])/i);
+    if (mPref) {
+      const n = parseInt(mPref[1], 10);
+      if (n > 0) return n;
+    }
+
+    return null;
+  }
+
+  function formatLayerNumTag(num) {
+    if (num === 1) return 'L1(Top)';
+    if (num === BOTTOM_LAYER_INDEX) return 'Bottom';
+    return `L${num}`;
+  }
+
+  /**
+   * 解析过孔文本块中的连接起止层信息 (Padstack Defined from <Start> to <End>)
+   */
+  function parseViaLayerSpan(secText) {
+    const mDef = secText ? secText.match(RE_VIA_PADSTACK_DEF) : null;
+    if (!mDef) {
+      return {
+        hasDefinedSpan: false,
+        definedRaw: 'Top to Bottom',
+        startLayer: 'Top',
+        endLayer: 'Bottom',
+        startLayerNum: 1,
+        endLayerNum: BOTTOM_LAYER_INDEX,
+        minLayerNum: 1,
+        maxLayerNum: BOTTOM_LAYER_INDEX,
+        viaSpanType: 'thru',
+        viaTypeLabel: '通孔',
+        spanShort: 'Top~Bottom',
+        spanLabel: '通孔 (Top~Bottom)'
+      };
+    }
+
+    const startLayer = mDef[1].trim();
+    const endLayer = mDef[2].trim();
+    const n1 = parseLayerIndex(startLayer);
+    const n2 = parseLayerIndex(endLayer);
+
+    if (n1 != null && n2 != null) {
+      const minLayerNum = Math.min(n1, n2);
+      const maxLayerNum = Math.max(n1, n2);
+      let viaSpanType = 'buried';
+      let viaTypeLabel = '埋孔';
+      if (minLayerNum === 1 && maxLayerNum === BOTTOM_LAYER_INDEX) {
+        viaSpanType = 'thru';
+        viaTypeLabel = '通孔';
+      } else if (minLayerNum === 1 || maxLayerNum === BOTTOM_LAYER_INDEX) {
+        viaSpanType = 'blind';
+        viaTypeLabel = '盲孔';
+      }
+
+      const rangeTag = (minLayerNum === 1 && maxLayerNum === BOTTOM_LAYER_INDEX)
+        ? 'Top~Bottom'
+        : `${minLayerNum === 1 ? 'L1' : 'L' + minLayerNum}-${maxLayerNum === BOTTOM_LAYER_INDEX ? 'Bot' : 'L' + maxLayerNum}`;
+      const rawPair = `${startLayer}~${endLayer}`;
+      const spanLabel = viaSpanType === 'thru'
+        ? `通孔 (${rawPair})`
+        : `${viaTypeLabel} ${rangeTag}` + (rawPair.toUpperCase() !== rangeTag.toUpperCase() ? ` (${rawPair})` : '');
+
+      return {
+        hasDefinedSpan: true,
+        definedRaw: `${startLayer} to ${endLayer}`,
+        startLayer,
+        endLayer,
+        startLayerNum: n1,
+        endLayerNum: n2,
+        minLayerNum,
+        maxLayerNum,
+        viaSpanType,
+        viaTypeLabel,
+        spanShort: rangeTag,
+        spanLabel
+      };
+    }
+
+    // 非编号自定义层名的回退处理
+    const isThruCustom = /^top$/i.test(startLayer) && /^bottom$/i.test(endLayer);
+    return {
+      hasDefinedSpan: true,
+      definedRaw: `${startLayer} to ${endLayer}`,
+      startLayer,
+      endLayer,
+      startLayerNum: n1,
+      endLayerNum: n2,
+      minLayerNum: isThruCustom ? 1 : null,
+      maxLayerNum: isThruCustom ? BOTTOM_LAYER_INDEX : null,
+      viaSpanType: isThruCustom ? 'thru' : 'buried',
+      viaTypeLabel: isThruCustom ? '通孔' : '盲埋孔',
+      spanShort: `${startLayer}~${endLayer}`,
+      spanLabel: `${isThruCustom ? '通孔' : '盲埋孔'} (${startLayer}~${endLayer})`
+    };
+  }
+
+  /**
+   * 核心层间穿越判定：判断过孔 (via) 是否物理穿过/连接走线所在层 (traceLayer)
+   * 例：
+   * - 过孔 Padstack Defined from 10G07P to 13G09P (层范围 10..13)，走线在 L12 (12) -> 返回 true (穿过 L12，需检查线孔间距)
+   * - 过孔 Padstack Defined from L1 to L3 / Top to 03G02P (层范围 1..3)，走线在 L12 (12) -> 返回 false (不穿过 L12，无需分析)
+   */
+  function doesViaSpanLayer(via, traceLayer, precomputedTraceLayerNum) {
+    if (!via) return false;
+
+    let minL = via.minLayerNum;
+    let maxL = via.maxLayerNum;
+
+    if ((minL == null || maxL == null) && (via.startLayer || via.endLayer)) {
+      const sNum = parseLayerIndex(via.startLayer);
+      const eNum = parseLayerIndex(via.endLayer);
+      if (sNum != null && eNum != null) {
+        minL = Math.min(sNum, eNum);
+        maxL = Math.max(sNum, eNum);
+      }
+    }
+
+    // 未携带层定义的老旧/简化对象默认按通孔兼容处理
+    if (minL == null || maxL == null) {
+      if (!via.startLayer && !via.endLayer) return true;
+      const tLow = String(traceLayer || '').trim().toLowerCase();
+      if (!tLow) return true;
+      if (via.startLayer && via.startLayer.trim().toLowerCase() === tLow) return true;
+      if (via.endLayer && via.endLayer.trim().toLowerCase() === tLow) return true;
+      if (Array.isArray(via.traceLayers) && via.traceLayers.some(l => String(l).trim().toLowerCase() === tLow)) return true;
+      return false;
+    }
+
+    // 通孔快速通道
+    if (minL === 1 && maxL === BOTTOM_LAYER_INDEX) return true;
+
+    const tNum = precomputedTraceLayerNum !== undefined ? precomputedTraceLayerNum : parseLayerIndex(traceLayer);
+    if (tNum != null) {
+      return tNum >= minL && tNum <= maxL;
+    }
+
+    // 若走线层名无法解析为层号，回退精确匹配起止层或连接层
+    const tStr = String(traceLayer || '').trim().toLowerCase();
+    if (!tStr) return true;
+    if (via.startLayer && via.startLayer.trim().toLowerCase() === tStr) return true;
+    if (via.endLayer && via.endLayer.trim().toLowerCase() === tStr) return true;
+    if (Array.isArray(via.traceLayers) && via.traceLayers.some(l => String(l).trim().toLowerCase() === tStr)) return true;
+    return false;
+  }
 
   const RE_TRACE_SUBSET = /Subset:\s*([^\n\r]+)/i;
   const RE_TRACE_NET = /Net:\s*([^\n\r]+)/i;
   const RE_TRACE_TYPE = /Type:\s*([^\n\r]+)/i;
-  const RE_TRACE_LEN = /Seg Length:\s*([-\d.]+)/i;
-  const RE_TRACE_SEG = /(?:^|\n)\s*(?:Seg:\s*)?xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Width\s*\(([-\d.]+)\)/i;
-  const RE_TRACE_ARC = /(?:^|\n)\s*(?:Arc\s*seg:\s*)?xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Width\s*\(([-\d.]+)\)/i;
+  const RE_TRACE_LEN = /(?:Seg\s+)?Length:\s*([-\d.]+)/i;
+  const RE_TRACE_SEG = /(?:^|\n)\s*(?:Seg(?:ment)?:\s*)?xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Width\s*(?:\(\s*([-\d.]+)\s*\)|([-\d.]+))/i;
+  const RE_TRACE_MULTI_SEG = /Segment:\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*(?:arc\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*radius\s*([-\d.]+)\s*(CCW|CW)?\s*)?width\s*(?:\(\s*([-\d.]+)\s*\)|([-\d.]+))/gi;
+  const RE_TRACE_ARC = /(?:^|\n)\s*(?:Arc\s*seg:\s*)?xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Width\s*(?:\(\s*([-\d.]+)\s*\)|([-\d.]+))/i;
   const RE_TRACE_CENTER = /Center-xy:\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Radius\s*\(([-\d.]+)\)\s*(CCW|CW)?/i;
 
   /**
@@ -70,6 +246,7 @@
         const mNet = sec.match(RE_VIA_NET);
         const mPad = sec.match(RE_VIA_PAD);
         const mDrill = sec.match(RE_VIA_DRILL);
+        const mUsage = sec.match(RE_VIA_USAGE);
         const mConn = sec.match(RE_VIA_CONN_TRACE);
 
         if (mXy) {
@@ -77,6 +254,8 @@
           const netName = mNet ? mNet[1].trim() : '无网络';
           const isGnd = (netName.toUpperCase() === 'GND');
           const padName = mPad ? mPad[1].trim() : '';
+          const usage = mUsage ? mUsage[1].trim() : '';
+          const spanInfo = parseViaLayerSpan(sec);
 
           const shape = isGnd ? gndPadShape : signalPadShape;
           const padDiameter = shape ? Math.max(shape.w, shape.h) : (isGnd ? defaultGndPadDiam : defaultSignalPadDiam);
@@ -92,6 +271,19 @@
             net: netName,
             isGnd: isGnd,
             padstack: padName,
+            usage: usage,
+            hasDefinedSpan: spanInfo.hasDefinedSpan,
+            definedRaw: spanInfo.definedRaw,
+            startLayer: spanInfo.startLayer,
+            endLayer: spanInfo.endLayer,
+            startLayerNum: spanInfo.startLayerNum,
+            endLayerNum: spanInfo.endLayerNum,
+            minLayerNum: spanInfo.minLayerNum,
+            maxLayerNum: spanInfo.maxLayerNum,
+            viaSpanType: spanInfo.viaSpanType,       // 'thru' | 'blind' | 'buried'
+            viaTypeLabel: spanInfo.viaTypeLabel,     // '通孔' | '盲孔' | '埋孔'
+            spanShort: spanInfo.spanShort,           // e.g. 'L10-L13' / 'Top~Bottom'
+            spanLabel: spanInfo.spanLabel,           // e.g. '埋孔 L10-L13 (10G07P~13G09P)'
             drill: finishDrill,             // 完成孔径 Finished Hole Diameter (仅作展示记录)
             finishDrill: finishDrill,
             firstDrill: firstDrill,         // 一钻直径 First Drill Diameter (直接参与计算)
@@ -120,6 +312,7 @@
 
         if (mArc && mCenter) {
           const dir = mCenter[4] ? mCenter[4].toUpperCase() : (sec.indexOf('CW') >= 0 ? 'CW' : 'CCW');
+          const arcW = parseFloat(mArc[5] || mArc[6]);
           traces.push({
             id: itemId,
             type: 'trace',
@@ -128,14 +321,58 @@
             net: net,
             p1: [parseFloat(mArc[1]), parseFloat(mArc[2])],
             p2: [parseFloat(mArc[3]), parseFloat(mArc[4])],
-            width: parseFloat(mArc[5]),
+            width: arcW,
             center: [parseFloat(mCenter[1]), parseFloat(mCenter[2])],
             radius: parseFloat(mCenter[3]),
             dir: dir,
             len: segLen,
             raw: sec.trim()
           });
+        } else if (itemKind === 'trace' && /Segment:/i.test(sec)) {
+          // 支持完整 < Trace > 块中多条 Segment:xy [...] xy [...] width ... 展开
+          RE_TRACE_MULTI_SEG.lastIndex = 0;
+          let sm, subIdx = 0;
+          while ((sm = RE_TRACE_MULTI_SEG.exec(sec)) !== null) {
+            subIdx++;
+            const p1 = [parseFloat(sm[1]), parseFloat(sm[2])];
+            const p2 = [parseFloat(sm[3]), parseFloat(sm[4])];
+            const w = parseFloat(sm[9] || sm[10]);
+            const segId = subIdx === 1 ? itemId : (itemId * 1000 + subIdx);
+            if (sm[5] != null && sm[7] != null) {
+              traces.push({
+                id: segId,
+                parentTraceId: itemId,
+                type: 'trace',
+                kind: 'arc',
+                subset: subset,
+                net: net,
+                p1: p1,
+                p2: p2,
+                width: w,
+                center: [parseFloat(sm[5]), parseFloat(sm[6])],
+                radius: parseFloat(sm[7]),
+                dir: sm[8] ? sm[8].toUpperCase() : 'CCW',
+                len: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+                raw: sec.trim()
+              });
+            } else {
+              traces.push({
+                id: segId,
+                parentTraceId: itemId,
+                type: 'trace',
+                kind: 'line',
+                subset: subset,
+                net: net,
+                p1: p1,
+                p2: p2,
+                width: w,
+                len: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+                raw: sec.trim()
+              });
+            }
+          }
         } else if (mSeg) {
+          const segW = parseFloat(mSeg[5] || mSeg[6]);
           traces.push({
             id: itemId,
             type: 'trace',
@@ -144,7 +381,7 @@
             net: net,
             p1: [parseFloat(mSeg[1]), parseFloat(mSeg[2])],
             p2: [parseFloat(mSeg[3]), parseFloat(mSeg[4])],
-            width: parseFloat(mSeg[5]),
+            width: segW,
             len: segLen,
             raw: sec.trim()
           });
@@ -348,18 +585,50 @@
 
     const activeTraces = layerFilter ? traces.filter(t => t.subset === layerFilter) : traces;
 
-    // Calculate theoretical cross-combinations
+    // Pre-cache parsed physical layer numbers for each unique trace Subset (O(1) lookup)
+    const subsetLayerNumMap = new Map();
+    activeTraces.forEach(t => {
+      if (!subsetLayerNumMap.has(t.subset)) {
+        subsetLayerNumMap.set(t.subset, parseLayerIndex(t.subset));
+      }
+    });
+
+    // Aggregate trace counts per (subset, net) for ultra-fast layer-aware theoretical pair counting
+    const subsetStatsMap = new Map();
+    activeTraces.forEach(t => {
+      let st = subsetStatsMap.get(t.subset);
+      if (!st) {
+        st = { total: 0, byNet: new Map(), layerNum: subsetLayerNumMap.get(t.subset) };
+        subsetStatsMap.set(t.subset, st);
+      }
+      st.total++;
+      st.byNet.set(t.net, (st.byNet.get(t.net) || 0) + 1);
+    });
+
+    // Calculate layer-aware cross-combinations (仅统计过孔实际穿过的走线层，自动跳过盲埋孔不穿过的层)
     let totalChecked = 0;
     let gndTotal = 0;
     let sigTotal = 0;
+    let skippedNonSpanningPairs = 0;
+    const viaTypeCounts = { thru: 0, blind: 0, buried: 0 };
 
     vias.forEach(v => {
+      const vType = v.viaSpanType || 'thru';
+      if (viaTypeCounts[vType] !== undefined) viaTypeCounts[vType]++;
+      else viaTypeCounts.thru++;
+
       let count = 0;
-      activeTraces.forEach(t => {
-        if (!diffNetOnly || v.net !== t.net) {
-          count++;
+      subsetStatsMap.forEach((st, subsetName) => {
+        const candidateCnt = diffNetOnly ? (st.total - (st.byNet.get(v.net) || 0)) : st.total;
+        if (candidateCnt <= 0) return;
+
+        if (doesViaSpanLayer(v, subsetName, st.layerNum)) {
+          count += candidateCnt;
+        } else {
+          skippedNonSpanningPairs += candidateCnt;
         }
       });
+
       totalChecked += count;
       if (v.isGnd) gndTotal += count;
       else sigTotal += count;
@@ -416,7 +685,7 @@
     let gndFail = 0, sigFail = 0;
     let minObservedDist = Infinity;
 
-    // 2. Spatial Query for Each Via (Narrow Phase Evaluation)
+    // 2. Spatial Query for Each Via (Narrow Phase Evaluation with Layer-Span Filtering)
     vias.forEach(via => {
       const vPadRadius = via.padRadius || (via.isGnd ? defaultGndPadDiam / 2.0 : defaultSignalPadDiam / 2.0);
       const vFirstDrillR = via.firstDrillRadius || (via.isGnd ? defaultGndFirstDrill / 2.0 : defaultSignalFirstDrill / 2.0);
@@ -430,7 +699,13 @@
       const targetThreshold = via.isGnd ? minClearanceGnd : minClearanceSignal;
       const targetType = via.isGnd ? '线到GND孔' : '线到信号孔';
 
-      layerGrids.forEach(lGrid => {
+      layerGrids.forEach((lGrid, traceLayerName) => {
+        // 核心盲埋孔层间过滤：若过孔连接的起止层不穿过当前走线所在层，直接跳过，避免盲埋孔下穿走线误判！
+        const cachedTraceLayerNum = subsetLayerNumMap.get(traceLayerName);
+        if (!doesViaSpanLayer(via, traceLayerName, cachedTraceLayerNum)) {
+          return;
+        }
+
         const gx0 = Math.floor((vx - vSearchR) / CELL_SIZE);
         const gx1 = Math.floor((vx + vSearchR) / CELL_SIZE);
         const gy0 = Math.floor((vy - vSearchR) / CELL_SIZE);
@@ -625,6 +900,8 @@
       failCount: failCount,
       passCount: passCount,
       totalChecked: totalChecked,
+      skippedNonSpanningPairs: skippedNonSpanningPairs,
+      viaTypeCounts: viaTypeCounts,
       minObservedDist: minObservedDist === Infinity ? 0 : minObservedDist,
       minClearanceGnd: minClearanceGnd,
       minClearanceSignal: minClearanceSignal,
@@ -696,6 +973,7 @@
       : (padRegion ? traceToPadSigned(padRegion, trace) - traceHalfW
                    : traceEdgeDist - via.padRadius);
     const drillAirgap = traceEdgeDist - via.firstDrillRadius;
+    const spansTraceLayer = trace && trace.subset ? doesViaSpanLayer(via, trace.subset) : true;
 
     return {
       type: 'via_to_trace',
@@ -705,11 +983,16 @@
       centerDist: dCenter,
       traceEdgeDist: traceEdgeDist,
       padAirgap: padAirgap,
-      drillAirgap: drillAirgap
+      drillAirgap: drillAirgap,
+      spansTraceLayer: spansTraceLayer
     };
   }
 
   // Export functions
+  exports.BOTTOM_LAYER_INDEX = BOTTOM_LAYER_INDEX;
+  exports.parseLayerIndex = parseLayerIndex;
+  exports.parseViaLayerSpan = parseViaLayerSpan;
+  exports.doesViaSpanLayer = doesViaSpanLayer;
   exports.parseDfmItems = parseDfmItems;
   exports.ptToSegDist = ptToSegDist;
   exports.ptToArcDist = ptToArcDist;

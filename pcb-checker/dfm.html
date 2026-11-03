@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCB 加工能力与空间间距检查工具</title>
 <script src="pad-geom.js"></script>
-<script src="dfm-check.js?v=3"></script>
+<script src="dfm-check.js?v=4"></script>
 <style>
 :root{
   --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
@@ -126,20 +126,45 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 .net-defects-table td{font-size:11px;padding:6px 8px}
 
 .tooltip{position:absolute;background:rgba(15,23,42,.95);border:1px solid #38bdf8;padding:8px 12px;border-radius:6px;color:#fff;font-size:11px;pointer-events:none;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3);line-height:1.4}
+
+/* Global Display: Full-Width & Fullscreen Workbench */
+.global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.fs-btn{background:linear-gradient(135deg,#0284c7,#0369a1);border-color:#7dd3fc;color:#fff !important}
+.global-display-ctrl .gdisp-btn.fs-active{background:#059669 !important;border-color:#34d399;color:#fff !important}
+html:fullscreen,html:-webkit-full-screen{background:var(--bg,#f8fafc);overflow-y:auto}
+html.pcb-global-wide main,html:fullscreen main,html:-webkit-full-screen main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
+html.pcb-global-wide .canvas-wrap,html:fullscreen .canvas-wrap{height:calc(100vh - 230px) !important;min-height:580px !important}
 </style>
 </head>
 <body>
 
-<header>
+<header style="flex-wrap:wrap">
   <h1>PCB 加工能力检查工具 <span class="tag">DFM / 空间间距与测量</span></h1>
   <span class="sub">导入 Via &amp; Trace 坐标 → 空间几何解析与测量标尺 → 真实还原走线与过孔 → 标红超标间距 → 导出报告</span>
-  <div class="navlinks">
+  <div class="navlinks" style="display:flex;align-items:center;flex-wrap:wrap">
     <a href="index.html">走线检查</a>
     <a href="copper.html">约束检查</a>
     <a href="dfm.html" class="active">加工能力检查</a>
     <a href="fanout.html">扇出方案检查</a>
     <a href="pour.html">铜皮检查</a>
     <a href="unified.html">综合一体化检查</a>
+    <div class="global-display-ctrl">
+      <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
+        <span id="lblGlobalWide">铺满宽屏</span>
+      </button>
+      <button type="button" class="gdisp-btn fs-btn" id="btnGlobalFullscreen" onclick="toggleGlobalFullscreen()" title="一键将检查工作台全屏独占整个显示屏（按 Esc 可退出）">
+        <svg id="icoGlobalFs" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+        <span id="lblGlobalFs">全屏工作台</span>
+      </button>
+      <a class="gdisp-btn" id="btnGlobalPopout" href="dfm.html?wide=1" target="_blank" rel="noopener" style="display:none" title="在独立浏览器新标签页 100% 大屏打开工作台">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h5v5M14 2L7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5"/></svg>
+        <span>独立大屏</span>
+      </a>
+    </div>
   </div>
 </header>
 
@@ -351,6 +376,15 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
           </h4>
           <div id="measureCardBody"></div>
         </div>
+
+        <!-- 空间几何视图定位异常同步复核浮窗 -->
+        <div id="dfmSpatialReviewCard" style="display:none;position:absolute;top:54px;right:14px;width:305px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.42);border-radius:8px;padding:10px 12px;color:#f1f5f9;z-index:25;box-shadow:0 10px 24px rgba(0,0,0,0.45)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(148,163,184,0.2)">
+            <strong id="dfmSpatialRevTitle" style="font-size:12.5px;color:#38bdf8">定位异常复核</strong>
+            <button type="button" onclick="$('dfmSpatialReviewCard').style.display='none'" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:14px">×</button>
+          </div>
+          <div id="dfmSpatialRevBody"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -515,8 +549,15 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
       <h3>4. 几何图交互式测量支持</h3>
       <ul class="hint" style="margin-left:20px;margin-top:6px">
         <li><b>孔到孔</b>：中心距、孔盘到孔盘 Airgap、孔盘到孔壁 Airgap、一钻孔壁到孔壁 Airgap。</li>
-        <li><b>走线到过孔</b>：线到一钻孔壁 Airgap、线到孔盘 Airgap、走线中心到孔中心距离。</li>
+        <li><b>走线到过孔</b>：线到一钻孔壁 Airgap、线到孔盘 Airgap、走线中心到孔中心距离（并自动识别过孔是否穿过走线层）。</li>
         <li><b>走线到走线</b>：最近中心距与边缘铜皮间距。</li>
+      </ul>
+
+      <h3>5. 盲埋孔与通孔层间穿越判定机制（Padstack Defined）</h3>
+      <ul class="hint" style="margin-left:20px;margin-top:6px">
+        <li><b>连接层范围解析</b>：解析器自动从每个 <code>&lt; Via &gt;</code> 报告块的 <code>Padstack Defined from &lt;StartLayer&gt; to &lt;EndLayer&gt;</code> 中提取过孔物理连接的起止层，精准区分<b>通孔</b>（如 <code>Top to Bottom</code>）、<b>盲孔</b>（如 <code>Top to 03G02P</code> / <code>L1 to L3</code> / <code>18IS08 to Bottom</code>）与<b>埋孔</b>（如 <code>10G07P to 13G09P</code>）。</li>
+        <li><b>穿层匹配过滤规则</b>：同时将走线所在层（<code>Subset</code>，如 <code>L12</code> / <code>12IS05</code>）与过孔起止层映射为单调物理层序号 $\text{LayerIndex}$。仅当 $\text{MinLayer}(\text{Via}) \le \text{LayerIndex}(\text{Trace}) \le \text{MaxLayer}(\text{Via})$ 时，说明过孔物理穿过该走线层，引擎才计算并判定两者间距是否满足要求。</li>
+        <li><b>消除下穿/上跨误报</b>：例如过孔定义为 <code>Padstack Defined from 10G07P to 13G09P</code>（跨 L10~L13），走线在 <code>L12</code> 层时穿层成立，正常执行间距判定；若过孔连接 <code>L1-3</code>（<code>Top to 03G02P</code>），而走线位于 <code>L12</code> 层从盲孔下方穿过，两者物理互不干涉，引擎自动跳过分析，彻底消除盲埋孔被误当作通孔导致的假阳性报警。</li>
       </ul>
     </div>
   </section>
@@ -747,6 +788,7 @@ $('btnLoadSample').addEventListener('click', async () => {
   }
 });
 
+
 $('btnClearData').addEventListener('click', () => {
   State.rawText = '';
   State.vias = [];
@@ -844,14 +886,24 @@ function loadTextData(text, sourceName) {
   $('fileStatus').textContent = `已加载: ${sourceName} (${State.vias.length} 个过孔, ${State.traces.length} 段走线)`;
   
   // Update data summary
+  const thruCount = State.vias.filter(v => (v.viaSpanType || 'thru') === 'thru').length;
+  const blindCount = State.vias.filter(v => v.viaSpanType === 'blind').length;
+  const buriedCount = State.vias.filter(v => v.viaSpanType === 'buried').length;
+  const uniqueSpans = Array.from(new Set(State.vias.map(v => v.spanLabel || '通孔 (Top~Bottom)')));
+
   const summaryCard = $('dataSummaryCard');
   summaryCard.style.display = 'block';
   $('dataSummaryContent').innerHTML = `
-    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;align-items:center">
       <div><b>过孔数量：</b><span class="tag-badge ok">${State.vias.length} 个 (GND: ${State.vias.filter(v=>v.isGnd).length}, 信号: ${State.vias.filter(v=>!v.isGnd).length})</span></div>
+      <div><b>孔型构成：</b><span class="tag-badge" style="background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe">通孔: ${thruCount} | 盲孔: ${blindCount} | 埋孔: ${buriedCount}</span></div>
       <div><b>走线段数：</b><span class="tag-badge ok">${State.traces.length} 段</span></div>
       <div><b>涉及层数：</b><span class="tag-badge ok">${State.layers.length} 层 (${State.layers.join('、')})</span></div>
       <div><b>涉及网络：</b><span class="tag-badge ok">${Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、')}</span></div>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#475569;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
+      <span style="color:#0284c7;font-weight:600">✓ 已启用盲埋孔穿层匹配（仅分析过孔实际穿过走线层的对偶）</span>
     </div>
   `;
 
@@ -953,7 +1005,10 @@ function runCheck(sync) {
 
     State.checkResult = result;
     State.currentPage = 1;
-    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处），发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。`;
+    const skipNote = result.skippedNonSpanningPairs > 0
+      ? `（已智能排除 ${result.skippedNonSpanningPairs.toLocaleString()} 处盲埋孔未穿过走线层的无关对偶）`
+      : '';
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。`;
 
     btn.disabled = false;
     btn.innerHTML = origBtnText;
@@ -1128,10 +1183,15 @@ function renderNetGroupView() {
       const defectRows = item.defects.map((p, dIdx) => {
         const pKey = `${p.via.id}_${p.trace.id}`;
         const isRev = !!State.reviewedKeys[pKey];
+        const vSpanBadge = p.via.viaSpanType === 'buried'
+          ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:10px;padding:1px 5px">${p.via.spanLabel}</span>`
+          : (p.via.viaSpanType === 'blind'
+            ? `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 5px">${p.via.spanLabel}</span>`
+            : `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${p.via.spanLabel || '通孔 (Top~Bottom)'}</span>`);
         return `
           <tr class="${isRev ? 'reviewed' : ''}" style="background:#fff">
             <td>${dIdx + 1}</td>
-            <td><b>Via ${p.via.id}</b> (${p.via.net}) <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
+            <td><b>Via ${p.via.id}</b> (${p.via.net}) ${vSpanBadge} <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
             <td>${p.targetType}</td>
             <td>Trace ${p.trace.id} (${p.trace.width}mil)</td>
             <td style="font-family:var(--mono)">[${p.proj[0].toFixed(1)}, ${p.proj[1].toFixed(1)}]</td>
@@ -1221,7 +1281,7 @@ function renderPairListView() {
     if (filter === 'signal' && p.isGndVia) return false;
     if (query) {
       const qNorm = query.replace(/^via\s*/i, '').trim();
-      const qText = `via ${p.via.id} ${p.via.id} ${p.via.net} ${p.targetType} trace ${p.trace.id} ${p.trace.id} ${p.trace.subset} ${p.trace.net}`.toLowerCase();
+      const qText = `via ${p.via.id} ${p.via.id} ${p.via.net} ${p.via.spanLabel || ''} ${p.via.definedRaw || ''} ${p.targetType} trace ${p.trace.id} ${p.trace.id} ${p.trace.subset} ${p.trace.net}`.toLowerCase();
       if (!qText.includes(query) && !qText.includes(qNorm)) return false;
     }
     return true;
@@ -1271,6 +1331,13 @@ function renderPairListView() {
       ? `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1">⚡ 线到GND孔</span>`
       : `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">📡 线到信号孔</span>`;
 
+    const spanBadgeStyle = p.via.viaSpanType === 'buried'
+      ? 'background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe'
+      : (p.via.viaSpanType === 'blind'
+        ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd'
+        : 'background:#f8fafc;color:#475569;border:1px solid #cbd5e1');
+    const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:10px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${p.via.definedRaw || 'Top to Bottom'}">${p.via.spanLabel || '通孔 (Top~Bottom)'}</span>`;
+
     return `
       <tr class="${isBad ? 'fail-row' : ''} ${isRev ? 'reviewed' : ''}" id="row-${idx}" data-via="${p.via.id}" data-trace="${p.trace.id}">
         <td>${idx + 1}</td>
@@ -1279,6 +1346,7 @@ function renderPairListView() {
         <td>${typeBadge}</td>
         <td>
           <b>Via ${p.via.id}</b> (${p.via.net})<br>
+          ${spanBadge}<br>
           <span style="font-family:var(--mono);font-size:11px;color:var(--sub)">[${p.via.origin[0].toFixed(2)}, ${p.via.origin[1].toFixed(2)}]</span>
         </td>
         <td>
@@ -1386,13 +1454,15 @@ $('inpSearch').addEventListener('input', e => {
 // CSV Export
 $('btnExportCsv').addEventListener('click', () => {
   if (!State.checkResult || !State.checkResult.pairs.length) return alert('暂无检查数据');
-  const headers = ['序号,状态,判定类型,过孔编号,过孔网络,过孔X,过孔Y,走线编号,走线层,走线网络,走线线宽,走线最近点X,走线最近点Y,实测间距(mil),规则要求(mil),偏差(mil),一钻孔径(mil),焊盘直径(mil)'];
+  const headers = ['序号,状态,判定类型,过孔编号,过孔网络,过孔跨层类型,过孔连接起止层(Padstack Defined),过孔X,过孔Y,走线编号,走线层,走线网络,走线线宽,走线最近点X,走线最近点Y,实测间距(mil),规则要求(mil),偏差(mil),一钻孔径(mil),焊盘直径(mil)'];
   const rows = State.checkResult.pairs.map((p, idx) => [
     idx + 1,
     p.status,
     `"${p.targetType}"`,
     p.via.id,
     `"${p.via.net}"`,
+    `"${p.via.viaTypeLabel || '通孔'}"`,
+    `"${p.via.definedRaw || 'Top to Bottom'}"`,
     p.via.origin[0],
     p.via.origin[1],
     p.trace.id,
@@ -1597,12 +1667,23 @@ function renderCanvas() {
     });
   }
 
-  // 3. Draw Vias (with Viewport Culling)
+  // 3. Draw Vias (with Viewport Culling & Layer-Span Awareness)
   if (showVias) {
+    const activeLayerFocus = (State.highlightNetRoute && State.highlightNetRoute.layer)
+      || ($('selLayerFilter') ? $('selLayerFilter').value : '');
+
     State.vias.forEach(v => {
       const vx = v.origin[0], vy = v.origin[1];
       if (vx + v.padRadius < vMinX || vx - v.padRadius > vMaxX ||
           vy + v.padRadius < vMinY || vy - v.padRadius > vMaxY) return;
+
+      const spansActiveLayer = !activeLayerFocus || DfmCheck.doesViaSpanLayer(v, activeLayerFocus);
+      const isBlindOrBuried = v.viaSpanType === 'blind' || v.viaSpanType === 'buried';
+
+      ctx.save();
+      if (!spansActiveLayer) {
+        ctx.globalAlpha = 0.22; // 当前聚焦层未被该盲埋孔穿过，半透明弱化显示
+      }
 
       const p = worldToScreen(vx, vy);
       const finishDrillR = Math.max(1.5, (v.drill / 2.0) * vp.zoom);
@@ -1610,9 +1691,15 @@ function renderCanvas() {
       const padR = Math.max(2.8, v.padRadius * vp.zoom);
       const isSelected = State.measureSelection.some(s => s.type === 'via' && s.item.id === v.id);
 
-      // Pad outline (Dotted circle)
-      ctx.strokeStyle = isSelected ? '#38bdf8' : (v.isGnd ? 'rgba(148, 163, 184, 0.45)' : 'rgba(239, 68, 68, 0.7)');
-      ctx.lineWidth = isSelected ? 2 : 1;
+      // Pad outline (Dotted circle; cyan/violet accent for blind/buried vias)
+      ctx.strokeStyle = isSelected
+        ? '#38bdf8'
+        : (v.viaSpanType === 'buried'
+          ? 'rgba(192, 132, 252, 0.85)'
+          : (v.viaSpanType === 'blind'
+            ? 'rgba(56, 189, 248, 0.85)'
+            : (v.isGnd ? 'rgba(148, 163, 184, 0.45)' : 'rgba(239, 68, 68, 0.7)')));
+      ctx.lineWidth = isSelected ? 2 : (isBlindOrBuried ? 1.4 : 1);
       ctx.setLineDash([2, 2]);
       ctx.beginPath();
       ctx.arc(p[0], p[1], padR, 0, 2 * Math.PI);
@@ -1637,12 +1724,14 @@ function renderCanvas() {
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Text label
+      // Text label (with blind/buried span tag)
       if (showLabels && vp.zoom > 1.2) {
-        ctx.fillStyle = '#cbd5e1';
+        ctx.fillStyle = isBlindOrBuried ? '#e9d5ff' : '#cbd5e1';
         ctx.font = '10px ui-monospace, sans-serif';
-        ctx.fillText(`V${v.id}`, p[0] + padR + 2, p[1] - 2);
+        const spanSuffix = isBlindOrBuried && v.spanShort ? `[${v.spanShort}]` : '';
+        ctx.fillText(`V${v.id}${spanSuffix}`, p[0] + padR + 2, p[1] - 2);
       }
+      ctx.restore();
     });
   }
 
@@ -1788,8 +1877,16 @@ function showMeasureCardViaToVia(m) {
 function showMeasureCardTraceToVia(m) {
   const card = $('measureCard');
   card.style.display = 'block';
+  const spanNotice = m.spansTraceLayer === false
+    ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#bae6fd;line-height:1.4">
+         ℹ️ <b>非同穿层提示：</b>Via ${m.via.id} (${m.via.spanLabel || '盲埋孔'}) <b>未穿过</b>走线层 <b>${m.trace.subset}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
+       </div>`
+    : `<div style="background:rgba(16,185,129,0.14);border:1px solid rgba(52,211,153,0.4);border-radius:5px;padding:4px 7px;margin-bottom:6px;font-size:11px;color:#6ee7b7">
+         ✓ 穿层有效：${m.via.spanLabel || '通孔 (Top~Bottom)'} 穿过走线层 <b>${m.trace.subset}</b>
+       </div>`;
   $('measureCardBody').innerHTML = `
     <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.via.id} (${m.via.net}) ↔ Trace ${m.trace.id} (${m.trace.subset})</div>
+    ${spanNotice}
     <div class="m-row"><span>孔中心到走线中心距：</span><b>${m.centerDist.toFixed(3)} mil</b></div>
     <div class="m-row"><span>孔盘到走线边缘 Airgap：</span><b style="color:#38bdf8">${m.padAirgap.toFixed(3)} mil</b></div>
     <div class="m-row"><span>一钻孔壁到走线边缘 Airgap：</span><b>${m.drillAirgap.toFixed(3)} mil</b></div>
@@ -1927,6 +2024,8 @@ canvas.addEventListener('mousemove', e => {
     tip.style.top = (e.clientY + 14) + 'px';
     tip.innerHTML = `
       <b>Via ${nearestVia.id}</b> (${nearestVia.net})<br>
+      孔型与跨层: <b style="color:#7dd3fc">${nearestVia.spanLabel || '通孔 (Top~Bottom)'}</b><br>
+      Padstack Defined: ${nearestVia.definedRaw || 'Top to Bottom'}<br>
       坐标: [${nearestVia.origin[0].toFixed(2)}, ${nearestVia.origin[1].toFixed(2)}]<br>
       完成孔径: ${nearestVia.drill.toFixed(2)} mil | 一钻孔径: ${nearestVia.firstDrill.toFixed(2)} mil<br>
       环宽: ${nearestVia.padRing.toFixed(2)} mil | 焊盘直径: ${nearestVia.padDiameter.toFixed(2)} mil<br>
@@ -2012,6 +2111,60 @@ $('btnExportSvg').addEventListener('click', () => {
   a.click();
 });
 
+function toggleDfmPairReview(pKey, checked) {
+  State.reviewedKeys[pKey] = checked !== undefined ? Boolean(checked) : !State.reviewedKeys[pKey];
+  if (typeof renderResults === 'function') renderResults();
+  if (typeof renderNetGroupView === 'function') renderNetGroupView();
+  if (State.activeLocatedPair) {
+    renderDfmSpatialReviewCard(State.activeLocatedPair.viaId, State.activeLocatedPair.traceId);
+  }
+  renderCanvas();
+}
+window.toggleDfmPairReview = toggleDfmPairReview;
+
+function renderDfmSpatialReviewCard(viaId, traceId) {
+  const card = $('dfmSpatialReviewCard');
+  const titleEl = $('dfmSpatialRevTitle');
+  const bodyEl = $('dfmSpatialRevBody');
+  if (!card || !bodyEl) return;
+
+  State.activeLocatedPair = { viaId, traceId };
+  const pKey = `${viaId}_${traceId}`;
+  const isRev = !!State.reviewedKeys[pKey];
+  const pairs = (State.checkResult && State.checkResult.allPairs) ? State.checkResult.allPairs : [];
+  const p = pairs.find(item => item.via.id === viaId && item.trace.id === traceId);
+
+  if (titleEl) {
+    titleEl.textContent = `Via ${viaId} ↔ Trace ${traceId} 复核`;
+  }
+
+  const barStyle = isRev
+    ? 'background:rgba(16,185,129,.18);border:1px solid rgba(52,211,153,.55);'
+    : 'background:rgba(245,158,11,.15);border:1px solid rgba(251,191,36,.45);';
+
+  bodyEl.innerHTML = `
+    <div style="${barStyle}border-radius:6px;padding:7px 9px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:700;color:${isRev ? '#6ee7b7' : '#fde68a'};margin:0">
+        <input type="checkbox" id="chkDfmSpatialReview" ${isRev ? 'checked' : ''} onchange="toggleDfmPairReview('${pKey}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
+        <span>${isRev ? '已复核 (明细已同步勾选)' : '勾选复核此项'}</span>
+      </label>
+      <button type="button" class="btn small" onclick="toggleDfmPairReview('${pKey}', ${!isRev})" style="padding:3px 8px;font-size:11px;border:none;background:${isRev ? 'rgba(51,65,85,.9)' : '#10b981'};color:#fff">
+        ${isRev ? '取消复核' : '✓ 确认复核'}
+      </button>
+    </div>
+    ${p ? `
+      <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">
+        <div>走线: <strong style="color:#7dd3fc">${p.trace.net}</strong> (${p.trace.subset}) | 过孔: <strong>Via ${p.via.id}</strong> (${p.via.net}, ${p.via.spanLabel || '通孔'})</div>
+        <div>实测间距: <strong style="color:${p.status === '不满足' ? '#f87171' : '#4ade80'};font-family:var(--mono)">${p.evalDist.toFixed(2)} mil</strong> (要求 ≥ ${p.threshold.toFixed(2)} mil)</div>
+      </div>
+    ` : ''}
+    <div style="display:flex;justify-content:flex-end">
+      <button type="button" class="btn sec small" onclick="document.querySelector('nav#tabs button[data-tab=\\'result\\']').click()">返回检查结果明细</button>
+    </div>
+  `;
+  card.style.display = 'block';
+}
+
 function locateInCanvas(viaId, traceId) {
   State.highlightNetRoute = null;
   const tabBtn = document.querySelector('nav#tabs button[data-tab="canvas"]');
@@ -2025,6 +2178,7 @@ function locateInCanvas(viaId, traceId) {
   vp.zoom = 8.0;
   vp.panX = w/2 - via.origin[0] * vp.zoom;
   vp.panY = h/2 - via.origin[1] * vp.zoom;
+  renderDfmSpatialReviewCard(viaId, traceId);
   renderCanvas();
 }
 
@@ -2070,6 +2224,62 @@ window.locateNetRoute = locateNetRoute;
 window.addEventListener('DOMContentLoaded', () => {
   $('btnLoadSample').click();
 });
+
+// Global Display Controller: 100% Full-Width & Fullscreen Workbench
+(function() {
+  const KEY = 'pcb_workbench_wide_v1';
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement); }
+  function syncUI() {
+    const wide = document.documentElement.classList.contains('pcb-global-wide');
+    const fs = isFs();
+    const bW = document.getElementById('btnGlobalWide'), lW = document.getElementById('lblGlobalWide');
+    const bF = document.getElementById('btnGlobalFullscreen'), lF = document.getElementById('lblGlobalFs'), iF = document.getElementById('icoGlobalFs');
+    const bP = document.getElementById('btnGlobalPopout');
+    if (bW) bW.classList.toggle('active', wide);
+    if (lW) lW.textContent = wide ? '已铺满宽屏' : '铺满宽屏';
+    if (bF) bF.classList.toggle('fs-active', fs);
+    if (lF) lF.textContent = fs ? '退出全屏' : '全屏工作台';
+    if (iF) iF.innerHTML = fs ? '<path d="M6 2v4H2M10 2v4h4M10 14v-4h4M6 14v-4H2"/>' : '<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>';
+    if (bP) {
+      try {
+        bP.style.display = (window.self !== window.top && !fs) ? 'inline-flex' : 'none';
+        const u = new URL(window.location.href); u.searchParams.set('wide', '1'); bP.href = u.toString();
+      } catch (e) { bP.style.display = 'inline-flex'; }
+    }
+  }
+  function triggerResize() {
+    try { window.dispatchEvent(new Event('resize')); setTimeout(() => window.dispatchEvent(new Event('resize')), 120); } catch (e) {}
+  }
+  window.setGlobalWideMode = function(enable, persist = true) {
+    document.documentElement.classList.toggle('pcb-global-wide', !!enable);
+    if (persist) { try { localStorage.setItem(KEY, enable ? '1' : '0'); } catch (e) {} }
+    syncUI(); triggerResize();
+  };
+  window.toggleGlobalWideMode = function() { window.setGlobalWideMode(!document.documentElement.classList.contains('pcb-global-wide'), true); };
+  window.toggleGlobalFullscreen = function() {
+    if (isFs()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) { try { Promise.resolve(exit.call(document)).finally(() => { syncUI(); triggerResize(); }); } catch (e) {} }
+      return;
+    }
+    window.setGlobalWideMode(true, true);
+    const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    const fallback = () => {
+      try { if (window.self !== window.top) { const u = new URL(window.location.href); u.searchParams.set('wide', '1'); window.open(u.toString(), '_blank', 'noopener'); } } catch (e) {}
+      syncUI();
+    };
+    if (!req) { fallback(); return; }
+    try { const p = req.call(el); if (p && typeof p.then === 'function') p.then(() => { syncUI(); triggerResize(); }).catch(fallback); else { syncUI(); triggerResize(); } } catch (e) { fallback(); }
+  };
+  try {
+    if (window.location.search.indexOf('wide=1') >= 0) { document.documentElement.classList.add('pcb-global-wide'); localStorage.setItem(KEY, '1'); }
+    else if (localStorage.getItem(KEY) === '1') { document.documentElement.classList.add('pcb-global-wide'); }
+  } catch (e) {}
+  document.addEventListener('fullscreenchange', () => { syncUI(); triggerResize(); });
+  document.addEventListener('webkitfullscreenchange', () => { syncUI(); triggerResize(); });
+  document.addEventListener('DOMContentLoaded', syncUI);
+  syncUI();
+})();
 </script>
 </body>
 </html>
