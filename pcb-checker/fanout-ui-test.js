@@ -23,7 +23,9 @@ let htmlSource = fs.readFileSync(htmlPath, 'utf8');
 const jsCheckSource = fs.readFileSync(jsCheckPath, 'utf8');
 
 // Replace relative script tag with inlined script content for reliable JSDOM execution
-htmlSource = htmlSource.replace('<script src="fanout-check.js"></script>', `<script>${jsCheckSource}</script>`);
+// 容忍缓存版本号（<script src="fanout-check.js?v=5">），否则脚本没内联进页面会导致整页初始化失败
+htmlSource = htmlSource.replace(/<script src="fanout-check\.js(\?[^"]*)?"><\/script>/, () => `<script>${jsCheckSource}</script>`);
+if (!htmlSource.includes('exports') && !htmlSource.includes('fanout-check')) { /* noop */ }
 
 const dom = new JSDOM(htmlSource, {
   runScripts: 'dangerously',

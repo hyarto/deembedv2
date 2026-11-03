@@ -947,7 +947,7 @@ html.pcb-global-wide #modalViewScheme .modal-box,html:fullscreen #modalViewSchem
 </div>
 
 <!-- Load Core Engine -->
-<script src="fanout-check.js"></script>
+<script src="fanout-check.js?v=5"></script>
 
 <script>
 /**
@@ -3168,7 +3168,7 @@ function renderResultsTable() {
 
     // Signal vias and GND vias breakdown
     const sigVias = c.signalVias || c.vias.filter(v => v.net && !v.net.toUpperCase().includes('GND'));
-    const sigStr = sigVias.map(v => `#${v.id} (${v.net})`).join(', ');
+    const sigStr = sigVias.map(v => `#${v.id} (${escapeHtml(v.net)})`).join(', ');
     const gndCount = c.vias.length - sigVias.length;
     const ts = c.traceSummary || null;
     const traceInfoHtml = (ts && (ts.segmentCount > 0 || (ts.layers && ts.layers.length > 0)))
@@ -3189,8 +3189,8 @@ function renderResultsTable() {
           <div style="font-family:var(--mono);font-size:11px">[${c.centroid.x.toFixed(1)}, ${c.centroid.y.toFixed(1)}]</div>
           <div style="font-size:11px;color:#64748b">跨度: ${(((c.bbox&&c.bbox.maxSpan!=null)?c.bbox.maxSpan:Math.hypot(c.bbox?.spanX||0,c.bbox?.spanY||0))*0.0254).toFixed(2)}mm</div>
         </td>
-        <td style="max-width:210px;font-size:11px" title="${c.vias.map(v => `#${v.id} ${v.net} ${v.padstack}`).join('; ')}">
-          <div style="font-weight:700;color:#0369a1">${c.signalNet || sigStr}</div>
+        <td style="max-width:210px;font-size:11px" title="${escapeHtml(c.vias.map(v => `#${v.id} ${v.net} ${v.padstack}`).join('; '))}">
+          <div style="font-weight:700;color:#0369a1">${c.signalNet ? escapeHtml(c.signalNet) : sigStr}</div>
           <div style="color:#64748b;font-size:10.5px">信号孔: ${sigStr}</div>
           <div style="color:#94a3b8;font-size:10px">伴随地孔: ${gndCount} 个</div>
           ${traceInfoHtml}

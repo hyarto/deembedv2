@@ -421,5 +421,59 @@ Item 201   < Trace seg >
   if (m102.spansTraceLayer !== false) throw new Error('Via 102 (Top~03G02P) 应标记为未穿过 L12');
 });
 
+// ---------------------------------------------------------------------------
+// 盲埋孔层过滤的安全性：宁可多检，不可漏检（层名解析不出层号时不得静默跳过）
+// ---------------------------------------------------------------------------
+function spanCase(viaSpan, traceLayer) {
+  const txt = `Total 2 Items
+
+Item 1                < Via >
+  Origin-xy: [100.0000, 100.0000]
+  Net: GND
+  Padstack Name: TEST_SPAN
+  Padstack Defined from ${viaSpan[0]} to ${viaSpan[1]}
+  Circle Drill: 3.9400
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Item 2                < Trace >
+  Subset: ${traceLayer}
+  Net: 25_N
+  Type: Seg
+  Seg Length: 100.0000
+  Seg: xy [100.0000, 103.0000]  xy [200.0000, 103.0000] Width (6.0000)
+`;
+  const parsed = DfmCheck.parseDfmItems(txt, {gndPadDiameter: 10, signalPadDiameter: 10, gndFirstDrill: 3.94, signalFirstDrill: 3.94});
+  return DfmCheck.runDfmCheck(parsed.vias, parsed.traces, {minClearanceGnd: 6, minClearanceSignal: 6, mode: 'pad_to_trace', diffNetOnly: true});
+}
+
+test('走线层名无法解析为层号时不得静默跳过（漏检防护）：仍应检出 1 处超标', () => {
+  const r = spanCase(['<L2>', '<L5>'], 'SIGA');
+  if (r.totalChecked !== 1) throw new Error('应照常核对 1 处（宁可多检），实际 ' + r.totalChecked);
+  if (r.failCount !== 1) throw new Error('该 3 mil 间距应判超标，实际 failCount=' + r.failCount);
+  if (r.undeterminedSpanPairs !== 1) throw new Error('应记录 1 处「层信息无法判定」统计，实际 ' + r.undeterminedSpanPairs);
+});
+
+test('层名可解析且确不穿越时仍正常跳过（不过度检查）', () => {
+  const r = spanCase(['<L2>', '<L5>'], '19IS08');
+  if (r.totalChecked !== 0) throw new Error('L2–L5 盲孔不应检查 L19 走线，实际核对 ' + r.totalChecked);
+  if (r.skippedNonSpanningPairs !== 1) throw new Error('应计入 1 处非穿层排除，实际 ' + r.skippedNonSpanningPairs);
+  if (r.undeterminedSpanPairs !== 0) throw new Error('层号明确时不应计入「无法判定」，实际 ' + r.undeterminedSpanPairs);
+});
+
+test('真穿越与不穿越的边界：L2–L5 盲孔对 L4 走线要检查、对 L12 走线不检查', () => {
+  const inSpan = spanCase(['<L2>', '<L5>'], '04IS01');
+  const outSpan = spanCase(['<L2>', '<L5>'], '12IS01');
+  if (inSpan.totalChecked !== 1 || inSpan.failCount !== 1) throw new Error('L4 在跨度内，应检出超标');
+  if (outSpan.totalChecked !== 0) throw new Error('L12 在跨度外，应跳过');
+});
+
+test('evaluateViaSpan 返回值语义：spans 表示是否检查、determined 表示是否精确判定', () => {
+  const viaKnown = {minLayerNum: 2, maxLayerNum: 5, startLayer: '<L2>', endLayer: '<L5>'};
+  const a = DfmCheck.evaluateViaSpan(viaKnown, '19IS08', 19);
+  const b = DfmCheck.evaluateViaSpan(viaKnown, 'SIGA', null);
+  if (a.spans !== false || a.determined !== true) throw new Error('明确不穿越应返回 {false,true}，实际 ' + JSON.stringify(a));
+  if (b.spans !== true || b.determined !== false) throw new Error('无法判定应返回 {true,false}，实际 ' + JSON.stringify(b));
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);
