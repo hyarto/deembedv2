@@ -564,11 +564,14 @@ test('整个方案库跨方案统一配色：同一种 Padstack 在所有方案�
   window.renderSchemeCards();
 });
 
-// 17. 顶栏全局显示控制：100%铺满宽屏与全屏工作台切换验证
-test('顶栏全局显示控制：铺满宽屏与全屏工作台按钮及状态持久化', () => {
+// 17. 顶栏全局显示控制：只保留「铺满宽屏」（全屏工作台 / 独立大屏已按需求删除）
+test('顶栏全局显示控制：铺满宽屏可用，全屏工作台与独立大屏已移除', () => {
   const btnWide = document.getElementById('btnGlobalWide');
-  const btnFs = document.getElementById('btnGlobalFullscreen');
-  assert.ok(btnWide && btnFs, '顶栏必须包含「铺满宽屏」与「全屏工作台」全局显示按钮');
+  assert.ok(btnWide, '顶栏必须保留「铺满宽屏」按钮');
+  assert.strictEqual(document.getElementById('btnGlobalFullscreen'), null, '「全屏工作台」按钮应已删除');
+  assert.strictEqual(document.getElementById('btnGlobalPopout'), null, '「独立大屏」入口应已删除');
+  assert.strictEqual(typeof window.toggleGlobalFullscreen, 'undefined', 'toggleGlobalFullscreen 应已删除');
+  assert.strictEqual(document.getElementById('lblGlobalFs'), null, '全屏按钮文字节点应已删除');
 
   window.setGlobalWideMode(false, true);
   assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '初始关闭铺满宽屏');
@@ -580,12 +583,8 @@ test('顶栏全局显示控制：铺满宽屏与全屏工作台按钮及状态�
   } catch (e) {}
   assert.ok(document.getElementById('lblGlobalWide').textContent.includes('已铺满宽屏'), '按钮文字应同步更新');
 
-  // 点击全屏工作台时即使 JSDOM 无原生 requestFullscreen，也应自动确保全宽模式开启且不抛错
   window.setGlobalWideMode(false, true);
-  window.toggleGlobalFullscreen();
-  assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), true, '开启全屏工作台应自动激活 100% 铺满宽屏');
-
-  window.setGlobalWideMode(false, true);
+  assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '再次点击应关闭全宽模式');
 });
 
 console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
