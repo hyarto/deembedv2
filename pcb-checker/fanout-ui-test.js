@@ -587,5 +587,136 @@ test('顶栏全局显示控制：铺满宽屏可用，全屏工作台与独立�
   assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '再次点击应关闭全宽模式');
 });
 
+// 18. 方案库内部规则检查：参数可改、全库汇总表、卡片徽标、违例明细联动
+function importRuleSampleScheme() {
+  const txt = fs.readFileSync(path.join(__dirname, 'sample/盲埋孔扇出示例.txt'), 'utf8');
+  const parsed = window.FanoutChecker.parseMultiSchemeTxt(txt, 0);
+  assert.strictEqual(parsed.length, 1, '样例文件应解析出 1 套方案');
+  window.State.library.clear();
+  const scheme = window.State.library.addScheme(new window.FanoutChecker.FanoutScheme(parsed[0]));
+  window.renderSchemeCards();
+  return scheme;
+}
+
+test('内部规则检查：参数控件齐全、默认值正确、汇总表按方案逐行出结论', () => {
+  const ids = ['inpRuleSigPitch', 'inpRuleGndPitch', 'inpRuleDistTol', 'inpRuleSymTol', 'inpRuleStackTol', 'selRulePitchScope'];
+  ids.forEach(id => assert.ok(document.getElementById(id), `缺少参数控件 ${id}`));
+
+  assert.strictEqual(document.getElementById('inpRuleSigPitch').value, '0.45,0.5,0.6,0.7,0.8', '信号孔距默认标称值');
+  assert.strictEqual(document.getElementById('inpRuleGndPitch').value, '350,400,450', '地孔距默认标称值（µm）');
+  assert.strictEqual(document.getElementById('inpRuleDistTol').value, '0.02');
+  assert.strictEqual(document.getElementById('inpRuleSymTol').value, '0.02');
+  assert.strictEqual(document.getElementById('inpRuleStackTol').value, '0.05');
+  assert.strictEqual(document.getElementById('selRulePitchScope').value, 'all');
+
+  window.State.library.clear();
+  window.loadPresets();
+  window.renderSchemeCards();
+
+  const rows = document.querySelectorAll('#pnlSchemeRuleSummary tbody tr');
+  assert.strictEqual(rows.length, 6, '汇总表每个方案一行');
+  const headers = Array.from(document.querySelectorAll('#pnlSchemeRuleSummary thead th')).map(th => th.textContent.trim());
+  assert.ok(headers.some(h => h.includes('信号孔中心距')), headers.join('|'));
+  assert.ok(headers.some(h => h.includes('地孔')), headers.join('|'));
+  assert.ok(headers.some(h => h.includes('逐层对称')), headers.join('|'));
+
+  const badge = document.getElementById('ruleOverallBadge');
+  assert.ok(/套方案/.test(badge.textContent), badge.textContent);
+});
+
+test('内部规则检查：样例 43 孔判定为违例，卡片徽标与汇总表数字一致', () => {
+  const scheme = importRuleSampleScheme();
+  const result = window.SchemeRuleState.results[scheme.id];
+  assert.ok(result, '样例方案应有规则结果');
+  assert.strictEqual(result.ok, false, '按默认规则该样例存在违例');
+  assert.strictEqual(result.totals.viaCount, 43);
+  assert.strictEqual(result.totals.signalCount, 6);
+  assert.strictEqual(result.pitch.checked, 9);
+  assert.strictEqual(result.pitch.violations.length, 4);
+  assert.strictEqual(result.gndToSignal.checked, 37);
+  assert.strictEqual(result.gndToSignal.violations.length, 6);
+  assert.strictEqual(result.symmetry.failLayers, 0, '每层孔分布对称');
+  assert.strictEqual(result.totals.stackColumns, 12, '叠孔柱已识别并豁免');
+
+  const card = document.getElementById('card_' + scheme.id);
+  const badgeText = Array.from(card.querySelectorAll('.badge-tag')).map(e => e.textContent.trim()).join(' ');
+  assert.ok(badgeText.includes('规则违例'), badgeText);
+
+  const rows = Array.from(document.querySelectorAll('#pnlSchemeRuleSummary tbody tr'));
+  const row = rows.find(r => r.textContent.includes('43'));
+  assert.ok(row, '汇总表应包含该方案行');
+  assert.ok(row.textContent.includes('信号 6'), row.textContent);
+  assert.ok(row.textContent.includes('4 违例'), row.textContent);
+  assert.ok(row.textContent.includes('6 违例'), row.textContent);
+  assert.ok(row.textContent.includes('全部对称'), row.textContent);
+});
+
+test('内部规则检查：展开违例明细，点击违例行跳转放大视图并高亮该孔', () => {
+  const scheme = importRuleSampleScheme();
+  window.toggleSchemeRuleDetail(scheme.id);
+
+  const detail = document.getElementById('pnlSchemeRuleSummary');
+  assert.ok(detail.textContent.includes('违例明细'), '展开后应出现明细区块');
+  assert.ok(detail.textContent.includes('信号孔距标称'), detail.textContent.slice(0, 200));
+
+  const clickable = detail.querySelectorAll('tr[onclick]');
+  assert.strictEqual(clickable.length, 10, '信号 4 条 + 地孔 6 条违例行');
+  assert.ok(clickable[0].textContent.includes('mm'), clickable[0].textContent);
+
+  clickable[0].dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+
+  const modal = document.getElementById('modalViewScheme');
+  assert.ok(modal.classList.contains('open'), '点击违例应打开放大查看弹窗');
+
+  const firstViolation = window.SchemeRuleState.results[scheme.id].pitch.violations[0];
+  // 高亮在 rAF 里执行，直接调用同一入口做确定性断言
+  window.setViewSchemeHoveredVia(firstViolation.viaA);
+  assert.strictEqual(window.ViewSchemeState.hoveredIndex, firstViolation.viaA, '应高亮违例的第一颗孔');
+  window.closeViewSchemeModal();
+});
+
+test('内部规则检查：参数可手改并即时重算，恢复默认参数可一键还原', () => {
+  const scheme = importRuleSampleScheme();
+
+  document.getElementById('inpRuleSigPitch').value = '0.475';
+  document.getElementById('inpRuleGndPitch').value = '425,600,424.9';
+  document.getElementById('inpRuleDistTol').value = '0.05';
+  window.applySchemeRuleParams();
+
+  const after = window.SchemeRuleState.results[scheme.id];
+  assert.strictEqual(after.params.signalPitchMm.length, 1);
+  assert.strictEqual(after.pitch.violations.length, 0, '改成实际用值后信号孔距不再违例');
+  assert.strictEqual(after.gndToSignal.violations.length, 0);
+  assert.strictEqual(after.ok, true);
+  assert.ok(document.getElementById('ruleOverallBadge').textContent.includes('全部通过'),
+    document.getElementById('ruleOverallBadge').textContent);
+
+  document.getElementById('selRulePitchScope').value = 'sameLayer';
+  window.applySchemeRuleParams();
+  const sameLayer = window.SchemeRuleState.results[scheme.id];
+  assert.ok(sameLayer.pitch.checked < 9, '仅同层共存孔对时检查对象更少');
+
+  window.resetSchemeRuleParams();
+  assert.strictEqual(document.getElementById('inpRuleSigPitch').value, '0.45,0.5,0.6,0.7,0.8');
+  assert.strictEqual(document.getElementById('inpRuleGndPitch').value, '350,400,450');
+  assert.strictEqual(document.getElementById('inpRuleDistTol').value, '0.02');
+  assert.strictEqual(document.getElementById('selRulePitchScope').value, 'all');
+  const restored = window.SchemeRuleState.results[scheme.id];
+  assert.strictEqual(restored.pitch.violations.length, 4, '恢复默认参数后回到 4 条信号违例');
+});
+
+test('方案库 Padstack 色卡已移到本页尾部（main 末尾，不在方案库卡片内）', () => {
+  const legend = document.getElementById('libraryPadstackLegendBar');
+  const main = document.querySelector('main');
+  assert.ok(legend, '色卡容器应存在');
+  assert.strictEqual(legend.parentElement, main, '色卡应直接挂在 main 下（页面尾部）');
+  assert.strictEqual(main.lastElementChild, legend, '色卡应是页面最后一个区块');
+  assert.ok(!legend.closest('#tabLibrary'), '色卡不应再出现在方案库卡片里');
+  const tabSections = Array.from(main.querySelectorAll('section.tab'));
+  assert.ok(tabSections.length >= 5, '五个页签区块仍完整');
+  assert.ok(tabSections[0].compareDocumentPosition(legend) & window.Node.DOCUMENT_POSITION_FOLLOWING,
+    '色卡应排在所有页签区块之后');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
 assert.strictEqual(fail, 0);

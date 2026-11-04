@@ -84,6 +84,23 @@ tools/oracle/gen-fixtures.py   用 shapely 重新生成几何基准（仅开发�
    （`nav-unify-test.js` 会做跨页比对）。页面只保留各自不同的「标题 / 副标题 / 页签文案」，
    样式一律回到这块统一规则里改；不要再往页面局部写 `header{}` / `nav#tabs{}` 之类的规则。
 
+10. **扇出方案库内部规则检查**（扇出页顶部的「🧪 方案库内部规则检查」卡片）：
+    `fanout-check.js` 的 `checkSchemeInternalRules(scheme, params)` 逐套方案自查三条规则 ——
+    ① 信号孔之间中心距命中 `signalPitchMm` 标称集合（默认 0.45/0.5/0.6/0.7/0.8 mm）；
+    ② 每个地孔到最近信号孔中心距命中 `gndToSignalUm`（默认 350/400/450 µm）；
+    ③ 每一层的孔分布满足**中心对称或轴对称**（容差 `symmetryTolMm`）。
+    - 判距用 `matchNominal()`：命中「最近标称值」且 `|实测-标称| ≤ distanceTolMm` 才算合格，
+      界面必须同时显示实测值、最近标称值、偏差 —— 只报「不合格」无法定位问题。
+    - **叠孔柱豁免**：同网络且 XY 距离 ≤ `stackColumnTolMm`（默认 0.05mm）的孔对是同一个钻孔柱
+      （跨层堆叠），物理上就该重合，不计间距违例，只统计处数；异网同点位不算同柱（那是真短路）。
+    - 间距检查范围 `pitchScope`：`all`（默认，物理钻孔距，跨层也算）/ `sameLayer`（仅同层共存孔对）。
+    - 层跨度来源见第 11 条；没有层信息的方案退回**整体投影**查对称性，并在结果里标 `estimated`。
+    - 参数输入框 id 固定（`inpRuleSigPitch` 等），改完调 `applySchemeRuleParams()` 重算全库。
+
+11. **盲埋孔层跨度解析**：`parseViaTextLayerSpan()` / `parseViaLayerRange()` 的优先级固定为
+    `layerStart/layerEnd` 字段 → `layers` 数组（Connections 的 **第一个** Shape 行 = 焊盘层列表，
+    信号孔后面的 Trace 行不要用）→ Padstack 名称尾部 `_L5_L10`。三者都没有视为「无层信息」。
+
 ## 5. 数值与几何：安全方向不可反
 
 DRC 类工具的底线是**宁可判危险，不可乐观**：
@@ -149,8 +166,8 @@ w.__SYNC_CHECK__ = true;                                                 // 关�
 - 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`test(ui): …`、`docs: …`，
   正文写清「原来怎样 / 现在怎样 / 为什么」，并附上关键验证数字。
 - 每个任务一个分支，PR 到 `main`；PR 描述包含：背景、改动清单、样例数据实测数字、测试结果。
-- **合并前 `npm test` 必须全绿**（当前基线：几何 7 / 走线 41 / DFM 22 / 扇出 7 / 铜皮 11 /
-  集成 21 / 115 / 23 / 17 / 16 / 参数记忆 21）。
+- **合并前 `npm test` 必须全绿**（当前基线：几何 7 / 走线 41 / DFM 22 / 扇出 7 / 方案内部规则 16 /
+  铜皮 11 / 集成 21 / 115 / 铜皮 UI 21 / DFM UI 23 / 扇出 UI 22 / 铜皮 UI 16 / 参数记忆 21 / 顶栏统一 14）。
 - 不要提交 `node_modules/`、临时脚本、开发机绝对路径（`/home/xxx/...`、`/tmp/...`）、
   `dev/`、`uploads/`、截图等过程产物。
 

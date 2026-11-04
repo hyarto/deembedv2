@@ -765,15 +765,28 @@
       const rawVias = options.vias || [];
       const unitScale = this.unit === 'mm' ? MIL_PER_MM : 1.0;
 
-      this.vias = rawVias.map((v, idx) => ({
-        id: v.id != null ? v.id : idx + 1,
-        x: (v.x || 0) * unitScale,
-        y: (v.y || 0) * unitScale,
-        padstack: (v.padstack || 'STANDARD_VIA').trim(),
-        net: (v.net || '').trim(),
-        role: (v.role || '').trim(),
-        drill: v.drill || 0
-      }));
+      this.vias = rawVias.map((v, idx) => {
+        const via = {
+          id: v.id != null ? v.id : idx + 1,
+          x: (v.x || 0) * unitScale,
+          y: (v.y || 0) * unitScale,
+          padstack: (v.padstack || 'STANDARD_VIA').trim(),
+          net: (v.net || '').trim(),
+          role: (v.role || '').trim(),
+          drill: v.drill || 0
+        };
+        // 盲埋孔层跨度（按层算孔分布用）：有就带上，没有则运行时回退到 Padstack 名称
+        if (v.layerStart != null) via.layerStart = Number(v.layerStart);
+        if (v.layerEnd != null) via.layerEnd = Number(v.layerEnd);
+        if (Array.isArray(v.layers) && v.layers.length) via.layers = v.layers.slice();
+        if (v.type) via.type = v.type;
+        return via;
+      });
+
+      // 方案自带的规则参数（可选，覆盖全局默认）
+      this.ruleParams = (options.ruleParams && typeof options.ruleParams === 'object')
+        ? Object.assign({}, options.ruleParams)
+        : null;
 
       this.viaCount = this.vias.length;
       this._computeGeometry();
@@ -846,15 +859,21 @@
         category: this.category,
         description: this.description,
         unit: 'mil',
-        vias: this.vias.map(v => ({
-          id: v.id,
-          x: roundN(v.x, 4),
-          y: roundN(v.y, 4),
-          padstack: v.padstack,
-          net: v.net,
-          role: v.role,
-          drill: v.drill
-        }))
+        vias: this.vias.map(v => {
+          const out = {
+            id: v.id,
+            x: roundN(v.x, 4),
+            y: roundN(v.y, 4),
+            padstack: v.padstack,
+            net: v.net,
+            role: v.role,
+            drill: v.drill
+          };
+          if (v.layerStart != null) out.layerStart = v.layerStart;
+          if (v.layerEnd != null) out.layerEnd = v.layerEnd;
+          if (Array.isArray(v.layers) && v.layers.length) out.layers = v.layers.slice();
+          return out;
+        })
       };
     }
 
@@ -2506,6 +2525,8 @@
             const isGnd = net.toUpperCase().includes('GND') || padstack.toUpperCase().includes('GND');
             const role = isGnd ? '伴随地孔' : '信号孔';
             const type = isGnd ? 'gnd' : 'signal';
+            // 层跨度（方案内部规则检查要按层算孔分布）
+            const layerSpan = parseViaTextLayerSpan(ib);
 
             vias.push({
               id: vIdx + 1,
@@ -2517,7 +2538,11 @@
               net: net || (isGnd ? 'GND' : 'SIGNAL'),
               role,
               type,
-              drill
+              drill,
+              layerStart: layerSpan.layerStart,
+              layerEnd: layerSpan.layerEnd,
+              layers: layerSpan.layers,
+              layerSource: layerSpan.layerSource
             });
           }
         });
@@ -2533,6 +2558,7 @@
               const padstack = parts[2] || 'VIA_PADSTACK';
               const net = parts[3] || 'GND';
               const isGnd = net.toUpperCase().includes('GND') || padstack.toUpperCase().includes('GND');
+              const nameSpan = parseLayerSpanFromPadstackName(padstack);
               vias.push({
                 id: vIdx + 1,
                 rawX: x,
@@ -2543,7 +2569,10 @@
                 net,
                 role: isGnd ? '伴随地孔' : '信号孔',
                 type: isGnd ? 'gnd' : 'signal',
-                drill: 0
+                drill: 0,
+                layerStart: nameSpan ? nameSpan.start : null,
+                layerEnd: nameSpan ? nameSpan.end : null,
+                layers: []
               });
             }
           }
@@ -2876,6 +2905,607 @@
       absDyMm: Math.abs(dy) * MM_PER_MIL,
       angleDeg
     };
+  }
+
+  /* ==========================================================================
+   * 盲埋孔层跨度解析 + 扇出方案内部规则检查
+   * --------------------------------------------------------------------------
+   * 层跨度来源优先级：layerStart/layerEnd 字段 → layers 数组（Connections 的
+   * Shape 层列表）→ Padstack 名称尾部 _L5_L10。三者都没有视为「无层信息」。
+   *
+   * 方案内部规则（参数全部可改，见 DEFAULT_INTERNAL_RULES）：
+   *   1) 信号孔之间的中心距必须命中 signalPitchMm 中的某一标称值；
+   *   2) 每个地孔到最近信号孔的中心距必须命中 gndToSignalUm（µm）中的某一标称值；
+   *   3) 每一层的孔分布必须满足中心对称或轴对称（symmetryTolMm 容差）。
+   *   叠孔柱（同网络、XY 距离 ≤ stackColumnTolMm）物理上就是同一个钻孔柱，
+   *   其孔对不计入间距违例，单独统计。
+   * ======================================================================== */
+
+  const BOTTOM_LAYER_INDEX_FANOUT = 9999;
+
+  /**
+   * 叠层名 -> 单调递增的物理层序号（Top=1，Bottom=9999）
+   * 兼容 Top / 表层 / 10G07P / 13G09P / L12 / Layer_12 / Inner12 / "12"
+   */
+  function parseLayerIndexFromName(layerName) {
+    if (layerName == null) return null;
+    if (typeof layerName === 'number') return isFinite(layerName) ? layerName : null;
+    const s = String(layerName).trim();
+    if (!s) return null;
+
+    if (/^(?:top|表层|top_layer)$/i.test(s)) return 1;
+    if (/^(?:bottom|bot|底层|bottom_layer)$/i.test(s)) return BOTTOM_LAYER_INDEX_FANOUT;
+
+    const mLead = s.match(/^0*(\d{1,3})(?:$|[^0-9])/);
+    if (mLead) {
+      const n = parseInt(mLead[1], 10);
+      if (n > 0) return n;
+    }
+
+    const mPref = s.match(/^(?:L|LAYER|INNER|SIGNAL|SIG|GND|PLN|S)[_\-\s]*0*(\d{1,3})(?:$|[^0-9])/i);
+    if (mPref) {
+      const n = parseInt(mPref[1], 10);
+      if (n > 0) return n;
+    }
+
+    const mAny = s.match(/(?:^|[_\-\s])L0*(\d{1,3})(?:$|[^0-9])/i);
+    if (mAny) {
+      const n = parseInt(mAny[1], 10);
+      if (n > 0) return n;
+    }
+    return null;
+  }
+
+  function formatLayerNum(num) {
+    if (num == null || !isFinite(num)) return '?';
+    if (num >= BOTTOM_LAYER_INDEX_FANOUT) return 'Bottom';
+    if (num === 1) return 'L1(Top)';
+    return `L${num}`;
+  }
+
+  /**
+   * Padstack 名称尾部层跨度：..._L1_L5 / ..._L5_L10 / ..._L10_11
+   */
+  function parseLayerSpanFromPadstackName(padstackName) {
+    const s = String(padstackName == null ? '' : padstackName).trim();
+    if (!s) return null;
+    const m = s.match(/_L?(\d{1,3})[_-]L?(\d{1,3})$/i);
+    if (!m) return null;
+    const a = parseInt(m[1], 10);
+    const b = parseInt(m[2], 10);
+    if (!(a > 0) || !(b > 0) || a === b) return null;
+    return { start: Math.min(a, b), end: Math.max(a, b) };
+  }
+
+  /**
+   * 单个过孔文本块 -> 层跨度（Padstack Defined from / Connections Shape / 名称后缀）
+   */
+  function parseViaTextLayerSpan(text) {
+    const src = String(text == null ? '' : text);
+    const res = { layerStart: null, layerEnd: null, layers: [], layerSource: '' };
+
+    const mDef = src.match(/Padstack\s+Defined\s*(?:from|:)?\s*([^\s\r\n]+?)\s+(?:to|~|-)\s+([^\s\r\n]+)/i);
+    if (mDef) {
+      const a = parseLayerIndexFromName(mDef[1]);
+      const b = parseLayerIndexFromName(mDef[2]);
+      if (a != null && b != null) {
+        res.layerStart = Math.min(a, b);
+        res.layerEnd = Math.max(a, b);
+        res.layerSource = 'defined';
+      }
+    }
+
+    // 第一个 Shape 行是焊盘层列表（信号孔后面可能还有 Trace 行，取第一个即可）
+    const mShape = src.match(/Shape:\s*\d+\s*\(([^)]*)\)/i);
+    if (mShape) {
+      const nums = mShape[1].split(/[,\s]+/).map(n => parseLayerIndexFromName(n)).filter(n => n != null);
+      if (nums.length) {
+        res.layers = nums;
+        if (res.layerStart == null) {
+          res.layerStart = Math.min.apply(null, nums);
+          res.layerEnd = Math.max.apply(null, nums);
+          res.layerSource = 'connections';
+        }
+      }
+    }
+
+    if (res.layerStart == null) {
+      const mPad = src.match(/Padstack\s+Name:\s*([^\r\n]+)/i);
+      const span = mPad ? parseLayerSpanFromPadstackName(mPad[1]) : null;
+      if (span) {
+        res.layerStart = span.start;
+        res.layerEnd = span.end;
+        res.layerSource = 'padstack-name';
+      }
+    }
+
+    return res;
+  }
+
+  /**
+   * 取某个孔的层跨度 {start, end, source}，无层信息返回 null
+   */
+  function parseViaLayerRange(via) {
+    if (!via) return null;
+
+    const n1 = via.layerStart != null ? parseLayerIndexFromName(via.layerStart) : null;
+    const n2 = via.layerEnd != null ? parseLayerIndexFromName(via.layerEnd) : null;
+    if (n1 != null && n2 != null && n1 !== n2) {
+      return { start: Math.min(n1, n2), end: Math.max(n1, n2), source: 'field' };
+    }
+
+    const list = Array.isArray(via.layers)
+      ? via.layers.map(n => parseLayerIndexFromName(n)).filter(n => n != null)
+      : [];
+    if (list.length > 1) {
+      const a = Math.min.apply(null, list);
+      const b = Math.max.apply(null, list);
+      if (a !== b) return { start: a, end: b, source: 'layers' };
+    }
+
+    const span = parseLayerSpanFromPadstackName(via.padstack);
+    if (span) return { start: span.start, end: span.end, source: 'padstack-name' };
+
+    if (list.length === 1) return { start: list[0], end: list[0], source: 'layers-single' };
+    if (n1 != null && n2 != null) return { start: Math.min(n1, n2), end: Math.max(n1, n2), source: 'field-single' };
+    return null;
+  }
+
+  /* ---------------- 方案内部规则：参数 ---------------- */
+
+  const DEFAULT_INTERNAL_RULES = {
+    signalPitchMm: [0.45, 0.5, 0.6, 0.7, 0.8],   // 信号孔中心距允许的标称值 (mm)
+    gndToSignalUm: [350, 400, 450],              // 地孔到最近信号孔中心距标称值 (µm)
+    distanceTolMm: 0.02,                         // 中心距容差 (±mm / 地孔 ±µm 同值换算)
+    symmetryTolMm: 0.02,                         // 对称性判定容差 (mm)
+    stackColumnTolMm: 0.05,                      // 叠孔柱判定阈值 (mm)
+    pitchScope: 'all',                           // all = 全部孔对；sameLayer = 仅同层共存孔对
+    checkSymmetry: true
+  };
+
+  function uniqueSortedNumbers(list) {
+    return Array.from(new Set(list.map(n => Number(n)).filter(n => isFinite(n) && n > 0))).sort((a, b) => a - b);
+  }
+
+  /**
+   * 「0.45,0.5,0.6」/ 数组 -> 去重升序数值数组；空则回退默认值
+   */
+  function parseNominalList(input, fallback) {
+    let nums = [];
+    if (Array.isArray(input)) {
+      nums = input.map(n => Number(n));
+    } else {
+      const matched = String(input == null ? '' : input).match(/\d+(?:\.\d+)?/g);
+      nums = matched ? matched.map(n => Number(n)) : [];
+    }
+    const clean = uniqueSortedNumbers(nums);
+    return clean.length ? clean : (fallback || []).slice();
+  }
+
+  /**
+   * 规则参数规范化（缺省 / 非法值一律回退默认）
+   */
+  function normalizeInternalRuleParams(params) {
+    const p = params || {};
+    const num = (v, d) => {
+      const n = Number(v);
+      return (isFinite(n) && n >= 0) ? n : d;
+    };
+    return {
+      signalPitchMm: parseNominalList(p.signalPitchMm, DEFAULT_INTERNAL_RULES.signalPitchMm),
+      gndToSignalUm: parseNominalList(p.gndToSignalUm, DEFAULT_INTERNAL_RULES.gndToSignalUm),
+      distanceTolMm: num(p.distanceTolMm, DEFAULT_INTERNAL_RULES.distanceTolMm),
+      symmetryTolMm: num(p.symmetryTolMm, DEFAULT_INTERNAL_RULES.symmetryTolMm),
+      stackColumnTolMm: num(p.stackColumnTolMm, DEFAULT_INTERNAL_RULES.stackColumnTolMm),
+      pitchScope: (String(p.pitchScope || '').toLowerCase() === 'samelayer') ? 'sameLayer' : 'all',
+      checkSymmetry: p.checkSymmetry === false ? false : true
+    };
+  }
+
+  /**
+   * 数值命中标称集合：返回 {hit, nominal, deviation}
+   */
+  function matchNominal(value, nominalList, tol) {
+    let bestNominal = null;
+    let bestDev = Infinity;
+    (nominalList || []).forEach(n => {
+      const dev = Math.abs(value - n);
+      if (dev < bestDev) { bestDev = dev; bestNominal = n; }
+    });
+    return {
+      hit: bestDev <= tol,
+      nominal: bestNominal,
+      deviation: isFinite(bestDev) ? bestDev : null
+    };
+  }
+
+  /* ---------------- 方案内部规则：层视图与叠孔柱 ---------------- */
+
+  function readViaXY(v) {
+    return { x: Number(v && v.x) || 0, y: Number(v && v.y) || 0 };
+  }
+
+  function viaNetKey(v) {
+    const net = String((v && v.net) || '').trim().toUpperCase();
+    if (net) return `NET:${net}`;
+    const pad = String((v && v.padstack) || '').trim().toUpperCase();
+    return pad ? `PAD:${pad}` : 'NET:UNKNOWN';
+  }
+
+  /**
+   * 每层有哪些孔（层跨度展开）。含 Bottom 哨兵时用已知最大有限层号收口。
+   */
+  function buildSchemeLayerView(vias) {
+    const list = Array.isArray(vias) ? vias : [];
+    const ranges = list.map(v => parseViaLayerRange(v));
+    const hasInfo = ranges.some(Boolean);
+
+    let maxFinite = 0;
+    ranges.forEach(r => {
+      if (!r) return;
+      if (r.start < BOTTOM_LAYER_INDEX_FANOUT && r.start > maxFinite) maxFinite = r.start;
+      if (r.end < BOTTOM_LAYER_INDEX_FANOUT && r.end > maxFinite) maxFinite = r.end;
+    });
+
+    const layerMap = new Map();
+    const viaLayers = list.map(() => new Set());
+
+    if (hasInfo) {
+      ranges.forEach((r, idx) => {
+        if (!r) return;
+        const lo = r.start;
+        const hi = r.end >= BOTTOM_LAYER_INDEX_FANOUT ? Math.max(maxFinite, r.start) : r.end;
+        const capped = Math.min(hi, lo + 127);
+        for (let n = lo; n <= capped; n++) {
+          if (!layerMap.has(n)) layerMap.set(n, []);
+          layerMap.get(n).push(idx);
+          viaLayers[idx].add(n);
+        }
+      });
+    }
+
+    const layers = Array.from(layerMap.keys()).sort((a, b) => a - b).map(n => ({
+      layer: n,
+      layerLabel: formatLayerNum(n),
+      viaIndices: layerMap.get(n)
+    }));
+
+    return { layerInfoAvailable: hasInfo, layers, viaLayers, maxFiniteLayer: maxFinite || null };
+  }
+
+  /**
+   * 叠孔柱：同网络 + XY 距离 ≤ 阈值（物理上同一个钻孔柱，跨层堆叠）
+   */
+  function resolveStackColumns(vias, tolMm) {
+    const list = Array.isArray(vias) ? vias : [];
+    const n = list.length;
+    const tolMil = Math.max(0, Number(tolMm) || 0) / MM_PER_MIL;
+    const columnOf = new Array(n).fill(-1);
+    const columns = [];
+    const keys = list.map(v => viaNetKey(v));
+
+    for (let i = 0; i < n; i++) {
+      if (columnOf[i] >= 0) continue;
+      const group = [i];
+      const pi = readViaXY(list[i]);
+      for (let j = i + 1; j < n; j++) {
+        if (columnOf[j] >= 0) continue;
+        if (keys[i] !== keys[j]) continue;
+        const pj = readViaXY(list[j]);
+        if (Math.hypot(pi.x - pj.x, pi.y - pj.y) <= tolMil) group.push(j);
+      }
+      if (group.length > 1) {
+        const ci = columns.length;
+        group.forEach(k => { columnOf[k] = ci; });
+        columns.push({ index: ci, viaIndices: group, net: keys[i], x: pi.x, y: pi.y });
+      }
+    }
+    return { columnOf, columns };
+  }
+
+  /* ---------------- 方案内部规则：对称性 ---------------- */
+
+  function pointsCentroid(points) {
+    let sx = 0, sy = 0;
+    points.forEach(p => { sx += p.x; sy += p.y; });
+    return { x: sx / points.length, y: sy / points.length };
+  }
+
+  /**
+   * 用「最近未用点」贪心配对，判断映射后的点集是否与原集合一致
+   */
+  function matchTransformedPoints(points, targetFn, tol) {
+    const n = points.length;
+    const used = new Array(n).fill(false);
+    let maxDev = 0;
+    let ok = true;
+    for (let i = 0; i < n; i++) {
+      const t = targetFn(points[i]);
+      let best = -1;
+      let bestD = Infinity;
+      for (let j = 0; j < n; j++) {
+        if (used[j]) continue;
+        const d = Math.hypot(points[j].x - t.x, points[j].y - t.y);
+        if (d < bestD) { bestD = d; best = j; }
+      }
+      if (best >= 0 && bestD <= tol) {
+        used[best] = true;
+        if (bestD > maxDev) maxDev = bestD;
+      } else {
+        ok = false;
+        if (bestD > maxDev) maxDev = bestD;
+        if (maxDev > tol * 6) break;
+      }
+    }
+    return { ok, maxDeviation: maxDev };
+  }
+
+  /**
+   * 孔分布对称性：中心对称（绕质心 180°）或轴对称（过质心的某条直线镜像）
+   * @returns {{ok:boolean, type:string, axisAngleDeg:number|null, maxDeviationMil:number}}
+   */
+  function checkPointSetSymmetry(points, tolMil) {
+    const list = Array.isArray(points) ? points : [];
+    const n = list.length;
+    const tol = Math.max(1e-9, Number(tolMil) || 0);
+
+    if (n === 0) return { ok: true, type: 'empty', axisAngleDeg: null, maxDeviationMil: 0 };
+    if (n === 1) return { ok: true, type: 'trivial', axisAngleDeg: null, maxDeviationMil: 0 };
+
+    const c = pointsCentroid(list);
+
+    // 1) 中心对称
+    const centro = matchTransformedPoints(list, p => ({ x: 2 * c.x - p.x, y: 2 * c.y - p.y }), tol);
+    if (centro.ok) {
+      return { ok: true, type: 'centro', axisAngleDeg: null, maxDeviationMil: centro.maxDeviation };
+    }
+
+    // 2) 轴对称：候选轴全部过质心
+    const angles = [];
+    const pushAngle = a => {
+      let v = a % Math.PI;
+      if (v < 0) v += Math.PI;
+      if (!angles.some(x => Math.abs(x - v) < 1e-6)) angles.push(v);
+    };
+
+    const polar = list.map(p => {
+      const dx = p.x - c.x, dy = p.y - c.y;
+      return { dx, dy, r: Math.hypot(dx, dy), a: Math.atan2(dy, dx) };
+    });
+
+    // 点在轴上 -> 该点到质心的方向就是候选轴
+    polar.forEach(p => { if (p.r > tol) pushAngle(p.a); });
+
+    // 两点关于轴镜像 -> 角平分线是候选轴
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (Math.abs(polar[i].r - polar[j].r) > tol) continue;
+        const mid = (polar[i].a + polar[j].a) / 2;
+        pushAngle(mid);
+        pushAngle(mid + Math.PI / 2);
+      }
+    }
+    if (angles.length === 0) pushAngle(0);
+
+    let best = { ok: false, type: 'none', axisAngleDeg: null, maxDeviationMil: centro.maxDeviation };
+    for (let k = 0; k < angles.length; k++) {
+      const th = angles[k];
+      const ux = Math.cos(th), uy = Math.sin(th);
+      const res = matchTransformedPoints(list, p => {
+        const dx = p.x - c.x, dy = p.y - c.y;
+        const proj = dx * ux + dy * uy;
+        return { x: c.x + proj * ux - (dx - proj * ux), y: c.y + proj * uy - (dy - proj * uy) };
+      }, tol);
+      if (res.ok) {
+        return { ok: true, type: 'axis', axisAngleDeg: (th * 180) / Math.PI, maxDeviationMil: res.maxDeviation };
+      }
+      if (best.axisAngleDeg == null || res.maxDeviation < best.maxDeviationMil) {
+        best = { ok: false, type: 'none', axisAngleDeg: (th * 180) / Math.PI, maxDeviationMil: res.maxDeviation };
+      }
+    }
+    return best;
+  }
+
+  /* ---------------- 方案内部规则：主入口 ---------------- */
+
+  /**
+   * 扇出方案内部规则检查
+   *
+   * @param {Object|Array} scheme 扇出方案（或孔数组）
+   * @param {Object} params 规则参数（见 DEFAULT_INTERNAL_RULES），缺省取方案上的 ruleParams
+   * @returns {Object} {
+   *   ok, layerInfoAvailable, params, totals,
+   *   pitch:{checked, violations[], stackExemptPairs},
+   *   gndToSignal:{checked, violations[]},
+   *   symmetry:{layers[], failLayers, estimated}
+   * }
+   */
+  function checkSchemeInternalRules(scheme, params) {
+    const vias = (scheme && Array.isArray(scheme.vias))
+      ? scheme.vias
+      : (Array.isArray(scheme) ? scheme : []);
+    const P = normalizeInternalRuleParams(params || (scheme && scheme.ruleParams) || {});
+    const layerView = buildSchemeLayerView(vias);
+    const stack = resolveStackColumns(vias, P.stackColumnTolMm);
+    const tolMil = P.distanceTolMm / MM_PER_MIL;
+
+    const sigIdx = [];
+    const gndIdx = [];
+    vias.forEach((v, i) => { (isSignalVia(v) ? sigIdx : gndIdx).push(i); });
+
+    const shareLayer = (i, j) => {
+      if (!layerView.layerInfoAvailable) return true;
+      const a = layerView.viaLayers[i];
+      const b = layerView.viaLayers[j];
+      if (!a || !b) return true;
+      let found = false;
+      a.forEach(n => { if (b.has(n)) found = true; });
+      return found;
+    };
+    const commonLayerLabel = (i, j) => {
+      if (!layerView.layerInfoAvailable) return '整体（无层信息）';
+      const a = layerView.viaLayers[i];
+      const b = layerView.viaLayers[j];
+      if (!a || !b) return '-';
+      const common = Array.from(a).filter(n => b.has(n)).sort((x, y) => x - y);
+      if (!common.length) return '跨层';
+      if (common.length <= 3) return common.map(formatLayerNum).join('/');
+      return `${formatLayerNum(common[0])}~${formatLayerNum(common[common.length - 1])}`;
+    };
+    const viaLabel = i => `#${i + 1}`;
+
+    /* --- 1) 信号孔之间中心距 --- */
+    const pitchViolations = [];
+    let pitchChecked = 0;
+    let stackExemptPairs = 0;
+    for (let a = 0; a < sigIdx.length; a++) {
+      for (let b = a + 1; b < sigIdx.length; b++) {
+        const i = sigIdx[a];
+        const j = sigIdx[b];
+        if (stack.columnOf[i] >= 0 && stack.columnOf[i] === stack.columnOf[j]) {
+          stackExemptPairs++;
+          continue;
+        }
+        const sameLayer = shareLayer(i, j);
+        if (P.pitchScope === 'sameLayer' && !sameLayer) continue;
+
+        const pi = readViaXY(vias[i]);
+        const pj = readViaXY(vias[j]);
+        const dMm = Math.hypot(pi.x - pj.x, pi.y - pj.y) * MM_PER_MIL;
+        pitchChecked++;
+        const m = matchNominal(dMm, P.signalPitchMm, P.distanceTolMm);
+        if (!m.hit) {
+          pitchViolations.push({
+            kind: 'signalPitch',
+            layerLabel: commonLayerLabel(i, j),
+            viaA: i,
+            viaB: j,
+            viaALabel: viaLabel(i),
+            viaBLabel: viaLabel(j),
+            viaAPadstack: String(vias[i].padstack || ''),
+            viaBPadstack: String(vias[j].padstack || ''),
+            actualMm: roundN(dMm, 4),
+            nominalMm: m.nominal,
+            deviationMm: roundN(m.deviation, 4)
+          });
+        }
+      }
+    }
+
+    /* --- 2) 地孔到最近信号孔中心距 --- */
+    const gndViolations = [];
+    let gndChecked = 0;
+    gndIdx.forEach(g => {
+      let best = -1;
+      let bestD = Infinity;
+      const pg = readViaXY(vias[g]);
+      sigIdx.forEach(s => {
+        if (P.pitchScope === 'sameLayer' && !shareLayer(g, s)) return;
+        const ps = readViaXY(vias[s]);
+        const d = Math.hypot(pg.x - ps.x, pg.y - ps.y);
+        if (d < bestD) { bestD = d; best = s; }
+      });
+      if (best < 0) return;
+      gndChecked++;
+      const dUm = bestD * MM_PER_MIL * 1000;
+      const m = matchNominal(dUm, P.gndToSignalUm, P.distanceTolMm * 1000);
+      if (!m.hit) {
+        gndViolations.push({
+          kind: 'gndToSignal',
+          layerLabel: commonLayerLabel(g, best),
+          viaA: g,
+          viaB: best,
+          viaALabel: viaLabel(g),
+          viaBLabel: viaLabel(best),
+          viaAPadstack: String(vias[g].padstack || ''),
+          viaBPadstack: String(vias[best].padstack || ''),
+          actualUm: roundN(dUm, 1),
+          nominalUm: m.nominal,
+          deviationUm: roundN(m.deviation, 1)
+        });
+      }
+    });
+
+    /* --- 3) 每一层的孔分布对称性 --- */
+    const symmetryLayers = [];
+    if (P.checkSymmetry && vias.length > 0) {
+      const tol = P.symmetryTolMm / MM_PER_MIL;
+      const buildEntry = (layerNum, layerLabel, indices, estimated) => {
+        const pts = indices.map(i => {
+          const p = readViaXY(vias[i]);
+          return { x: p.x, y: p.y, viaIndex: i };
+        });
+        const res = checkPointSetSymmetry(pts, tol);
+        return {
+          layer: layerNum,
+          layerLabel,
+          estimated: !!estimated,
+          viaCount: pts.length,
+          signalCount: indices.filter(i => isSignalVia(vias[i])).length,
+          gndCount: indices.filter(i => !isSignalVia(vias[i])).length,
+          ok: res.ok,
+          type: res.type,
+          typeLabel: res.type === 'centro' ? '中心对称'
+            : (res.type === 'axis' ? `轴对称 (${roundN(res.axisAngleDeg, 1)}°)`
+              : (res.type === 'trivial' ? '单孔（平凡对称）' : (res.type === 'empty' ? '无孔' : '不对称'))),
+          axisAngleDeg: res.axisAngleDeg == null ? null : roundN(res.axisAngleDeg, 1),
+          maxDeviationMm: roundN(res.maxDeviationMil * MM_PER_MIL, 4),
+          viaIndices: indices
+        };
+      };
+
+      if (layerView.layerInfoAvailable) {
+        layerView.layers.forEach(l => {
+          if (!l.viaIndices.length) return;
+          symmetryLayers.push(buildEntry(l.layer, l.layerLabel, l.viaIndices, false));
+        });
+      } else {
+        symmetryLayers.push(buildEntry(null, '整体投影', vias.map((v, i) => i), true));
+      }
+    }
+
+    const symmetryFailLayers = symmetryLayers.filter(l => !l.ok).length;
+    const totals = {
+      viaCount: vias.length,
+      signalCount: sigIdx.length,
+      gndCount: gndIdx.length,
+      pitchChecked,
+      pitchViolations: pitchViolations.length,
+      gndChecked,
+      gndViolations: gndViolations.length,
+      stackColumns: stack.columns.length,
+      stackExemptPairs,
+      symmetryLayers: symmetryLayers.length,
+      symmetryFailLayers,
+      violations: pitchViolations.length + gndViolations.length + symmetryFailLayers
+    };
+
+    return {
+      ok: totals.violations === 0,
+      layerInfoAvailable: layerView.layerInfoAvailable,
+      layers: layerView.layers.map(l => l.layer),
+      pitchScope: P.pitchScope,
+      params: P,
+      pitch: { checked: pitchChecked, violations: pitchViolations, stackExemptPairs, nominal: P.signalPitchMm },
+      gndToSignal: { checked: gndChecked, violations: gndViolations, nominalUm: P.gndToSignalUm },
+      symmetry: { layers: symmetryLayers, failLayers: symmetryFailLayers, estimated: !layerView.layerInfoAvailable },
+      totals
+    };
+  }
+
+  /**
+   * 规则检查结果一句话摘要
+   */
+  function summarizeSchemeInternalRules(result) {
+    if (!result || !result.totals) return '';
+    const t = result.totals;
+    const parts = [];
+    parts.push(`信号孔距 ${t.pitchChecked} 对 → 违例 ${t.pitchViolations}`);
+    parts.push(`地孔距 ${t.gndChecked} 个 → 违例 ${t.gndViolations}`);
+    parts.push(`逐层对称 ${t.symmetryLayers} 层 → 不合格 ${t.symmetryFailLayers}`);
+    if (t.stackColumns) parts.push(`叠孔柱 ${t.stackColumns} 处已豁免`);
+    if (!result.layerInfoAvailable) parts.push('无层信息：按整体投影估算');
+    return parts.join(' · ');
   }
 
   /**
@@ -3767,6 +4397,20 @@
     buildPadstackColorMap,
     calcSchemeViaPairDistance,
     parseMultiSchemeTxt,
+    parseLayerIndexFromName,
+    formatLayerNum,
+    parseLayerSpanFromPadstackName,
+    parseViaTextLayerSpan,
+    parseViaLayerRange,
+    DEFAULT_INTERNAL_RULES,
+    parseNominalList,
+    normalizeInternalRuleParams,
+    matchNominal,
+    buildSchemeLayerView,
+    resolveStackColumns,
+    checkPointSetSymmetry,
+    checkSchemeInternalRules,
+    summarizeSchemeInternalRules,
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,
