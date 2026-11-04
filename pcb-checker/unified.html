@@ -40,74 +40,7 @@ body {
 }
 
 /* Header & Global Nav */
-header {
-  background: #ffffff;
-  border-bottom: 1px solid var(--line);
-  padding: 12px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.header-title h1 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.2px;
-}
-.header-title .tag {
-  background: linear-gradient(135deg, #0284c7, #38bdf8);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-}
-.header-desc {
-  font-size: 12px;
-  color: var(--sub);
-  margin-top: 2px;
-}
 
-.navlinks {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.navlinks a {
-  color: #475569;
-  text-decoration: none;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  transition: all 0.15s;
-  border: 1px solid transparent;
-}
-.navlinks a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
-}
-.navlinks a.active {
-  color: #fff;
-  background: #0284c7;
-  font-weight: 600;
-  border-color: #0369a1;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
-}
 
 /* Master KPI Banner */
 .kpi-banner {
@@ -172,49 +105,6 @@ header {
 }
 
 /* Tab Navigation */
-.tab-nav {
-  display: flex;
-  gap: 6px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 16px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-.tab-btn {
-  background: transparent;
-  border: none;
-  color: var(--sub);
-  padding: 10px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.tab-btn:hover {
-  color: #0f172a;
-  background: #f1f5f9;
-}
-.tab-btn.active {
-  color: #0284c7;
-  border-bottom-color: #0284c7;
-  background: #f0f9ff;
-}
-.tab-btn .badge-pill {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: #e2e8f0;
-  color: #475569;
-}
-.tab-btn.active .badge-pill {
-  background: #0284c7;
-  color: #fff;
-}
 
 /* Tab Contents */
 .tab-pane {
@@ -921,15 +811,11 @@ table.layertable .srcnote {
 html { font-size: 16.5px; }
 body { font-size: 15px; }
 
-header .header-title h1 { font-size: 22px !important; }
-header .header-desc { font-size: 14.5px !important; }
 
 .kpi-banner { font-size: 14.5px !important; padding: 14px 24px !important; }
 .kpi-item b { font-size: 17px !important; }
 .score-circle { width: 52px !important; height: 52px !important; font-size: 20px !important; }
 
-.tab-btn { font-size: 15px !important; padding: 12px 18px !important; }
-.badge-pill { font-size: 13px !important; padding: 2px 8px !important; }
 
 .card-title { font-size: 17px !important; }
 .card-subtitle { font-size: 13.5px !important; }
@@ -1058,36 +944,62 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
   background: #ffffff;
 }
 
+  /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
+  header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
+  header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
+  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
+  header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
+  header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
+  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
+  nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
+  nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
+  nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <header>
-  <div class="header-top">
-    <div class="header-title">
-      <h1>PCB 综合检查一体化工作台</h1>
-      <span class="tag">5-in-1 UNIFIED SUITE</span>
+  <h1>PCB 综合检查一体化工作台</h1>
+  <span class="sub">一键导入 EDA TXT 数据文件 → 完整保留五大引擎全量多规则与多格式导入 → 走线 / 约束 / DFM / 扇出 / 铜皮全项协同检查 → 双维度缺陷归纳与综合报告</span>
+  <div class="navlinks">
+    <a href="index.html">走线检查</a>
+    <a href="copper.html">约束检查</a>
+    <a href="dfm.html">加工能力检查</a>
+    <a href="fanout.html">扇出方案检查</a>
+    <a href="pour.html">铜皮检查</a>
+    <a href="unified.html" class="active">综合一体化检查</a>
+<div class="global-display-ctrl">
+      <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
+        <span id="lblGlobalWide">铺满宽屏</span>
+      </button>
     </div>
-    <div class="navlinks" style="display:flex;align-items:center;flex-wrap:wrap">
-      <a href="index.html">走线检查</a>
-      <a href="copper.html">约束检查</a>
-      <a href="dfm.html">加工能力检查</a>
-      <a href="fanout.html">扇出方案检查</a>
-      <a href="pour.html">铜皮检查</a>
-      <a href="unified.html" class="active">综合一体化检查</a>
-      <div class="global-display-ctrl">
-        <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
-          <span id="lblGlobalWide">铺满宽屏</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="header-desc">
-    一键导入 EDA TXT 数据文件 → 完整保留五大引擎全量多规则与多格式导入 → 走线 / 约束 / DFM / 扇出 / 铜皮全项协同检查 → 双维度缺陷归纳与综合报告
   </div>
 </header>
+<nav id="tabs">
+  <button class="tab-btn active" onclick="switchTab('tabData')">
+    ① 综合数据与五大引擎规则 <span class="badge-pill" id="badgeDataStatus">待配置</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('tabDashboard')">
+    ② 综合仪表盘与风险雷达 <span class="badge-pill" id="badgeDashScore">--</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('tabDefects')">
+    ③ 统一综合缺陷清单 <span class="badge-pill" id="badgeDefectCount">0</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('tabCanvas')">
+    ④ 全局 2D CAD 空间透视
+  </button>
+  <button class="tab-btn" onclick="switchTab('tabAnalysis')">
+    ⑤ 缺陷规律与工程分析总结
+  </button>
+</nav>
 
 <!-- Global Master KPI Banner -->
 <div class="kpi-banner">
@@ -1107,25 +1019,6 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 
 <!-- Main Container -->
 <div class="container">
-
-  <!-- Tab Navigation (5 Unified Workspaces) -->
-  <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('tabData')">
-      ① 综合数据与五大引擎规则 <span class="badge-pill" id="badgeDataStatus">待配置</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('tabDashboard')">
-      ② 综合仪表盘与风险雷达 <span class="badge-pill" id="badgeDashScore">--</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('tabDefects')">
-      ③ 统一综合缺陷清单 <span class="badge-pill" id="badgeDefectCount">0</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('tabCanvas')">
-      ④ 全局 2D CAD 空间透视
-    </button>
-    <button class="tab-btn" onclick="switchTab('tabAnalysis')">
-      ⑤ 缺陷规律与工程分析总结
-    </button>
-  </div>
 
   <!-- TAB 1: 综合数据与规则配置 (上下分布布局) -->
   <div id="tabData" class="tab-pane active">
