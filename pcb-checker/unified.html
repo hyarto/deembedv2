@@ -950,7 +950,7 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
 .dash-card .cat-title { font-size: 15.5px !important; }
 .dash-score { font-size: 26px !important; }
 
-/* Global Display: Full-Width & Fullscreen Workbench */
+/* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl {
   display: inline-flex;
   align-items: center;
@@ -986,37 +986,19 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
   border-color: #38bdf8;
   color: #ffffff !important;
 }
-.global-display-ctrl .gdisp-btn.fs-btn {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  border-color: #7dd3fc;
-  color: #ffffff !important;
-}
-.global-display-ctrl .gdisp-btn.fs-active {
-  background: #059669 !important;
-  border-color: #34d399;
-  color: #ffffff !important;
-}
-html:fullscreen, html:-webkit-full-screen {
-  background: var(--bg, #f8fafc);
-  overflow-y: auto;
-}
-html.pcb-global-wide .container,
-html:fullscreen .container,
-html:-webkit-full-screen .container {
+html.pcb-global-wide .container {
   max-width: 100% !important;
   width: 100% !important;
   padding-left: 20px !important;
   padding-right: 20px !important;
 }
-html.pcb-global-wide #modalViewFanoutScheme .modal-box,
-html:fullscreen #modalViewFanoutScheme .modal-box {
+html.pcb-global-wide #modalViewFanoutScheme .modal-box {
   max-width: 96vw !important;
   width: 96vw !important;
   max-height: 94vh !important;
 }
 @media (min-width: 1600px) {
-  html.pcb-global-wide #pnlFanoutSchemeGrid,
-  html:fullscreen #pnlFanoutSchemeGrid {
+  html.pcb-global-wide #pnlFanoutSchemeGrid {
     grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)) !important;
   }
 }
@@ -1099,14 +1081,6 @@ html:fullscreen #modalViewFanoutScheme .modal-box {
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
           <span id="lblGlobalWide">铺满宽屏</span>
         </button>
-        <button type="button" class="gdisp-btn fs-btn" id="btnGlobalFullscreen" onclick="toggleGlobalFullscreen()" title="一键将检查工作台全屏独占整个显示屏（按 Esc 可退出）">
-          <svg id="icoGlobalFs" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
-          <span id="lblGlobalFs">全屏工作台</span>
-        </button>
-        <a class="gdisp-btn" id="btnGlobalPopout" href="unified.html?wide=1" target="_blank" rel="noopener" style="display:none" title="在独立浏览器新标签页 100% 大屏打开工作台">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h5v5M14 2L7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5"/></svg>
-          <span>独立大屏</span>
-        </a>
       </div>
     </div>
   </div>
@@ -7703,53 +7677,20 @@ window.parseTraceRulesJson = parseTraceRulesJson;
 window.decodeTxt = decodeTxt;
 
 // =========================================================================
-// Global Display Controller: 100% Full-Width & Fullscreen Workbench
+// Global Display Controller: 100% 铺满宽屏（全站跨页面记忆）
 // =========================================================================
 const PCB_WIDE_STORAGE_KEY = 'pcb_workbench_wide_v1';
-
-function isBrowserFullscreenActive() {
-  if (typeof document === 'undefined') return false;
-  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
-}
 
 function syncGlobalDisplayUI() {
   if (typeof document === 'undefined' || !document.documentElement) return;
   const isWide = document.documentElement.classList.contains('pcb-global-wide');
-  const isFs = isBrowserFullscreenActive();
   const btnWide = $('btnGlobalWide');
   const lblWide = $('lblGlobalWide');
-  const btnFs = $('btnGlobalFullscreen');
-  const lblFs = $('lblGlobalFs');
-  const icoFs = $('icoGlobalFs');
-  const btnPop = $('btnGlobalPopout');
 
   if (btnWide && btnWide.classList) {
     if (isWide) btnWide.classList.add('active'); else btnWide.classList.remove('active');
   }
   if (lblWide) lblWide.textContent = isWide ? '已铺满宽屏' : '铺满宽屏';
-
-  if (btnFs && btnFs.classList) {
-    if (isFs) btnFs.classList.add('fs-active'); else btnFs.classList.remove('fs-active');
-  }
-  if (lblFs) lblFs.textContent = isFs ? '退出全屏' : '全屏工作台';
-  if (icoFs) {
-    icoFs.innerHTML = isFs
-      ? '<path d="M6 2v4H2M10 2v4h4M10 14v-4h4M6 14v-4H2"/>'
-      : '<path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/>';
-  }
-  if (btnPop && btnPop.style) {
-    try {
-      const inIframe = (typeof window !== 'undefined') && (window.self !== window.top);
-      btnPop.style.display = (inIframe && !isFs) ? 'inline-flex' : 'none';
-      if (typeof window !== 'undefined' && window.location && window.location.href) {
-        const u = new URL(window.location.href);
-        u.searchParams.set('wide', '1');
-        btnPop.href = u.toString();
-      }
-    } catch (e) {
-      btnPop.style.display = 'inline-flex';
-    }
-  }
 }
 
 function triggerWorkbenchResize() {
@@ -7787,74 +7728,20 @@ function toggleGlobalWideMode() {
   setGlobalWideMode(next, true);
 }
 
-function toggleGlobalFullscreen() {
-  if (typeof document === 'undefined' || !document.documentElement) return;
-  if (isBrowserFullscreenActive()) {
-    const exitFn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-    if (exitFn) {
-      try { Promise.resolve(exitFn.call(document)).finally(() => { syncGlobalDisplayUI(); triggerWorkbenchResize(); }); } catch (e) {}
-    }
-    return;
-  }
-
-  // 进入全屏时自动开启 100% 铺满宽屏，彻底消除左右留白
-  setGlobalWideMode(true, true);
-
-  const docEl = document.documentElement;
-  const reqFn = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
-  const handleFallback = () => {
-    try {
-      if (typeof window !== 'undefined' && window.self !== window.top && window.location) {
-        const u = new URL(window.location.href);
-        u.searchParams.set('wide', '1');
-        window.open(u.toString(), '_blank', 'noopener');
-        if (typeof showToast === 'function') {
-          showToast('当前内嵌预览框限制了系统全屏，已为您铺满当前区域并在独立窗口打开大屏工作台');
-        }
-      }
-    } catch (e) {}
-    syncGlobalDisplayUI();
-  };
-
-  if (!reqFn) {
-    handleFallback();
-    return;
-  }
-  try {
-    const p = reqFn.call(docEl);
-    if (p && typeof p.then === 'function') {
-      p.then(() => { syncGlobalDisplayUI(); triggerWorkbenchResize(); }).catch(() => handleFallback());
-    } else {
-      syncGlobalDisplayUI();
-      triggerWorkbenchResize();
-    }
-  } catch (err) {
-    handleFallback();
-  }
-}
-
 (function initGlobalDisplay() {
   if (typeof document === 'undefined' || !document.documentElement) return;
   let initWide = false;
   try {
-    if (typeof window !== 'undefined' && window.location && window.location.search.indexOf('wide=1') >= 0) {
-      initWide = true;
-      localStorage.setItem(PCB_WIDE_STORAGE_KEY, '1');
-    } else if (localStorage.getItem(PCB_WIDE_STORAGE_KEY) === '1') {
-      initWide = true;
-    }
+    if (localStorage.getItem(PCB_WIDE_STORAGE_KEY) === '1') initWide = true;
   } catch (e) {}
   if (initWide) document.documentElement.classList.add('pcb-global-wide');
   if (document.addEventListener) {
-    document.addEventListener('fullscreenchange', () => { syncGlobalDisplayUI(); triggerWorkbenchResize(); });
-    document.addEventListener('webkitfullscreenchange', () => { syncGlobalDisplayUI(); triggerWorkbenchResize(); });
     document.addEventListener('DOMContentLoaded', () => syncGlobalDisplayUI());
   }
   syncGlobalDisplayUI();
 })();
 
 window.toggleGlobalWideMode = toggleGlobalWideMode;
-window.toggleGlobalFullscreen = toggleGlobalFullscreen;
 window.setGlobalWideMode = setGlobalWideMode;
 </script>
 
