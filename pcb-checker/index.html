@@ -13,12 +13,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-header{flex:none;background:#0f172a;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px;z-index:30}
-header h1{font-size:18px;font-weight:600;white-space:nowrap}
-header .sub{color:#94a3b8;font-size:12px}
-nav{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--line);padding:0 16px;z-index:29}
-nav button{border:none;background:none;padding:12px 18px;font-size:14px;cursor:pointer;color:var(--sub);border-bottom:3px solid transparent}
-nav button.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
 main{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:12px 24px 16px;max-width:1500px;width:100%;margin:0 auto}
 section.tab{display:none}
 section.tab.active{display:block;flex:1;min-height:0;overflow:auto}
@@ -100,21 +94,37 @@ pre.preview{background:#0f172a;color:#d1d5db;border-radius:8px;padding:12px;font
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
 .global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
+  /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
+  header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
+  header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
+  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
+  header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
+  header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
+  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
+  nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
+  nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
+  nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
 <body>
-<header style="flex-wrap:wrap">
+<header>
   <h1>PCB 走线检查工具</h1>
   <span class="sub">导入网络走线报告 TXT → 统计整理 → 以网络为单位规则检查标注 → 差分按层线长差分析（后续扩展过孔 / 铜皮）</span>
-  <span class="sub" id="hdrMeta" style="color:#7dd3fc"></span>
-  <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <a href="index.html" style="color:#fff;background:#0284c7;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px;font-weight:600">走线检查</a>
-    <a href="copper.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">约束检查</a>
-    <a href="dfm.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">加工能力检查</a>
-    <a href="fanout.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">扇出方案检查</a>
-    <a href="pour.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">铜皮检查</a>
-    <a href="unified.html" style="color:#7dd3fc;font-size:13px;text-decoration:none;padding:3px 8px;border-radius:4px">综合一体化检查</a>
-    <div class="global-display-ctrl">
+  <span class="sub meta" id="hdrMeta"></span>
+  <div class="navlinks">
+    <a href="index.html" class="active">走线检查</a>
+    <a href="copper.html">约束检查</a>
+    <a href="dfm.html">加工能力检查</a>
+    <a href="fanout.html">扇出方案检查</a>
+    <a href="pour.html">铜皮检查</a>
+    <a href="unified.html">综合一体化检查</a>
+<div class="global-display-ctrl">
       <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
         <span id="lblGlobalWide">铺满宽屏</span>
