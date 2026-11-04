@@ -96,6 +96,15 @@ tools/oracle/gen-fixtures.py   用 shapely 重新生成几何基准（仅开发�
     - 间距检查范围 `pitchScope`：`all`（默认，物理钻孔距，跨层也算）/ `sameLayer`（仅同层共存孔对）。
     - 层跨度来源见第 11 条；没有层信息的方案退回**整体投影**查对称性，并在结果里标 `estimated`。
     - 参数输入框 id 固定（`inpRuleSigPitch` 等），改完调 `applySchemeRuleParams()` 重算全库。
+    - **违例不得汇总成一张表**：结论与明细放在**各自方案卡片内**（`.scheme-rule-box`，默认折叠；
+      展开后按 ①②③ 分组，每组最多 3 行，超出显示「还有 N 条」；点一行打开查看弹窗并高亮对应孔）。
+    - **违例必须在放大效果图上标出具体位置**：`buildSchemeRuleMarks(result, {maxSymmetryMarks})`
+      产出 `{order, kind, sev, a, b, label, detail, layerLabel}`，`drawSchemeRuleMarks(ctx, layout, marks)`
+      在 `renderSchemeEnlargedCanvas()` 末尾绘制 —— 红 `#f87171` = 间距违例，琥珀 `#fbbf24` = 同网/对称提示；
+      两颗孔加深色底 + 彩色圆环 + 虚线连线，中点画**序号芯片**（叠孔柱会让多对违例中点完全重合，
+      芯片按 21px 间距就近避让，被挪开时画虚线引线回真实位置），具体数值由弹窗里的 `#viewRuleList`
+      编号清单对照（点一行高亮对应孔）。开关为查看弹窗的 `#chkViewRuleMarks`（默认勾选）。
+    - jsdom 没有真实 canvas：验证「标记真的画在坐标上」只能用假 ctx Proxy 统计 `arc`/`strokeRect`/`fillRect`。
 
 11. **盲埋孔层跨度解析**：`parseViaTextLayerSpan()` / `parseViaLayerRange()` 的优先级固定为
     `layerStart/layerEnd` 字段 → `layers` 数组（Connections 的 **第一个** Shape 行 = 焊盘层列表，

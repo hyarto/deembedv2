@@ -3217,6 +3217,7 @@
   function matchTransformedPoints(points, targetFn, tol) {
     const n = points.length;
     const used = new Array(n).fill(false);
+    const unmatched = [];
     let maxDev = 0;
     let ok = true;
     for (let i = 0; i < n; i++) {
@@ -3233,11 +3234,12 @@
         if (bestD > maxDev) maxDev = bestD;
       } else {
         ok = false;
+        unmatched.push(i);
         if (bestD > maxDev) maxDev = bestD;
         if (maxDev > tol * 6) break;
       }
     }
-    return { ok, maxDeviation: maxDev };
+    return { ok, maxDeviation: maxDev, unmatched };
   }
 
   /**
@@ -3249,15 +3251,15 @@
     const n = list.length;
     const tol = Math.max(1e-9, Number(tolMil) || 0);
 
-    if (n === 0) return { ok: true, type: 'empty', axisAngleDeg: null, maxDeviationMil: 0 };
-    if (n === 1) return { ok: true, type: 'trivial', axisAngleDeg: null, maxDeviationMil: 0 };
+    if (n === 0) return { ok: true, type: 'empty', axisAngleDeg: null, maxDeviationMil: 0, worstIndices: [] };
+    if (n === 1) return { ok: true, type: 'trivial', axisAngleDeg: null, maxDeviationMil: 0, worstIndices: [] };
 
     const c = pointsCentroid(list);
 
     // 1) 中心对称
     const centro = matchTransformedPoints(list, p => ({ x: 2 * c.x - p.x, y: 2 * c.y - p.y }), tol);
     if (centro.ok) {
-      return { ok: true, type: 'centro', axisAngleDeg: null, maxDeviationMil: centro.maxDeviation };
+      return { ok: true, type: 'centro', axisAngleDeg: null, maxDeviationMil: centro.maxDeviation, worstIndices: [] };
     }
 
     // 2) 轴对称：候选轴全部过质心
@@ -3287,7 +3289,13 @@
     }
     if (angles.length === 0) pushAngle(0);
 
-    let best = { ok: false, type: 'none', axisAngleDeg: null, maxDeviationMil: centro.maxDeviation };
+    let best = {
+      ok: false,
+      type: 'none',
+      axisAngleDeg: null,
+      maxDeviationMil: centro.maxDeviation,
+      worstIndices: centro.unmatched.slice()
+    };
     for (let k = 0; k < angles.length; k++) {
       const th = angles[k];
       const ux = Math.cos(th), uy = Math.sin(th);
@@ -3297,10 +3305,16 @@
         return { x: c.x + proj * ux - (dx - proj * ux), y: c.y + proj * uy - (dy - proj * uy) };
       }, tol);
       if (res.ok) {
-        return { ok: true, type: 'axis', axisAngleDeg: (th * 180) / Math.PI, maxDeviationMil: res.maxDeviation };
+        return { ok: true, type: 'axis', axisAngleDeg: (th * 180) / Math.PI, maxDeviationMil: res.maxDeviation, worstIndices: [] };
       }
       if (best.axisAngleDeg == null || res.maxDeviation < best.maxDeviationMil) {
-        best = { ok: false, type: 'none', axisAngleDeg: (th * 180) / Math.PI, maxDeviationMil: res.maxDeviation };
+        best = {
+          ok: false,
+          type: 'none',
+          axisAngleDeg: (th * 180) / Math.PI,
+          maxDeviationMil: res.maxDeviation,
+          worstIndices: res.unmatched.slice()
+        };
       }
     }
     return best;
@@ -3450,7 +3464,9 @@
               : (res.type === 'trivial' ? '单孔（平凡对称）' : (res.type === 'empty' ? '无孔' : '不对称'))),
           axisAngleDeg: res.axisAngleDeg == null ? null : roundN(res.axisAngleDeg, 1),
           maxDeviationMm: roundN(res.maxDeviationMil * MM_PER_MIL, 4),
-          viaIndices: indices
+          viaIndices: indices,
+          // 最不对称的孔（放大图里用来打标记）
+          worstViaIndices: res.ok ? [] : (res.worstIndices || []).map(k => pts[k] ? pts[k].viaIndex : indices[k])
         };
       };
 
@@ -3506,6 +3522,176 @@
     if (t.stackColumns) parts.push(`叠孔柱 ${t.stackColumns} 处已豁免`);
     if (!result.layerInfoAvailable) parts.push('无层信息：按整体投影估算');
     return parts.join(' · ');
+  }
+
+  /**
+   * 把规则检查结果转成放大图上的「违例标记」列表
+   * @param {Object} result checkSchemeInternalRules() 的返回值
+   * @param {Object} options { maxSymmetryMarks: 单层最多标记多少颗孔(默认 6) }
+   * @returns {Array<Object>} [{kind, sev, a, b, label, detail, layerLabel}]
+   *   a / b 为方案内孔序号（0 基），b 为 null 表示单孔标记
+   */
+  function buildSchemeRuleMarks(result, options = {}) {
+    if (!result || !result.totals) return [];
+    const maxSym = Math.max(1, Number(options.maxSymmetryMarks) || 6);
+    const marks = [];
+    const push = (mark) => {
+      mark.order = marks.length + 1;
+      marks.push(mark);
+    };
+
+    (result.pitch.violations || []).forEach(v => {
+      push({
+        kind: 'pitch',
+        sev: 'bad',
+        a: v.viaA,
+        b: v.viaB,
+        label: `${v.actualMm}mm ✕`,
+        detail: `信号孔距 ${v.actualMm}mm（最近标称 ${v.nominalMm}mm，偏差 ±${v.deviationMm}mm）`,
+        layerLabel: v.layerLabel
+      });
+    });
+
+    (result.gndToSignal.violations || []).forEach(v => {
+      push({
+        kind: 'gnd',
+        sev: 'warn',
+        a: v.viaA,
+        b: v.viaB,
+        label: `${v.actualUm}µm ✕`,
+        detail: `地孔→信号孔距 ${v.actualUm}µm（最近标称 ${v.nominalUm}µm，偏差 ±${v.deviationUm}µm）`,
+        layerLabel: v.layerLabel
+      });
+    });
+
+    ((result.symmetry && result.symmetry.layers) || []).filter(l => !l.ok).forEach(l => {
+      const pool = (l.worstViaIndices && l.worstViaIndices.length) ? l.worstViaIndices : (l.viaIndices || []);
+      pool.slice(0, maxSym).forEach(idx => {
+        push({
+          kind: 'symmetry',
+          sev: 'warn',
+          a: idx,
+          b: null,
+          label: `${l.layerLabel} 不对称`,
+          detail: `${l.layerLabel} 层孔分布不对称（最大偏差 ${l.maxDeviationMm}mm）`,
+          layerLabel: l.layerLabel
+        });
+      });
+    });
+
+    return marks;
+  }
+
+  /**
+   * 在放大效果图上绘制违例标记（红色=间距违例，琥珀色=同网/对称提示）
+   */
+  /**
+   * 画一个违例序号芯片，并与已有芯片做避让（同点叠孔时中点会完全重合）
+   * @returns {{x:number, y:number}} 实际落点
+   */
+  function drawSchemeRuleMarkChip(ctx, used, baseX, baseY, text, color, monoStack) {
+    const size = 17;
+    const gap = size + 4;
+    // 就近避让：先原地，再按一圈圈向外找一个不打架的位置（最多 4 圈）
+    const dirs = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1],
+                  [1, 1], [1, -1], [-1, 1], [-1, -1]];
+    let x = baseX;
+    let y = baseY;
+    let found = false;
+    for (let ring = 0; ring <= 4 && !found; ring++) {
+      for (const [dx, dy] of dirs) {
+        if (ring === 0 && (dx !== 0 || dy !== 0)) continue;
+        if (ring > 0 && dx === 0 && dy === 0) continue;
+        const cx = baseX + dx * ring * gap;
+        const cy = baseY + dy * ring * gap;
+        const clash = used.some(p => Math.abs(p.x - cx) < gap && Math.abs(p.y - cy) < gap);
+        if (!clash) { x = cx; y = cy; found = true; break; }
+      }
+    }
+
+    // 被避让移开的芯片，用一根细引线连回真实位置，避免看错孔
+    if (Math.abs(x - baseX) > 0.5 || Math.abs(y - baseY) > 0.5) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 芯片外围再压一圈深色，压在密集走线上也能认出来
+    ctx.fillStyle = 'rgba(9, 14, 26, 0.92)';
+    ctx.fillRect(x - size / 2 - 2, y - size / 2 - 2, size + 4, size + 4);
+    ctx.fillStyle = color;
+    ctx.fillRect(x - size / 2, y - size / 2, size, size);
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+
+    ctx.font = `700 11px ${monoStack || 'Consolas, monospace'}`;
+    ctx.fillStyle = '#0f172a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(text), x, y);
+    return { x, y };
+  }
+
+  function drawSchemeRuleMarks(ctx, layout, marks) {
+    if (!ctx || !layout || !Array.isArray(layout.vias)) return;
+    const colors = { bad: '#f87171', warn: '#fbbf24' };
+    const mono = 'Consolas, Monaco, "Courier New", monospace';
+    const padR = Number(layout.padR) || 10;
+    const usedChips = [];
+
+    marks.forEach(mark => {
+      const va = layout.vias[mark.a];
+      if (!va) return;
+      const vb = (mark.b != null) ? layout.vias[mark.b] : null;
+      const color = colors[mark.sev] || colors.bad;
+
+      ctx.save();
+
+      if (vb) {
+        // 先铺一层深色描边，避免彩色走线把连线吃掉
+        [['rgba(9, 14, 26, 0.9)', 4.4], [color, 1.8]].forEach(([stroke, lw]) => {
+          ctx.setLineDash([5, 4]);
+          ctx.lineWidth = lw;
+          ctx.strokeStyle = stroke;
+          ctx.beginPath();
+          ctx.moveTo(va.sx, va.sy);
+          ctx.lineTo(vb.sx, vb.sy);
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+      }
+
+      [va, vb].forEach(v => {
+        if (!v) return;
+        [['rgba(9, 14, 26, 0.9)', 6.2], [color, 2.4]].forEach(([stroke, lw]) => {
+          ctx.beginPath();
+          ctx.arc(v.sx, v.sy, padR + 4.5, 0, Math.PI * 2);
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = lw;
+          ctx.stroke();
+        });
+      });
+
+      // 序号芯片：叠孔柱会让多对违例的中点完全重合，长文字标签会糊成一团，
+      // 这里只画编号，具体数值由弹窗里的「违例清单」对照。
+      const txt = String(mark.order || '');
+      if (txt) {
+        const baseX = vb ? (va.sx + vb.sx) / 2 : va.sx;
+        const baseY = vb ? (va.sy + vb.sy) / 2 : (va.sy - padR - 13);
+        const placed = drawSchemeRuleMarkChip(ctx, usedChips, baseX, baseY, txt, color, mono);
+        usedChips.push(placed);
+      }
+
+      ctx.restore();
+    });
   }
 
   /**
@@ -4381,6 +4567,11 @@
       ctx.restore();
     }
 
+    // 8. 规则违例标记（信号孔距 / 地孔距 / 逐层对称）
+    if (Array.isArray(options.ruleMarks) && options.ruleMarks.length > 0) {
+      drawSchemeRuleMarks(ctx, layout, options.ruleMarks);
+    }
+
     ctx.restore();
     return layout;
   }
@@ -4411,6 +4602,8 @@
     checkPointSetSymmetry,
     checkSchemeInternalRules,
     summarizeSchemeInternalRules,
+    buildSchemeRuleMarks,
+    drawSchemeRuleMarks,
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,

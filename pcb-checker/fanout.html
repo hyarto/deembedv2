@@ -86,6 +86,26 @@ main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
 .scheme-info .metric{font-weight:600;color:#0f172a}
 .scheme-actions{display:flex;gap:6px;margin-top:auto;padding-top:6px;border-top:1px solid #f1f5f9}
 
+/* 方案卡片内的内部规则区块 */
+.scheme-rule-box{border:1px solid #e2e8f0;border-radius:7px;padding:7px 9px;background:#fbfdff;display:flex;flex-direction:column;gap:6px}
+.srb-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:#64748b}
+.srb-title{font-weight:700;color:#0f172a;white-space:nowrap}
+.srb-summary{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:10.5px}
+.srb-toggle{margin-left:auto;padding:1px 7px;font-size:10.5px;line-height:1.6;border:1px solid #cbd5e1;background:#fff;border-radius:4px;cursor:pointer;color:#334155;font-weight:600;white-space:nowrap}
+.srb-toggle:hover{background:#e2e8f0}
+.srb-body{display:flex;flex-direction:column;gap:8px;border-top:1px dashed #e2e8f0;padding-top:7px}
+.srb-group{display:flex;flex-direction:column;gap:3px}
+.srb-group-title{font-size:10.5px;font-weight:700;color:#334155;font-family:var(--mono)}
+.srb-row{display:flex;align-items:baseline;gap:6px;font-size:10.5px;padding:2px 5px;border-radius:4px;background:#fff;border:1px solid #e8eef5;cursor:pointer;font-family:var(--mono)}
+.srb-row:hover{background:#fef2f2;border-color:#fca5a5}
+.srb-row-main{color:#0f172a;font-weight:600;white-space:nowrap}
+.srb-row-meta{color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srb-ok{font-size:10.5px;color:#15803d;padding-left:2px}
+.srb-more{font-size:10px;color:#94a3b8;padding-left:2px}
+.srb-note{font-size:10px;color:#64748b}
+.srb-open{align-self:flex-start;padding:2px 8px;font-size:10.5px;border:1px solid #7dd3fc;background:#f0f9ff;color:#0369a1;border-radius:4px;cursor:pointer;font-weight:600}
+.srb-open:hover{background:#e0f2fe}
+
 /* Table styles */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:12px}
 table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
@@ -269,7 +289,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         </div>
       </div>
 
-      <div id="pnlSchemeRuleSummary" style="margin-top:4px"></div>
+      <div class="hint" style="margin-top:8px;font-size:11px">每套方案的检查结论与违例明细显示在下方各自卡片内；点「查看」可在放大效果图上看到违例位置的标记。</div>
     </div>
 
     <div class="card" style="margin-top:14px">
@@ -939,6 +959,10 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
           <input type="checkbox" id="chkViewDistances" onchange="onViewSchemeOptionChange()">
           <span>显示孔心距 (mil)</span>
         </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;color:#b91c1c" title="在效果图上标出信号孔距 / 地孔距 / 逐层对称的违例位置">
+          <input type="checkbox" id="chkViewRuleMarks" checked onchange="onViewSchemeOptionChange()">
+          <span>标记规则违例</span>
+        </label>
         <span id="viewSchemePadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#475569"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -957,8 +981,10 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <div id="viewSchemeCanvasWrap" style="position:relative;flex:1;min-height:500px;background:#0f172a;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.22);border:1px solid #1e293b">
           <canvas id="viewSchemeCanvas" width="760" height="520" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
         </div>
+        <div id="viewRuleSummary" style="font-size:11.5px;background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:5px 9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"></div>
+        <div id="viewRuleList" style="display:none;max-height:112px;overflow-y:auto;background:#fffdf8;border:1px solid #fed7aa;border-radius:7px;padding:5px 7px;font-size:11px;line-height:1.5;font-family:var(--mono)"></div>
         <div id="viewSchemeBottomHint" style="font-size:11px;color:#64748b;text-align:right;font-family:var(--mono)">
-          滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距
+          滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距 · 红色/琥珀虚线=规则违例位置
         </div>
       </div>
 
@@ -1160,7 +1186,7 @@ function renderSchemeCards() {
             <div style="font-size:11px;color:#64748b;margin-top:2px">${escapeHtml(s.description || '标准扇出拓扑')}</div>
           </div>
           <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${renderSchemeRuleBadge(s)}
+            ${schemeRuleBadgeHtml(s)}
             <span class="scheme-cat">${escapeHtml(s.category)}</span>
           </span>
         </div>
@@ -1176,6 +1202,7 @@ function renderSchemeCards() {
             </div>
           </div>
         </div>
+        ${renderSchemeRuleBlock(s)}
         <div class="scheme-actions">
           <button class="btn sec small" onclick="editScheme('${s.id}')">✏️ 编辑</button>
           <button class="btn bad small" onclick="deleteScheme('${s.id}')">🗑️ 删除</button>
@@ -1185,8 +1212,8 @@ function renderSchemeCards() {
     `;
   }).join('');
 
-  // 汇总表 / 违例明细（本页顶部规则检查卡片内）
-  renderSchemeRuleSummary();
+  // 顶部参数卡片上的全库状态（违例详情在各自方案卡片内展示）
+  renderSchemeRulePanel();
 
   // Draw thumbnail canvas for each scheme
   requestAnimationFrame(() => {
@@ -1265,13 +1292,12 @@ function drawSchemeThumbnail(canvasId, scheme) {
 /* ==========================================================================
  * 方案库内部规则检查（信号孔距 / 地孔距 / 逐层对称性）
  * --------------------------------------------------------------------------
- * 规则参数全部可改（输入框由 ui-prefs.js 记住），每次改动即时重算全库：
- *   ① 信号孔之间中心距 ∈ 标称集合（mm）
- *   ② 每个地孔到最近信号孔中心距 ∈ 标称集合（µm）
- *   ③ 每一层的孔分布满足中心对称或轴对称
- * 同网同点位的叠孔柱不计间距违例（物理上是同一个钻孔柱）。
+ * 规则参数全部可改（输入框由 ui-prefs.js 记住），每次改动即时重算全库。
+ * 违例不再汇总到一张表，而是**每套方案自己展示**：
+ *   · 方案卡片内「内部规则」区块：结论 + 分组违例清单（可展开）
+ *   · 「查看」放大效果图里按坐标直接标出违例位置（红色=间距，琥珀=对称）
  * ========================================================================== */
-const SchemeRuleState = { results: {}, expandedId: null };
+const SchemeRuleState = { results: {}, expanded: {} };
 window.SchemeRuleState = SchemeRuleState;
 
 function schemeRuleInput(id, fallback) {
@@ -1310,6 +1336,11 @@ function computeSchemeRuleResults() {
 function applySchemeRuleParams() {
   computeSchemeRuleResults();
   renderSchemeCards();
+  if (document.getElementById('modalViewScheme') &&
+      document.getElementById('modalViewScheme').classList.contains('open')) {
+    renderViewedSchemeRuleBar();
+    renderViewedSchemeCanvas();
+  }
 }
 
 function resetSchemeRuleParams() {
@@ -1326,219 +1357,262 @@ function resetSchemeRuleParams() {
 
 function schemeRuleResult(scheme) {
   if (!scheme) return null;
-  const cached = SchemeRuleState.results[scheme.id];
-  if (cached) return cached;
-  return null;
+  return SchemeRuleState.results[scheme.id] || null;
 }
 
-/* ---------- 卡片徽标 ---------- */
+/* ---------- 参数卡片顶部的全库状态 ---------- */
 
-function renderSchemeRuleBadge(scheme) {
+function renderSchemeRulePanel() {
+  const badge = document.getElementById('ruleOverallBadge');
+  if (!badge) return;
+  const schemes = (State.library && State.library.schemes) || [];
+  if (!schemes.length) {
+    badge.className = 'badge-tag gray';
+    badge.textContent = '待检查';
+    return;
+  }
+  const failCount = schemes.filter(s => {
+    const r = schemeRuleResult(s);
+    return r && !r.ok;
+  }).length;
+  if (!failCount) {
+    badge.className = 'badge-tag ok';
+    badge.textContent = `✓ ${schemes.length} 套方案全部通过`;
+  } else {
+    badge.className = 'badge-tag bad';
+    badge.textContent = `✕ ${failCount}/${schemes.length} 套方案有违例`;
+  }
+}
+
+/* ---------- 方案卡片内的规则区块 ---------- */
+
+/**
+ * 卡片头部一句话摘要（比 summarizeSchemeInternalRules 更短，避免被省略号截断）
+ */
+function compactRuleSummary(r) {
+  if (!r || !r.totals) return '';
+  const t = r.totals;
+  const scope = `检查 ${t.pitchChecked} 对信号孔 / ${t.gndChecked} 个地孔 / ${t.symmetryLayers} 层`;
+  if (r.ok) return `${scope}，全部合格`;
+  const parts = [`信号孔距 ${t.pitchViolations} 处`, `地孔距 ${t.gndViolations} 处`];
+  parts.push(t.symmetryFailLayers ? `不对称 ${t.symmetryFailLayers} 层` : '逐层对称合格');
+  return `${scope} → ${parts.join(' · ')}`;
+}
+
+function schemeRuleBadgeHtml(scheme) {
   const r = schemeRuleResult(scheme);
   if (!r || !r.totals) return '<span class="badge-tag gray" title="规则结果尚未计算">规则 —</span>';
-
   const summary = FanoutChecker.summarizeSchemeInternalRules
     ? FanoutChecker.summarizeSchemeInternalRules(r)
     : '';
-  if (r.ok) {
-    return `<span class="badge-tag ok" title="${escapeHtml(summary)}">✓ 规则通过</span>`;
-  }
-  const tip = `${summary}${r.layerInfoAvailable ? '' : '（无层信息，对称性按整体投影估算）'}`;
+  if (r.ok) return `<span class="badge-tag ok" title="${escapeHtml(summary)}">✓ 规则通过</span>`;
+  const tip = summary + (r.layerInfoAvailable ? '' : '（无层信息，对称性按整体投影估算）');
   return `<span class="badge-tag bad" title="${escapeHtml(tip)}">✕ 规则违例 ${r.totals.violations}</span>`;
 }
 
-/* ---------- 汇总表 + 违例明细 ---------- */
-
-function schemeRuleCountCell(checked, violations, unitText) {
-  if (!checked) return '<span style="color:#94a3b8">无检查对象</span>';
-  const head = `${checked} ${unitText} → `;
-  if (!violations) return `<span style="color:#15803d;font-weight:600">${head}0 违例</span>`;
-  return `<span style="color:#dc2626;font-weight:700">${head}${violations} 违例</span>`;
+/**
+ * 一条违例的可点击行：点了在放大效果图里定位并高亮
+ */
+function schemeRuleViolationRowHtml(schemeId, labelHtml, detailHtml, viaA, viaB, extraTip) {
+  return `
+    <div class="srb-row" onclick="focusSchemeViolation('${schemeId}', ${viaA}, ${viaB == null ? 'null' : viaB})"
+         title="${escapeHtml(extraTip || '点击在放大效果图中查看该违例位置')}">
+      <span class="srb-row-main">${labelHtml}</span>
+      <span class="srb-row-meta">${detailHtml}</span>
+    </div>`;
 }
 
-function schemeRuleSymCell(sym) {
-  if (!sym || !sym.layers || !sym.layers.length) return '<span style="color:#94a3b8">无层信息</span>';
-  const fail = sym.failLayers;
-  const label = `${sym.layers.length} 层 → `;
-  const est = sym.estimated ? '<span style="font-size:10px;color:#b45309">（整体投影估算）</span>' : '';
-  if (!fail) return `<span style="color:#15803d;font-weight:600">${label}全部对称</span>${est}`;
-  return `<span style="color:#dc2626;font-weight:700">${label}${fail} 层不对称</span>${est}`;
-}
+function renderSchemeRuleBlock(scheme) {
+  const r = schemeRuleResult(scheme);
+  if (!r || !r.totals) return '';
 
-function renderSchemeRuleSummary() {
-  const wrap = document.getElementById('pnlSchemeRuleSummary');
-  const badge = document.getElementById('ruleOverallBadge');
-  if (!wrap) return;
+  const t = r.totals;
+  const expanded = !!SchemeRuleState.expanded[scheme.id];
+  const sid = scheme.id;
+  const MAX_ROWS = 3;
 
-  const schemes = (State.library && State.library.schemes) || [];
-  if (!schemes.length) {
-    wrap.innerHTML = '<div style="font-size:12px;color:#94a3b8;padding:10px 0">方案库为空，暂无检查对象。</div>';
-    if (badge) { badge.className = 'badge-tag gray'; badge.textContent = '待检查'; }
-    return;
-  }
+  const groupHeader = (idx, title, count, total, unitText, okText) => {
+    const color = count ? '#dc2626' : '#15803d';
+    const head = count ? `${count} 处违例` : (okText || '无违例');
+    return `<div class="srb-group-title">${idx} ${escapeHtml(title)}
+      <span style="color:${color};font-weight:700">${head}</span>
+      <span style="color:#94a3b8;font-weight:400">/ 检查 ${total} ${unitText}</span>
+    </div>`;
+  };
 
-  const results = SchemeRuleState.results || {};
-  const list = schemes.map(s => ({ scheme: s, result: results[s.id] || null }));
-  const failSchemes = list.filter(x => x.result && !x.result.ok).length;
-  const totalViol = list.reduce((sum, x) => sum + (x.result && x.result.totals ? x.result.totals.violations : 0), 0);
+  const pitchRows = (r.pitch.violations || []).slice(0, MAX_ROWS).map(v => schemeRuleViolationRowHtml(
+    sid,
+    `${escapeHtml(v.viaALabel)} ↔ ${escapeHtml(v.viaBLabel)} <span style="color:#94a3b8">· ${escapeHtml(v.layerLabel)}</span>`,
+    `<b style="color:#dc2626">${v.actualMm} mm</b> （标称 ${v.nominalMm}，偏差 ±${v.deviationMm}）`,
+    v.viaA, v.viaB,
+    `信号孔距 ${v.actualMm}mm，最近标称 ${v.nominalMm}mm，偏差 ±${v.deviationMm}mm`
+  )).join('');
 
-  if (badge) {
-    if (failSchemes === 0) {
-      badge.className = 'badge-tag ok';
-      badge.textContent = `✓ ${schemes.length} 套方案全部通过`;
-    } else {
-      badge.className = 'badge-tag bad';
-      badge.textContent = `✕ ${failSchemes}/${schemes.length} 套方案有违例（共 ${totalViol} 条）`;
-    }
-  }
+  const gndRows = (r.gndToSignal.violations || []).slice(0, MAX_ROWS).map(v => schemeRuleViolationRowHtml(
+    sid,
+    `${escapeHtml(v.viaALabel)} → ${escapeHtml(v.viaBLabel)} <span style="color:#94a3b8">· ${escapeHtml(v.layerLabel)}</span>`,
+    `<b style="color:#b45309">${v.actualUm} µm</b> （标称 ${v.nominalUm}，偏差 ±${v.deviationUm}）`,
+    v.viaA, v.viaB,
+    `地孔到最近信号孔 ${v.actualUm}µm，最近标称 ${v.nominalUm}µm，偏差 ±${v.deviationUm}µm`
+  )).join('');
 
-  const rows = list.map(({ scheme, result }) => {
-    const t = result ? result.totals : null;
-    const expanded = SchemeRuleState.expandedId === scheme.id;
-    const verdict = !result
-      ? '<span class="badge-tag gray">未计算</span>'
-      : (result.ok ? '<span class="badge-tag ok">通过</span>' : `<span class="badge-tag bad">违例 ${t.violations}</span>`);
-    return `
-      <tr${expanded ? ' style="background:#f0f9ff"' : ''}>
-        <td style="font-weight:600;color:#0f172a;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(scheme.name)}">
-          ${escapeHtml(scheme.name)}
-          ${result && !result.layerInfoAvailable ? '<span style="font-size:10px;color:#b45309">（无层信息）</span>' : ''}
-        </td>
-        <td style="font-family:var(--mono)">${t ? t.viaCount : scheme.viaCount} <span style="color:#94a3b8">(信号 ${t ? t.signalCount : '-'} / 地 ${t ? t.gndCount : '-'})</span></td>
-        <td>${t ? schemeRuleCountCell(t.pitchChecked, t.pitchViolations, '对') : '-'}</td>
-        <td>${t ? schemeRuleCountCell(t.gndChecked, t.gndViolations, '个') : '-'}</td>
-        <td>${result ? schemeRuleSymCell(result.symmetry) : '-'}</td>
-        <td>${verdict}</td>
-        <td style="white-space:nowrap">
-          <button class="btn sec small" type="button" onclick="toggleSchemeRuleDetail('${scheme.id}')">${expanded ? '收起明细' : '明细'}</button>
-        </td>
-      </tr>`;
+  const moreRow = (count, kind) => count > MAX_ROWS
+    ? `<div class="srb-more">还有 ${count - MAX_ROWS} 条，点「查看」在放大图中查看全部标记</div>`
+    : '';
+
+  const failLayers = (r.symmetry.layers || []).filter(l => !l.ok);
+  const symRows = failLayers.slice(0, MAX_ROWS).map(l => {
+    const idx = (l.worstViaIndices && l.worstViaIndices.length) ? l.worstViaIndices[0] : (l.viaIndices || [])[0];
+    return schemeRuleViolationRowHtml(
+      sid,
+      `${escapeHtml(l.layerLabel)} <span style="color:#94a3b8">· ${l.viaCount} 孔</span>`,
+      `<b style="color:#b45309">不对称</b>（最大偏差 ${l.maxDeviationMm} mm）`,
+      idx, null,
+      `${l.layerLabel} 层孔分布不对称，最大偏差 ${l.maxDeviationMm}mm`
+    );
   }).join('');
 
-  const detail = list
-    .filter(x => x.scheme.id === SchemeRuleState.expandedId && x.result)
-    .map(x => renderSchemeRuleDetailHtml(x.scheme, x.result))
-    .join('');
-
-  wrap.innerHTML = `
-    <div class="table-wrap" style="margin-top:4px">
-      <table style="font-size:11.5px">
-        <thead>
-          <tr>
-            <th style="padding:8px 10px">方案</th>
-            <th style="padding:8px 10px">孔数</th>
-            <th style="padding:8px 10px">信号孔中心距</th>
-            <th style="padding:8px 10px">地孔→最近信号孔</th>
-            <th style="padding:8px 10px">逐层对称性</th>
-            <th style="padding:8px 10px">结论</th>
-            <th style="padding:8px 10px">操作</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    ${detail}
-  `;
-}
-
-function renderSchemeRuleDetailHtml(scheme, result) {
-  const t = result.totals;
-  const p = result.params;
-
-  const pitchRows = result.pitch.violations.length
-    ? result.pitch.violations.map(v => `
-        <tr style="cursor:pointer" onclick="focusSchemeViolation('${scheme.id}', ${v.viaA}, ${v.viaB})" title="点击在放大视图中高亮该孔对">
-          <td style="padding:6px 8px;font-family:var(--mono)">${escapeHtml(v.viaALabel)} ↔ ${escapeHtml(v.viaBLabel)}</td>
-          <td style="padding:6px 8px">${escapeHtml(v.layerLabel)}</td>
-          <td style="padding:6px 8px;font-family:var(--mono);color:#dc2626;font-weight:700">${v.actualMm} mm</td>
-          <td style="padding:6px 8px;font-family:var(--mono)">${v.nominalMm != null ? v.nominalMm + ' mm' : '-'}</td>
-          <td style="padding:6px 8px;font-family:var(--mono);color:#b45309">${v.deviationMm != null ? '±' + v.deviationMm + ' mm' : '-'}</td>
-        </tr>`).join('')
-    : '<tr><td colspan="5" style="padding:6px 8px;color:#15803d">无违例</td></tr>';
-
-  const gndRows = result.gndToSignal.violations.length
-    ? result.gndToSignal.violations.map(v => `
-        <tr style="cursor:pointer" onclick="focusSchemeViolation('${scheme.id}', ${v.viaA}, ${v.viaB})" title="点击在放大视图中高亮该孔对">
-          <td style="padding:6px 8px;font-family:var(--mono)">${escapeHtml(v.viaALabel)} → ${escapeHtml(v.viaBLabel)}</td>
-          <td style="padding:6px 8px">${escapeHtml(v.layerLabel)}</td>
-          <td style="padding:6px 8px;font-family:var(--mono);color:#dc2626;font-weight:700">${v.actualUm} µm</td>
-          <td style="padding:6px 8px;font-family:var(--mono)">${v.nominalUm != null ? v.nominalUm + ' µm' : '-'}</td>
-          <td style="padding:6px 8px;font-family:var(--mono);color:#b45309">${v.deviationUm != null ? '±' + v.deviationUm + ' µm' : '-'}</td>
-        </tr>`).join('')
-    : '<tr><td colspan="5" style="padding:6px 8px;color:#15803d">无违例</td></tr>';
-
-  const symRows = result.symmetry.layers.length
-    ? result.symmetry.layers.map(l => `
-        <tr style="${l.ok ? '' : 'background:#fff7ed'}">
-          <td style="padding:6px 8px;font-family:var(--mono);font-weight:600">${escapeHtml(l.layerLabel)}</td>
-          <td style="padding:6px 8px;font-family:var(--mono)">${l.viaCount}</td>
-          <td style="padding:6px 8px">${l.ok ? `<span style="color:#15803d;font-weight:600">${escapeHtml(l.typeLabel)}</span>` : '<span style="color:#dc2626;font-weight:700">不对称</span>'}</td>
-          <td style="padding:6px 8px;font-family:var(--mono);color:${l.ok ? '#475569' : '#b45309'}">${l.maxDeviationMm} mm</td>
-        </tr>`).join('')
-    : '<tr><td colspan="4" style="padding:6px 8px;color:#94a3b8">未启用对称性检查</td></tr>';
+  const symTotal = (r.symmetry.layers || []).length;
+  const symTitle = r.symmetry.estimated ? '逐层对称性（无层信息，按整体投影估算）' : '逐层对称性';
 
   return `
-    <div style="margin-top:12px;border:1px solid #93c5fd;background:#f8fbff;border-radius:8px;padding:10px 12px">
-      <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:8px">
-        违例明细：${escapeHtml(scheme.name)}
-        <span style="font-weight:400;color:#64748b;font-size:11px;margin-left:6px">
-          信号孔距标称 ${escapeHtml(p.signalPitchMm.join(' / '))} mm · 地孔距标称 ${escapeHtml(p.gndToSignalUm.join(' / '))} µm · 容差 ±${p.distanceTolMm} mm · 对称容差 ±${p.symmetryTolMm} mm · 叠孔柱豁免 ≤${p.stackColumnTolMm} mm · 范围 ${p.pitchScope === 'sameLayer' ? '仅同层共存孔对' : '全部孔对'}
-        </span>
+    <div class="scheme-rule-box" id="ruleBox_${sid}">
+      <div class="srb-head">
+        <span class="srb-title">🧪 内部规则</span>
+        ${schemeRuleBadgeHtml(scheme)}
+        <span class="srb-summary" title="${escapeHtml(FanoutChecker.summarizeSchemeInternalRules ? FanoutChecker.summarizeSchemeInternalRules(r) : '')}">${escapeHtml(compactRuleSummary(r))}</span>
+        <button type="button" class="srb-toggle" onclick="toggleSchemeRuleDetail('${sid}')">${expanded ? '收起' : '明细'}</button>
       </div>
-      ${t.stackColumns ? `<div style="font-size:11px;color:#475569;margin-bottom:8px">叠孔柱 ${t.stackColumns} 处（${t.stackExemptPairs} 对信号孔对因同柱被豁免，不计违例）</div>` : ''}
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
-        <div>
-          <div style="font-size:11.5px;font-weight:700;color:#334155;margin-bottom:4px">① 信号孔中心距违例 (${result.pitch.violations.length})</div>
-          <div class="table-wrap" style="margin-top:0"><table style="font-size:11px"><thead><tr>
-            <th style="padding:6px 8px">孔对</th><th style="padding:6px 8px">层</th><th style="padding:6px 8px">实测</th><th style="padding:6px 8px">最近标称</th><th style="padding:6px 8px">偏差</th>
-          </tr></thead><tbody>${pitchRows}</tbody></table></div>
+      ${expanded ? `
+      <div class="srb-body">
+        <div class="srb-group">
+          ${groupHeader('①', '信号孔中心距', t.pitchViolations, t.pitchChecked, '对')}
+          ${pitchRows || '<div class="srb-ok">无违例</div>'}
+          ${moreRow(t.pitchViolations, 'pitch')}
         </div>
-        <div>
-          <div style="font-size:11.5px;font-weight:700;color:#334155;margin-bottom:4px">② 地孔→最近信号孔违例 (${result.gndToSignal.violations.length})</div>
-          <div class="table-wrap" style="margin-top:0"><table style="font-size:11px"><thead><tr>
-            <th style="padding:6px 8px">地孔 → 信号孔</th><th style="padding:6px 8px">层</th><th style="padding:6px 8px">实测</th><th style="padding:6px 8px">最近标称</th><th style="padding:6px 8px">偏差</th>
-          </tr></thead><tbody>${gndRows}</tbody></table></div>
+        <div class="srb-group">
+          ${groupHeader('②', '地孔→最近信号孔', t.gndViolations, t.gndChecked, '个')}
+          ${gndRows || '<div class="srb-ok">无违例</div>'}
+          ${moreRow(t.gndViolations, 'gnd')}
         </div>
-      </div>
-
-      <div style="margin-top:10px">
-        <div style="font-size:11.5px;font-weight:700;color:#334155;margin-bottom:4px">③ 逐层孔分布对称性 (${result.symmetry.failLayers} 层不合格 / 共 ${result.symmetry.layers.length} 层)</div>
-        <div class="table-wrap" style="margin-top:0"><table style="font-size:11px"><thead><tr>
-          <th style="padding:6px 8px">层</th><th style="padding:6px 8px">孔数</th><th style="padding:6px 8px">判定</th><th style="padding:6px 8px">最大偏差</th>
-        </tr></thead><tbody>${symRows}</tbody></table></div>
-      </div>
-    </div>
-  `;
+        <div class="srb-group">
+          ${groupHeader('③', symTitle, t.symmetryFailLayers, symTotal, '层', '全部对称')}
+          ${symRows || '<div class="srb-ok">每层孔分布均满足中心对称或轴对称</div>'}
+          ${moreRow(failLayers.length, 'sym')}
+        </div>
+        ${t.stackColumns ? `<div class="srb-note">叠孔柱 ${t.stackColumns} 处（${t.stackExemptPairs} 对信号孔对同柱重合，已豁免不计违例）</div>` : ''}
+        <button type="button" class="srb-open" onclick="viewScheme('${sid}')">🔍 在放大效果图中查看违例标记</button>
+      </div>` : ''}
+    </div>`;
 }
 
 function toggleSchemeRuleDetail(schemeId) {
-  SchemeRuleState.expandedId = SchemeRuleState.expandedId === schemeId ? null : schemeId;
-  renderSchemeRuleSummary();
+  SchemeRuleState.expanded[schemeId] = !SchemeRuleState.expanded[schemeId];
+  renderSchemeCards();
 }
 
 /**
- * 点击违例 -> 打开「查看」放大视图并高亮第一个孔
+ * 点击违例 -> 打开「查看」放大视图，标记违例位置并高亮该孔
  */
 function focusSchemeViolation(schemeId, viaA, viaB) {
   const scheme = State.library.getScheme(schemeId);
   if (!scheme) return;
-  const idx = Number(viaA);
-  if (!isFinite(idx)) return;
+
+  const chk = document.getElementById('chkViewRuleMarks');
+  if (chk) chk.checked = true;
 
   const modal = document.getElementById('modalViewScheme');
   if (ViewSchemeState.schemeId !== scheme.id || !modal || !modal.classList.contains('open')) {
     viewScheme(scheme.id);
+  } else {
+    renderViewedSchemeCanvas();
   }
+
+  const idx = Number(viaA);
+  if (!isFinite(idx)) return;
   const doHighlight = () => {
     if (typeof setViewSchemeHoveredVia === 'function') setViewSchemeHoveredVia(idx);
-    const rows = document.querySelectorAll('#viewSchemeViaTableBody tr');
-    if (rows[idx]) {
-      rows[idx].scrollIntoView({ block: 'nearest' });
-    }
   };
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(doHighlight);
   else doHighlight();
+}
+
+/* ---------- 「查看」放大图里的违例标记 ---------- */
+
+/**
+ * 当前查看方案 -> 规则标记列表（供画布绘制）
+ */
+function currentViewedSchemeRuleMarks(scheme) {
+  const chk = document.getElementById('chkViewRuleMarks');
+  if (chk && !chk.checked) return [];
+  const r = schemeRuleResult(scheme);
+  if (!r || !r.totals) return [];
+  return FanoutChecker.buildSchemeRuleMarks ? FanoutChecker.buildSchemeRuleMarks(r) : [];
+}
+
+/**
+ * 点「查看」里的违例清单 -> 在放大图上高亮对应孔
+ */
+function focusViewedSchemeMark(viaA, viaB) {
+  const idx = Number(viaA);
+  if (!isFinite(idx)) return;
+  if (typeof setViewSchemeHoveredVia === 'function') setViewSchemeHoveredVia(idx);
+  const rows = document.querySelectorAll('#viewSchemeViaTableBody tr');
+  if (rows[idx] && rows[idx].scrollIntoView) rows[idx].scrollIntoView({ block: 'nearest' });
+}
+
+/**
+ * 放大图上方/下方的违例提示条
+ */
+function renderViewedSchemeRuleBar() {
+  const bar = document.getElementById('viewRuleSummary');
+  const listEl = document.getElementById('viewRuleList');
+  if (!bar) return;
+  const scheme = State.library.getScheme(ViewSchemeState.schemeId);
+  const r = scheme ? schemeRuleResult(scheme) : null;
+  if (!scheme || !r || !r.totals) {
+    bar.innerHTML = '<span style="color:#94a3b8">内部规则：暂无检查结果</span>';
+    if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = ''; }
+    return;
+  }
+
+  // 画布上的编号芯片 ① ② ③ … 在这里列出具体数值，点一行即在图上高亮对应孔
+  if (listEl) {
+    const marks = (r.ok || !FanoutChecker.buildSchemeRuleMarks) ? [] : FanoutChecker.buildSchemeRuleMarks(r);
+    if (!marks.length) {
+      listEl.style.display = 'none';
+      listEl.innerHTML = '';
+    } else {
+      listEl.style.display = 'block';
+      listEl.innerHTML = marks.map(m => {
+        const head = (m.b != null)
+          ? `#${m.a + 1} ↔ #${m.b + 1}`
+          : `#${m.a + 1}`;
+        const kindText = m.kind === 'pitch' ? '信号孔距' : (m.kind === 'gnd' ? '地孔距' : '逐层对称');
+        return `<div onclick="focusViewedSchemeMark(${m.a}, ${m.b == null ? 'null' : m.b})"
+                     title="${escapeHtml(m.detail || '')}"
+                     style="display:flex;gap:6px;align-items:baseline;padding:1px 4px;border-radius:4px;cursor:pointer">
+          <span style="display:inline-block;min-width:18px;text-align:center;border-radius:3px;background:${m.sev === 'bad' ? '#f87171' : '#fbbf24'};color:#0f172a;font-weight:700;font-size:10px">${m.order}</span>
+          <span style="color:#0f172a;font-weight:600;white-space:nowrap">${escapeHtml(head)}</span>
+          <span style="color:#64748b;white-space:nowrap">${escapeHtml(m.layerLabel || '')}</span>
+          <span style="color:${m.sev === 'bad' ? '#b91c1c' : '#9a3412'};white-space:nowrap">${escapeHtml(kindText)} ${escapeHtml(m.label.replace(' ✕', ''))}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+  const t = r.totals;
+  if (r.ok) {
+    bar.innerHTML = '<span class="badge-tag ok">✓ 内部规则全部通过</span>'
+      + `<span style="color:#64748b;margin-left:6px">信号孔距 ${t.pitchChecked} 对 · 地孔距 ${t.gndChecked} 个 · 逐层对称 ${t.symmetryLayers} 层</span>`;
+    return;
+  }
+  bar.innerHTML = `<span class="badge-tag bad">✕ 违例 ${t.violations}</span>`
+    + `<span style="color:#b91c1c;font-weight:600">信号孔距 ${t.pitchViolations}</span>`
+    + `<span style="color:#9a3412;font-weight:600">地孔距 ${t.gndViolations}</span>`
+    + `<span style="color:#9a3412;font-weight:600">不对称层 ${t.symmetryFailLayers}</span>`
+    + (t.stackColumns ? `<span style="color:#64748b">叠孔柱 ${t.stackColumns} 处已豁免</span>` : '')
+    + (r.layerInfoAvailable ? '' : '<span style="color:#b45309">无层信息：对称性按整体投影估算</span>')
+    + '<span style="color:#64748b">红色虚线/圆环=中心距违例，琥珀色=同网或对称提示</span>';
 }
 
 function loadPresets() {
@@ -2303,6 +2377,7 @@ function viewScheme(id) {
 
   populateViewedSchemeDetails(scheme);
   renderViewSchemeMeasureUI();
+  renderViewedSchemeRuleBar();
   requestAnimationFrame(() => renderViewedSchemeCanvas());
 }
 
@@ -2420,7 +2495,12 @@ function renderViewedSchemeCanvas() {
   const showCoords = document.getElementById('chkViewCoords') ? document.getElementById('chkViewCoords').checked : false;
   const showDistances = document.getElementById('chkViewDistances') ? document.getElementById('chkViewDistances').checked : false;
 
+  const ruleMarks = (typeof currentViewedSchemeRuleMarks === 'function')
+    ? currentViewedSchemeRuleMarks(scheme)
+    : [];
+
   ViewSchemeState.lastLayout = FanoutChecker.renderSchemeEnlargedCanvas(canvas, scheme, {
+    ruleMarks,
     width: w,
     height: h,
     zoom: ViewSchemeState.zoom,

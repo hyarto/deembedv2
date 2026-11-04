@@ -287,5 +287,100 @@ test('方案序列化往返：层跨度不丢，规则结果一致', () => {
   assert.deepStrictEqual(b.totals, a.totals);
 });
 
+/* ---------------- 7. 违例标记（放大图定位用） ---------------- */
+test('违例标记：样例 43 孔生成 10 个标记，字段足够定位到具体孔对', () => {
+  const r = checkSchemeInternalRules(loadSampleScheme(), {});
+  const marks = FanoutChecker.buildSchemeRuleMarks(r);
+
+  assert.strictEqual(marks.length, 10, '4 条信号孔距 + 6 条地孔距');
+  assert.strictEqual(marks.filter(m => m.kind === 'pitch').length, 4);
+  assert.strictEqual(marks.filter(m => m.kind === 'gnd').length, 6);
+  assert.strictEqual(marks.filter(m => m.sev === 'bad').length, 4);
+
+  marks.forEach(m => {
+    assert.ok(Number.isFinite(m.a), '必须有孔序号才能定位');
+    assert.ok(m.label && m.label.includes('✕'), m.label);
+    assert.ok(m.detail && m.detail.length > 0);
+  });
+  const pitch = marks.find(m => m.kind === 'pitch');
+  assert.ok(pitch.label.endsWith('mm ✕'), pitch.label);
+  assert.ok(pitch.detail.includes('最近标称'), pitch.detail);
+});
+
+test('违例标记：逐层对称不合格时标出最不对称的孔', () => {
+  // 四个地孔围两颗信号孔，但最右侧地孔被拉开 0.1mm -> 该层不对称
+  const tol = 0.5 / 0.0254;
+  const vias = [
+    { id: 1, x: 0, y: 0, net: 'SIG_P', padstack: 'HDI-SIG-045drill_L1_L5' },
+    { id: 2, x: 0, y: tol, net: 'SIG_N', padstack: 'HDI-SIG-045drill_L1_L5' },
+    { id: 3, x: 0.4 / 0.0254, y: 0, net: 'GND', padstack: 'HDI-GND-045drill_L1_L5' },
+    { id: 4, x: -0.4 / 0.0254, y: 0, net: 'GND', padstack: 'HDI-GND-045drill_L1_L5' },
+    { id: 5, x: 0, y: tol + 0.4 / 0.0254, net: 'GND', padstack: 'HDI-GND-045drill_L1_L5' },
+    // 最下方地孔横向偏 0.1mm：破坏 x=0 镜像轴，该层不再对称
+    { id: 6, x: 0.1 / 0.0254, y: -0.4 / 0.0254, net: 'GND', padstack: 'HDI-GND-045drill_L1_L5' }
+  ];
+  const r = checkSchemeInternalRules(new FanoutScheme({ name: 'asym', vias }), {});
+  assert.ok(r.symmetry.failLayers >= 1, '应判定为不对称');
+
+  const badLayer = r.symmetry.layers.find(l => !l.ok);
+  assert.ok(Array.isArray(badLayer.worstViaIndices) && badLayer.worstViaIndices.length > 0,
+    '不合格层要给出最不对称的孔序号，才能在放大图里打标记');
+
+  const marks = FanoutChecker.buildSchemeRuleMarks(r);
+  const symMarks = marks.filter(m => m.kind === 'symmetry');
+  assert.ok(symMarks.length > 0, '对称违例也要产出标记');
+  assert.ok(symMarks.every(m => m.b === null), '对称标记是单孔标记');
+  assert.ok(symMarks.every(m => badLayer.viaIndices.includes(m.a)));
+});
+
+test('违例标记绘制：renderSchemeEnlargedCanvas 收到 ruleMarks 后真的画在孔位上', () => {
+  const scheme = loadSampleScheme();
+  const r = checkSchemeInternalRules(scheme, {});
+  const marks = FanoutChecker.buildSchemeRuleMarks(r);
+
+  const ops = [];
+  const fakeCtx = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === 'measureText') return (t) => ({ width: String(t).length * 6 });
+      if (prop === 'canvas') return { width: 760, height: 520 };
+      return (...args) => ops.push({ op: String(prop), args });
+    },
+    set() { return true; }
+  });
+  const fakeCanvas = {
+    width: 760, height: 520, clientWidth: 760, clientHeight: 520,
+    getAttribute: () => '760',
+    getContext: () => fakeCtx
+  };
+
+  const layout = FanoutChecker.renderSchemeEnlargedCanvas(fakeCanvas, scheme, {
+    width: 760, height: 520, ruleMarks: marks
+  });
+  assert.ok(layout && layout.vias.length === 43);
+
+  const strokeRects = ops.filter(o => o.op === 'strokeRect');
+  assert.strictEqual(strokeRects.length, marks.length, '每条违例都应画出标签框（验证 ruleMarks 已连到绘制流程）');
+
+  // 标记落在对应孔的画布坐标上
+  const target = marks[0];
+  const via = layout.vias[target.a];
+  const hit = ops.filter(o => o.op === 'arc' && Math.abs(o.args[0] - via.sx) < 0.001 && Math.abs(o.args[1] - via.sy) < 0.001);
+  assert.ok(hit.length >= 1, '违例圆环应画在该孔的 sx/sy 上');
+
+  // 不传 ruleMarks -> 不画标签框
+  const ops2 = [];
+  const fakeCtx2 = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === 'measureText') return (t) => ({ width: String(t).length * 6 });
+      if (prop === 'canvas') return { width: 760, height: 520 };
+      return (...args) => ops2.push({ op: String(prop), args });
+    },
+    set() { return true; }
+  });
+  FanoutChecker.renderSchemeEnlargedCanvas(
+    Object.assign({}, fakeCanvas, { getContext: () => fakeCtx2 }), scheme, { width: 760, height: 520 });
+  assert.strictEqual(ops2.filter(o => o.op === 'strokeRect').length, 0, '未开启标记时不画违例框');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
 assert.strictEqual(fail, 0);

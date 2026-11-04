@@ -598,7 +598,7 @@ function importRuleSampleScheme() {
   return scheme;
 }
 
-test('内部规则检查：参数控件齐全、默认值正确、汇总表按方案逐行出结论', () => {
+test('内部规则检查：参数控件齐全、默认值正确，每套方案各自的卡片内出结论', () => {
   const ids = ['inpRuleSigPitch', 'inpRuleGndPitch', 'inpRuleDistTol', 'inpRuleSymTol', 'inpRuleStackTol', 'selRulePitchScope'];
   ids.forEach(id => assert.ok(document.getElementById(id), `缺少参数控件 ${id}`));
 
@@ -609,28 +609,32 @@ test('内部规则检查：参数控件齐全、默认值正确、汇总表按�
   assert.strictEqual(document.getElementById('inpRuleStackTol').value, '0.05');
   assert.strictEqual(document.getElementById('selRulePitchScope').value, 'all');
 
+  assert.strictEqual(document.getElementById('pnlSchemeRuleSummary'), null, '汇总表已移除：违例不再集中到一张表');
+
   window.State.library.clear();
   window.loadPresets();
   window.renderSchemeCards();
 
-  const rows = document.querySelectorAll('#pnlSchemeRuleSummary tbody tr');
-  assert.strictEqual(rows.length, 6, '汇总表每个方案一行');
-  const headers = Array.from(document.querySelectorAll('#pnlSchemeRuleSummary thead th')).map(th => th.textContent.trim());
-  assert.ok(headers.some(h => h.includes('信号孔中心距')), headers.join('|'));
-  assert.ok(headers.some(h => h.includes('地孔')), headers.join('|'));
-  assert.ok(headers.some(h => h.includes('逐层对称')), headers.join('|'));
+  const cards = document.querySelectorAll('.scheme-card');
+  assert.strictEqual(cards.length, 6);
+  cards.forEach((card, idx) => {
+    const box = card.querySelector('.scheme-rule-box');
+    assert.ok(box, `方案卡片 #${idx + 1} 内应有内部规则区块`);
+    assert.ok(box.querySelector('.srb-head'), '规则区块应有标题行');
+    assert.ok(box.querySelector('.srb-head .badge-tag'), '规则区块应带结论徽标');
+    assert.strictEqual(box.querySelectorAll('.srb-row').length, 0, '默认折叠不显示违例明细');
+  });
 
   const badge = document.getElementById('ruleOverallBadge');
   assert.ok(/套方案/.test(badge.textContent), badge.textContent);
 });
 
-test('内部规则检查：样例 43 孔判定为违例，卡片徽标与汇总表数字一致', () => {
+test('内部规则检查：样例 43 孔违例显示在它自己的卡片里（分组清单，不汇总）', () => {
   const scheme = importRuleSampleScheme();
   const result = window.SchemeRuleState.results[scheme.id];
   assert.ok(result, '样例方案应有规则结果');
   assert.strictEqual(result.ok, false, '按默认规则该样例存在违例');
   assert.strictEqual(result.totals.viaCount, 43);
-  assert.strictEqual(result.totals.signalCount, 6);
   assert.strictEqual(result.pitch.checked, 9);
   assert.strictEqual(result.pitch.violations.length, 4);
   assert.strictEqual(result.gndToSignal.checked, 37);
@@ -639,39 +643,118 @@ test('内部规则检查：样例 43 孔判定为违例，卡片徽标与汇总�
   assert.strictEqual(result.totals.stackColumns, 12, '叠孔柱已识别并豁免');
 
   const card = document.getElementById('card_' + scheme.id);
-  const badgeText = Array.from(card.querySelectorAll('.badge-tag')).map(e => e.textContent.trim()).join(' ');
-  assert.ok(badgeText.includes('规则违例'), badgeText);
+  const head = card.querySelector('.scheme-rule-box .srb-head');
+  assert.ok(head.textContent.includes('规则违例 10'), head.textContent);
+  assert.ok(head.textContent.includes('信号孔距 4 处'), head.textContent);
+  assert.ok(head.textContent.includes('地孔距 6 处'), head.textContent);
+  assert.ok(head.textContent.includes('逐层对称合格'), head.textContent);
 
-  const rows = Array.from(document.querySelectorAll('#pnlSchemeRuleSummary tbody tr'));
-  const row = rows.find(r => r.textContent.includes('43'));
-  assert.ok(row, '汇总表应包含该方案行');
-  assert.ok(row.textContent.includes('信号 6'), row.textContent);
-  assert.ok(row.textContent.includes('4 违例'), row.textContent);
-  assert.ok(row.textContent.includes('6 违例'), row.textContent);
-  assert.ok(row.textContent.includes('全部对称'), row.textContent);
+  // 其它方案卡片不受影响（各自独立展示）
+  const otherCards = Array.from(document.querySelectorAll('.scheme-card')).filter(c => c.id !== 'card_' + scheme.id);
+  otherCards.forEach(c => {
+    const otherHead = c.querySelector('.scheme-rule-box .srb-head');
+    assert.ok(otherHead, '每张卡片都有自己的规则区块');
+    assert.ok(!otherHead.textContent.includes('信号孔距 4 处'), '违例详情不串到别的方案卡片');
+  });
 });
 
-test('内部规则检查：展开违例明细，点击违例行跳转放大视图并高亮该孔', () => {
+test('内部规则检查：卡片内展开明细，按三条规则分组，点违例行在放大图中定位', () => {
   const scheme = importRuleSampleScheme();
   window.toggleSchemeRuleDetail(scheme.id);
 
-  const detail = document.getElementById('pnlSchemeRuleSummary');
-  assert.ok(detail.textContent.includes('违例明细'), '展开后应出现明细区块');
-  assert.ok(detail.textContent.includes('信号孔距标称'), detail.textContent.slice(0, 200));
+  const box = document.getElementById('card_' + scheme.id).querySelector('.scheme-rule-box');
+  const titles = Array.from(box.querySelectorAll('.srb-group-title')).map(e => e.textContent.replace(/\s+/g, ' ').trim());
+  assert.strictEqual(titles.length, 3, '三条规则各一组');
+  assert.ok(titles[0].includes('① 信号孔中心距') && titles[0].includes('4 处违例'), titles[0]);
+  assert.ok(titles[1].includes('② 地孔→最近信号孔') && titles[1].includes('6 处违例'), titles[1]);
+  assert.ok(titles[2].includes('③ 逐层对称性') && titles[2].includes('全部对称'), titles[2]);
 
-  const clickable = detail.querySelectorAll('tr[onclick]');
-  assert.strictEqual(clickable.length, 10, '信号 4 条 + 地孔 6 条违例行');
-  assert.ok(clickable[0].textContent.includes('mm'), clickable[0].textContent);
+  const rows = box.querySelectorAll('.srb-row');
+  assert.ok(rows.length >= 6, `展开后应有违例明细行，实际 ${rows.length}`);
+  assert.ok(rows[0].textContent.includes('mm'), rows[0].textContent);
+  assert.ok(rows[0].textContent.includes('标称'), rows[0].textContent);
 
-  clickable[0].dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  // 超出 3 条的用「还有 N 条」折叠，不刷屏
+  const more = Array.from(box.querySelectorAll('.srb-more')).map(e => e.textContent);
+  assert.ok(more.some(t => t.includes('还有')), more.join('|'));
+
+  rows[0].dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
   const modal = document.getElementById('modalViewScheme');
   assert.ok(modal.classList.contains('open'), '点击违例应打开放大查看弹窗');
+  const bar = document.getElementById('viewRuleSummary');
+  assert.ok(bar.textContent.includes('违例'), bar.textContent);
 
   const firstViolation = window.SchemeRuleState.results[scheme.id].pitch.violations[0];
-  // 高亮在 rAF 里执行，直接调用同一入口做确定性断言
   window.setViewSchemeHoveredVia(firstViolation.viaA);
   assert.strictEqual(window.ViewSchemeState.hoveredIndex, firstViolation.viaA, '应高亮违例的第一颗孔');
+  window.closeViewSchemeModal();
+});
+
+test('内部规则检查：放大效果图标记违例位置，切换开关可隐藏标记', () => {
+  const scheme = importRuleSampleScheme();
+  window.viewScheme(scheme.id);
+
+  const chk = document.getElementById('chkViewRuleMarks');
+  assert.ok(chk, '查看弹窗应有「标记规则违例」开关');
+  assert.strictEqual(chk.checked, true, '默认开启');
+
+  const marks = window.currentViewedSchemeRuleMarks(scheme);
+  assert.strictEqual(marks.length, 10, '4 条信号孔距 + 6 条地孔距');
+  assert.strictEqual(marks.filter(m => m.kind === 'pitch').length, 4);
+  assert.strictEqual(marks.filter(m => m.kind === 'gnd').length, 6);
+  marks.forEach(m => {
+    assert.ok(Number.isFinite(m.a), '标记必须带孔序号，才能定位到画布坐标');
+    assert.ok(m.label && m.label.includes('✕'), m.label);
+  });
+  assert.ok(marks.find(m => m.a === 37 && m.b === 41), '标记应指向具体孔对');
+
+  // 标记绘制：用假 ctx 验证真的画到了布局坐标上
+  const layout = window.FanoutChecker.computeSchemeViewLayout(scheme, 760, 520, { showPadstack: true });
+  const ops = [];
+  const fakeCtx = new Proxy({}, {
+    get(_t, prop) {
+      if (prop === 'measureText') return (t) => ({ width: String(t).length * 6 });
+      if (prop === 'canvas') return { width: 760, height: 520 };
+      return (...args) => ops.push({ op: String(prop), args });
+    },
+    set() { return true; }
+  });
+  window.FanoutChecker.drawSchemeRuleMarks(fakeCtx, layout, marks);
+  const arcs = ops.filter(o => o.op === 'arc');
+  assert.ok(arcs.length >= marks.length * 2, '每条违例要在两颗孔上各画一个圈');
+  const strokeRects = ops.filter(o => o.op === 'strokeRect');
+  assert.strictEqual(strokeRects.length, marks.length, '每条违例一个序号芯片');
+
+  // 叠孔柱会让多对违例的中点完全重合，芯片必须做避让，不能叠在一起
+  const chips = ops.filter(o => o.op === 'fillRect' && Math.abs(o.args[2] - 17) < 0.01 && Math.abs(o.args[3] - 17) < 0.01)
+    .map(o => ({ x: o.args[0] + 8.5, y: o.args[1] + 8.5 }));
+  assert.strictEqual(chips.length, marks.length, '每条违例一个芯片');
+  for (let i = 0; i < chips.length; i++) {
+    for (let j = i + 1; j < chips.length; j++) {
+      const d = Math.hypot(chips[i].x - chips[j].x, chips[i].y - chips[j].y);
+      assert.ok(d > 17, `芯片 ${i + 1} 与 ${j + 1} 重叠（间距 ${d.toFixed(1)}px）`);
+    }
+  }
+
+  // 画布下方按编号列出违例，点一行即在图上高亮对应孔
+  const list = document.getElementById('viewRuleList');
+  assert.ok(list, '查看弹窗应有违例清单');
+  assert.notStrictEqual(list.style.display, 'none', '有违例时应显示清单');
+  const items = Array.from(list.children);
+  assert.strictEqual(items.length, marks.length, '清单条数与画布芯片一一对应');
+  assert.ok(items[0].textContent.includes('#38') && items[0].textContent.includes('信号孔距'),
+    items[0].textContent);
+  items[0].dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+  assert.strictEqual(window.ViewSchemeState.hoveredIndex, marks[0].a, '点清单行应高亮该违例的孔');
+
+  // 关掉开关 -> 不再绘制
+  chk.checked = false;
+  window.onViewSchemeOptionChange();
+  assert.strictEqual(window.currentViewedSchemeRuleMarks(scheme).length, 0, '关闭开关后不生成标记');
+  chk.checked = true;
+  window.onViewSchemeOptionChange();
+
   window.closeViewSchemeModal();
 });
 
@@ -690,11 +773,13 @@ test('内部规则检查：参数可手改并即时重算，恢复默认参数�
   assert.strictEqual(after.ok, true);
   assert.ok(document.getElementById('ruleOverallBadge').textContent.includes('全部通过'),
     document.getElementById('ruleOverallBadge').textContent);
+  const head = document.getElementById('card_' + scheme.id).querySelector('.srb-head');
+  assert.ok(head.textContent.includes('规则通过'), head.textContent);
+  assert.strictEqual(window.FanoutChecker.buildSchemeRuleMarks(after).length, 0, '通过后画布不再有标记');
 
   document.getElementById('selRulePitchScope').value = 'sameLayer';
   window.applySchemeRuleParams();
-  const sameLayer = window.SchemeRuleState.results[scheme.id];
-  assert.ok(sameLayer.pitch.checked < 9, '仅同层共存孔对时检查对象更少');
+  assert.ok(window.SchemeRuleState.results[scheme.id].pitch.checked < 9, '仅同层共存孔对时检查对象更少');
 
   window.resetSchemeRuleParams();
   assert.strictEqual(document.getElementById('inpRuleSigPitch').value, '0.45,0.5,0.6,0.7,0.8');
