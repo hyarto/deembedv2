@@ -64,13 +64,13 @@ tr.fail td.reason{color:var(--bad);font-weight:600}
 .ruleitems .chk{font-size:12px;white-space:nowrap}
 td.badcell,tr.fail td.badcell{background:#fecaca !important;color:#991b1b;font-weight:700}
 tr.reviewed td, tr.fail.reviewed td, tr.totalrow.fail.reviewed td{background:#f8fafc !important;color:#94a3b8 !important}
-tr.reviewed td.badcell, tr.fail.reviewed td.badcell, tr.totalrow.fail.reviewed td.badcell{background:#f1f5f9 !important;color:#64748b !important}
-tr.reviewed .badge.bad, tr.fail.reviewed .badge.bad, tr.totalrow.fail.reviewed .badge.bad{background:#e2e8f0 !important;color:#64748b !important;border-color:#cbd5e1 !important}
+tr.reviewed td.badcell, tr.fail.reviewed td.badcell, tr.totalrow.fail.reviewed td.badcell{background:#f1f5f9 !important;color:#6b7280 !important}
+tr.reviewed .badge.bad, tr.fail.reviewed .badge.bad, tr.totalrow.fail.reviewed .badge.bad{background:#e2e8f0 !important;color:#6b7280 !important;border-color:#cbd5e1 !important}
 tr.reviewed .badge.warn, tr.fail.reviewed .badge.warn, tr.totalrow.fail.reviewed .badge.warn{background:#f1f5f9 !important;color:#94a3b8 !important}
-tr.reviewed .badval, tr.fail.reviewed .badval, tr.totalrow.fail.reviewed .badval{background:#f1f5f9 !important;color:#64748b !important}
-tr.reviewed b, tr.fail.reviewed b, tr.totalrow.fail.reviewed b{color:#64748b !important}
-.rev-chk-wrap{display:inline-flex;align-items:center;gap:3px;margin-right:6px;cursor:pointer;font-size:12px;color:#475569;user-select:none;vertical-align:middle}
-.rev-chk-wrap input[type=checkbox]{cursor:pointer;accent-color:#64748b;vertical-align:middle}
+tr.reviewed .badval, tr.fail.reviewed .badval, tr.totalrow.fail.reviewed .badval{background:#f1f5f9 !important;color:#6b7280 !important}
+tr.reviewed b, tr.fail.reviewed b, tr.totalrow.fail.reviewed b{color:#6b7280 !important}
+.rev-chk-wrap{display:inline-flex;align-items:center;gap:3px;margin-right:6px;cursor:pointer;font-size:12px;color:#6b7280;user-select:none;vertical-align:middle}
+.rev-chk-wrap input[type=checkbox]{cursor:pointer;accent-color:#6b7280;vertical-align:middle}
 tr.reviewed .rev-chk-wrap{color:#94a3b8}
 .badval{color:#991b1b;font-weight:700;background:#fee2e2;border-radius:3px;padding:0 3px}
 .layer-res h2{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -92,23 +92,23 @@ pre.preview{background:#0f172a;color:#d1d5db;border-radius:8px;padding:12px;font
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
 .global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#60a5fa;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -303,7 +303,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
       <label class="fld">只看层 <select id="fltLayer" style="width:150px" data-no-persist><option value="">全部</option></select></label>
       <label class="fld">状态 <select id="fltStatus" style="width:100px" data-no-persist><option value="">全部</option><option value="fail">不符合</option><option value="pass">通过</option><option value="none">未检查</option></select></label>
       <span class="hint" id="fltNote">点击红色「不符合」只显示不符合项，再点一次恢复全部。</span>
-      <button type="button" class="btn" id="btnExpReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <button type="button" class="btn" id="btnExpReport" style="background:#2563eb;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
       <button type="button" class="btn ghost" id="btnExpAll">导出全部 CSV</button>
       <button type="button" class="btn ghost" id="btnExpFail">导出不符合项 CSV</button>
       <button type="button" class="btn ghost" id="btnClearTraceRev">清空复验标记</button>
@@ -342,7 +342,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
   <div class="card">
     <h2>差分线长差分析（支持逐层线长差与所有层总线长差检查）</h2>
     <div class="row" style="margin-bottom:8px">
-      <button type="button" class="btn" id="btnExpDiffReport" style="background:#0284c7;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <button type="button" class="btn" id="btnExpDiffReport" style="background:#2563eb;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
       <label class="fld"><input type="checkbox" id="chkDiffOnlyFail" data-no-persist> 仅显示超差对</label>
       <button type="button" class="btn ghost" id="btnExpDiff">导出差分分析 CSV</button>
       <button type="button" class="btn ghost" id="btnClearDiffRev">清空复验标记</button>

@@ -6,37 +6,37 @@
 <title>PCB 铜皮检查工具 (Copper Pour Inspection)</title>
 <style>
 :root{
-  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
-  --pri:#0284c7;--pri-bg:#e0f2fe;--pri-hover:#0369a1;
+  --bg:#f4f6f9;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--line:#e3e8ef;
+  --pri:#2563eb;--pri-bg:#f8fafc;--pri-hover:#1d4ed8;
   --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
   --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
   --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
   --copper:#b45309;--copper-bg:#fef3c7;--copper-line:#fcd34d;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
 
 
 nav#tabs button .badge{font-size:11px;padding:1px 6px;border-radius:10px;background:#334155;color:#f1f5f9}
-nav#tabs button.active .badge{background:#0284c7;color:#fff}
+nav#tabs button.active .badge{background:#2563eb;color:#fff}
 
-main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
+main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .tab{display:none}
 .tab.active{display:block}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
-.card h2{font-size:15px;font-weight:700;margin-bottom:8px;color:#1e293b;display:flex;align-items:center;gap:8px}
-.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#334155}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#374151}
 .hint{font-size:12px;color:var(--sub);line-height:1.6}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
 .btn.pri{background:var(--pri);color:#fff}
 .btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;border-color:var(--line);color:#334155}
+.btn.sec{background:#fff;border-color:var(--line);color:#374151}
 .btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
-.btn.sec.active{background:#e0f2fe;border-color:#38bdf8;color:#0284c7}
+.btn.sec.active{background:#f1f5f9;border-color:#38bdf8;color:#2563eb}
 .btn.bad{background:var(--bad);color:#fff}
 .btn.bad:hover{background:#b91c1c}
 .btn.copper{background:#b45309;color:#fff}
@@ -44,16 +44,16 @@ main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
 .btn.small{font-size:12px;padding:4px 8px}
 
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
-.stat-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
-.stat-box .lbl{font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
-.stat-box .val{font-size:20px;font-weight:800;color:#0f172a;margin-top:2px;font-family:var(--mono)}
-.stat-box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.stat-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat-box .lbl{font-size:12px;color:var(--sub)}
+.stat-box .val{font-size:22px;font-weight:700;color:#111827;margin-top:2px;font-family:var(--mono)}
+
 .stat-box.ok .val{color:var(--ok)}
-.stat-box.bad{border-color:var(--bad-line);background:var(--bad-bg)}
+
 .stat-box.bad .val{color:var(--bad)}
-.stat-box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+
 .stat-box.warn .val{color:var(--warn)}
-.stat-box.copper{border-color:var(--copper-line);background:var(--copper-bg)}
+
 .stat-box.copper .val{color:var(--copper)}
 
 .dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all .15s}
@@ -63,31 +63,31 @@ main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
 
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
 .form-item{display:flex;flex-direction:column;gap:4px}
-.form-item label{font-size:12px;font-weight:600;color:#334155}
+.form-item label{font-size:12px;font-weight:600;color:#374151}
 .form-item input, .form-item select, .form-item textarea{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text);font-family:inherit}
 .form-item textarea{font-family:var(--mono);font-size:12px}
 
 .chip-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
-.chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:12px;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;cursor:pointer;transition:all .15s;font-family:var(--mono);user-select:none}
-.chip:hover{background:#e0f2fe;border-color:#38bdf8;color:#0284c7}
-.chip.active{background:#0284c7;color:#fff;border-color:#0284c7}
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:12px;background:#f1f5f9;border:1px solid #e3e8ef;color:#6b7280;cursor:pointer;transition:all .15s;font-family:var(--mono);user-select:none}
+.chip:hover{background:#f1f5f9;border-color:#38bdf8;color:#2563eb}
+.chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
 
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
-th{background:#f8fafc;padding:9px 12px;font-weight:700;color:#334155;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+th{background:#f1f5f9;padding:8px 10px;font-weight:600;color:#334155;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);color:#1f2937;vertical-align:middle}
 tr:hover td{background:#f8fafc}
 tr.reviewed td{opacity:.55;background:#fcfcfc}
 tr.row-fail td{background:#fffaf0}
 tr.row-pass td{background:#fafdfb}
-tr.subrow td{background:#f8fafc;padding:6px 12px;border-left:3px solid #0284c7}
+tr.subrow td{background:#f8fafc;padding:6px 12px;border-left:3px solid #2563eb}
 
 .badge-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
 .badge-tag.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
 .badge-tag.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
 .badge-tag.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
 .badge-tag.copper{background:var(--copper-bg);color:var(--copper);border:1px solid var(--copper-line)}
-.badge-tag.gray{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+.badge-tag.gray{background:#f1f5f9;color:#6b7280;border:1px solid #e3e8ef}
 
 /* Canvas Viewport */
 .canvas-container{position:relative;width:100%;height:680px;background:#0f172a;border-radius:8px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
@@ -97,9 +97,9 @@ canvas#mainCanvas:active{cursor:grabbing}
 .canvas-toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;background:rgba(15,23,42,.85);backdrop-filter:blur(6px);padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.15);z-index:10}
 .canvas-toolbar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 10px;font-size:12px;border-radius:4px;cursor:pointer;font-weight:600;transition:all .15s}
 .canvas-toolbar button:hover{background:rgba(255,255,255,.25)}
-.canvas-toolbar button.active{background:#0284c7;border-color:#38bdf8}
+.canvas-toolbar button.active{background:#2563eb;border-color:#38bdf8}
 
-.canvas-legend{position:absolute;bottom:12px;left:12px;background:rgba(15,23,42,.88);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.15);color:#e2e8f0;font-size:11px;display:flex;gap:12px;align-items:center;z-index:10}
+.canvas-legend{position:absolute;bottom:12px;left:12px;background:rgba(15,23,42,.88);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.15);color:#e3e8ef;font-size:11px;display:flex;gap:12px;align-items:center;z-index:10}
 .legend-item{display:flex;align-items:center;gap:6px}
 .legend-color{width:12px;height:12px;border-radius:3px}
 
@@ -110,34 +110,34 @@ canvas#mainCanvas:active{cursor:grabbing}
 .modal-mask.open{opacity:1;pointer-events:auto}
 .modal-box{background:#fff;border-radius:10px;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2);padding:20px;position:relative}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.modal-header h3{font-size:16px;font-weight:700;color:#0f172a}
+.modal-header h3{font-size:16px;font-weight:700;color:#111827}
 
 .pattern-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:14px}
-.pattern-card h3{font-size:14px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.pattern-box{background:#f8fafc;border-left:4px solid var(--copper);padding:10px 14px;border-radius:0 6px 6px 0;margin:8px 0;font-size:12px;line-height:1.7;color:#334155}
+.pattern-card h3{font-size:14px;font-weight:700;color:#111827;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pattern-box{background:#f8fafc;border-left:4px solid var(--copper);padding:10px 14px;border-radius:0 6px 6px 0;margin:8px 0;font-size:12px;line-height:1.7;color:#374151}
 
 /* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#f1f5f9 !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#38bdf8;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
 html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min-height:580px !important}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -180,7 +180,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
     </div>
     <div class="stat-box">
       <div class="lbl">导入过孔 / 走线</div>
-      <div class="val"><span id="statViasTraces">0 / 0</span> <span style="font-size:12px;font-weight:normal;color:#64748b">个</span></div>
+      <div class="val"><span id="statViasTraces">0 / 0</span> <span style="font-size:12px;font-weight:normal;color:#6b7280">个</span></div>
     </div>
     <div class="stat-box bad">
       <div class="lbl">❌ 检查不符合项 (缺陷总数)</div>
@@ -199,8 +199,8 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
     <div class="card" style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 18px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2 style="font-size:14px;margin-bottom:2px;color:#0f172a">💾 铜皮规则约束方案库 (本地持久化与导入/导出)</h2>
-          <p class="hint" style="color:#475569">
+          <h2 style="margin-bottom:2px;color:#111827">铜皮规则约束方案库 (本地持久化与导入/导出)</h2>
+          <p class="hint" style="color:#6b7280">
             支持将整页 5 项规则与异型铜皮模板一键保存为本地 JSON 文件，或从本地文件读取规则，便于下一次直接调用与复用。
           </p>
         </div>
@@ -353,7 +353,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
   <!-- TAB 2: 数据导入 (Import Data) -->
   <section id="tabImport" class="tab">
     <div class="card">
-      <h2>📥 导入 PCB 铜皮、过孔与走线数据 (EDA TXT 格式)</h2>
+      <h2>导入 PCB 铜皮、过孔与走线数据 (EDA TXT 格式)</h2>
       <p class="hint">可导入包含 <code>&lt; Shape &gt;</code>、<code>&lt; Via &gt;</code> 和 <code>&lt; Trace &gt;</code> 的 Allegro/EDA 坐标报告文本。</p>
 
       <div class="dropzone" id="dropzoneData" onclick="document.getElementById('fileDataInput').click()" style="margin-top:14px">
@@ -383,7 +383,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2>📊 铜皮五项检查结果与异常明细</h2>
+          <h2>铜皮五项检查结果与异常明细</h2>
           <p class="hint">自动将同一目标对象（过孔/走线/铜皮）在各层与各段的问题进行<strong>统一汇总与归纳</strong>，并支持展开逐层明细。</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -522,7 +522,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2>📈 铜皮五项检查缺陷规律与工程分析总结</h2>
+          <h2>铜皮五项检查缺陷规律与工程分析总结</h2>
           <p class="hint">深入归纳每一种缺陷分类在层别分布、网络特征、几何尺寸及信号完整性/制造工艺方面的核心规律与整改建议。</p>
         </div>
         <button class="btn sec small" onclick="exportAnalysisReport()">📄 导出缺陷规律分析报告</button>
@@ -540,7 +540,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
 <div class="modal-mask" id="modalRule1">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 id="modalR1Title">➕ 配置孔经过层铺铜覆盖规则</h3>
+      <h3 id="modalR1Title">配置孔经过层铺铜覆盖规则</h3>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule1')">✕</span>
     </div>
     <div class="form-grid">
@@ -571,7 +571,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
 <div class="modal-mask" id="modalRule2">
   <div class="modal-box" style="max-width:780px">
     <div class="modal-header">
-      <h3 id="modalR2Title">➕ 配置特定异型铜皮比对规则 (导入 Shape TXT)</h3>
+      <h3 id="modalR2Title">配置特定异型铜皮比对规则 (导入 Shape TXT)</h3>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule2')">✕</span>
     </div>
 
@@ -609,7 +609,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
         <canvas id="modalR2Canvas" width="110" height="110"></canvas>
       </div>
       <div style="flex:1;font-size:12px;color:var(--sub)">
-        <div style="font-weight:700;color:#0f172a" id="modalR2PreviewTitle">异型铜皮几何预览</div>
+        <div style="font-weight:700;color:#111827" id="modalR2PreviewTitle">异型铜皮几何预览</div>
         <div id="modalR2PreviewDesc" style="margin-top:4px;line-height:1.5">
           请粘贴 Shape TXT 文本以解析边界、面积与圆弧...
         </div>
@@ -627,7 +627,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
 <div class="modal-mask" id="modalRule3">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 id="modalR3Title">➕ 配置走线参考层超宽规则</h3>
+      <h3 id="modalR3Title">配置走线参考层超宽规则</h3>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule3')">✕</span>
     </div>
     <div class="form-grid">
@@ -663,7 +663,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
 <div class="modal-mask" id="modalExport">
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
-      <h3 id="exportModalTitle">📤 导出文件</h3>
+      <h3 id="exportModalTitle">导出文件</h3>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalExport')">✕</span>
     </div>
     <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出数据，可直接点击下载文件或一键复制全部内容：</div>
@@ -672,7 +672,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
       <button class="btn sec" id="btnCopyExport" onclick="copyExportContent()">📋 一键复制全部内容</button>
       <span id="copySuccessTip" style="font-size:12px;color:#16a34a;display:none;align-items:center;font-weight:600">✅ 复制成功！</span>
     </div>
-    <textarea id="exportModalText" rows="12" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;background:#f8fafc;color:#0f172a;resize:vertical" onfocus="this.select()"></textarea>
+    <textarea id="exportModalText" rows="12" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;background:#f8fafc;color:#111827;resize:vertical" onfocus="this.select()"></textarea>
     <div style="display:flex;justify-content:flex-end;margin-top:14px">
       <button class="btn sec" onclick="closeModal('modalExport')">关闭窗口</button>
     </div>
@@ -865,7 +865,7 @@ function renderHistoryChips() {
 function renderChipBar(containerId, inputId, list, unit = '') {
   const el = document.getElementById(containerId);
   if (!el || !list) return;
-  el.innerHTML = '<span style="font-size:11px;color:#64748b">快捷选项:</span>' + list.map(v => 
+  el.innerHTML = '<span style="font-size:11px;color:#6b7280">快捷选项:</span>' + list.map(v => 
     `<span class="chip" onclick="fillInputAndRecord('${inputId}', '${escapeHtml(v)}')">${escapeHtml(v)}${unit ? ' ' + unit : ''}</span>`
   ).join('');
 }
@@ -998,7 +998,7 @@ function renderRule3Table() {
  */
 function openAddRule1Modal() {
   State.editingIndex = -1;
-  document.getElementById('modalR1Title').textContent = '➕ 新增孔铺铜覆盖规则';
+  document.getElementById('modalR1Title').textContent = '新增孔铺铜覆盖规则';
   document.getElementById('modalR1InpPadstack').value = 'HDI_045drill_ring3_1_4';
   document.getElementById('modalR1InpLayers').value = 'L1-L5';
   document.getElementById('modalR1InpDist').value = '50.0';
@@ -1009,7 +1009,7 @@ function openAddRule1Modal() {
 function openEditRule1Modal(idx) {
   State.editingIndex = idx;
   const r = State.viaCoverageRules[idx];
-  document.getElementById('modalR1Title').textContent = `✏️ 编辑孔铺铜覆盖规则 #${idx + 1}`;
+  document.getElementById('modalR1Title').textContent = `编辑孔铺铜覆盖规则 #${idx + 1}`;
   document.getElementById('modalR1InpPadstack').value = r.padstack;
   document.getElementById('modalR1InpLayers').value = String(r.layers);
   document.getElementById('modalR1InpDist').value = r.coverageRadius;
@@ -1046,7 +1046,7 @@ function deleteRule1(idx) {
 // Rule 2 Modals & Shape TXT Preview
 function openAddRule2Modal() {
   State.editingIndex = -1;
-  document.getElementById('modalR2Title').textContent = '➕ 新增特定异型铜皮模板 (导入 Shape TXT)';
+  document.getElementById('modalR2Title').textContent = '新增特定异型铜皮模板 (导入 Shape TXT)';
   document.getElementById('modalR2InpPadstack').disabled = false;
   document.getElementById('modalR2InpPadstack').style.background = '#ffffff';
   document.getElementById('modalR2InpLayer').disabled = false;
@@ -1072,7 +1072,7 @@ function openAddRule2Modal() {
 function openEditRule2Modal(idx) {
   State.editingIndex = idx;
   const t = State.specialShapeTemplates[idx];
-  document.getElementById('modalR2Title').textContent = `✏️ 编辑特定异型铜皮模板`;
+  document.getElementById('modalR2Title').textContent = `编辑特定异型铜皮模板`;
   document.getElementById('modalR2InpPadstack').disabled = true;
   document.getElementById('modalR2InpPadstack').style.background = '#f8fafc';
   document.getElementById('modalR2InpLayer').disabled = true;
@@ -1197,7 +1197,7 @@ function deleteRule2(idx) {
 // Rule 3 Modals
 function openAddRule3Modal() {
   State.editingIndex = -1;
-  document.getElementById('modalR3Title').textContent = '➕ 新增走线参考层超宽规则';
+  document.getElementById('modalR3Title').textContent = '新增走线参考层超宽规则';
   document.getElementById('modalR3InpTraceLayer').value = '19IS08';
   document.getElementById('modalR3InpUpperRef').value = '08IS03';
   document.getElementById('modalR3InpLowerRef').value = 'Bottom';
@@ -1209,7 +1209,7 @@ function openAddRule3Modal() {
 function openEditRule3Modal(idx) {
   State.editingIndex = idx;
   const r = State.traceMarginRules[idx];
-  document.getElementById('modalR3Title').textContent = `✏️ 编辑走线参考层规则 #${idx + 1}`;
+  document.getElementById('modalR3Title').textContent = `编辑走线参考层规则 #${idx + 1}`;
   document.getElementById('modalR3InpTraceLayer').value = r.traceLayer;
   document.getElementById('modalR3InpUpperRef').value = r.upperRefLayer || '';
   document.getElementById('modalR3InpLowerRef').value = r.lowerRefLayer || '';
@@ -1705,7 +1705,7 @@ function renderResultsTable() {
         <tr class="subrow">
           <td></td>
           <td colspan="8" style="padding:10px 14px">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#0369a1">
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#1d4ed8">
               🔎 【${escapeHtml(targetStr)}】逐层 / 逐段检查明细拆解 (共 ${r.subRecords.length} 项)：
             </div>
             <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;overflow:hidden">
@@ -1726,7 +1726,7 @@ function renderResultsTable() {
                       <td style="padding:5px 10px"><strong>${escapeHtml(sub.actualDistStr || (sub.actualMargin != null ? sub.actualMargin + ' mil' : (sub.actualRadius != null ? sub.actualRadius + ' mil' : '-')))}</strong></td>
                       <td style="padding:5px 10px">${escapeHtml(sub.requiredDist ? `≤ ${sub.requiredDist} mil` : (sub.minMargin ? `≥ ${sub.minMargin} mil` : `≥ ${sub.requiredRadius || 10} mil`))}</td>
                       <td style="padding:5px 10px"><span class="badge-tag ${sub.pass ? 'ok' : 'bad'}">${sub.pass ? '✅ 符合' : '❌ 不符合'}</span></td>
-                      <td style="padding:5px 10px;color:#475569">${escapeHtml(sub.message)}</td>
+                      <td style="padding:5px 10px;color:#6b7280">${escapeHtml(sub.message)}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -2357,7 +2357,7 @@ function renderReasonNetBadges(byNet) {
       const itemStr = list.slice(0, 5).map(id => '#' + id).join('、') + (list.length > 5 ? ` 等${list.length}个` : '');
       return '<span style="display:inline-flex;align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">' +
         '<code>' + escapeHtml(netName) + '</code>' +
-        '<span style="color:#64748b;margin-left:4px;font-size:10px">(' + list.length + '项: ' + escapeHtml(itemStr) + ')</span>' +
+        '<span style="color:#6b7280;margin-left:4px;font-size:10px">(' + list.length + '项: ' + escapeHtml(itemStr) + ')</span>' +
       '</span>';
     }).join('') +
   '</div>';
@@ -2463,7 +2463,7 @@ function renderAnalysisTab() {
   // 【置顶展示】各约束下不符合的具体原因展开明细（过孔网络一一对应全列出）
   // ==========================================
   h += '<div class="card" style="padding:16px 20px;margin-bottom:18px">';
-  h += `<h3 style="margin-top:0;font-size:15px;color:#0f172a">各约束下不符合的具体原因展开明细（过孔/走线网络一一对应全列出${badTotal ? `，共 <span class="bad">${badTotal}</span> 条` : ''}）</h3>`;
+  h += `<h3 style="margin-top:0;color:#111827">各约束下不符合的具体原因展开明细（过孔/走线网络一一对应全列出${badTotal ? `，共 <span class="bad">${badTotal}</span> 条` : ''}）</h3>`;
 
   if (!badTotal) {
     h += '<div class="hint" style="margin-bottom:16px;color:#16a34a;font-weight:600">✅ 本次检查所有铜皮、过孔与走线均符合约束规则，没有不符合的记录。</div>';
@@ -2473,7 +2473,7 @@ function renderAnalysisTab() {
     h += '<div style="margin:10px 0 16px 0"><span style="font-size:12px;color:var(--sub);font-weight:600">按层分布概览：</span>' +
       '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">' +
       layerKeys.map(lk => {
-        return `<span style="padding:3px 9px;border-radius:4px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px">` +
+        return `<span style="padding:3px 9px;border-radius:4px;background:#f8fafc;border:1px solid #e3e8ef;font-size:12px">` +
           `${lk}：<b class="bad">${layerBadMap[lk]}</b> 条</span>`;
       }).join('') +
       '</div></div>';
@@ -2489,12 +2489,12 @@ function renderAnalysisTab() {
       subReasons.forEach(sr => {
         const netCount = Object.keys(sr.byNet).length;
         const targetCount = Object.keys(sr.targets).length;
-        detailHtml += '<div style="padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0">' +
+        detailHtml += '<div style="padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #e3e8ef">' +
           '<div style="font-size:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">' +
             `<div><b>${escapeHtml(sr.layer)}</b>：${sr.reason}</div>` +
             `<div class="bad" style="font-weight:700;white-space:nowrap">${sr.n} 条 (${targetCount} 个对象)</div>` +
           '</div>' +
-          '<div style="margin-top:4px;font-size:11px;color:#475569">' +
+          '<div style="margin-top:4px;font-size:11px;color:#6b7280">' +
             `<span style="font-weight:600">对应目标网络（共 ${netCount} 个网络，全列出）：</span>` +
             renderReasonNetBadges(sr.byNet) +
           '</div>' +
@@ -2517,7 +2517,7 @@ function renderAnalysisTab() {
   // 【五大分类工程机理与优化指引】
   // ==========================================
   h += `
-    <div style="font-weight:700;font-size:14px;color:#0f172a;margin:20px 0 10px 0;display:flex;align-items:center;gap:6px">
+    <div style="font-weight:700;font-size:14px;color:#111827;margin:20px 0 10px 0;display:flex;align-items:center;gap:6px">
       <span>💡 五大检查分类工程机理归纳与整改优化指导</span>
     </div>
 
@@ -2532,7 +2532,7 @@ function renderAnalysisTab() {
         1. <strong>高发层位分布规律</strong>：缺陷主要集中在 <strong>${Object.entries(layerBadMap).map(([l,c])=>`${l} (${c}条)`).join('、') || '各内层'}</strong>。过孔在穿越盲埋孔段或跨越信号层时，由于未铺设接地伴随铜箔或局部反焊盘过大，造成孔中心 50 mil 范围内完全无铜皮。<br>
         2. <strong>信号完整性 (SI/EMI) 危害</strong>：过孔在内层缺少铺铜伴随，过孔分布寄生电感增加，导致过孔特征阻抗突升 10~15Ω，且回流路径被拉长，易引发高频电磁辐射与临近串扰。
       </div>
-      <div style="font-size:12px;color:#334155;margin-top:6px">
+      <div style="font-size:12px;color:#374151;margin-top:6px">
         <strong>💡 工程优化指导：</strong> 建议在相应内层补充接地参考铜皮铺设；对于高速差分过孔对，在孔中心 30~50 mil 范围内增设接地伴随过孔（GND Return Via）以保证回流连续性。
       </div>
     </div>
@@ -2548,7 +2548,7 @@ function renderAnalysisTab() {
         1. <strong>形状与面积偏差规律</strong>：检出过孔在指定目标层周围未生成标准异型泪滴铜皮，或实测面积与模板偏差超过设定容差。<br>
         2. <strong>工艺成因分析</strong>：EDA 自动泪滴生成脚本未在特定层（如 02G01P / 19IS08）正确运行，或异型铜皮被相邻网络的 Anti-pad/避让槽意外切割削减。
       </div>
-      <div style="font-size:12px;color:#334155;margin-top:6px">
+      <div style="font-size:12px;color:#374151;margin-top:6px">
         <strong>💡 工程优化指导：</strong> 检查 EDA 异型铜皮/泪滴生成规则，确保特定封装类型的过孔在指定层别自动生成设计要求的泪滴过渡铜皮。
       </div>
     </div>
@@ -2564,7 +2564,7 @@ function renderAnalysisTab() {
         1. <strong>单侧外延不足与跨分割规律</strong>：走线边缘过于靠近参考地平面边缘（外延 < 50 mil），或走线下方地参考平面被反焊盘/分割槽挖空形成平面缝隙。<br>
         2. <strong>阻抗与电磁泄漏机理</strong>：微带线/带状线单侧铜皮超宽不足 50 mil 时，走线边缘电磁力线无法完全终结在参考平面上，导致边缘漏电容增加、特征阻抗失配（阻抗偏高 3~8Ω），并增加对外辐射。
       </div>
-      <div style="font-size:12px;color:#334155;margin-top:6px">
+      <div style="font-size:12px;color:#374151;margin-top:6px">
         <strong>💡 工程优化指导：</strong> 扩展上下参考地平面的边界，确保参考铜皮边缘比高速走线边缘宽出至少 50 mil（满足 3W / 50mil 铺铜保护准则）；严禁高速差分线贴近平面分割边缘走线。
       </div>
     </div>
@@ -2580,7 +2580,7 @@ function renderAnalysisTab() {
         1. <strong>空间聚集特征</strong>：碎铜主要散落在密集过孔阵列（BGA 扇出区域或排阻引脚间隙）中，面积通常小于 300 sq mil。<br>
         2. <strong>浮空天线与生产隐患</strong>：未连接有效过孔的孤立铜皮处于浮空状态，在高速射频环境下易充当贴片天线发射 EMI 噪声；在波峰焊/回流焊时吸热不均易引发板面起泡或翘曲。
       </div>
-      <div style="font-size:12px;color:#334155;margin-top:6px">
+      <div style="font-size:12px;color:#374151;margin-top:6px">
         <strong>💡 工程优化指导：</strong> 在 EDA 铺铜管理器中开启「自动删除孤立死铜 (Remove Unconnected Copper Island)」功能，彻底清理面积 &lt; 500 sq mil 的无网络碎铜。
       </div>
     </div>
@@ -2596,7 +2596,7 @@ function renderAnalysisTab() {
         1. <strong>几何尖角分布特征</strong>：过小圆弧半径（&lt; 10 mil）多出现在铜皮避让密集过孔群或直角拐弯处。<br>
         2. <strong>PCB 制造 (DFM) 腐蚀酸角隐患</strong>：尖锐内凹圆弧在 PCB 湿法蚀刻过程中易残留药水（Acid Trap / 酸角），导致铜皮局部过度侧蚀、甚至断裂脱落，降低 PCB 制造良率。
       </div>
-      <div style="font-size:12px;color:#334155;margin-top:6px">
+      <div style="font-size:12px;color:#374151;margin-top:6px">
         <strong>💡 工程优化指导：</strong> 优化铜皮铺铜倒角设置，将铜皮边界避让圆弧的平滑半径统一设定为 ≥ 10~15 mil，消除尖角与锐角过渡。
       </div>
     </div>

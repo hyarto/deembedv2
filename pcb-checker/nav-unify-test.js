@@ -3,7 +3,7 @@
  *
  * 约定（见 AGENTS.md）：六个页面共用同一份「全站统一顶栏 + 页签条」样式块
  *   - 顶栏：深色 #0f172a 单行，左起 标题（可带 .tag 徽标）→ 灰色副标题 →
- *           右对齐 .navlinks（6 个站内链接，当前页 = 蓝色实心 pill）→ 显示控件
+ *           右对齐 .navlinks（6 个站内链接，当前页 = 蓝色实心 pill #2563eb）→ 显示控件
  *   - 页签条：nav#tabs 白底 + 蓝色下划线，5 个页签，文案统一 ①②③④⑤ 起头
  *
  * 本测试逐页断言结构与文案，并校验六页的统一样式块完全一致（防止只改了其中几页）。
@@ -148,7 +148,7 @@ function canonicalBlock(page) {
     blocks.forEach(x => assert(x.b === first.b,
       x.p + ' 的统一顶栏样式块与 ' + first.p + ' 不一致（只改了部分页面）'));
     // 关键规则必须存在
-    ['header{flex:none;background:#0f172a', 'header .navlinks a.active{background:#0284c7',
+    ['header{flex:none;background:#0f172a', 'header .navlinks a.active{background:#2563eb',
       'nav#tabs{flex:none;display:flex', 'nav#tabs button.active{color:#2563eb'].forEach(k => {
       assert(first.b.includes(k), '统一块缺少关键规则：' + k);
     });

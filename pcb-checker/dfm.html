@@ -8,31 +8,31 @@
 <script src="dfm-check.js?v=5"></script>
 <style>
 :root{
-  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
-  --pri:#0284c7;--pri-bg:#e0f2fe;--pri-hover:#0369a1;
+  --bg:#f4f6f9;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--line:#e3e8ef;
+  --pri:#2563eb;--pri-bg:#f8fafc;--pri-hover:#1d4ed8;
   --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
   --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
   --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
 
 
-main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
+main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .tab{display:none}
 .tab.active{display:block}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
-.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b;display:flex;align-items:center;gap:8px}
-.card h3{font-size:13px;font-weight:700;margin:14px 0 8px 0;color:#334155}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#374151}
 .hint{font-size:12px;color:var(--sub);line-height:1.6}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
 .btn.pri{background:var(--pri);color:#fff}
 .btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;border-color:var(--line);color:#334155}
+.btn.sec{background:#fff;border-color:var(--line);color:#374151}
 .btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
 .btn.bad{background:var(--bad);color:#fff}
 .btn.bad:hover{background:#b91c1c}
@@ -45,26 +45,26 @@ main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
 
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
 .form-item{display:flex;flex-direction:column;gap:4px}
-.form-item label{font-size:12px;font-weight:600;color:#334155}
+.form-item label{font-size:12px;font-weight:600;color:#374151}
 .form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text)}
 .form-item input:focus, .form-item select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-bg)}
 
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
-.stat-box{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s}
-.stat-box:hover{border-color:#cbd5e1;transform:translateY(-1px)}
-.stat-box.active{border-color:var(--pri);background:var(--pri-bg)}
-.stat-box .num{font-size:20px;font-weight:800;font-family:var(--mono)}
-.stat-box .lbl{font-size:11px;color:var(--sub);margin-top:2px}
+.stat-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .15s}
+.stat-box:hover{border-color:#cbd5e1}
+.stat-box.active{border-color:var(--pri)}
+.stat-box .num{font-size:22px;font-weight:700;font-family:var(--mono)}
+.stat-box .lbl{font-size:12px;color:var(--sub);margin-top:2px}
 .stat-box.bad .num{color:var(--bad)}
 .stat-box.ok .num{color:var(--ok)}
 
 /* Interactive Canvas Viewer */
 .viewer-container{position:relative;background:#000000;border-radius:10px;border:1px solid #1e293b;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,.12)}
-.viewer-toolbar{background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid #334155;padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#e2e8f0;font-size:12px}
+.viewer-toolbar{background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid #334155;padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#e3e8ef;font-size:12px}
 .viewer-toolbar .tb-group{display:flex;align-items:center;gap:4px;border-right:1px solid #334155;padding-right:8px;margin-right:4px}
 .viewer-toolbar button{background:#1e293b;border:1px solid #334155;color:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
-.viewer-toolbar button:hover{background:#334155;border-color:#475569}
-.viewer-toolbar button.active{background:#0284c7;border-color:#38bdf8;color:#fff}
+.viewer-toolbar button:hover{background:#334155;border-color:#374151}
+.viewer-toolbar button.active{background:#2563eb;border-color:#38bdf8;color:#fff}
 .viewer-toolbar label{display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px}
 .viewer-toolbar input[type="checkbox"]{cursor:pointer}
 
@@ -84,9 +84,9 @@ main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
 .measure-card .m-row b{color:#f8fafc}
 
 /* Tables */
-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-th{background:#f8fafc;color:#475569;font-weight:600;position:sticky;top:0;z-index:2}
+th{background:#f1f5f9;color:#334155;font-weight:600;position:sticky;top:0;z-index:2}
 tr:hover{background:#f8fafc}
 tr.fail-row{background:#fef2f2}
 tr.fail-row:hover{background:#fee2e2}
@@ -100,16 +100,16 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 .search-bar input{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
 
 .hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px}
-.hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#334155;cursor:pointer;transition:all .15s;line-height:1.3}
-.hist-chip:hover{background:#e2e8f0;border-color:#94a3b8}
-.hist-chip.active{background:#0284c7;color:#fff;border-color:#0369a1;font-weight:700}
+.hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#374151;cursor:pointer;transition:all .15s;line-height:1.3}
+.hist-chip:hover{background:#e3e8ef;border-color:#94a3b8}
+.hist-chip.active{background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700}
 
 .net-card{background:#ffffff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;transition:box-shadow .15s}
 .net-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .net-card.bad{border-left:4px solid var(--bad);background:#fffbfc}
 .net-card.ok{border-left:4px solid var(--ok)}
 
-.net-defects-table{margin-top:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.net-defects-table{margin-top:8px;background:#fff;border:1px solid #e3e8ef;border-radius:6px;overflow:hidden}
 .net-defects-table th{background:#f1f5f9;font-size:11px;padding:6px 8px}
 .net-defects-table td{font-size:11px;padding:6px 8px}
 
@@ -117,46 +117,46 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 
 /* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#f1f5f9 !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#38bdf8;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
 html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-height:580px !important}
 
   /* ===== 规律分析 (Pattern Analysis) ===== */
   .pat-bar-row{display:grid;grid-template-columns:120px 1fr 78px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12.5px}
   .pat-bar-row:last-child{border-bottom:none}
-  .pat-bar-name{font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
-  .pat-bar-name:hover{color:#0284c7;text-decoration:underline}
+  .pat-bar-name{font-weight:600;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .pat-bar-name:hover{color:#2563eb;text-decoration:underline}
   .pat-bar-track{height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden}
-  .pat-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#38bdf8,#0284c7);transition:width .2s}
+  .pat-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#38bdf8,#2563eb);transition:width .2s}
   .pat-bar-fill.bad{background:linear-gradient(90deg,#fb7185,#e11d48)}
   .pat-bar-fill.warn{background:linear-gradient(90deg,#fbbf24,#d97706)}
-  .pat-bar-val{text-align:right;font-family:var(--mono);font-size:11.5px;color:#475569}
-  .pat-concl{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0284c7;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.75;color:#1e293b}
-  .pat-concl b{color:#0369a1}
+  .pat-bar-val{text-align:right;font-family:var(--mono);font-size:11.5px;color:#6b7280}
+  .pat-concl{background:#f8fafc;border:1px solid #e3e8ef;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.75;color:#1e293b}
+  .pat-concl b{color:#1d4ed8}
   .pat-concl .risk{color:#be123c;font-weight:700}
-  .pat-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;margin-left:4px}
-  .pat-chip.muted{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+  .pat-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef;margin-left:4px}
+  .pat-chip.muted{background:#f1f5f9;color:#6b7280;border-color:#e3e8ef}
   .pat-obj-btn{font-size:12.5px !important;padding:5px 12px !important}
-  .pat-obj-btn.active{background:#0284c7 !important;color:#fff !important;border-color:#0284c7 !important}
+  .pat-obj-btn.active{background:#2563eb !important;color:#fff !important;border-color:#2563eb !important}
   @media (max-width:1100px){ #patChartsRow{grid-template-columns:1fr !important} }
   .pat-tab-note{font-size:11.5px;color:#94a3b8;margin-top:2px}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -254,7 +254,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
 
         <details class="pad-shape-box" style="grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin:2px 0 6px">
-          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#334155">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#374151">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
           <div class="grid" style="margin-top:10px">
             <div class="form-item">
               <label for="selPadShape">焊盘形状</label>
@@ -321,7 +321,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
         💡 <b>历史配置记录说明：</b> 每个指标下方会自动记录最近使用的数值历史标签，点击即可快速填充；TXT 中的 <code>Circle Drill</code> 仅作为<b>完成孔径</b>展示，空间间距完全由上方配置的焊盘直径与一钻直径进行精准运算。
       </div>
 
@@ -414,7 +414,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <div class="num" id="statGndBadCount" style="font-size:16px">0 / 0</div>
         <div class="lbl">⚡ 线到 GND 孔 (超标 / 检查数)</div>
       </div>
-      <div class="stat-box" data-filter="signal" style="border-left:3px solid #0284c7">
+      <div class="stat-box" data-filter="signal" style="border-left:3px solid #2563eb">
         <div class="num" id="statSigBadCount" style="font-size:16px">0 / 0</div>
         <div class="lbl">📡 线到 信号孔 (超标 / 检查数)</div>
       </div>
@@ -539,7 +539,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px">
         <div>
-          <h2 style="margin:0 0 4px">📊 规律分析：全板间距问题分布归纳</h2>
+          <h2 style="margin:0 0 4px">规律分析：全板间距问题分布归纳</h2>
           <div style="font-size:12.5px;color:var(--sub)" id="patHint">
             以<b>问题对象</b>为单位归纳：同一个信号孔（或同一条走线）上累计了多少处间距不足、集中在哪些层 / 网络，以及亏欠量分布。
           </div>
@@ -598,7 +598,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     </div>
 
     <div class="stats-grid" id="patStatsGrid">
-      <div class="stat-box" style="border-left:3px solid #0284c7">
+      <div class="stat-box" style="border-left:3px solid #2563eb">
         <div class="num" id="patKpiObjects">0</div>
         <div class="lbl" id="patKpiObjectsLbl">🏷 问题对象数（信号孔）</div>
       </div>
@@ -625,21 +625,21 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     </div>
 
     <div class="card" id="cardPatConcl" style="display:none">
-      <h3 style="margin:0 0 8px;font-size:15px">🧭 规律结论</h3>
+      <h3 style="margin:0 0 8px">规律结论</h3>
       <div class="pat-concl" id="patConclusion"></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px" id="patChartsRow">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="margin:0;font-size:15px" id="patDimTitle">📈 按出线层分布</h3>
+          <h3 style="margin:0" id="patDimTitle">按出线层分布</h3>
           <span style="font-size:11.5px;color:var(--sub)" id="patDimSub"></span>
         </div>
         <div id="patDimChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据，请先在①导入数据并运行检查。</div></div>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="margin:0;font-size:15px">📉 亏欠量分布（阈值 − 实测间距）</h3>
+          <h3 style="margin:0">亏欠量分布（阈值 − 实测间距）</h3>
           <span style="font-size:11.5px;color:var(--sub)" id="patDeficitSub"></span>
         </div>
         <div id="patDeficitChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据。</div></div>
@@ -648,7 +648,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-        <h3 style="margin:0;font-size:15px" id="patTableTitle">🏷 问题对象排行（按信号孔）</h3>
+        <h3 style="margin:0" id="patTableTitle">问题对象排行（按信号孔）</h3>
         <span style="font-size:11.5px;color:var(--sub)" id="patTableSub"></span>
       </div>
       <div style="overflow:auto;max-height:560px">
@@ -1166,7 +1166,7 @@ function renderPatternAnalysis() {
 	  ? `<div>${analysis.summary.headline}</div>` + (analysis.summary.bullets.length
 		? '<ul style="margin:8px 0 0;padding-left:20px">' + analysis.summary.bullets.map(b => `<li>${b}</li>`).join('') + '</ul>'
 		: '')
-	  : `<div style="color:#64748b">${escHtml(analysis.summary.headline || '尚无缺陷数据，先在①导入数据并运行检查。')}</div>`;
+	  : `<div style="color:#6b7280">${escHtml(analysis.summary.headline || '尚无缺陷数据，先在①导入数据并运行检查。')}</div>`;
   }
 
   // 维度条形图
@@ -1216,8 +1216,8 @@ function renderPatternAnalysis() {
 	  tbody.innerHTML = analysis.objects.map((it, i) => {
 		const pct = (it.failCount / total * 100).toFixed(1);
 		const objCell = PatternState.object === 'via'
-		  ? `<b>Via #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">[${it.origin ? it.origin[0].toFixed(1) + ', ' + it.origin[1].toFixed(1) : '-'}]</div>`
-		  : `<b>Trace #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">${escHtml(it.peerList.slice(0, 2).join(', '))}${it.peerList.length > 2 ? ' 等' + it.peerList.length + ' 个孔' : ''}</div>`;
+		  ? `<b>Via #${escHtml(it.id)}</b><div style="font-size:11px;color:#6b7280">[${it.origin ? it.origin[0].toFixed(1) + ', ' + it.origin[1].toFixed(1) : '-'}]</div>`
+		  : `<b>Trace #${escHtml(it.id)}</b><div style="font-size:11px;color:#6b7280">${escHtml(it.peerList.slice(0, 2).join(', '))}${it.peerList.length > 2 ? ' 等' + it.peerList.length + ' 个孔' : ''}</div>`;
 		const col3 = PatternState.object === 'via'
 		  ? `<span class="pat-chip ${it.isGnd ? 'muted' : ''}">${escHtml(it.spanType || '通孔')}</span>`
 		  : `<span class="pat-chip">${escHtml(it.layer || '-')}</span>`;
@@ -1453,7 +1453,7 @@ function padShapeNote(p) {
   const w = Number(sh.w || 0).toFixed(2), h = Number(sh.h || 0).toFixed(2);
   const corner = sh.corner ? ` R${Number(sh.corner).toFixed(2)}` : '';
   const rot = sh.rot ? ` ${Number(sh.rot).toFixed(1)}°` : '';
-  return `<br><span style="color:#0284c7">${PAD_SHAPE_LABEL[sh.kind] || sh.kind} ${w}×${h}${corner}${rot}</span>`;
+  return `<br><span style="color:#2563eb">${PAD_SHAPE_LABEL[sh.kind] || sh.kind} ${w}×${h}${corner}${rot}</span>`;
 }
 
 function readPadShapes() {
@@ -1519,9 +1519,9 @@ function loadTextData(text, sourceName) {
       <div><b>涉及层数：</b><span class="tag-badge ok">${State.layers.length} 层 (${State.layers.join('、')})</span></div>
       <div><b>涉及网络：</b><span class="tag-badge ok">${escHtml(Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、'))}</span></div>
     </div>
-    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#475569;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
-      <span style="color:#0284c7;font-weight:600">✓ 已启用盲埋孔穿层匹配（仅分析过孔实际穿过走线层的对偶）</span>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#6b7280;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#111827;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
+      <span style="color:#2563eb;font-weight:600">✓ 已启用盲埋孔穿层匹配（仅分析过孔实际穿过走线层的对偶）</span>
     </div>
   `;
 
@@ -1742,7 +1742,7 @@ function renderNetGroupView() {
     if (isBad) {
       failSummaryBadge = `
         <span class="tag-badge bad" style="font-size:12.5px;padding:3px 8px">❌ 存在 <b>${item.failCount}</b> 处间距不满足</span>
-        <div style="font-size:11px;color:#64748b;margin-top:4px">
+        <div style="font-size:11px;color:#6b7280;margin-top:4px">
           ⚡ 到GND孔: <b>${item.gndFailCount}</b> 处 | 📡 到信号孔: <b>${item.signalFailCount}</b> 处 (涉及 <b>${item.uniqueViaCount}</b> 个过孔)
         </div>
       `;
@@ -1756,7 +1756,7 @@ function renderNetGroupView() {
     // Conflicting vias snippet
     let viasSnippet = '<span style="color:var(--sub)">无冲突过孔</span>';
     if (item.uniqueViaIds && item.uniqueViaIds.length > 0) {
-      const visibleIds = item.uniqueViaIds.slice(0, 6).map(id => `<span class="tag-badge" style="background:#f1f5f9;color:#334155;margin:1px 2px">Via ${id}</span>`).join('');
+      const visibleIds = item.uniqueViaIds.slice(0, 6).map(id => `<span class="tag-badge" style="background:#f1f5f9;color:#374151;margin:1px 2px">Via ${id}</span>`).join('');
       const moreCount = item.uniqueViaIds.length - 6;
       viasSnippet = visibleIds + (moreCount > 0 ? `<span style="font-size:11px;color:var(--sub)"> 等共${item.uniqueViaIds.length}个</span>` : '');
     }
@@ -1772,7 +1772,7 @@ function renderNetGroupView() {
     html += `
       <tr class="${isBad ? 'fail-row' : ''}" style="border-top:1px solid #cbd5e1">
         <td style="font-weight:700">${idx + 1}</td>
-        <td><span class="tag-badge" style="background:#e2e8f0;color:#1e293b;border:1px solid #94a3b8">${escHtml(item.layer)}</span></td>
+        <td><span class="tag-badge" style="background:#e3e8ef;color:#1e293b;border:1px solid #94a3b8">${escHtml(item.layer)}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${netColor}"></span>
@@ -1809,8 +1809,8 @@ function renderNetGroupView() {
         const vSpanBadge = p.via.viaSpanType === 'buried'
           ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
           : (p.via.viaSpanType === 'blind'
-            ? `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
-            : `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`);
+            ? `<span class="tag-badge" style="background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
+            : `<span class="tag-badge" style="background:#f1f5f9;color:#6b7280;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`);
         return `
           <tr class="${isRev ? 'reviewed' : ''}" style="background:#fff">
             <td>${dIdx + 1}</td>
@@ -1830,7 +1830,7 @@ function renderNetGroupView() {
         <tr style="background:#f8fafc">
           <td colspan="9" style="padding:10px 16px">
             <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px">
-              <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#111827;display:flex;justify-content:space-between;align-items:center">
                 <span>走线【${escHtml(item.net)} @ ${escHtml(item.layer)}】上全部 ${item.defects.length} 处不满足间距对偶明细：</span>
                 <span style="font-weight:400;font-size:11px;color:var(--sub)">点击单项「定位图」可在画布中聚焦</span>
               </div>
@@ -1951,14 +1951,14 @@ function renderPairListView() {
     }
 
     const typeBadge = isGnd 
-      ? `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1">⚡ 线到GND孔</span>`
-      : `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">📡 线到信号孔</span>`;
+      ? `<span class="tag-badge" style="background:#f1f5f9;color:#6b7280;border:1px solid #cbd5e1">⚡ 线到GND孔</span>`
+      : `<span class="tag-badge" style="background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef">📡 线到信号孔</span>`;
 
     const spanBadgeStyle = p.via.viaSpanType === 'buried'
       ? 'background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe'
       : (p.via.viaSpanType === 'blind'
-        ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd'
-        : 'background:#f8fafc;color:#475569;border:1px solid #cbd5e1');
+        ? 'background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef'
+        : 'background:#f8fafc;color:#6b7280;border:1px solid #cbd5e1');
     const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:10px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${escHtml(p.via.definedRaw || 'Top to Bottom')}">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`;
 
     return `
@@ -1982,18 +1982,18 @@ function renderPairListView() {
         <td>
           <b class="${isBad ? 'tag-badge bad' : 'tag-badge ok'}" style="font-size:13px">${p.evalDist.toFixed(2)} mil</b>
           <div style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.35;font-family:var(--mono)">
-            ${p.mode === 'pad_to_trace' ? '<span style="color:#0284c7;font-weight:700">★ 焊盘Airgap</span>' : (p.mode === 'drill_to_trace' ? '<span style="color:#d97706;font-weight:700">★ 一钻孔壁</span>' : p.mode)}<br>
-            <span style="color:#334155" title="焊盘边缘到走线边缘 (EDA Airgap)">焊盘: <b>${p.padEdgeDist.toFixed(2)}</b> mil</span><br>
-            <span style="color:#64748b" title="一钻孔壁到走线边缘">一钻: <b>${p.drillEdgeDist.toFixed(2)}</b> mil</span>
+            ${p.mode === 'pad_to_trace' ? '<span style="color:#2563eb;font-weight:700">★ 焊盘Airgap</span>' : (p.mode === 'drill_to_trace' ? '<span style="color:#d97706;font-weight:700">★ 一钻孔壁</span>' : p.mode)}<br>
+            <span style="color:#374151" title="焊盘边缘到走线边缘 (EDA Airgap)">焊盘: <b>${p.padEdgeDist.toFixed(2)}</b> mil</span><br>
+            <span style="color:#6b7280" title="一钻孔壁到走线边缘">一钻: <b>${p.drillEdgeDist.toFixed(2)}</b> mil</span>
           </div>
         </td>
         <td><b>≥ ${p.threshold.toFixed(2)} mil</b></td>
         <td style="font-family:var(--mono);font-weight:700;color:${isBad ? 'var(--bad)' : 'var(--ok)'}">${diffStr}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:#475569">
+        <td style="font-family:var(--mono);font-size:11px;color:#6b7280">
           一钻: ${p.via.firstDrill.toFixed(2)} mil<br>
           焊盘: ${(p.via.padDiameter || p.via.padRadius * 2).toFixed(2)} mil${padShapeNote(p)}
         </td>
-        <td style="font-size:11px;color:#334155">${advice}</td>
+        <td style="font-size:11px;color:#374151">${advice}</td>
         <td>
           <button type="button" class="btn sec small btn-locate" data-via="${p.via.id}" data-trace="${p.trace.id}">定位图</button>
         </td>
@@ -2501,7 +2501,7 @@ function showMeasureCardTraceToVia(m) {
   const card = $('measureCard');
   card.style.display = 'block';
   const spanNotice = m.spansTraceLayer === false
-    ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#bae6fd;line-height:1.4">
+    ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#e3e8ef;line-height:1.4">
          ℹ️ <b>非同穿层提示：</b>Via ${m.via.id} (${escHtml(m.via.spanLabel || '盲埋孔')}) <b>未穿过</b>走线层 <b>${escHtml(m.trace.subset)}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
        </div>`
     : `<div style="background:rgba(16,185,129,0.14);border:1px solid rgba(52,211,153,0.4);border-radius:5px;padding:4px 7px;margin-bottom:6px;font-size:11px;color:#6ee7b7">
@@ -2647,7 +2647,7 @@ canvas.addEventListener('mousemove', e => {
     tip.style.top = (e.clientY + 14) + 'px';
     tip.innerHTML = `
       <b>Via ${nearestVia.id}</b> (${escHtml(nearestVia.net)})<br>
-      孔型与跨层: <b style="color:#7dd3fc">${escHtml(nearestVia.spanLabel || '通孔 (Top~Bottom)')}</b><br>
+      孔型与跨层: <b style="color:#cbd5e1">${escHtml(nearestVia.spanLabel || '通孔 (Top~Bottom)')}</b><br>
       Padstack Defined: ${escHtml(nearestVia.definedRaw || 'Top to Bottom')}<br>
       坐标: [${nearestVia.origin[0].toFixed(2)}, ${nearestVia.origin[1].toFixed(2)}]<br>
       完成孔径: ${nearestVia.drill.toFixed(2)} mil | 一钻孔径: ${nearestVia.firstDrill.toFixed(2)} mil<br>
@@ -2777,7 +2777,7 @@ function renderDfmSpatialReviewCard(viaId, traceId) {
     </div>
     ${p ? `
       <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">
-        <div>走线: <strong style="color:#7dd3fc">${escHtml(p.trace.net)}</strong> (${escHtml(p.trace.subset)}) | 过孔: <strong>Via ${p.via.id}</strong> (${escHtml(p.via.net)}, ${escHtml(p.via.spanLabel || '通孔')})</div>
+        <div>走线: <strong style="color:#cbd5e1">${escHtml(p.trace.net)}</strong> (${escHtml(p.trace.subset)}) | 过孔: <strong>Via ${p.via.id}</strong> (${escHtml(p.via.net)}, ${escHtml(p.via.spanLabel || '通孔')})</div>
         <div>实测间距: <strong style="color:${p.status === '不满足' ? '#f87171' : '#4ade80'};font-family:var(--mono)">${p.evalDist.toFixed(2)} mil</strong> (要求 ≥ ${p.threshold.toFixed(2)} mil)</div>
       </div>
     ` : ''}
