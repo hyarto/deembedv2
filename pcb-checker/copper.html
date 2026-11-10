@@ -34,6 +34,7 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .filechip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
 .filechip img{width:42px;height:28px;object-fit:cover;border-radius:4px;background:#fff}
 .set{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;background:#fff}
+.setgroup{margin:16px 0 10px;padding-left:9px;border-left:3px solid var(--pri);font-size:13px;font-weight:600;color:var(--txt2,#374151)}
 .set .hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;color:var(--txt);background:#f8fafc;border-bottom:1px solid var(--line)}
 .set .body{padding:12px}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -209,7 +210,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
   <div class="card">
     <h2>导入文件</h2>
     <div class="hint" id="stackHint" style="margin-bottom:8px"></div>
-    <div class="hint" style="margin-bottom:10px">只接受 TXT。中文若是 GBK 也会按 GB18030 读取，避免乱码。文件里每一类约束单独成一组，每一类里的每一条约束各成一条规则。请重新导入刚才的 copper.txt。</div>
+    <div class="hint" style="margin-bottom:10px">只接受 TXT。中文若是 GBK 也会按 GB18030 读取，避免乱码。两种写法都认：① 参数行「类 → 1. xxx → 名称 数值 mil」；② 三列表格「类 → 1. xxx → 层 / 反焊盘 / 焊盘」，表格里一张表生成一条约束，按「SMA-Top-L2」「BGA-L2-L4-0.5mm」这样命名，同一类下有几张表就有几条约束。</div>
     <div id="drop" tabindex="0">点击选择，或把 TXT 拖到这里<br><span class="hint">只接受 .txt，可多选</span></div>
     <input type="file" id="fileInput" multiple accept=".txt,text/plain" style="display:none">
     <div class="row" style="margin-top:10px">
@@ -217,6 +218,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
       <a class="btn ghost" href="sample/L17层扇出SMA.txt" download>下载 SMA 示例 TXT</a>
       <a class="btn ghost" href="sample/L15层扇出SMA.txt" download>下载 L15 扇出 SMA 示例 TXT</a>
       <a class="btn ghost" href="sample/L19层扇出SMA_bot_D2M5.txt" download>下载 bot 面 D2M5 示例 TXT</a>
+      <a class="btn ghost" href="sample/约束示例_表格型.txt" download>下载表格型约束示例 TXT</a>
       <span class="hint" id="genHint">还没有导入。</span>
     </div>
     <div class="row" id="fileList" style="margin-top:10px"></div>
@@ -233,7 +235,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
 <div id="pinB" class="pinblock">
   <div class="card">
     <h2>生成的约束</h2>
-    <div class="hint" style="margin-bottom:10px">名称写在每张表的标题里，按 TXT 生成。例如「一、SMA在bottom面，D2M为6mil的封装方案」加上「1. L19层扇出 SMA」，名称就是 Bot-SMA-L19-D2M6mil。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+    <div class="hint" style="margin-bottom:10px">名称按 TXT 生成。参数行写法：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。表格写法：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
     <div id="jumpNav" class="jumpnav" hidden></div>
   </div>
 </div>
@@ -492,6 +494,93 @@ function setsFromSections(sections, filename){
   });
   return sets;
 }
+/* ---------- 表格型约束 ----------
+   一、SMA封装方案
+   1. 信号孔连接层Top至L2
+   层 <TAB> 反焊盘尺寸 / 反焊盘半径 (mil) <TAB> 焊盘尺寸 / 焊盘半径 (mil)
+   L1 <TAB> 13 <TAB> 6.5
+   一类下面有好几种，每一种（一张表）就是一条约束，名字按「SMA-Top-L2」「BGA-L2-L4-0.5mm」生成。
+*/
+function tableKindOf(text){
+  const s=String(text||'');
+  if(/BGA/i.test(s))return 'BGA';
+  if(/SMA/i.test(s))return 'SMA';
+  return '';
+}
+function sideWordOf(s){
+  const t=String(s||'').trim();
+  if(/^(top|表层|顶层|正面)$/i.test(t))return 'Top';
+  if(/^(bot|bottom|底层|背面)$/i.test(t))return 'Bot';
+  const m=t.match(/^L\s*(\d+)$/i);
+  if(m)return 'L'+m[1];
+  if(/^\d+$/.test(t))return 'L'+t;
+  return '';
+}
+function connRangeOf(text){
+  const m=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot|表层|顶层|底层)?\s*至\s*L?\s*(\d+)/i);
+  if(m)return {start:sideWordOf(m[1]||''), end:'L'+m[2]};
+  const only=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot)\b/i);
+  if(only)return {start:sideWordOf(only[1]), end:''};
+  return {start:'', end:''};
+}
+function antiNum(v){
+  const m=String(v==null?'':v).match(/-?[0-9]+(?:\.[0-9]+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function tryLayerTable(raw, filename){
+  const src=String(raw||'').replace(/^\uFEFF/,'');
+  if(!/反焊盘/.test(src))return null;                 // 没有反焊盘列，交给别的解析器
+  const lines=src.split(/\r?\n/);
+  let group='', item='', padName='焊盘半径', rows=[], used={}, out=[], headerSeen=false;
+  function flush(){
+    if(!item||!rows.length)return;
+    const it=item, grp=group;
+    const kind=tableKindOf(grp+' '+it)||detectKind(grp||it, grp);
+    const ci=connRangeOf(it), cg=connRangeOf(grp);
+    const start=ci.start||cg.start;
+    const titleEnd=(ci.end||cg.end||'').replace(/^L/i,'');
+    // 连接层＝反焊盘的数值都相同的那一层里层号最大的（标题写错时以表格数据为准）
+    const nums=rows.map(r=>antiNum(r.anti));
+    let maxAnti=-Infinity, endLayer=0;
+    nums.forEach((v,i)=>{if(v==null)return; if(v>maxAnti){maxAnti=v;endLayer=rows[i].layer;} else if(v===maxAnti&&rows[i].layer>endLayer)endLayer=rows[i].layer;});
+    if(titleEnd && nums.every(v=>v===maxAnti))endLayer=+titleEnd;
+    if(!endLayer)endLayer=+titleEnd||0;
+    const pitch=(it.match(/间距\s*(?:为|=|：|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*mm/i)||[])[1]||'';
+    const parts=[kind||'约束'];
+    if(start)parts.push(start);
+    if(endLayer)parts.push('L'+endLayer);
+    if(pitch)parts.push(pitch+'mm');
+    let title=parts.join('-');
+    if(used[title]){ used[title]++; title+='('+used[title]+')'; } else used[title]=1;
+    const rules=[];
+    rows.forEach(function(r){
+      const anti=String(r.anti||'').trim();
+      const pad=String(r.pad||'').trim();
+      if(anti)rules.push({cat:'反焊盘尺寸', name:'反焊盘半径', scope:'L'+r.layer, value:anti, unit:'mil', raw:'L'+r.layer+' 反焊盘 '+anti+'mil'});
+      if(pad)rules.push({cat:'焊盘尺寸', name:padName, scope:'L'+r.layer, value:pad, unit:'mil', raw:'L'+r.layer+' 焊盘 '+pad});
+    });
+    if(!rules.length)return;
+    out.push({kind:kind, title:title, group:grp, item:it, txtHead:it, source:filename||'导入文本', sourceType:'text', image:'', rules:rules});
+  }
+  lines.forEach(function(line0){
+    const line=String(line0||'').trim();
+    if(!line)return;
+    const cols=line.indexOf('\t')>=0?line.split('\t').map(s=>s.trim()):[];
+    if(cols.length>=2 && /^层$/.test(cols[0]) && /反焊盘/.test(line)){
+      padName=/直径/.test(cols[2]||'')?'焊盘直径':'焊盘半径';
+      headerSeen=true;
+      return;
+    }
+    if(headerSeen && cols.length>=2 && /^L?\s*\d+$/i.test(cols[0]) && /[0-9]|无/.test(cols[1]||'')){
+      rows.push({layer:+String(cols[0]).replace(/^L/i,''), anti:cols[1], pad:cols[2]||''});
+      return;
+    }
+    if(/^[一二三四五六七八九十]+\s*[、.．]/.test(line) && line.length<=80){flush(); group=line; item=''; rows=[]; return;}
+    if(/^\d+\s*[.、．]\s*\S/.test(line) && line.length<=80){flush(); item=line; rows=[]; return;}
+  });
+  flush();
+  return out.length?out:null;
+}
 function tryMatrix(raw, filename){
   const rows=String(raw||'').split(/\r?\n/).map(s=>s.replace(/\u0000/g,'').trim()).filter(Boolean);
   if(rows.length<2)return null;
@@ -524,6 +613,8 @@ function tryMatrix(raw, filename){
 }
 function parseConstraintText(text, filename){
   const raw=String(text||'').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n');
+  const table=tryLayerTable(raw, filename);
+  if(table)return table;
   const matrix=tryMatrix(raw, filename);
   if(matrix)return matrix;
   const lines=[];
@@ -783,7 +874,10 @@ function render(){
     return;
   }
   let h='';
+  let lastGroup='';
   S.sets.forEach((set,si)=>{
+    const grp=set.group||'';
+    if(grp && grp!==lastGroup){h+='<div class="setgroup">'+esc(grp)+'</div>'; lastGroup=grp;}
     const kind=set.kind||'其他';
     const cons=set.constraints||[];
     const fan=fanLayerOf(set);
@@ -897,17 +991,18 @@ function rebuild(){
         set.constraints=buildConstraints(set.rules||[]);
         sets.push(set);
       });
-      item.status='已生成 '+parsed.map(s=>s.kind).join('、')+' '+parsed.reduce((a,s)=>a+(s.constraints||[]).length,0)+' 个约束';
+      item.status='已生成 '+parsed.length+' 条约束（'+parsed.reduce((a,s)=>a+(s.constraints||[]).length,0)+' 列参数）';
     }else item.status='没有抽出参数。每行写成「名称 数值mil」';
   });
   S.sets=sets;
   reexpandAll();
   const n=S.sets.reduce((a,s)=>a+(s.constraints||[]).length,0);
-  $('genHint').textContent=n?('已从 TXT 生成 '+n+' 个约束，并按当前总层数填入每一层。'):'没有生成出规则。请检查 TXT 格式。';
+  const nSets=S.sets.length;
+  $('genHint').textContent=n?('已从 TXT 生成 '+nSets+' 条约束（共 '+n+' 列参数），并按当前总层数填入每一层。'):'没有生成出规则。请检查 TXT 格式。';
   render();
   if(n && typeof showTab==='function'){
     showTab('sets');
-    $('genHint').textContent='已从 TXT 生成 '+n+' 个约束，并按叠层填入每一层。下面是「② 生成的约束」。';
+    $('genHint').textContent='已从 TXT 生成 '+nSets+' 条约束（共 '+n+' 列参数），并按叠层填入每一层。下面是「② 生成的约束」。';
   }
 }
 
