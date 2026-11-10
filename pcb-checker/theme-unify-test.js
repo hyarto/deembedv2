@@ -204,6 +204,58 @@ test('全部标题不含 emoji 图标', () => {
   });
 });
 
+test('全站不再出现图标字符（emoji / 象形符号）', () => {
+  // 允许：序号 ①-⑤、箭头 → ↔ ⇔、翻页与展开 ▶ ◀ ▲ ▼、列表圆点 ●
+  const ALLOW = '①②③④⑤⑥⑦⑧⑨⑩→←↔⇔▶◀▲▼●○◆◇■□';
+  const ICON = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{25A0}-\u{25FF}]/gu;
+  PAGES.forEach(page => {
+    const { window } = openPage(page);
+    const text = window.document.body.textContent;
+    const bad = new Set();
+    let m;
+    while ((m = ICON.exec(text))) {
+      if (!ALLOW.includes(m[0])) bad.add(m[0]);
+    }
+    if (bad.size) throw new Error(`${page} 仍有图标字符：${Array.from(bad).join(' ')}`);
+  });
+});
+
+test('字号只用统一阶梯（11 / 12 / 13 / 14 / 15 / 16 / 18 / 22px）', () => {
+  const LADDER = ['11', '12', '13', '14', '15', '16', '18', '22'];
+  PAGES.forEach(page => {
+    const html = fs.readFileSync(path.join(DIR, page), 'utf8');
+    const bad = new Set();
+    html.split('\n').forEach(line => {
+      if (/ctx\.font|font\s*=/.test(line)) return;      // canvas 内绘制文字不算页面排版
+      const re = /font-size:\s*([0-9.]+)px/g;
+      let m;
+      while ((m = re.exec(line))) if (!LADDER.includes(m[1])) bad.add(m[1]);
+    });
+    if (bad.size) throw new Error(`${page} 出现阶梯外字号：${Array.from(bad).map(v => v + 'px').join(' ')}`);
+  });
+});
+
+test('统计卡文字：标签 12px 灰、数值 22px（不再整块填色，也不再染蓝）', () => {
+  PAGES.forEach(page => {
+    const { window } = openPage(page);
+    const d = window.document;
+    const cs = el => window.getComputedStyle(el);
+    const labels = Array.from(d.querySelectorAll('.stat-box .lbl, .stat .t'));
+    labels.forEach(el => {
+      const size = cs(el).fontSize;
+      if (size !== '12px') throw new Error(`${page} 统计卡标签 ${size}，应为 12px`);
+      const color = cs(el).color;
+      if (color === 'rgb(29, 78, 216)' || color === 'rgb(37, 99, 235)') {
+        throw new Error(`${page} 统计卡标签仍被染成蓝色 ${color}`);
+      }
+    });
+    Array.from(d.querySelectorAll('.stat-box .val, .stat-box .num, .stat .v')).forEach(el => {
+      const size = cs(el).fontSize;
+      if (size !== '22px') throw new Error(`${page} 统计卡数值 ${size}，应为 22px`);
+    });
+  });
+});
+
 test('六页正文使用同一套字体栈（Segoe UI / 微软雅黑）', () => {
   PAGES.forEach(page => {
     const { normalized } = pageStyle(page);

@@ -58,7 +58,7 @@ td.nosrc{background:#f8fafc}
 .jumpcol:first-child{border-left:none;padding-left:0}
 .jumpcol-h{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:5px;white-space:nowrap}
 .jumpcol-h .cnt{color:#94a3b8;font-weight:400}
-.jumpcol .chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
+.jumpcol .chipsub{font-size:11px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
 .jumpcol a{display:flex;width:100%;justify-content:space-between;gap:8px;margin-bottom:4px}
 .jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .set{scroll-margin-top:calc(var(--pin-h, 16px) + 12px)}
@@ -81,7 +81,7 @@ section.tab.active{display:block}
 .chipcol{min-width:132px;max-width:190px;border-left:1px solid var(--line);padding-left:10px}
 .chipcol:first-child{border-left:none;padding-left:0}
 .chipcol-h{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px;white-space:nowrap}
-.chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
+.chipsub{font-size:11px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
 .chipcol .chip{display:flex;width:100%;justify-content:space-between;gap:10px;margin-bottom:4px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;
   border:1px solid #cbd5e1;color:#1f2937;font-size:12px;cursor:pointer;white-space:nowrap}
@@ -290,7 +290,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
     </div>
     <div class="row searchbar" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative;flex:1;min-width:280px;max-width:540px">
-        <input type="text" id="inpResSearch" class="search-inp" placeholder="🔍 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off" data-no-persist>
+        <input type="text" id="inpResSearch" class="search-inp" placeholder=" 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off" data-no-persist>
         <button type="button" id="btnClearSearch" title="清空搜索" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;display:none;padding:2px 6px">×</button>
       </div>
       <button type="button" class="btn gray" id="btnSearchGo" title="快速滚动并高亮定位到匹配的过孔">定位到孔</button>
@@ -1303,7 +1303,7 @@ function renderLegend(force){
         const viaStr=viaList.map(function(vid){return '#'+vid;}).join('、');
         return '<span style="display:inline-flex;align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:1px 6px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">'+
           '<code>'+esc(netName)+'</code>'+
-          '<span style="color:#6b7280;margin-left:4px;font-size:10px">('+viaList.length+'孔: '+esc(viaStr)+')</span>'+
+          '<span style="color:#6b7280;margin-left:4px;font-size:11px">('+viaList.length+'孔: '+esc(viaStr)+')</span>'+
         '</span>';
       }).join('')+
     '</div>';

@@ -303,7 +303,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
       <label class="fld">只看层 <select id="fltLayer" style="width:150px" data-no-persist><option value="">全部</option></select></label>
       <label class="fld">状态 <select id="fltStatus" style="width:100px" data-no-persist><option value="">全部</option><option value="fail">不符合</option><option value="pass">通过</option><option value="none">未检查</option></select></label>
       <span class="hint" id="fltNote">点击红色「不符合」只显示不符合项，再点一次恢复全部。</span>
-      <button type="button" class="btn" id="btnExpReport" style="background:#2563eb;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <button type="button" class="btn" id="btnExpReport" style="background:#2563eb;color:#fff;font-weight:600"> 输出检查汇总报告 (Excel)</button>
       <button type="button" class="btn ghost" id="btnExpAll">导出全部 CSV</button>
       <button type="button" class="btn ghost" id="btnExpFail">导出不符合项 CSV</button>
       <button type="button" class="btn ghost" id="btnClearTraceRev">清空复验标记</button>
@@ -342,7 +342,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
   <div class="card">
     <h2>差分线长差分析（支持逐层线长差与所有层总线长差检查）</h2>
     <div class="row" style="margin-bottom:8px">
-      <button type="button" class="btn" id="btnExpDiffReport" style="background:#2563eb;color:#fff;font-weight:600">📊 输出检查汇总报告 (Excel)</button>
+      <button type="button" class="btn" id="btnExpDiffReport" style="background:#2563eb;color:#fff;font-weight:600"> 输出检查汇总报告 (Excel)</button>
       <label class="fld"><input type="checkbox" id="chkDiffOnlyFail" data-no-persist> 仅显示超差对</label>
       <button type="button" class="btn ghost" id="btnExpDiff">导出差分分析 CSV</button>
       <button type="button" class="btn ghost" id="btnClearDiffRev">清空复验标记</button>
@@ -1273,7 +1273,7 @@ function applyData(){
     const blockCount=S.meta.items!=null?S.meta.items:null;
     const mismatch=S.meta.declared!=null&&blockCount!=null&&S.meta.declared!==blockCount;
     const skippedNonTrace=blockCount!=null&&blockCount>S.records.length?blockCount-S.records.length:0;
-    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item / 解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络'+(skippedNonTrace?' / 另有 '+skippedNonTrace+' 项非走线 Item（Via / Shape 等）未计入':'')+(mismatch?' ⚠ 声明与解析数量不符':'');
+    $('hdrMeta').textContent='｜'+(S.fileName||'')+'：文件声明 '+(S.meta.declared!=null?S.meta.declared:'?')+' 个 Item / 解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络'+(skippedNonTrace?' / 另有 '+skippedNonTrace+' 项非走线 Item（Via / Shape 等）未计入':'')+(mismatch?'  声明与解析数量不符':'');
   }else{
     $('hdrMeta').textContent='｜'+(S.fileName||'')+'：解析 '+S.records.length+' 条记录 / '+S.netLens.size+' 个网络';
   }
@@ -1596,7 +1596,7 @@ function renderResults(){
     '<div class="stat"><div class="v">'+st.none+'</div><div class="t">未设规则网络</div></div>'+
     '<div class="stat bad clickable'+(failOn&&!$('fltLayer').value?' on':'')+'" data-filter="fail" title="点击只看不符合记录，再点一次恢复"><div class="v">'+S.checkRes.recViol.size+'</div><div class="t">不符合记录数(网络×层)</div></div>';
   $('resBanner').innerHTML=st.none>0?
-    '<div class="hint" style="background:var(--warn-bg);border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:12px">⚠ '+st.none+' 个网络为「未检查」：所在层没有配置带判据的规则，或对应项未勾选检查。未作判定，既不是通过也不是不符合。<button class="btn ghost small" id="btnQuickGen" style="margin-left:10px">一键为数据中的层生成规则行</button></div>':'';
+    '<div class="hint" style="background:var(--warn-bg);border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:12px"> '+st.none+' 个网络为「未检查」：所在层没有配置带判据的规则，或对应项未勾选检查。未作判定，既不是通过也不是不符合。<button class="btn ghost small" id="btnQuickGen" style="margin-left:10px">一键为数据中的层生成规则行</button></div>':'';
   if(st.none>0)$('btnQuickGen').onclick=()=>{genLayerRules();switchTab('rules');};
   const allLayers=[...new Set(S.records.map(r=>r.layer))].sort();
   const sel=$('fltLayer');const cur=sel.value;
@@ -1843,7 +1843,7 @@ function showExportBox(name, data, hint, previewText){
   const msg=document.getElementById('expMsg');
   msg.textContent=hint||(isXlsx ? ('Excel 检查报告已生成（共 '+n+' 行，含问题网络、问题原因、如何修改）。若未自动下载，点「下载 Excel 文件」，或点「复制表格内容」直接粘贴进表格。') : ('共 '+n+' 行。若没有弹出保存窗口，点「下载文件」，或「复制表格内容」后粘贴到 Excel。'));
   const link=document.getElementById('expLink');
-  link.textContent = isXlsx ? '📥 下载 Excel 文件 (.xlsx)' : '📥 下载文件';
+  link.textContent = isXlsx ? ' 下载 Excel 文件 (.xlsx)' : ' 下载文件';
   const mime = isXlsx ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : (name.endsWith('.json') ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8');
   const url=fileUrl(data, mime);
   link.href=url;link.download=name;
