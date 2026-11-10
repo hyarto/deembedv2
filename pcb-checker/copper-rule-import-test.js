@@ -205,6 +205,26 @@ setTimeout(() => {
     if (/max-width: 250px/.test(block)) throw new Error('还是竖列宽度：' + block);
     if (uni.indexOf('按封装/面分组') < 0) throw new Error('指引文案没改');
   });
+  t('命名说明不在页头，落在本页页尾', () => {
+    const sec = d.getElementById('tab-sets');
+    const top = sec.querySelector('.card');
+    if (top.textContent.indexOf('表格写法') >= 0) throw new Error('页头还挂着长说明');
+    if (top.textContent.indexOf('点击下面的约束名') < 0) throw new Error('页头没有一句短引导：' + top.textContent.trim());
+    const kids = [].slice.call(sec.children);
+    const last = kids[kids.length - 1];
+    if (!last || last.id !== 'namingNote') throw new Error('页尾不是说明卡：' + (last && last.tagName + '#' + last.id));
+    const txt = last.textContent.replace(/\s+/g, ' ');
+    ['参数行写法', '表格写法', 'SMA-Top-L2', 'BGA-L2-L4-0.5mm', 'L18及以上', '填无'].forEach(k => {
+      if (txt.indexOf(k) < 0) throw new Error('说明缺「' + k + '」');
+    });
+    if (last.querySelector('h2').textContent.indexOf('说明') < 0) throw new Error('说明卡没有标题');
+  });
+  t('说明卡在最后一张约束卡之后（滚动到底才看到）', () => {
+    const note = d.getElementById('namingNote');
+    const sets = d.getElementById('rulesBody');
+    if (sets.compareDocumentPosition(note) !== 4) throw new Error('说明卡位置不对');
+    if (note.querySelectorAll('.set').length) throw new Error('说明卡里混进了约束卡');
+  });
   t('② 页没冒出来的 emoji 图标', () => {
     const bad = /[\u{1F300}-\u{1FAFF}\u{2190}\u{21A9}\u{2705}\u{274C}\u{26A1}\u{1F50D}]/u;
     const h = d.getElementById('sets').innerHTML;

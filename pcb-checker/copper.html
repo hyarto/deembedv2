@@ -234,7 +234,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
 <div id="pinB" class="pinblock">
   <div class="card">
     <h2>生成的约束</h2>
-    <div class="hint" style="margin-bottom:10px">名称按 TXT 生成。参数行写法：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。表格写法：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+    <div class="hint" style="margin-bottom:10px">点击下面的约束名跳到对应卡片；每个约束里一行一个层，格子可直接改，右边写着来源。</div>
     <div id="jumpNav" class="jumpnav" hidden></div>
   </div>
 </div>
@@ -245,6 +245,15 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
     <button type="button" class="btn gray" id="btnLoad">从本地文件读取</button>
     <input type="file" id="ruleFile" accept=".json,application/json" style="display:none">
     <span class="hint" id="saveHint"></span>
+  </div>
+</div>
+
+<div class="card" id="namingNote" style="margin-top:14px">
+  <h2>约束名称与填法说明</h2>
+  <div class="hint" style="line-height:1.9">
+    <div><b>参数行写法</b>：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。</div>
+    <div><b>表格写法</b>：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。</div>
+    <div><b>填法</b>：表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数；出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
   </div>
 </div>
 </section>
