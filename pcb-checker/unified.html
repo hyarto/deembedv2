@@ -636,26 +636,24 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 }
 .jumpnav .cols {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
 }
 .jumpcol {
-  min-width: 196px;
-  max-width: 250px;
-  border-left: 1px solid var(--line);
-  padding-left: 12px;
-}
-.jumpcol:first-child {
-  border-left: none;
-  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 .jumpcol-h {
+  width: 100%;
   font-size:12px;
   font-weight: 700;
   color:#374151;
-  margin-bottom: 6px;
+  margin: 2px 0 0;
   white-space: nowrap;
 }
 .jumpcol-h .cnt {
@@ -663,18 +661,17 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   font-weight: 400;
 }
 .jumpcol .chipsub {
+  width: 100%;
   font-size:11px;
   color: #94a3b8;
-  margin: 6px 0 4px;
+  margin: 4px 0 0;
   white-space: nowrap;
 }
 .jumpcol a {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 5px;
+  margin: 0;
   padding: 4px 10px;
   border-radius: 999px;
   background: #ffffff;
@@ -707,6 +704,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 180px;
 }
 
 /* Constraint Cards & Tables */
@@ -2010,7 +2008,7 @@ function showToast(msg, isSuccess = true) {
 function chipMeta(name){
   const s = String(name || '');
   const kind = /BGA/i.test(s) ? 'BGA' : (/SMA/i.test(s) ? 'SMA' : '其他');
-  const side = /^Bot/i.test(s) ? 'Bot' : (/^Top/i.test(s) ? 'Top' : '');
+  const side = /(?:^|[^A-Za-z])(?:Bot|Bottom)(?![A-Za-z])/i.test(s) ? 'Bot' : (/(?:^|[^A-Za-z])Top(?![A-Za-z])/i.test(s) ? 'Top' : '');
   const lm = s.match(/L(\d+)/i);
   const layer = lm ? +lm[1] : 0;
   const dm = s.match(/D2M\s*([0-9.]+)/i);
@@ -3225,7 +3223,7 @@ function renderJump() {
   if (!sets.length) { nav.style.display = 'none'; nav.innerHTML = ''; return; }
   nav.style.display = 'flex';
   const cols = jumpItems();
-  let h = '<div class="jlabel">约束指引 · 按封装/面分列，点击跳到对应约束</div><div class="cols">';
+  let h = '<div class="jlabel">约束指引 · 按封装/面分组，点击跳到对应约束</div><div class="cols">';
   cols.forEach(col => {
     h += `<div class="jumpcol"><div class="jumpcol-h">${col.group}<span class="cnt"> ${col.items.length}</span></div>`;
     const multi = col.items.some(x => x.d2m > 0);

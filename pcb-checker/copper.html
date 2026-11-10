@@ -54,14 +54,13 @@ td.nosrc{background:#f8fafc}
 .jumpnav a .k{font-size:11px;color:#fff;background:#15803d;border-radius:8px;padding:1px 6px;flex:none}
 .jumpnav a.BGA .k{background:#1d4ed8}
 .jumpnav a.其他 .k,.jumpnav a.混合 .k{background:#334155}
-.jumpnav .cols{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;width:100%}
-.jumpcol{min-width:196px;max-width:250px;border-left:1px solid var(--line);padding-left:10px}
-.jumpcol:first-child{border-left:none;padding-left:0}
-.jumpcol-h{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:5px;white-space:nowrap}
+.jumpnav .cols{display:flex;flex-direction:column;gap:10px;width:100%}
+.jumpcol{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;min-width:0}
+.jumpcol-h{width:100%;font-size:11px;font-weight:700;color:#6b7280;margin:2px 0 0;white-space:nowrap}
 .jumpcol-h .cnt{color:#94a3b8;font-weight:400}
-.jumpcol .chipsub{font-size:11px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
-.jumpcol a{display:flex;width:100%;justify-content:space-between;gap:8px;margin-bottom:4px}
-.jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jumpcol .chipsub{width:100%;font-size:11px;color:#94a3b8;margin:4px 0 0;white-space:nowrap}
+.jumpcol a{margin:0}
+.jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
 .set{scroll-margin-top:calc(var(--pin-h, 16px) + 12px)}
 .set.allrev .hd{box-shadow:inset 3px 0 0 var(--ok)}
 section.tab{display:none}
@@ -801,8 +800,8 @@ function jumpItems(){
     const kind=set.kind||'';
     if(/BGA/i.test(kind)||/BGA/i.test(title))return 'BGA';
     if(/SMA/i.test(kind)||/SMA/i.test(title)){
-      if(/^Top/i.test(title))return 'SMA · Top 面';
-      if(/^Bot/i.test(title))return 'SMA · bottom 面';
+      if(/(?:^|[^A-Za-z])Top(?![A-Za-z])/i.test(title))return 'SMA · Top 面';
+      if(/(?:^|[^A-Za-z])(?:Bot|BotTOM)(?![A-Za-z])/i.test(title))return 'SMA · bottom 面';
       return 'SMA · 未标面';
     }
     return kind||'其他';
@@ -836,7 +835,7 @@ function renderJump(){
   if(!S.sets.length){nav.hidden=true; nav.innerHTML=''; return;}
   nav.hidden=false;
   const cols=jumpItems();
-  let h='<div class="jlabel">约束指引 · 按封装/面分列，点击跳到对应约束</div><div class="cols">';
+  let h='<div class="jlabel">约束指引 · 按封装/面分组，点击跳到对应约束</div><div class="cols">';
   cols.forEach(function(col){
     h+='<div class="jumpcol"><div class="jumpcol-h">'+esc(col.group)+'<span class="cnt"> '+col.items.length+'</span></div>';
     const multi=col.items.some(function(x){return x.d2m>0;});

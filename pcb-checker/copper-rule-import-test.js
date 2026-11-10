@@ -171,6 +171,40 @@ setTimeout(() => {
     const note = d.querySelector('#sets .set .srcnote');
     if (!note || note.textContent.indexOf('L1') < 0) throw new Error(note ? note.textContent : '缺来源');
   });
+  t('约束指引按面分组：BGA 16、SMA · Top 面 3、SMA · bottom 面 3', () => {
+    const cols = [].map.call(d.querySelectorAll('#jumpNav .jumpcol'), c => ({
+      h: c.querySelector('.jumpcol-h').textContent.replace(/\s+/g, ' ').trim(),
+      n: c.querySelectorAll('a').length
+    }));
+    eq(cols, [
+      { h: 'BGA 16', n: 16 },
+      { h: 'SMA · Top 面 3', n: 3 },
+      { h: 'SMA · bottom 面 3', n: 3 }
+    ]);
+  });
+  t('约束指引是横排：每组一行、chips 横向自动换行（不再是竖列）', () => {
+    const block = (html.match(/\.jumpcol\{[^}]*\}/) || [''])[0];
+    if (!/flex-wrap:wrap/.test(block)) throw new Error('没有横向换行：' + block);
+    if (!/width:100%/.test(block)) throw new Error('没有占满整行：' + block);
+    if (/max-width:250px/.test(block)) throw new Error('还在用竖列宽度：' + block);
+    if (/\.jumpcol a\{[^}]*width:100%/.test((html.match(/\.jumpcol a\{[^}]*\}/) || [''])[0])) throw new Error('chip 仍然整行铺满');
+    const nav = w.eval('(function(){var c=document.querySelector("#jumpNav .jumpcol");var a=c.querySelector("a");return getComputedStyle(c).display+"|"+getComputedStyle(c).flexWrap+"|"+getComputedStyle(a).display;})()');
+    eq(nav, 'flex|wrap|inline-flex');
+  });
+  t('约束指引的 chip 都指向对应约束卡', () => {
+    const links = [].map.call(d.querySelectorAll('#jumpNav a'), a => a.getAttribute('href'));
+    eq(links.length, 22);
+    links.forEach(h => { if (!/^#set-\d+$/.test(h)) throw new Error('坏链接 ' + h); });
+    eq([...new Set(links)].length, 22);
+  });
+  t('综合一体化页的约束指引用同一套横排规则', () => {
+    const uni = fs.readFileSync(path.join(dir, 'unified.html'), 'utf8');
+    const block = (uni.match(/\.jumpcol \{[^}]*\}/) || [''])[0];
+    if (!/flex-wrap: wrap/.test(block)) throw new Error('没有横向换行：' + block);
+    if (!/width: 100%/.test(block)) throw new Error('没有占满整行：' + block);
+    if (/max-width: 250px/.test(block)) throw new Error('还是竖列宽度：' + block);
+    if (uni.indexOf('按封装/面分组') < 0) throw new Error('指引文案没改');
+  });
   t('② 页没冒出来的 emoji 图标', () => {
     const bad = /[\u{1F300}-\u{1FAFF}\u{2190}\u{21A9}\u{2705}\u{274C}\u{26A1}\u{1F50D}]/u;
     const h = d.getElementById('sets').innerHTML;
