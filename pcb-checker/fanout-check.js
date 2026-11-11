@@ -2434,22 +2434,60 @@
     return { success: false, error: '未能从文件中识别出有效的扇出方案 JSON 数据' };
   }
 
-  function summarizeGroundNeighborPitch(vias = []) {
-    const gnd = (vias || []).filter(v => v && (v.type === 'gnd' || v.role === '伴随地孔'));
-    if (gnd.length < 2) return '';
-    const nearestMm = gnd.map((v, i) => {
-      let nearest = Infinity;
-      gnd.forEach((other, j) => {
-        if (i === j) return;
-        const d = Math.hypot(Number(v.rawX ?? v.x) - Number(other.rawX ?? other.x), Number(v.rawY ?? v.y) - Number(other.rawY ?? other.y));
-        if (d > 1e-6 && d < nearest) nearest = d;
-      });
-      return nearest / 39.37007874;
-    }).filter(Number.isFinite).sort((a, b) => a - b);
-    if (!nearestMm.length) return '';
-    const min = nearestMm[0].toFixed(2);
-    const max = nearestMm[nearestMm.length - 1].toFixed(2);
-    return min === max ? `GND${gnd.length}@${min}mm` : `GND${gnd.length}@${min}-${max}mm`;
+  function classifyGroundSymmetry(vias = [], toleranceMil = 0.25) {
+    const isGnd = v => v && (v.type === 'gnd' || v.role === '伴随地孔' || /GND/i.test(String(v.net || '') + ' ' + String(v.padstack || '')));
+    const gnd = (vias || []).filter(isGnd).map(v => ({
+      x: Number(v.rawX ?? v.x), y: Number(v.rawY ?? v.y),
+      pad: String(v.padstack || v.padstackName || 'GND')
+    })).filter(v => Number.isFinite(v.x) && Number.isFinite(v.y));
+    if (gnd.length < 3) return '未判定';
+
+    const signals = (vias || []).filter(v => v && !isGnd(v)).map(v => ({ x: Number(v.rawX ?? v.x), y: Number(v.rawY ?? v.y) })).filter(v => Number.isFinite(v.x) && Number.isFinite(v.y));
+    const center = signals.length
+      ? { x: signals.reduce((sum, p) => sum + p.x, 0) / signals.length, y: signals.reduce((sum, p) => sum + p.y, 0) / signals.length }
+      : { x: gnd.reduce((sum, p) => sum + p.x, 0) / gnd.length, y: gnd.reduce((sum, p) => sum + p.y, 0) / gnd.length };
+    const points = gnd.map(p => ({ ...p, x: p.x - center.x, y: p.y - center.y }));
+
+    const preservesLabels = transform => {
+      const unused = new Set(points.map((_, i) => i));
+      for (const p of points) {
+        const q = transform(p);
+        let bestIndex = -1, bestDistance = Infinity;
+        for (const j of unused) {
+          if (points[j].pad !== p.pad) continue;
+          const d = Math.hypot(q.x - points[j].x, q.y - points[j].y);
+          if (d < bestDistance) { bestDistance = d; bestIndex = j; }
+        }
+        if (bestIndex < 0 || bestDistance > toleranceMil) return false;
+        unused.delete(bestIndex);
+      }
+      return unused.size === 0;
+    };
+
+    // 中心对称：绕信号孔群中心旋转 180° 后，各种 GND Padstack 均须回到同类孔位。
+    const central = preservesLabels(p => ({ x: -p.x, y: -p.y }));
+    // 轴对称：从同 Padstack 孔对的中点生成候选轴，并验证整组带 Padstack 标签的孔位。
+    const angles = new Set([0, Math.PI / 2]);
+    for (let i = 0; i < points.length; i++) for (let j = i; j < points.length; j++) {
+      if (points[i].pad !== points[j].pad) continue;
+      const sx = points[i].x + points[j].x, sy = points[i].y + points[j].y;
+      if (Math.hypot(sx, sy) < 1e-6) continue;
+      let angle = Math.atan2(sy, sx) % Math.PI;
+      if (angle < 0) angle += Math.PI;
+      angles.add(Math.round(angle * 10000) / 10000);
+    }
+    let axial = false;
+    for (const angle of angles) {
+      const ux = Math.cos(angle), uy = Math.sin(angle);
+      if (preservesLabels(p => {
+        const dot = p.x * ux + p.y * uy;
+        return { x: 2 * dot * ux - p.x, y: 2 * dot * uy - p.y };
+      })) { axial = true; break; }
+    }
+    if (axial && central) return '轴+中心对称';
+    if (axial) return '轴对称';
+    if (central) return '中心对称';
+    return '非对称';
   }
 
   /**
@@ -2637,8 +2675,8 @@
           const layerLabel = layerTokens.length > 1
             ? `${layerTokens[0].label}-${layerTokens[layerTokens.length - 1].label}`
             : layerTokens[0]?.label || '';
-          const groundPattern = summarizeGroundNeighborPitch(vias);
-          const baseName = [family, pairLabel, pitchLabel, layerLabel, groundPattern].filter(Boolean).join('_');
+          const groundSymmetry = classifyGroundSymmetry(vias);
+          const baseName = [family, pairLabel, pitchLabel, layerLabel, groundSymmetry !== '未判定' ? `GND${groundSymmetry}` : ''].filter(Boolean).join('_');
           const sameBase = results.filter(r => r.name === baseName || r.name.startsWith(baseName + '_')).length;
           schemeName = sameBase ? `${baseName}_${String(sameBase + 1).padStart(2, '0')}` : baseName;
         }
@@ -3856,7 +3894,7 @@
     buildPadstackColorMap,
     calcSchemeViaPairDistance,
     parseMultiSchemeTxt,
-    summarizeGroundNeighborPitch,
+    classifyGroundSymmetry,
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,

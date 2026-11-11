@@ -18,21 +18,27 @@ const {
   getStandardPresetSchemes,
   candidateRotations,
   buildConnectorDistanceColorMap,
-  summarizeGroundNeighborPitch,
+  classifyGroundSymmetry,
   dist2D
 } = FanoutChecker;
 
 console.log('== 扇出方案检查引擎单元测试 ==');
 {
-  const gndPatternA = summarizeGroundNeighborPitch([
-    { type: 'gnd', rawX: 0, rawY: 0 }, { type: 'gnd', rawX: 10, rawY: 0 }, { type: 'gnd', rawX: 30, rawY: 0 }
-  ]);
-  const gndPatternB = summarizeGroundNeighborPitch([
-    { type: 'gnd', rawX: 0, rawY: 0 }, { type: 'gnd', rawX: 20, rawY: 0 }, { type: 'gnd', rawX: 40, rawY: 0 }
-  ]);
-  assert.notStrictEqual(gndPatternA, gndPatternB, '同样孔数下，周围地孔最近邻间距不同应生成不同布局特征');
-  assert.ok(gndPatternA.includes('GND3@0.25-0.51mm'), '应将最近邻地孔间距范围用 mm 写入布局特征');
-  console.log('  PASS  自动命名比较周围 GND 孔最近邻间距并区分地孔布局');
+  const axisPattern = [
+    { type: 'signal', rawX: 0, rawY: 0 },
+    { type: 'gnd', padstack: 'A', rawX: 0, rawY: 10 },
+    { type: 'gnd', padstack: 'A', rawX: 0, rawY: -10 },
+    { type: 'gnd', padstack: 'A', rawX: 5, rawY: 0 }
+  ];
+  const centerPattern = [
+    { type: 'signal', rawX: 0, rawY: 0 },
+    { type: 'gnd', padstack: 'A', rawX: 1, rawY: 0 }, { type: 'gnd', padstack: 'A', rawX: -1, rawY: 0 },
+    { type: 'gnd', padstack: 'B', rawX: 0, rawY: 2 }, { type: 'gnd', padstack: 'B', rawX: 0, rawY: -2 },
+    { type: 'gnd', padstack: 'C', rawX: 1, rawY: 1 }, { type: 'gnd', padstack: 'C', rawX: -1, rawY: -1 }
+  ];
+  assert.strictEqual(classifyGroundSymmetry(axisPattern), '轴对称', '带 Padstack 类型的地孔分布应识别轴对称');
+  assert.strictEqual(classifyGroundSymmetry(centerPattern), '中心对称', '只具中心旋转对称的地孔分布应正确分类');
+  console.log('  PASS  自动命名识别周围 GND 孔的轴对称与中心对称关系');
 }
 {
   const colors = buildConnectorDistanceColorMap([{ dist: 10.01 }, { dist: 10.04 }, { dist: 12.0 }]);
