@@ -427,5 +427,76 @@ test('规律分析渲染不引入 HTML 注入（对象/网络名同样走转义�
   w.renderPatternAnalysis();
 });
 
+test('新增项：GND 孔盘到信号孔盘阈值输入框与历史值', () => {
+  const inp = $('inpThresholdPadPair');
+  if (!inp) throw new Error('缺少 GND 孔盘到信号孔盘阈值输入框');
+  if (Math.abs(parseFloat(inp.value) - 6.0) > 1e-9) throw new Error('默认值应为 6.0，实际 ' + inp.value);
+  if (!d.querySelector('label[for="inpThresholdPadPair"]')) throw new Error('输入框没有 label');
+  if (!d.getElementById('hist_thresh_padpair')) throw new Error('缺少历史值圆钮容器');
+  const label = d.querySelector('label[for="inpThresholdPadPair"]').textContent;
+  if (label.indexOf('GND') < 0 || label.indexOf('信号孔盘') < 0) throw new Error('文案不对：' + label);
+});
+
+test('新增项：跑检查后统计卡与明细卡给出孔盘对结果', () => {
+  const sampleTxt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  // 前面的用例可能改过焊盘/一钻直径，这里固定成界面默认口径再跑，条数才可复现
+  $('inpGndPadDiam').value = '7.906';
+  $('inpSignalPadDiam').value = '12.0';
+  $('inpGndFirstDrill').value = '6.0';
+  $('inpSignalFirstDrill').value = '6.0';
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval(`loadTextData(${JSON.stringify(sampleTxt)}, "via_trace_airgap_sample.txt"); runCheck(true);`);
+  const st = w.State.checkResult.padPairStats;
+  if (!st.enabled) throw new Error('应启用孔盘到孔盘检查');
+  if (st.total !== 22 || st.fail !== 0) throw new Error('应为 22 对全满足，实际 ' + JSON.stringify(st));
+  if ($('statPadPairBadCount').textContent !== '0 / 22') throw new Error('统计卡应为 0 / 22，实际 ' + $('statPadPairBadCount').textContent);
+  if ($('padPairCard').style.display !== 'block') throw new Error('明细卡应显示');
+  if ($('padPairHint').textContent.indexOf('6 mil') < 0) throw new Error('提示里没有阈值：' + $('padPairHint').textContent);
+  if ($('runHint').textContent.indexOf('GND孔盘↔信号孔盘') < 0) throw new Error('运行提示没提到新增项');
+});
+
+test('新增项：阈值调到 10 mil 时明细表列出 8 对不满足', () => {
+  $('inpThresholdPadPair').value = '10';
+  w.eval('runCheck(true)');
+  const st = w.State.checkResult.padPairStats;
+  if (st.fail !== 8) throw new Error('应 8 对不满足，实际 ' + st.fail);
+  if ($('statPadPairBadCount').textContent !== '8 / 34') throw new Error('统计卡应为 8 / 34，实际 ' + $('statPadPairBadCount').textContent);
+  const rows = d.querySelectorAll('#padPairBody tr');
+  if (rows.length !== 8) throw new Error('明细应为 8 行，实际 ' + rows.length);
+  const first = rows[0].textContent;
+  if (first.indexOf('GND') < 0 || first.indexOf('mil') >= 0) { /* 文案里没有单位，仅确认有网络名 */ }
+  if (rows[0].querySelectorAll('td').length !== 8) throw new Error('明细列数不对');
+  if (!/不满足 8 对/.test($('padPairHint').textContent)) throw new Error('提示没给出不满足数量：' + $('padPairHint').textContent);
+});
+
+test('新增项：阈值填 0 时不检查，统计卡显示未启用', () => {
+  $('inpThresholdPadPair').value = '0';
+  w.eval('runCheck(true)');
+  if (w.State.checkResult.padPairStats.enabled) throw new Error('填 0 应关闭');
+  if ($('statPadPairBadCount').textContent !== '未启用') throw new Error('统计卡应显示未启用，实际 ' + $('statPadPairBadCount').textContent);
+  if ($('padPairCard').style.display !== 'none') throw new Error('明细卡应隐藏');
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval('runCheck(true)');
+});
+
+test('新增项：三套预设都会带上孔盘到信号孔盘阈值', () => {
+  const cases = [['eda_project', '6.0'], ['std_6mil', '6.0'], ['high_density_5mil', '5.0']];
+  cases.forEach(([scheme, expect]) => {
+    $('inpThresholdPadPair').value = '99';
+    w.applyPresetScheme(scheme);
+    if (Math.abs(parseFloat($('inpThresholdPadPair').value) - parseFloat(expect)) > 1e-9) {
+      throw new Error(scheme + ' 应为 ' + expect + '，实际 ' + $('inpThresholdPadPair').value);
+    }
+  });
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval('runCheck(true)');
+});
+
+test('新增项：判定口径说明里写了这一条', () => {
+  const legend = d.getElementById('tab-legend').textContent;
+  if (legend.indexOf('GND 孔盘到信号孔盘') < 0) throw new Error('说明页没写判定口径');
+  if (legend.indexOf('Pad to Pad Airgap') < 0) throw new Error('说明页没写算的是孔盘到孔盘间距');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

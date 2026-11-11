@@ -475,5 +475,92 @@ test('evaluateViaSpan 返回值语义：spans 表示是否检查、determined �
   if (b.spans !== true || b.determined !== false) throw new Error('无法判定应返回 {true,false}，实际 ' + JSON.stringify(b));
 });
 
+console.log('== GND 孔盘到信号孔盘最小间距（新增项）==');
+
+function mkVia(id, isGnd, x, y, minL, maxL, padDiam) {
+  const padRadius = (padDiam || 8) / 2;
+  return {
+    id, type: 'via', origin: [x, y], net: isGnd ? 'GND' : 'SIG' + id, isGnd,
+    padstack: isGnd ? 'BGA_GND' : 'BGA_SIG', usage: 'BBVia',
+    hasDefinedSpan: true, minLayerNum: minL, maxLayerNum: maxL,
+    startLayerNum: minL, endLayerNum: maxL, viaSpanType: 'buried', viaTypeLabel: '埋孔',
+    spanShort: `L${minL}-L${maxL}`,
+    padDiameter: padDiam || 8, padRadius, padShape: null,
+    firstDrill: 5, firstDrillRadius: 2.5
+  };
+}
+
+test('孔盘到孔盘：阈值填 0 表示不检查这一项', () => {
+  const txt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  const res = DfmCheck.parseDfmItems(txt, {});
+  const r = DfmCheck.runDfmCheck(res.vias, res.traces, { minClearanceGnd: 4.01575, minClearanceSignal: 5.04725, minClearancePadPair: 0 });
+  if (r.padPairStats.enabled !== false) throw new Error('阈值 0 应标记未启用');
+  if (r.padPairStats.total !== 0 || r.padPairDefects.length !== 0) throw new Error('阈值 0 不应产出对偶');
+});
+
+test('孔盘到孔盘：97 项样本阈值 6 mil 时 22 对全部满足', () => {
+  const txt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  const res = DfmCheck.parseDfmItems(txt, { gndPadDiameter: 7.906, signalPadDiameter: 12.0, gndFirstDrill: 6.0, signalFirstDrill: 6.0 });
+  const r = DfmCheck.runDfmCheck(res.vias, res.traces, { minClearanceGnd: 4.01575, minClearanceSignal: 5.04725, minClearancePadPair: 6, gndPadDiameter: 7.906, signalPadDiameter: 12.0 });
+  if (!r.padPairStats.enabled) throw new Error('没启用');
+  if (r.padPairStats.total !== 22) throw new Error('应核对 22 对，实际 ' + r.padPairStats.total);
+  if (r.padPairStats.fail !== 0) throw new Error('不应有超标，实际 ' + r.padPairStats.fail);
+  if (Math.abs(r.padPairStats.minDist - 7.7558) > 0.001) throw new Error('最小间距应为 7.756，实际 ' + r.padPairStats.minDist);
+});
+
+test('孔盘到孔盘：阈值调到 10 mil 时 8 对不满足，且按间距从小到大', () => {
+  const txt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  const res = DfmCheck.parseDfmItems(txt, { gndPadDiameter: 7.906, signalPadDiameter: 12.0, gndFirstDrill: 6.0, signalFirstDrill: 6.0 });
+  const r = DfmCheck.runDfmCheck(res.vias, res.traces, { minClearanceGnd: 4.01575, minClearanceSignal: 5.04725, minClearancePadPair: 10, gndPadDiameter: 7.906, signalPadDiameter: 12.0 });
+  if (r.padPairStats.fail !== 8) throw new Error('应 8 对不满足，实际 ' + r.padPairStats.fail);
+  if (r.padPairDefects.length !== 8) throw new Error('明细条数不对：' + r.padPairDefects.length);
+  for (let i = 1; i < r.padPairDefects.length; i++) {
+    if (r.padPairDefects[i].padAirgap < r.padPairDefects[i - 1].padAirgap - 1e-9) throw new Error('没有按间距排序');
+  }
+  const d0 = r.padPairDefects[0];
+  if (Math.abs(d0.threshold - 10) > 1e-9) throw new Error('阈值没带进明细');
+  if (Math.abs(d0.diff - (d0.padAirgap - 10)) > 1e-6) throw new Error('亏欠算错：' + d0.diff);
+});
+
+test('孔盘到孔盘：只比对 GND 孔 × 信号孔，GND×GND / 信号×信号不算', () => {
+  const text = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  const res = DfmCheck.parseDfmItems(text, {});
+  const r = DfmCheck.runDfmCheck(res.vias, res.traces, { minClearancePadPair: 30 });
+  if (!r.padPairDefects.length) throw new Error('没产生对偶，测不到组合');
+  r.padPairDefects.forEach(d => {
+    if (!!d.gndVia.isGnd === !!d.sigVia.isGnd) throw new Error('出现了同类型孔对偶 #' + d.gndVia.id + ' / #' + d.sigVia.id);
+    if (!d.gndVia.isGnd) throw new Error('gndVia 不是 GND');
+    if (d.sigVia.isGnd) throw new Error('sigVia 是 GND');
+  });
+  const seen = new Set();
+  r.padPairDefects.forEach(d => {
+    const k = Math.min(d.gndVia.id, d.sigVia.id) + '-' + Math.max(d.gndVia.id, d.sigVia.id);
+    if (seen.has(k)) throw new Error('同一对算了两次：' + k);
+    seen.add(k);
+  });
+});
+
+test('孔盘到孔盘：层范围不重叠的盲埋孔不算一对', () => {
+  const v1 = mkVia(1, true, 0, 0, 1, 2);
+  const v2 = mkVia(2, false, 20, 0, 5, 6);   // 孔盘间距 20-4-4=12，但层不重叠
+  const r1 = DfmCheck.runDfmCheck([v1, v2], [], { minClearancePadPair: 20 });
+  if (r1.padPairStats.total !== 0) throw new Error('层不重叠不应算一对，实际 ' + r1.padPairStats.total);
+  const v3 = mkVia(3, false, 20, 0, 2, 6);   // 改成重叠
+  const r2 = DfmCheck.runDfmCheck([v1, v3], [], { minClearancePadPair: 20 });
+  if (r2.padPairStats.total !== 1) throw new Error('层重叠应算 1 对，实际 ' + r2.padPairStats.total);
+  if (r2.padPairStats.fail !== 1) throw new Error('12 mil < 20 mil 应判不满足');
+  if (Math.abs(r2.padPairDefects[0].padAirgap - 12) > 1e-6) throw new Error('孔盘间距应为 12，实际 ' + r2.padPairDefects[0].padAirgap);
+});
+
+test('孔盘到孔盘：同网络对偶在「仅检查异网络」下跳过', () => {
+  const v1 = mkVia(1, true, 0, 0, 1, 6);
+  const v2 = mkVia(2, false, 20, 0, 1, 6);
+  v2.net = 'GND';
+  const skip = DfmCheck.runDfmCheck([v1, v2], [], { minClearancePadPair: 20, diffNetOnly: true });
+  if (skip.padPairStats.total !== 0) throw new Error('同网络应跳过');
+  const keep = DfmCheck.runDfmCheck([v1, v2], [], { minClearancePadPair: 20, diffNetOnly: false });
+  if (keep.padPairStats.total !== 1) throw new Error('包含同网络时应算 1 对');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

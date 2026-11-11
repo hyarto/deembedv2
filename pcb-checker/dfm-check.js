@@ -596,6 +596,9 @@
 
     const maxPassingToKeep = typeof opts.maxPassingToKeep === 'number' ? opts.maxPassingToKeep : 3000;
 
+    // GND 孔盘 ↔ 信号孔盘最小间距（孔盘到孔盘 airgap），0 表示不检查这一项
+    const minClearancePadPair = typeof opts.minClearancePadPair === 'number' ? opts.minClearancePadPair : 0;
+
     const activeTraces = layerFilter ? traces.filter(t => t.subset === layerFilter) : traces;
 
     // Pre-cache parsed physical layer numbers for each unique trace Subset (O(1) lookup)
@@ -809,6 +812,74 @@
       });
     });
 
+    // ================= 孔盘到孔盘：GND 孔盘 ↔ 信号孔盘 =================
+    // 以过孔圆心建网格，只比对邻格里的 GND孔×信号孔 对偶，算焊盘到焊盘的空气间隙。
+    const padPairDefects = [];
+    let padPairTotal = 0;
+    let padPairFail = 0;
+    let padPairMin = Infinity;
+    if (minClearancePadPair > 0 && vias.length > 1) {
+      const cell = Math.max(20.0, minClearancePadPair + maxPadR);
+      const grid = new Map();
+      const keyOf = (x, y) => `${Math.floor(x / cell)}_${Math.floor(y / cell)}`;
+      vias.forEach(v => {
+        const k = keyOf(v.origin[0], v.origin[1]);
+        let bucket = grid.get(k);
+        if (!bucket) { bucket = []; grid.set(k, bucket); }
+        bucket.push(v);
+      });
+      const spanOverlap = (a, b) => {
+        if (!a.hasDefinedSpan || !b.hasDefinedSpan) return true;   // 层名解析不出来时照常检查
+        const a1 = a.minLayerNum, a2 = a.maxLayerNum, b1 = b.minLayerNum, b2 = b.maxLayerNum;
+        if (!(a1 > 0 && a2 > 0 && b1 > 0 && b2 > 0)) return true;
+        return Math.min(a2, b2) >= Math.max(a1, b1);
+      };
+      vias.forEach((v1, i1) => {
+        const cx = Math.floor(v1.origin[0] / cell), cy = Math.floor(v1.origin[1] / cell);
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const bucket = grid.get(`${cx + dx}_${cy + dy}`);
+            if (!bucket) continue;
+            for (let bi = 0; bi < bucket.length; bi++) {
+              const v2 = bucket[bi];
+              if (v2 === v1 || v2.id <= v1.id) continue;           // 每对只算一次
+              if (!!v1.isGnd === !!v2.isGnd) continue;             // 只查 GND孔 ↔ 信号孔
+              if (diffNetOnly && v1.net === v2.net) continue;
+              if (!spanOverlap(v1, v2)) continue;
+              const m = calcViaToViaMetrics(v1, v2);
+              const gap = m.padAirgap;
+              padPairTotal++;
+              if (gap < padPairMin) padPairMin = gap;
+              const isFail = gap < minClearancePadPair - 1e-4;
+              if (!isFail) continue;
+              padPairFail++;
+              const gndVia = v1.isGnd ? v1 : v2;
+              const sigVia = v1.isGnd ? v2 : v1;
+              padPairDefects.push({
+                type: 'via_pad_to_via_pad',
+                gndVia: gndVia,
+                sigVia: sigVia,
+                v1: v1,
+                v2: v2,
+                centerDist: m.centerDist,
+                padAirgap: gap,
+                evalDist: gap,
+                gndPadDiameter: gndVia.padDiameter || (gndVia.padRadius || defaultGndPadDiam / 2) * 2,
+                sigPadDiameter: sigVia.padDiameter || (sigVia.padRadius || defaultSignalPadDiam / 2) * 2,
+                spanGnd: gndVia.spanShort || gndVia.viaTypeLabel || '',
+                spanSig: sigVia.spanShort || sigVia.viaTypeLabel || '',
+                threshold: minClearancePadPair,
+                diff: gap - minClearancePadPair,
+                status: '不满足',
+                targetType: 'GND孔盘到信号孔盘'
+              });
+            }
+          }
+        }
+      });
+      padPairDefects.sort((a, b) => a.padAirgap - b.padAirgap);
+    }
+
     defectPairs.sort((a, b) => a.evalDist - b.evalDist);
     closePassingPairs.sort((a, b) => a.evalDist - b.evalDist);
 
@@ -940,7 +1011,16 @@
       },
       mode: mode,
       diffNetOnly: diffNetOnly,
-      layerFilter: layerFilter
+      layerFilter: layerFilter,
+      padPairStats: {
+        enabled: minClearancePadPair > 0,
+        total: padPairTotal,
+        fail: padPairFail,
+        pass: padPairTotal - padPairFail,
+        minDist: padPairMin === Infinity ? 0 : padPairMin,
+        threshold: minClearancePadPair
+      },
+      padPairDefects: padPairDefects
     };
   }
 

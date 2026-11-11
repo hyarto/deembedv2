@@ -232,6 +232,12 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
 
         <div class="form-item">
+          <label for="inpThresholdPadPair">GND 孔盘到信号孔盘最小间距规则阈值 (mil)</label>
+          <input type="number" id="inpThresholdPadPair" value="6.0" step="0.00001" min="0" style="width:100%" title="GND 过孔焊盘到信号过孔焊盘的空气间隙 (Pad to Pad Airgap) 判定阈值；填 0 关闭这一项">
+          <div class="hist-bar" id="hist_thresh_padpair"></div>
+        </div>
+
+        <div class="form-item">
           <label for="selMode">间距计算判定口径</label>
           <select id="selMode">
             <option value="pad_to_trace" selected> 焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
@@ -429,6 +435,34 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <div class="stat-box">
         <div class="num" id="statMinDist">0.00</div>
         <div class="lbl"> 最小实测间距 (mil)</div>
+      </div>
+      <div class="stat-box" style="border-left:3px solid #d97706">
+        <div class="num" id="statPadPairBadCount">未启用</div>
+        <div class="lbl"> GND 孔盘 ↔ 信号孔盘 (超标 / 检查数)</div>
+      </div>
+    </div>
+
+    <div class="card" id="padPairCard" style="display:none">
+      <h2>GND 孔盘到信号孔盘 间距不满足明细</h2>
+      <div class="hint" id="padPairHint" style="margin-bottom:8px"></div>
+      <div style="overflow-x:auto">
+        <table id="padPairTable">
+          <thead>
+            <tr>
+              <th style="width:52px">序号</th>
+              <th>GND 孔（孔号 / 网络 / 跨层）</th>
+              <th>信号孔（孔号 / 网络 / 跨层）</th>
+              <th style="width:110px">中心距 (mil)</th>
+              <th style="width:130px">孔盘间距实测 (mil)</th>
+              <th style="width:110px">规则阈值 (mil)</th>
+              <th style="width:110px">亏欠 (mil)</th>
+              <th style="width:150px">焊盘直径 GND / 信号</th>
+            </tr>
+          </thead>
+          <tbody id="padPairBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--sub);padding:20px">暂无孔盘到孔盘检查结果</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -671,6 +705,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <ul class="hint" style="margin-left:20px;margin-top:6px">
         <li><b>线到 GND 孔判定口径</b>：针对走线与地网络（GND）过孔之间的空间安全间距，应用「线到 GND 孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$）。</li>
         <li><b>线到信号孔判定口径</b>：针对走线与其他非 GND / 信号网络过孔之间的空间安全间距，应用「线到信号孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$ 或更高隔离要求）。</li>
+        <li><b>GND 孔盘到信号孔盘判定口径</b>：针对 GND 过孔焊盘与信号过孔焊盘之间的空气间隙（Pad to Pad Airgap），应用「GND 孔盘到信号孔盘最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$，填 0 关闭）。只比对 GND 孔 × 信号孔这一种组合（GND×GND、信号×信号不在本项内），并按两个过孔实际连接的层范围判断是否有层重叠，重叠才算一对。</li>
         <li><b>区分意义</b>：GND 孔与信号孔在 PCB 布局中具有不同的阻抗连续性、防串扰隔离和工艺容差要求，分别配置判定阈值可精准识别不同网络属性的间距风险。</li>
       </ul>
 
@@ -774,7 +809,8 @@ const HistoryManager = {
     pad_gnd: [7.906, 5.94, 8.0],
     pad_sig: [12.0, 9.94, 7.906, 10.0],
     drill_gnd: [6.0, 5.54],
-    drill_sig: [6.0, 5.54]
+    drill_sig: [6.0, 5.54],
+    thresh_padpair: [6.0, 5.0, 8.0, 10.0]
   },
   get(metric) {
     try {
@@ -837,6 +873,7 @@ const HistoryManager = {
       case 'pad_sig': return $('inpSignalPadDiam');
       case 'drill_gnd': return $('inpGndFirstDrill');
       case 'drill_sig': return $('inpSignalFirstDrill');
+      case 'thresh_padpair': return $('inpThresholdPadPair');
       default: return null;
     }
   }
@@ -857,6 +894,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '12.0';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '6.0';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '6.0';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '6.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   } else if (schemeName === 'std_6mil') {
     if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '6.0';
@@ -865,6 +903,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.94';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.54';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.54';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '6.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   } else if (schemeName === 'high_density_5mil') {
     if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '5.0';
@@ -873,6 +912,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.0';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.0';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.0';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '5.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   }
   HistoryManager.renderAll();
@@ -883,7 +923,7 @@ function applyPresetScheme(schemeName) {
 window.applyPresetScheme = applyPresetScheme;
 
 // Attach input change listeners to refresh chip highlights
-['inpThresholdGnd', 'inpThresholdSignal', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
+['inpThresholdGnd', 'inpThresholdSignal', 'inpThresholdPadPair', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
   const el = $(id);
   if (el) {
     el.addEventListener('input', () => {
@@ -1581,6 +1621,7 @@ function runCheck(sync) {
     const sigPadDiam = parseFloat($('inpSignalPadDiam') ? $('inpSignalPadDiam').value : 9.94) || 9.94;
     const gndFirstDrill = parseFloat($('inpGndFirstDrill') ? $('inpGndFirstDrill').value : 5.54) || 5.54;
     const sigFirstDrill = parseFloat($('inpSignalFirstDrill') ? $('inpSignalFirstDrill').value : 5.54) || 5.54;
+    const threshPadPair = parseFloat($('inpThresholdPadPair') ? $('inpThresholdPadPair').value : 0);
     const diffNetOnly = $('selNetFilter').value === 'diff_only';
     const layerFilter = $('selLayerFilter').value;
 
@@ -1603,6 +1644,7 @@ function runCheck(sync) {
     HistoryManager.add('pad_sig', sigPadDiam);
     HistoryManager.add('drill_gnd', gndFirstDrill);
     HistoryManager.add('drill_sig', sigFirstDrill);
+    if (!isNaN(threshPadPair)) HistoryManager.add('thresh_padpair', threshPadPair);
     HistoryManager.renderAll();
 
     const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -1616,7 +1658,8 @@ function runCheck(sync) {
       gndPadDiameter: gndPadDiam,
       signalPadDiameter: sigPadDiam,
       gndFirstDrill: gndFirstDrill,
-      signalFirstDrill: sigFirstDrill
+      signalFirstDrill: sigFirstDrill,
+      minClearancePadPair: isNaN(threshPadPair) ? 0 : threshPadPair
     });
     const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const duration = (t1 - t0).toFixed(0);
@@ -1630,7 +1673,11 @@ function runCheck(sync) {
     const unknownNote = result.undeterminedSpanPairs > 0
       ? `  另有 ${result.undeterminedSpanPairs.toLocaleString()} 处对偶的过孔/走线层名无法解析为层号，已按「全部检查」处理（宁可多检不可漏检）`
       : '';
-    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${unknownNote}`;
+    const pp = result.padPairStats || { enabled: false, total: 0, fail: 0 };
+    const ppNote = pp.enabled
+      ? ` 孔盘到孔盘（GND孔盘↔信号孔盘）另查 ${pp.total.toLocaleString()} 对，超标 ${pp.fail} 对，阈值 ${pp.threshold} mil。`
+      : ' 孔盘到孔盘检查：已在配置里填 0，本次未检查。';
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${ppNote}${unknownNote}`;
 
     btn.disabled = false;
     btn.innerHTML = origBtnText;
@@ -1671,6 +1718,44 @@ if ($('btnViewPairList')) {
   });
 }
 
+// --- 孔盘到孔盘（GND 孔盘 ↔ 信号孔盘）明细 ---
+function renderPadPairResults() {
+  const card = $('padPairCard');
+  if (!card) return;
+  const r = State.checkResult;
+  const pp = (r && r.padPairStats) || { enabled: false, total: 0, fail: 0, pass: 0, minDist: 0, threshold: 0 };
+  if ($('statPadPairBadCount')) {
+    $('statPadPairBadCount').textContent = pp.enabled
+      ? `${pp.fail.toLocaleString()} / ${pp.total.toLocaleString()}`
+      : '未启用';
+  }
+  if (!pp.enabled) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const defects = (r && r.padPairDefects) || [];
+  const shown = defects.slice(0, 200);
+  $('padPairHint').textContent = `阈值 ${pp.threshold} mil｜共核对 ${pp.total.toLocaleString()} 对 GND 孔盘 × 信号孔盘，不满足 ${pp.fail} 对、满足 ${pp.pass.toLocaleString()} 对，最小实测 ${pp.minDist.toFixed(3)} mil`
+    + (defects.length > shown.length ? `｜下表只列间距最小的 ${shown.length} 对（共 ${defects.length} 对）` : '');
+  const body = $('padPairBody');
+  if (!body) return;
+  if (!shown.length) {
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ok,#16a34a);padding:20px">全部满足，没有孔盘到孔盘间距不满足的对偶</td></tr>';
+    return;
+  }
+  body.innerHTML = shown.map((d, i) => {
+    const g = d.gndVia, sg = d.sigVia;
+    return '<tr>'
+      + `<td>${i + 1}</td>`
+      + `<td>#${escHtml(String(g.id))} · ${escHtml(g.net || '未命名网络')} · ${escHtml(d.spanGnd || g.viaTypeLabel || '通孔')}</td>`
+      + `<td>#${escHtml(String(sg.id))} · ${escHtml(sg.net || '未命名网络')} · ${escHtml(d.spanSig || sg.viaTypeLabel || '通孔')}</td>`
+      + `<td>${d.centerDist.toFixed(3)}</td>`
+      + `<td class="bad">${d.padAirgap.toFixed(3)}</td>`
+      + `<td>${d.threshold}</td>`
+      + `<td class="bad">${d.diff.toFixed(3)}</td>`
+      + `<td>${d.gndPadDiameter.toFixed(3)} / ${d.sigPadDiameter.toFixed(3)}</td>`
+      + '</tr>';
+  }).join('');
+}
+
 // --- Render Result Table & Stats with Pagination ---
 function renderResults() {
   const r = State.checkResult;
@@ -1685,6 +1770,8 @@ function renderResults() {
     $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果</td></tr>';
     if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
     if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
+    if ($('statPadPairBadCount')) $('statPadPairBadCount').textContent = '未启用';
+    if ($('padPairCard')) $('padPairCard').style.display = 'none';
     return;
   }
 
@@ -1697,6 +1784,7 @@ function renderResults() {
 
   renderNetGroupView();
   renderPairListView();
+  renderPadPairResults();
 }
 
 // 1. Render Net & Layer Grouping View (出线层x走线网络 缺陷汇总)
@@ -2100,6 +2188,31 @@ $('btnExportCsv').addEventListener('click', () => {
     p.via.firstDrill.toFixed(2),
     (p.via.padDiameter || p.via.padRadius * 2).toFixed(2)
   ].join(','));
+  // 孔盘到孔盘（GND 孔盘 ↔ 信号孔盘）另起一段
+  const ppDefects = State.checkResult.padPairDefects || [];
+  const ppStats = State.checkResult.padPairStats || { enabled: false };
+  if (ppStats.enabled && ppDefects.length) {
+    rows.push('');
+    rows.push(`"GND 孔盘到信号孔盘间距（阈值 ${ppStats.threshold} mil，共 ${ppDefects.length} 对不满足）"`);
+    rows.push(['序号,GND孔号,GND网络,GND跨层,信号孔号,信号网络,信号跨层,中心距(mil),孔盘间距实测(mil),规则阈值(mil),亏欠(mil),GND焊盘直径(mil),信号焊盘直径(mil)'].join(','));
+    ppDefects.forEach((d, i) => {
+      rows.push([
+        i + 1,
+        d.gndVia.id,
+        `"${d.gndVia.net}"`,
+        `"${d.spanGnd || d.gndVia.viaTypeLabel || '通孔'}"`,
+        d.sigVia.id,
+        `"${d.sigVia.net}"`,
+        `"${d.spanSig || d.sigVia.viaTypeLabel || '通孔'}"`,
+        d.centerDist.toFixed(4),
+        d.padAirgap.toFixed(4),
+        d.threshold.toFixed(2),
+        d.diff.toFixed(4),
+        d.gndPadDiameter.toFixed(2),
+        d.sigPadDiameter.toFixed(2)
+      ].join(','));
+    });
+  }
   const blob = new Blob(['\uFEFF' + headers.concat(rows).join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
