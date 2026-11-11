@@ -18,10 +18,22 @@ const {
   getStandardPresetSchemes,
   candidateRotations,
   buildConnectorDistanceColorMap,
+  summarizeGroundNeighborPitch,
   dist2D
 } = FanoutChecker;
 
 console.log('== 扇出方案检查引擎单元测试 ==');
+{
+  const gndPatternA = summarizeGroundNeighborPitch([
+    { type: 'gnd', rawX: 0, rawY: 0 }, { type: 'gnd', rawX: 10, rawY: 0 }, { type: 'gnd', rawX: 30, rawY: 0 }
+  ]);
+  const gndPatternB = summarizeGroundNeighborPitch([
+    { type: 'gnd', rawX: 0, rawY: 0 }, { type: 'gnd', rawX: 20, rawY: 0 }, { type: 'gnd', rawX: 40, rawY: 0 }
+  ]);
+  assert.notStrictEqual(gndPatternA, gndPatternB, '同样孔数下，周围地孔最近邻间距不同应生成不同布局特征');
+  assert.ok(gndPatternA.includes('GND3@0.25-0.51mm'), '应将最近邻地孔间距范围用 mm 写入布局特征');
+  console.log('  PASS  自动命名比较周围 GND 孔最近邻间距并区分地孔布局');
+}
 {
   const colors = buildConnectorDistanceColorMap([{ dist: 10.01 }, { dist: 10.04 }, { dist: 12.0 }]);
   assert.deepStrictEqual([...colors.keys()], [10, 12], '10.01 与 10.04 mil 应并入同一距离类别');

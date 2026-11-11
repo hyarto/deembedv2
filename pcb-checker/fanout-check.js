@@ -2434,6 +2434,24 @@
     return { success: false, error: '未能从文件中识别出有效的扇出方案 JSON 数据' };
   }
 
+  function summarizeGroundNeighborPitch(vias = []) {
+    const gnd = (vias || []).filter(v => v && (v.type === 'gnd' || v.role === '伴随地孔'));
+    if (gnd.length < 2) return '';
+    const nearestMm = gnd.map((v, i) => {
+      let nearest = Infinity;
+      gnd.forEach((other, j) => {
+        if (i === j) return;
+        const d = Math.hypot(Number(v.rawX ?? v.x) - Number(other.rawX ?? other.x), Number(v.rawY ?? v.y) - Number(other.rawY ?? other.y));
+        if (d > 1e-6 && d < nearest) nearest = d;
+      });
+      return nearest / 39.37007874;
+    }).filter(Number.isFinite).sort((a, b) => a - b);
+    if (!nearestMm.length) return '';
+    const min = nearestMm[0].toFixed(2);
+    const max = nearestMm[nearestMm.length - 1].toFixed(2);
+    return min === max ? `GND${gnd.length}@${min}mm` : `GND${gnd.length}@${min}-${max}mm`;
+  }
+
   /**
    * 解析包含多个扇出方案的多块 TXT 文本（每个方案之间使用 ~~~end~~~ 或 ~End~ 分界）
    * @param {string} text 
@@ -2619,8 +2637,8 @@
           const layerLabel = layerTokens.length > 1
             ? `${layerTokens[0].label}-${layerTokens[layerTokens.length - 1].label}`
             : layerTokens[0]?.label || '';
-          const gndCount = vias.filter(v => v.type === 'gnd').length;
-          const baseName = [family, pairLabel, pitchLabel, layerLabel, gndCount ? `G${gndCount}` : ''].filter(Boolean).join('_');
+          const groundPattern = summarizeGroundNeighborPitch(vias);
+          const baseName = [family, pairLabel, pitchLabel, layerLabel, groundPattern].filter(Boolean).join('_');
           const sameBase = results.filter(r => r.name === baseName || r.name.startsWith(baseName + '_')).length;
           schemeName = sameBase ? `${baseName}_${String(sameBase + 1).padStart(2, '0')}` : baseName;
         }
@@ -3838,6 +3856,7 @@
     buildPadstackColorMap,
     calcSchemeViaPairDistance,
     parseMultiSchemeTxt,
+    summarizeGroundNeighborPitch,
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,
