@@ -562,5 +562,103 @@ test('孔盘到孔盘：同网络对偶在「仅检查异网络」下跳过', ()
   if (keep.padPairStats.total !== 1) throw new Error('包含同网络时应算 1 对');
 });
 
+console.log('== 分层规则（按层覆盖阈值）==');
+
+function mkTrace(id, subset, net, width, x, y1, y2) {
+  return { id, type: 'trace', kind: 'line', subset, net, width, p1: [x, y1], p2: [x, y2], len: Math.abs(y2 - y1) };
+}
+
+test('层表达式解析：Top / Bot / 内层 / L2-L5 / 顿号分隔', () => {
+  const D = DfmCheck;
+  if (JSON.stringify(D.parseLayerSpec('Top、Bot')) !== JSON.stringify([[1, 1], [9999, 9999]])) throw new Error('Top、Bot 解析错');
+  if (JSON.stringify(D.parseLayerSpec('内层')) !== JSON.stringify([[2, 9998]])) throw new Error('内层解析错');
+  if (JSON.stringify(D.parseLayerSpec('L2-L5')) !== JSON.stringify([[2, 5]])) throw new Error('L2-L5 解析错');
+  if (JSON.stringify(D.parseLayerSpec('3-7')) !== JSON.stringify([[3, 7]])) throw new Error('3-7 解析错');
+  if (JSON.stringify(D.parseLayerSpec('L2、L3、Top')) !== JSON.stringify([[2, 2], [3, 3], [1, 1]])) throw new Error('列表解析错');
+  if (D.parseLayerSpec('').length !== 0 || D.parseLayerSpec('乱写').length !== 0) throw new Error('非法写法应为空');
+  if (D.layerSpecLabel(D.parseLayerSpec('内层')).indexOf('内层') < 0) throw new Error('标签错：' + D.layerSpecLabel(D.parseLayerSpec('内层')));
+  if (D.layerSpecLabel(D.parseLayerSpec('Top、Bot')) !== 'L1（Top）、Bottom') throw new Error('标签错：' + D.layerSpecLabel(D.parseLayerSpec('Top、Bot')));
+});
+
+test('分层规则：走线按自身所在层取阈值（Top 规则不影响内层走线）', () => {
+  const via = mkVia(1, true, 0, 0, 1, 6, 8);            // GND 通孔，焊盘半径 4
+  const trace = mkTrace(2, 'L2', 'SIG', 2, 10, -10, 10); // L2 走线，距孔心 10 → 焊盘边到线边 5 mil
+  const base = { minClearanceGnd: 4, minClearanceSignal: 4 };
+  const noRule = DfmCheck.runDfmCheck([via], [trace], base);
+  if (noRule.failCount !== 0) throw new Error('默认阈值 4 应通过，实际超标 ' + noRule.failCount);
+  const topRule = DfmCheck.runDfmCheck([via], [trace], Object.assign({}, base, {
+    layerRules: [{ layers: 'Top', minClearanceGnd: 8 }]
+  }));
+  if (topRule.failCount !== 0) throw new Error('Top 规则不该管 L2 走线');
+  if (topRule.layerRuleStats[0].checked !== 0) throw new Error('Top 规则不该命中：' + topRule.layerRuleStats[0].checked);
+  const l2Rule = DfmCheck.runDfmCheck([via], [trace], Object.assign({}, base, {
+    layerRules: [{ layers: 'L2', minClearanceGnd: 6 }]
+  }));
+  if (l2Rule.failCount !== 1) throw new Error('L2 规则 6 mil 应判 1 处超标，实际 ' + l2Rule.failCount);
+  if (l2Rule.defectPairs[0].threshold !== 6) throw new Error('阈值没用规则里的：' + l2Rule.defectPairs[0].threshold);
+  if (l2Rule.layerRuleStats[0].checked !== 1 || l2Rule.layerRuleStats[0].fail !== 1) throw new Error('命中统计不对');
+});
+
+test('分层规则：同一层命中多条时用靠上的一条', () => {
+  const via = mkVia(1, true, 0, 0, 1, 6, 8);
+  const trace = mkTrace(2, 'L3', 'SIG', 2, 10, -10, 10);
+  const r = DfmCheck.runDfmCheck([via], [trace], {
+    minClearanceGnd: 4,
+    layerRules: [
+      { layers: '内层', minClearanceGnd: 9 },
+      { layers: 'L3', minClearanceGnd: 2 }
+    ]
+  });
+  const hit = r.defectPairs.length ? r.defectPairs[0] : r.pairs[0];
+  if (hit.threshold !== 9) throw new Error('应先用靠上的「内层」规则 9，实际 ' + hit.threshold);
+  if (hit.ruleLayers !== '内层') throw new Error('没记录命中的规则：' + hit.ruleLayers);
+});
+
+test('分层规则：信号孔 / GND 孔各用各的阈值', () => {
+  const gnd = mkVia(1, true, 0, 0, 1, 6, 8);
+  const sig = mkVia(2, false, 40, 0, 1, 6, 8);
+  const tG = mkTrace(3, 'L2', 'X1', 2, 10, -10, 10);
+  const tS = mkTrace(4, 'L2', 'X2', 2, 50, -10, 10);
+  const r = DfmCheck.runDfmCheck([gnd, sig], [tG, tS], {
+    minClearanceGnd: 4, minClearanceSignal: 4,
+    layerRules: [{ layers: 'Top、内层', minClearanceGnd: 8, minClearanceSignal: 2 }]
+  });
+  const g = r.defectPairs.find(p => p.via.isGnd);
+  const s = r.defectPairs.find(p => !p.via.isGnd);
+  if (!g || g.threshold !== 8) throw new Error('GND 孔阈值应为规则里的 8');
+  if (s) throw new Error('信号孔阈值 2 不该超标');
+});
+
+test('分层规则：孔盘到孔盘取重叠层里最严的一条', () => {
+  const g = mkVia(1, true, 0, 0, 1, 6);
+  const s = mkVia(2, false, 20, 0, 1, 6);
+  const base = { minClearancePadPair: 6 };
+  const loose = DfmCheck.runDfmCheck([g, s], [], Object.assign({}, base, {
+    layerRules: [{ layers: '内层', minClearancePadPair: 5 }]
+  }));
+  if (loose.padPairStats.fail !== 0) throw new Error('规则 5 mil 时 12 mil 间距应通过');
+  const strict = DfmCheck.runDfmCheck([g, s], [], Object.assign({}, base, {
+    layerRules: [
+      { layers: 'Top', minClearancePadPair: 10 },
+      { layers: '内层', minClearancePadPair: 14 }
+    ]
+  }));
+  if (strict.padPairStats.fail !== 1) throw new Error('应取最严的 14 mil 判超标');
+  if (strict.padPairDefects[0].threshold !== 14) throw new Error('阈值应为 14，实际 ' + strict.padPairDefects[0].threshold);
+  if (strict.padPairDefects[0].ruleLayers !== '内层') throw new Error('没记录规则：' + strict.padPairDefects[0].ruleLayers);
+});
+
+test('分层规则：表达式写错的行直接忽略，不影响默认阈值', () => {
+  const via = mkVia(1, true, 0, 0, 1, 6, 8);
+  const trace = mkTrace(2, 'L2', 'SIG', 2, 10, -10, 10);
+  const r = DfmCheck.runDfmCheck([via], [trace], {
+    minClearanceGnd: 4,
+    layerRules: [{ layers: '乱写的层', minClearanceGnd: 99 }, { layers: '', minClearanceGnd: 99 }]
+  });
+  if (r.layerRuleStats.length !== 0) throw new Error('非法规则不该进结果');
+  if (r.failCount !== 0) throw new Error('不该被非法规则影响');
+  if (r.defectPairs.length || r.pairs.some(p => p.threshold !== 4)) throw new Error('阈值应仍是默认 4');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

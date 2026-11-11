@@ -327,6 +327,33 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
       </div>
 
+      <div id="layerRuleBox" style="margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">分层规则（按层覆盖上面的默认阈值）</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px">适用层支持：<code>Top</code>、<code>Bot</code>、<code>内层</code>、<code>L2-L5</code>，多个用顿号隔开，如 <code>Top、Bot</code></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn sec small" id="btnLayerRuleTemplate">套用 Top/Bot + 内层</button>
+            <button type="button" class="btn sec small" id="btnAddLayerRule">+ 加一条分层规则</button>
+          </div>
+        </div>
+        <table id="layerRuleTable" style="margin:0">
+          <thead>
+            <tr>
+              <th style="width:210px">适用层</th>
+              <th>线到 GND 孔 (mil)</th>
+              <th>线到信号孔 (mil)</th>
+              <th>GND 孔盘到信号孔盘 (mil)</th>
+              <th style="width:130px">本次命中</th>
+              <th style="width:66px"></th>
+            </tr>
+          </thead>
+          <tbody id="layerRuleBody"></tbody>
+        </table>
+        <div class="hint" id="layerRuleHint" style="margin-top:6px"></div>
+      </div>
+
       <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
          <b>历史配置记录说明：</b> 每个指标下方会自动记录最近使用的数值历史标签，点击即可快速填充；TXT 中的 <code>Circle Drill</code> 仅作为<b>完成孔径</b>展示，空间间距完全由上方配置的焊盘直径与一钻直径进行精准运算。
       </div>
@@ -706,6 +733,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <li><b>线到 GND 孔判定口径</b>：针对走线与地网络（GND）过孔之间的空间安全间距，应用「线到 GND 孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$）。</li>
         <li><b>线到信号孔判定口径</b>：针对走线与其他非 GND / 信号网络过孔之间的空间安全间距，应用「线到信号孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$ 或更高隔离要求）。</li>
         <li><b>GND 孔盘到信号孔盘判定口径</b>：针对 GND 过孔焊盘与信号过孔焊盘之间的空气间隙（Pad to Pad Airgap），应用「GND 孔盘到信号孔盘最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$，填 0 关闭）。只比对 GND 孔 × 信号孔这一种组合（GND×GND、信号×信号不在本项内），并按两个过孔实际连接的层范围判断是否有层重叠，重叠才算一对。</li>
+        <li><b>分层规则（按层覆盖）</b>：在上面的默认阈值之外，可以按层再加规则，适用层写 <code>Top、Bot</code> / <code>内层</code> / <code>L2-L5</code> 这类，每个层组各配一套「线到 GND 孔 / 线到信号孔 / GND 孔盘到信号孔盘」阈值。走线按它自己所在的层取规则，同一层命中多条时用表中靠上的那条；孔盘到孔盘按两个过孔重叠层里命中的最严一条判定。没命中任何分层规则的层，继续用默认阈值。</li>
         <li><b>区分意义</b>：GND 孔与信号孔在 PCB 布局中具有不同的阻抗连续性、防串扰隔离和工艺容差要求，分别配置判定阈值可精准识别不同网络属性的间距风险。</li>
       </ul>
 
@@ -931,6 +959,145 @@ window.applyPresetScheme = applyPresetScheme;
     });
   }
 });
+
+// --- 分层规则（按层覆盖默认阈值）---
+const LayerRules = {
+  key: 'pcb.dfm.layerRules.v1',
+  rows: [],
+  defaults() {
+    return [
+      { layers: 'Top、Bot', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') },
+      { layers: '内层', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') }
+    ];
+  },
+  defOf(id) {
+    const v = parseFloat($(id) ? $(id).value : '');
+    return isFinite(v) ? v : 0;
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return null;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return null;
+      return arr.filter(r => r && typeof r.layers === 'string').map(r => ({
+        layers: r.layers,
+        gnd: parseFloat(r.gnd) || 0,
+        sig: parseFloat(r.sig) || 0,
+        pad: parseFloat(r.pad) || 0
+      }));
+    } catch (e) { return null; }
+  },
+  save() {
+    try { localStorage.setItem(this.key, JSON.stringify(this.read())); } catch (e) {}
+  },
+  read() {
+    const body = $('layerRuleBody');
+    if (!body) return [];
+    return [...body.querySelectorAll('tr[data-row]')].map(tr => ({
+      layers: (tr.querySelector('.lrLayers').value || '').trim(),
+      gnd: parseFloat(tr.querySelector('.lrGnd').value),
+      sig: parseFloat(tr.querySelector('.lrSig').value),
+      pad: parseFloat(tr.querySelector('.lrPad').value)
+    })).filter(r => r.layers);
+  },
+  previewOf(layers) {
+    const parse = (window.DfmCheck && DfmCheck.parseLayerSpec) ? DfmCheck.parseLayerSpec(layers) : [];
+    if (!parse.length) return layers && layers.trim() ? '未识别，按默认阈值' : '';
+    const label = (DfmCheck.layerSpecLabel ? DfmCheck.layerSpecLabel(parse) : '') || '';
+    return label ? '= ' + label : '';
+  },
+  rowHtml(r) {
+    const v = x => (isFinite(x) && x !== null && x !== undefined) ? String(x) : '';
+    return '<tr data-row>'
+      + `<td><input class="lrLayers" value="${escHtml(String(r.layers || ''))}" placeholder="Top、Bot 或 内层 或 L2-L5" style="width:100%">`
+      + `<div class="hint lrPreview" style="font-size:12px;margin-top:2px">${escHtml(this.previewOf(r.layers))}</div></td>`
+      + `<td><input type="number" class="lrGnd" value="${v(r.gnd)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td><input type="number" class="lrSig" value="${v(r.sig)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td><input type="number" class="lrPad" value="${v(r.pad)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td class="lrHit" style="font-size:12px;color:var(--sub)">—</td>`
+      + '<td><button type="button" class="btn bad small lrDel">删除</button></td>'
+      + '</tr>';
+  },
+  render(list) {
+    this.rows = list || [];
+    const body = $('layerRuleBody');
+    if (!body) return;
+    if (!this.rows.length) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:14px">还没有分层规则：所有层都用上面的默认阈值。点右上角「套用 Top/Bot + 内层」快速建两条。</td></tr>';
+    } else {
+      body.innerHTML = this.rows.map(r => this.rowHtml(r)).join('');
+    }
+    this.syncHint();
+    this.renderStats(State.checkResult);
+  },
+  add(rule) {
+    const list = this.read();
+    list.push(rule || { layers: '', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') });
+    this.render(list);
+    this.save();
+    const inputs = $('layerRuleBody').querySelectorAll('tr[data-row] .lrLayers');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  },
+  syncHint() {
+    const n = this.read().length;
+    if (!n) {
+      $('layerRuleHint').textContent = '不设分层规则时，所有层统一用上面的默认阈值（当前就是这样）。';
+      return;
+    }
+    $('layerRuleHint').textContent = `已设 ${n} 条分层规则（列顺序：线到 GND 孔 / 线到信号孔 / GND 孔盘到信号孔盘）· 同一层命中多条时用靠上的一条；孔盘到孔盘取重叠层里最严的一条；没命中的层继续用默认阈值。`;
+  },
+  renderStats(result) {
+    const body = $('layerRuleBody');
+    if (!body) return;
+    const stats = (result && result.layerRuleStats) || [];
+    const list = this.read();
+    const trs = [...body.querySelectorAll('tr[data-row]')];
+    trs.forEach((tr, i) => {
+      const s = stats[i];
+      const cell = tr.querySelector('.lrHit');
+      if (!cell) return;
+      if (!result) { cell.textContent = '—'; return; }
+      if (!s) { cell.textContent = '—'; return; }
+      cell.innerHTML = `<b>${s.checked + s.padPairChecked}</b> 处`
+        + (s.fail + s.padPairFail > 0 ? `<br><span class="bad">超标 ${s.fail + s.padPairFail}</span>` : '');
+    });
+    if (body.querySelector('tr td[colspan]') && list.length === 0) return;
+  }
+};
+window.LayerRules = LayerRules;
+
+(function initLayerRules() {
+  const saved = LayerRules.load();
+  LayerRules.render(saved || []);
+  const body = $('layerRuleBody');
+  if (!body) return;
+  body.addEventListener('input', e => {
+    const tr = e.target.closest('tr[data-row]');
+    if (tr && e.target.classList.contains('lrLayers')) {
+      const p = tr.querySelector('.lrPreview');
+      if (p) p.textContent = LayerRules.previewOf(e.target.value);
+    }
+    LayerRules.syncHint();
+    LayerRules.save();
+  });
+  body.addEventListener('click', e => {
+    if (!e.target.classList.contains('lrDel')) return;
+    const tr = e.target.closest('tr[data-row]');
+    const list = LayerRules.read();
+    const idx = [...body.querySelectorAll('tr[data-row]')].indexOf(tr);
+    if (idx >= 0) list.splice(idx, 1);
+    LayerRules.render(list);
+    LayerRules.save();
+    if (State.checkResult) runCheck(true);
+  });
+  $('btnAddLayerRule').addEventListener('click', () => LayerRules.add());
+  $('btnLayerRuleTemplate').addEventListener('click', () => {
+    LayerRules.render(LayerRules.defaults());
+    LayerRules.save();
+    if (State.checkResult) runCheck(true);
+  });
+})();
 
 // Initial history chip render
 HistoryManager.renderAll();
@@ -1659,7 +1826,13 @@ function runCheck(sync) {
       signalPadDiameter: sigPadDiam,
       gndFirstDrill: gndFirstDrill,
       signalFirstDrill: sigFirstDrill,
-      minClearancePadPair: isNaN(threshPadPair) ? 0 : threshPadPair
+      minClearancePadPair: isNaN(threshPadPair) ? 0 : threshPadPair,
+      layerRules: (window.LayerRules ? LayerRules.read().map(r => ({
+        layers: r.layers,
+        minClearanceGnd: isFinite(r.gnd) ? r.gnd : undefined,
+        minClearanceSignal: isFinite(r.sig) ? r.sig : undefined,
+        minClearancePadPair: isFinite(r.pad) ? r.pad : undefined
+      })) : [])
     });
     const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const duration = (t1 - t0).toFixed(0);
@@ -1673,11 +1846,15 @@ function runCheck(sync) {
     const unknownNote = result.undeterminedSpanPairs > 0
       ? `  另有 ${result.undeterminedSpanPairs.toLocaleString()} 处对偶的过孔/走线层名无法解析为层号，已按「全部检查」处理（宁可多检不可漏检）`
       : '';
+    if (window.LayerRules) LayerRules.renderStats(result);
+    const lrNote = (result.layerRuleStats && result.layerRuleStats.length)
+      ? ` 分层规则 ${result.layerRuleStats.length} 条（${result.layerRuleStats.map(r => r.layers + ' 命中 ' + (r.checked + r.padPairChecked) + ' 处/超标 ' + (r.fail + r.padPairFail)).join('，')}）。`
+      : ' 未设分层规则，所有层用默认阈值。';
     const pp = result.padPairStats || { enabled: false, total: 0, fail: 0 };
     const ppNote = pp.enabled
       ? ` 孔盘到孔盘（GND孔盘↔信号孔盘）另查 ${pp.total.toLocaleString()} 对，超标 ${pp.fail} 对，阈值 ${pp.threshold} mil。`
       : ' 孔盘到孔盘检查：已在配置里填 0，本次未检查。';
-    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${ppNote}${unknownNote}`;
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${ppNote}${lrNote}${unknownNote}`;
 
     btn.disabled = false;
     btn.innerHTML = origBtnText;
