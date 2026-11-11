@@ -43,8 +43,8 @@ main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .dropzone .t1{font-size:14px;font-weight:600;color:#1e293b}
 .dropzone .t2{font-size:12px;color:var(--sub);margin-top:4px}
 
-.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px;margin:10px 0}
-@media (max-width:1180px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;margin:10px 0}
+@media (max-width:760px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .form-item{display:flex;flex-direction:column;gap:2px}
 .form-item label{font-size:12px;font-weight:600;color:#374151}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -266,12 +266,9 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           </select>
         </div>
 
-        <div class="form-item">
-          <label for="selLayerFilter">层筛选 (Layer Filter)</label>
-          <select id="selLayerFilter" data-no-persist>
-            <option value="" selected>全部层 (All Layers)</option>
-          </select>
-        </div>
+        <select id="selLayerFilter" data-no-persist hidden aria-hidden="true">
+          <option value="" selected>全部层 (All Layers)</option>
+        </select>
 
         <details class="pad-shape-box" style="grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin:2px 0 6px">
           <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#374151">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
