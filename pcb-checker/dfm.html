@@ -43,10 +43,12 @@ main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .dropzone .t1{font-size:14px;font-weight:600;color:#1e293b}
 .dropzone .t2{font-size:12px;color:var(--sub);margin-top:4px}
 
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
-.form-item{display:flex;flex-direction:column;gap:4px}
+.form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px;margin:10px 0}
+@media (max-width:1180px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.form-item{display:flex;flex-direction:column;gap:2px}
 .form-item label{font-size:12px;font-weight:600;color:#374151}
-.form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;background:#fff;color:var(--text)}
 .form-item input:focus, .form-item select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-bg)}
 
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
@@ -99,7 +101,10 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 .search-bar{display:flex;gap:8px;margin-bottom:12px}
 .search-bar input{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
 
-.hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px}
+.hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:3px}
+#layerRuleBox{padding:8px 10px}
+#layerRuleTable th, #layerRuleTable td{padding:5px 8px}
+#layerRuleTable input[type="number"]{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;background:#fff;color:var(--text);box-sizing:border-box}
 .hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#374151;cursor:pointer;transition:all .15s;line-height:1.3}
 .hist-chip:hover{background:#e3e8ef;border-color:#94a3b8}
 .hist-chip.active{background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700}
@@ -220,24 +225,6 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
 
       <div class="form-grid">
         <div class="form-item">
-          <label for="inpThresholdGnd"> 线到 GND 孔最小间距规则阈值 (mil)</label>
-          <input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%">
-          <div class="hist-bar" id="hist_thresh_gnd"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="inpThresholdSignal"> 线到信号孔最小间距规则阈值 (mil)</label>
-          <input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%">
-          <div class="hist-bar" id="hist_thresh_sig"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="inpThresholdPadPair">GND 孔盘到信号孔盘最小间距规则阈值 (mil)</label>
-          <input type="number" id="inpThresholdPadPair" value="6.0" step="0.00001" min="0" style="width:100%" title="GND 过孔焊盘到信号过孔焊盘的空气间隙 (Pad to Pad Airgap) 判定阈值；填 0 关闭这一项">
-          <div class="hist-bar" id="hist_thresh_padpair"></div>
-        </div>
-
-        <div class="form-item">
           <label for="selMode">间距计算判定口径</label>
           <select id="selMode">
             <option value="pad_to_trace" selected> 焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
@@ -257,6 +244,33 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           <label for="inpSignalPadDiam">非 GND / 信号焊盘直径 (mil)</label>
           <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" style="width:100%" title="非 GND 信号过孔焊盘直径，如 12 mil / 9.94 mil">
           <div class="hist-bar" id="hist_pad_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
+          <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="GND 过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_gnd"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpSignalFirstDrill">非 GND / 信号一钻直径 (mil)</label>
+          <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="非 GND 信号过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="selNetFilter">网络检查范围</label>
+          <select id="selNetFilter">
+            <option value="diff_only" selected>仅检查异网络 (Different Nets，排查短路与安全间距风险)</option>
+            <option value="all_nets">包含同网络 (All Nets，检查扇出过渡区)</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="selLayerFilter">层筛选 (Layer Filter)</label>
+          <select id="selLayerFilter" data-no-persist>
+            <option value="" selected>全部层 (All Layers)</option>
+          </select>
         </div>
 
         <details class="pad-shape-box" style="grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin:2px 0 6px">
@@ -298,40 +312,13 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           </div>
           <div class="hint" style="margin-top:8px">圆形焊盘走解析式（与旧版完全一致）；长圆/矩形焊盘按「凸多边形 ⊕ 圆角」模型精确求间距，圆弧走线也按弧段精确投影，不再采样近似。</div>
         </details>
-
-        <div class="form-item">
-          <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
-          <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="GND 过孔一钻直径，如 6.0 mil / 5.54 mil">
-          <div class="hist-bar" id="hist_drill_gnd"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="inpSignalFirstDrill">非 GND / 信号一钻直径 (mil)</label>
-          <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="非 GND 信号过孔一钻直径，如 6.0 mil / 5.54 mil">
-          <div class="hist-bar" id="hist_drill_sig"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="selNetFilter">网络检查范围</label>
-          <select id="selNetFilter">
-            <option value="diff_only" selected>仅检查异网络 (Different Nets，排查短路与安全间距风险)</option>
-            <option value="all_nets">包含同网络 (All Nets，检查扇出过渡区)</option>
-          </select>
-        </div>
-
-        <div class="form-item">
-          <label for="selLayerFilter">层筛选 (Layer Filter)</label>
-          <select id="selLayerFilter" data-no-persist>
-            <option value="" selected>全部层 (All Layers)</option>
-          </select>
-        </div>
       </div>
 
       <div id="layerRuleBox" style="margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
           <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">分层规则（按层覆盖上面的默认阈值）</div>
-            <div style="font-size:12px;color:var(--sub);margin-top:2px">适用层支持：<code>Top</code>、<code>Bot</code>、<code>内层</code>、<code>L2-L5</code>，多个用顿号隔开，如 <code>Top、Bot</code></div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">间距规则（按层生效，靠上优先，最后一行是默认）</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px">适用层支持 <code>Top</code>、<code>Bot</code>、<code>内层</code>、<code>L2-L5</code>，多个用顿号隔开，如 <code>Top、Bot</code>；没被命中的层用最后一行「默认」</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button type="button" class="btn sec small" id="btnLayerRuleTemplate">套用 Top/Bot + 内层</button>
@@ -341,15 +328,25 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <table id="layerRuleTable" style="margin:0">
           <thead>
             <tr>
-              <th style="width:210px">适用层</th>
+              <th style="width:180px">适用层</th>
               <th>线到 GND 孔 (mil)</th>
               <th>线到信号孔 (mil)</th>
               <th>GND 孔盘到信号孔盘 (mil)</th>
-              <th style="width:130px">本次命中</th>
-              <th style="width:66px"></th>
+              <th style="width:110px">本次命中</th>
+              <th style="width:62px"></th>
             </tr>
           </thead>
           <tbody id="layerRuleBody"></tbody>
+          <tbody id="layerRuleDefaultBody">
+            <tr data-default style="background:#f8fafc">
+              <td><b>默认</b><div class="hint" style="font-size:12px;margin-top:1px">没被上面规则命中的层</div></td>
+              <td><label class="sr-only" for="inpThresholdGnd">默认线到 GND 孔阈值</label><input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%"><div class="hist-bar" id="hist_thresh_gnd"></div></td>
+              <td><label class="sr-only" for="inpThresholdSignal">默认线到信号孔阈值</label><input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%"><div class="hist-bar" id="hist_thresh_sig"></div></td>
+              <td><label class="sr-only" for="inpThresholdPadPair">默认 GND 孔盘到信号孔盘阈值</label><input type="number" id="inpThresholdPadPair" value="6.0" step="0.00001" min="0" style="width:100%" title="GND 过孔焊盘到信号过孔焊盘的空气间隙 (Pad to Pad Airgap) 判定阈值；填 0 关闭这一项"><div class="hist-bar" id="hist_thresh_padpair"></div></td>
+              <td class="lrHit" style="font-size:12px;color:var(--sub)">—</td>
+              <td></td>
+            </tr>
+          </tbody>
         </table>
         <div class="hint" id="layerRuleHint" style="margin-top:6px"></div>
       </div>
