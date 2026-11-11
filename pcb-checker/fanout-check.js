@@ -2592,14 +2592,15 @@
           });
           const pitchCounts = new Map();
           pairDistances.forEach(d => {
-            const rounded = Math.round(d * 10) / 10;
+            // EDA 坐标按 mil 解析；名称统一将 P/N 中心距转换为 mm，保留两位小数。
+            const rounded = Math.round((d / 39.37007874) * 100) / 100;
             pitchCounts.set(rounded, (pitchCounts.get(rounded) || 0) + 1);
           });
           const pitchValues = [...pitchCounts.entries()]
             .sort((a, b) => b[1] - a[1] || a[0] - b[0])
             .slice(0, 2).map(x => x[0]).sort((a, b) => a - b);
           const pitchLabel = pitchValues.length
-            ? `P${pitchValues.map(d => Number.isInteger(d) ? d : d.toFixed(1)).join('/')}`
+            ? `P${pitchValues.map(d => d.toFixed(2).replace(/0+$/, '').replace(/\\.$/, '')).join('/')}mm`
             : '';
           const hasPN = nets.some(net => /_P$/i.test(net)) && nets.some(net => /_N$/i.test(net));
           const pairCount = hasPN ? Math.floor(signals.length / 2) : 0;

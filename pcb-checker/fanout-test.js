@@ -27,7 +27,7 @@ console.log('== 扇出方案检查引擎单元测试 ==');
   const batch = `Total 3 Items\nItem 1 < Via >\nOrigin-xy: [1000, 2000]\nPadstack Name: BGA-HDI-GND-045drill-ring3_L1_L5\nNet: GND\nPadstack Defined from 02G01P to 05G02P\nCircle Drill: 4.5 Plated\nItem 2 < Via >\nOrigin-xy: [1000, 2010]\nPadstack Name: BGA-HDI-SIG-045drill-ring3_L1_L5\nNet: SIG_P\nPadstack Defined from 02G01P to 05G02P\nCircle Drill: 4.5 Plated\nItem 3 < Via >\nOrigin-xy: [1000, 2020]\nPadstack Name: BGA-HDI-SIG-045drill-ring3_L1_L5\nNet: SIG_N\nPadstack Defined from 02G01P to 05G02P\nCircle Drill: 4.5 Plated\n~~~~~~~~~~~~\nTotal 2 Items\nItem 1 < Via >\nOrigin-xy: [2000, 3000]\nPadstack Name: SMA-HDI-GND-045drill-ring3_L10_L14\nNet: GND\nPadstack Defined from 10G07P to Bottom\nCircle Drill: 4.5 Plated\nItem 2 < Via >\nOrigin-xy: [2000, 3010]\nPadstack Name: SMA-HDI-SIG-045drill-ring3_L10_L14\nNet: SIG_P\nPadstack Defined from 11G08P to Bottom\nCircle Drill: 4.5 Plated`;
   const autoNamed = FanoutChecker.parseMultiSchemeTxt(batch, 0);
   assert.strictEqual(autoNamed.length, 2, '应按 EDA 的 Item 1 重启切成两组');
-  assert.ok(autoNamed[0].name.includes('BGA') && autoNamed[0].name.includes('1对') && autoNamed[0].name.includes('P10') && autoNamed[0].name.includes('L2-L5'), 'BGA 孔群名应包含差分对数、P/N 间距与信号连接层');
+  assert.ok(autoNamed[0].name.includes('BGA') && autoNamed[0].name.includes('1对') && autoNamed[0].name.includes('P0.25mm') && autoNamed[0].name.includes('L2-L5'), 'BGA 孔群名应包含差分对数、P/N 间距与信号连接层');
   assert.ok(autoNamed[1].name.includes('SMA') && autoNamed[1].name.includes('L11-Bot') && autoNamed[1].name.includes('1信号'), 'SMA 孔群名应反映单信号与连接层');
   assert.strictEqual(new Set(autoNamed.map(s => s.name)).size, 2, '自动名称应唯一');
   console.log('  PASS  批量 EDA TXT 按 Item 重启识别孔群，并依据差分孔距/信号连接层自动命名');
