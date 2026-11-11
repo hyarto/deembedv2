@@ -141,6 +141,21 @@ function canonicalBlock(page) {
     });
   }
 
+  await test('综合一体化同步 DFM 分层规则与扇出预览特征', async () => {
+    const ctx = openPage('unified.html');
+    await ready(ctx.w);
+    const d = ctx.d, w = ctx.w;
+    assert(d.getElementById('unifiedLayerRuleBox'), '综合页缺少分层间距规则表');
+    assert(d.getElementById('inpThresholdPadPair'), '默认行缺少孔盘到孔盘阈值');
+    assert(d.getElementById('unifiedLayerRuleTable').contains(d.getElementById('inpThresholdGnd')), '默认阈值应收在规则表内');
+    assert(!d.getElementById('selDfmLayerFilter'), '不应显示旧的单层筛选控件');
+    assert(d.getElementById('uViewFanoutDistanceLegend').textContent.includes('同孔心距同色'), '扇出放大预览缺少按间距分色说明');
+    w.eval('UnifiedDfmLayerRules.template()');
+    assert(d.querySelectorAll('#unifiedLayerRuleBody tr').length === 2, 'Top/Bot + 内层模板应生成两条分层规则');
+    assert(ctx.errors.length === 0, '综合页脚本错误：' + ctx.errors.join('；'));
+    ctx.close();
+  });
+
   await test('六页的「统一顶栏 + 页签条」样式块完全一致', async () => {
     const blocks = PAGES.map(p => ({ p, b: canonicalBlock(p) }));
     blocks.forEach(x => assert(x.b, x.p + ' 缺少统一顶栏样式块'));

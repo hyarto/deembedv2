@@ -963,6 +963,12 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
   nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
+<style>
+.unified-dfm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;font-size:12px;color:#6b7280;margin:10px 0}
+.udfm-item{display:flex;flex-direction:column;gap:3px;min-width:0}.udfm-item label{font-size:12px;font-weight:600;color:#374151}.udfm-item input,.udfm-item select,#unifiedLayerRuleTable input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px;background:#fff;color:#1f2937;font-size:13px}
+.udfm-item .hist-bar{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}.udfm-item .hist-bar button{font-size:11px;padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#f1f5f9;color:#374151;cursor:pointer}#unifiedLayerRuleTable th,#unifiedLayerRuleTable td{padding:5px 7px;text-align:left;border-bottom:1px solid #e3e8ef}#unifiedLayerRuleTable input{padding:4px 6px}#unifiedLayerRuleTable .hist-bar{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}#unifiedLayerRuleTable .hist-bar button{font-size:11px;padding:1px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#f1f5f9;color:#374151;cursor:pointer}
+@media(max-width:760px){.unified-dfm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
 </head>
 <body>
 
@@ -1255,7 +1261,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
                 <!-- 3. DFM Rules (3x3 Grid with Presets and History Chips - Matching image-1.png) -->
         <div class="rule-acc">
           <div class="rule-acc-header" onclick="toggleAcc(this)">
-            <h4>3. DFM 加工能力检查规则 (线到GND孔 / 线到信号孔双独立判定阈值与判定口径)</h4>
+            <h4>3. DFM 加工能力检查规则 (阈值按层设置、孔盘间距与判定口径)</h4>
             <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
               <button class="btn sec small" style="padding:2px 6px" onclick="importDfmRulesPrompt()">导入 DFM JSON</button>
               <button class="btn sec small" style="padding:2px 6px" onclick="exportDfmRulesPrompt()">导出 DFM JSON</button>
@@ -1273,122 +1279,32 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
               </div>
             </div>
 
-            <!-- 3x3 Grid matching image-1.png -->
-            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:12px;color:#6b7280" id="pnlDfmGrid">
-              <!-- Item 1: Threshold GND -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">线到 GND 孔最小间距规则阈值 (mil) *</div>
-                <input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_tol', this.value)">
-                <div class="hist-bar" id="hist_thresh_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','4.01575')">4.01575 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','6.0')">6.0 mil (标准)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','8.0')">8.0 mil</span>
-                </div>
+            <!-- Compact DFM options: six common controls in two rows of three -->
+            <div class="unified-dfm-grid" id="pnlDfmGrid">
+              <div class="udfm-item"><label for="selDfmMode">间距计算判定口径</label><select id="selDfmMode"><option value="pad_to_trace" selected>焊盘到走线边缘（EDA Air Gap）</option><option value="drill_to_trace">钻孔孔壁到走线边缘</option><option value="center_to_trace">过孔中心到走线边缘</option><option value="center_to_center">过孔中心到走线中心</option></select></div>
+              <div class="udfm-item"><label for="inpGndPadDiam">GND 焊盘直径 (mil)</label><input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpGndPadDiam','7.906')">7.906</button><button type="button" onclick="fillInput('inpGndPadDiam','5.94')">5.94</button><button type="button" onclick="fillInput('inpGndPadDiam','8')">8</button></div></div>
+              <div class="udfm-item"><label for="inpSignalPadDiam">非 GND / 信号焊盘直径 (mil)</label><input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpSignalPadDiam','12')">12</button><button type="button" onclick="fillInput('inpSignalPadDiam','9.94')">9.94</button><button type="button" onclick="fillInput('inpSignalPadDiam','10')">10</button></div></div>
+              <div class="udfm-item"><label for="inpGndDrillDiam">GND 一钻直径 (mil)</label><input type="number" id="inpGndDrillDiam" value="6.0" step="0.01" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpGndDrillDiam','6')">6</button><button type="button" onclick="fillInput('inpGndDrillDiam','5.54')">5.54</button></div></div>
+              <div class="udfm-item"><label for="inpSignalDrillDiam">非 GND / 信号一钻直径 (mil)</label><input type="number" id="inpSignalDrillDiam" value="6.0" step="0.01" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpSignalDrillDiam','6')">6</button><button type="button" onclick="fillInput('inpSignalDrillDiam','5.54')">5.54</button></div></div>
+              <div class="udfm-item"><label for="selDfmNetScope">网络检查范围</label><select id="selDfmNetScope"><option value="diff_net" selected>仅检查异网络</option><option value="all_net">包含同网络</option></select></div>
+            </div>
+            <details style="border:1px dashed #cbd5e1;border-radius:8px;padding:8px 10px;margin:2px 0 8px">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#374151">焊盘形状（可选 · 非圆形焊盘按真实几何计算）</summary>
+              <div class="unified-dfm-grid" style="margin-top:8px">
+                <div class="udfm-item"><label for="selUnifiedPadShape">焊盘形状</label><select id="selUnifiedPadShape"><option value="circle" selected>圆形</option><option value="oblong">长圆 / 椭圆</option><option value="roundrect">圆角矩形</option><option value="rect">直角矩形</option></select></div>
+                <div class="udfm-item"><label>GND 焊盘长 × 宽 (mil)</label><div style="display:flex;gap:5px"><input id="inpUnifiedGndPadW" type="number" value="7.906"><input id="inpUnifiedGndPadH" type="number" value="7.906"></div></div>
+                <div class="udfm-item"><label>信号焊盘长 × 宽 (mil)</label><div style="display:flex;gap:5px"><input id="inpUnifiedSigPadW" type="number" value="12"><input id="inpUnifiedSigPadH" type="number" value="12"></div></div>
+                <div class="udfm-item"><label for="inpUnifiedPadCorner">圆角半径 (mil)</label><input id="inpUnifiedPadCorner" type="number" value="0" min="0"></div>
+                <div class="udfm-item"><label for="inpUnifiedPadRot">旋转角 (°)</label><input id="inpUnifiedPadRot" type="number" value="0" step="0.5"></div>
               </div>
-
-              <!-- Item 2: Threshold Signal -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">线到信号孔最小间距规则阈值 (mil) *</div>
-                <input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_tol', this.value)">
-                <div class="hist-bar" id="hist_thresh_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','5.04725')">5.04725 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','6.0')">6.0 mil (标准)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','8.0')">8.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','10.0')">10.0 mil</span>
-                </div>
+            </details>
+            <div id="unifiedLayerRuleBox" style="margin-top:10px;border:1px solid #e3e8ef;border-radius:8px;padding:10px 12px;background:#fff">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <div><div style="font-size:13px;font-weight:700;color:#111827">间距规则（按层生效，靠上优先，最后一行是默认）</div><div style="font-size:12px;color:#6b7280;margin-top:2px">适用层支持 Top、Bot、内层、L2-L5；孔盘到孔盘按重叠层取最严规则。默认行用于未命中的层。</div></div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sec small" onclick="UnifiedDfmLayerRules.template()">套用 Top/Bot + 内层</button><button type="button" class="btn sec small" onclick="UnifiedDfmLayerRules.add()">新增规则</button></div>
               </div>
-
-              <!-- Item 3: Mode -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">间距计算判定口径 *</div>
-                <select id="selDfmMode" style="width:100%">
-                  <option value="pad_to_trace" selected>焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
-                  <option value="drill_to_trace">钻孔孔壁到走线边缘 (一钻孔径孔壁到走线，机械孔壁间距)</option>
-                  <option value="center_to_trace">过孔中心到走线边缘 (Center to Trace Edge)</option>
-                  <option value="center_to_center">过孔中心到走线中心 (Center to Center)</option>
-                </select>
-                <div style="font-size:11px;color:#6b7280;margin-top:6px">
-                  通常以铜皮焊盘边缘到走线边缘作为电气安全净距判据
-                </div>
-              </div>
-
-              <!-- Item 4: GND Pad Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">GND 焊盘直径 (mil) *</div>
-                <input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_pad', this.value)">
-                <div class="hist-bar" id="hist_pad_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','7.906')">7.906 mil (EDA实测)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','7.0')">7.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','5.94')">5.94 mil (一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','8.0')">8.0 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 5: Signal Pad Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">非 GND / 信号焊盘直径 (mil) *</div>
-                <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_pad', this.value)">
-                <div class="hist-bar" id="hist_pad_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','12.0')">12.0 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','9.0')">9.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','9.94')">9.94 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','7.906')">7.906 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','10.0')">10.0 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 6: GND Drill Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">GND 一钻直径 (mil) *</div>
-                <input type="number" id="inpGndDrillDiam" value="6.0" step="0.01" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_drill', this.value)">
-                <div class="hist-bar" id="hist_drill_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','6.0')">6.0 mil (默认一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','5.54')">5.54 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 7: Signal Drill Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">非 GND / 信号一钻直径 (mil) *</div>
-                <input type="number" id="inpSignalDrillDiam" value="6.0" step="0.01" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_drill', this.value)">
-                <div class="hist-bar" id="hist_drill_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','6.0')">6.0 mil (默认一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','5.54')">5.54 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 8: Net Scope Filter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">网络检查范围 *</div>
-                <select id="selDfmNetScope" style="width:100%">
-                  <option value="diff_net" selected>仅检查异网络 (Diff Nets，排除同网络走线，推荐)</option>
-                  <option value="all_net">检查所有网络 (包含同网络走线)</option>
-                </select>
-                <div style="font-size:11px;color:#6b7280;margin-top:6px">
-                  通常仅异网络过孔与走线才存在蚀刻连锡短路风险
-                </div>
-              </div>
-
-              <!-- Item 9: Layer Filter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e3e8ef">
-                <div style="margin-bottom:4px;font-weight:600;color:#111827">层筛选 (Layer Filter) *</div>
-                <select id="selDfmLayerFilter" style="width:100%" data-no-persist>
-                  <option value="all" selected>全部层 (All Layers)</option>
-                  <option value="02G01P">02G01P</option>
-                  <option value="19IS08">19IS08</option>
-                  <option value="08IS03">08IS03</option>
-                  <option value="L2">L2</option>
-                  <option value="L4">L4</option>
-                  <option value="L17">L17</option>
-                </select>
-                <div style="font-size:11px;color:#6b7280;margin-top:6px">
-                  可指定仅检查关键内层或高速差分出线层
-                </div>
-              </div>
+              <div class="table-wrap" style="overflow-x:auto"><table id="unifiedLayerRuleTable" style="width:100%;border-collapse:collapse;margin:0"><thead><tr><th style="width:150px">适用层</th><th>线到 GND 孔 (mil)</th><th>线到信号孔 (mil)</th><th>GND 孔盘到信号孔盘 (mil)</th><th style="width:58px"></th></tr></thead><tbody id="unifiedLayerRuleBody"></tbody><tbody><tr style="background:#f8fafc"><td><b>默认</b><div style="font-size:11px;color:#6b7280">未命中上方规则的层</div></td><td><input id="inpThresholdGnd" aria-label="默认线到 GND 孔阈值" type="number" value="4.01575" step="0.00001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdGnd','4.01575')">4.01575</button><button type="button" onclick="fillInput('inpThresholdGnd','5')">5</button><button type="button" onclick="fillInput('inpThresholdGnd','6')">6</button><button type="button" onclick="fillInput('inpThresholdGnd','8')">8</button></div></td><td><input id="inpThresholdSignal" aria-label="默认线到信号孔阈值" type="number" value="5.04725" step="0.00001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdSignal','5.04725')">5.04725</button><button type="button" onclick="fillInput('inpThresholdSignal','5')">5</button><button type="button" onclick="fillInput('inpThresholdSignal','6')">6</button><button type="button" onclick="fillInput('inpThresholdSignal','8')">8</button><button type="button" onclick="fillInput('inpThresholdSignal','10')">10</button></div></td><td><input id="inpThresholdPadPair" aria-label="默认孔盘到孔盘阈值" type="number" value="6" step="0.00001" min="0"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdPadPair','6')">6</button><button type="button" onclick="fillInput('inpThresholdPadPair','5')">5</button><button type="button" onclick="fillInput('inpThresholdPadPair','8')">8</button><button type="button" onclick="fillInput('inpThresholdPadPair','10')">10</button></div></td><td></td></tr></tbody></table></div>
+              <div id="unifiedLayerRuleHint" style="font-size:11px;color:#6b7280;margin-top:6px">未设置分层规则时，所有层使用默认阈值。</div>
             </div>
           </div>
         </div>
@@ -3426,21 +3342,78 @@ function onLayerCountChange() {
 // =========================================================================
 // DFM Inspection Presets & History Chips (Matching image-1.png)
 // =========================================================================
+function readUnifiedPadShapes() {
+  const kind = $('selUnifiedPadShape')?.value || 'circle';
+  const gndD = parseFloat($('inpGndPadDiam')?.value) || 7.906;
+  const sigD = parseFloat($('inpSignalPadDiam')?.value) || 12;
+  const corner = parseFloat($('inpUnifiedPadCorner')?.value) || 0;
+  const rot = parseFloat($('inpUnifiedPadRot')?.value) || 0;
+  if (kind === 'circle') return { gndPad: { kind: 'circle', w: gndD }, signalPad: { kind: 'circle', w: sigD } };
+  return {
+    gndPad: { kind, w: parseFloat($('inpUnifiedGndPadW')?.value) || gndD, h: parseFloat($('inpUnifiedGndPadH')?.value) || gndD, corner, rot },
+    signalPad: { kind, w: parseFloat($('inpUnifiedSigPadW')?.value) || sigD, h: parseFloat($('inpUnifiedSigPadH')?.value) || sigD, corner, rot }
+  };
+}
+
+const UnifiedDfmLayerRules = {
+  key: 'pcb.unified.dfm.layerRules.v1',
+  rows: [],
+  load() {
+    try { const value = JSON.parse(localStorage.getItem(this.key) || '[]'); this.rows = Array.isArray(value) ? value : []; }
+    catch (_) { this.rows = []; }
+    this.render();
+  },
+  save() {
+    try { localStorage.setItem(this.key, JSON.stringify(this.rows)); } catch (_) {}
+  },
+  render() {
+    const body = $('unifiedLayerRuleBody');
+    if (!body) return;
+    body.innerHTML = this.rows.map((r, i) => `<tr>
+      <td><input type="text" value="${escHtml(r.layers || '')}" placeholder="Top、Bot / 内层 / L2-L5" oninput="UnifiedDfmLayerRules.rows[${i}].layers=this.value;UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.gnd != null && r.gnd !== '' && Number.isFinite(Number(r.gnd)) ? r.gnd : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].gnd=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.sig != null && r.sig !== '' && Number.isFinite(Number(r.sig)) ? r.sig : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].sig=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.pad != null && r.pad !== '' && Number.isFinite(Number(r.pad)) ? r.pad : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].pad=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><button type="button" class="btn danger small" onclick="UnifiedDfmLayerRules.remove(${i})">删除</button></td></tr>`).join('');
+    const hint = $('unifiedLayerRuleHint');
+    if (hint) hint.textContent = this.rows.length ? `当前 ${this.rows.length} 条按层覆盖规则；同层多条时靠上的优先，孔盘间距按重叠层取最严值。` : '未设置分层规则时，所有层使用默认阈值。';
+  },
+  add(row = {}) { this.rows.push({ layers: row.layers || '', gnd: row.gnd ?? null, sig: row.sig ?? null, pad: row.pad ?? null }); this.save(); this.render(); },
+  remove(i) { this.rows.splice(i, 1); this.save(); this.render(); },
+  template() {
+    const g = parseFloat($('inpThresholdGnd')?.value) || 4.01575;
+    const s = parseFloat($('inpThresholdSignal')?.value) || 5.04725;
+    const p = parseFloat($('inpThresholdPadPair')?.value) || 6;
+    this.rows = [{ layers: 'Top、Bot', gnd: g, sig: s, pad: p }, { layers: '内层', gnd: g, sig: s, pad: p }];
+    this.save(); this.render();
+  },
+  read() { const numberOrUndefined = v => v == null || v === '' || !Number.isFinite(Number(v)) ? undefined : Number(v); return this.rows.map(r => ({ layers: r.layers, minClearanceGnd: numberOrUndefined(r.gnd), minClearanceSignal: numberOrUndefined(r.sig), minClearancePadPair: numberOrUndefined(r.pad) })); },
+  init() {
+    this.load();
+    try { const d = JSON.parse(localStorage.getItem(this.key + '.defaults') || '{}'); if (d.gnd) $('inpThresholdGnd').value = d.gnd; if (d.sig) $('inpThresholdSignal').value = d.sig; if (d.pad) $('inpThresholdPadPair').value = d.pad; } catch (_) {}
+    ['inpThresholdGnd','inpThresholdSignal','inpThresholdPadPair'].forEach(id => $(id)?.addEventListener('change', () => this.saveDefaults()));
+  },
+  saveDefaults() {
+    try { localStorage.setItem(this.key + '.defaults', JSON.stringify({ gnd: $('inpThresholdGnd').value, sig: $('inpThresholdSignal').value, pad: $('inpThresholdPadPair').value })); } catch (_) {}
+  }
+};
+
 function applyDfmPreset(key) {
   if (key === 'current_eda') {
     fillInput('inpThresholdGnd', '4.01575');
     fillInput('inpThresholdSignal', '5.04725');
+    fillInput('inpThresholdPadPair', '6.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '7.906');
     fillInput('inpSignalPadDiam', '12.0');
     fillInput('inpGndDrillDiam', '6.0');
     fillInput('inpSignalDrillDiam', '6.0');
     if ($('selDfmNetScope')) $('selDfmNetScope').value = 'diff_net';
-    if ($('selDfmLayerFilter')) $('selDfmLayerFilter').value = 'all';
     showToast('已成功载入【当前 EDA 工程配置】(线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12)');
   } else if (key === 'std_6mil') {
     fillInput('inpThresholdGnd', '6.0');
     fillInput('inpThresholdSignal', '6.0');
+    fillInput('inpThresholdPadPair', '6.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '8.0');
     fillInput('inpSignalPadDiam', '12.0');
@@ -3450,6 +3423,7 @@ function applyDfmPreset(key) {
   } else if (key === 'high_density_5mil') {
     fillInput('inpThresholdGnd', '5.0');
     fillInput('inpThresholdSignal', '5.0');
+    fillInput('inpThresholdPadPair', '5.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '7.0');
     fillInput('inpSignalPadDiam', '10.0');
@@ -5715,15 +5689,20 @@ function runMasterInspection() {
   const dfmChecks = [];
   if (tDfmFanout && typeof DfmCheck !== 'undefined' && DfmCheck.parseDfmItems) {
     const dfmData = DfmCheck.parseDfmItems(tDfmFanout, {
-      gndPadDiameter: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-      signalPadDiameter: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-      gndFirstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54,
-      signalFirstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+      gndPadDiameter: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+      signalPadDiameter: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+      gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+      signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+      ...readUnifiedPadShapes()
     });
+    const padPairThreshold = Number($('inpThresholdPadPair')?.value ?? 6);
     const dfmRun = DfmCheck.runDfmCheck(dfmData.vias, dfmData.traces, {
-      minClearanceGnd: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-      minClearanceSignal: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-      mode: 'pad_to_trace'
+      minClearanceGnd: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+      minClearanceSignal: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+      minClearancePadPair: Number.isFinite(padPairThreshold) ? padPairThreshold : 6,
+      mode: $('selDfmMode')?.value || 'pad_to_trace',
+      diffNetOnly: $('selDfmNetScope')?.value !== 'all_net',
+      layerRules: UnifiedDfmLayerRules.read()
     });
 
     const defectList = dfmRun.defectPairs || [];
@@ -5745,6 +5724,18 @@ function runMasterInspection() {
         objId: d.trace.id,
         viaId: d.via.id,
         viaCoord: d.via.origin
+      });
+    });
+    (dfmRun.padPairDefects || []).forEach(d => {
+      dfmChecks.push({
+        id: `dfm_pad_pair_${d.gndVia.id}_${d.sigVia.id}`,
+        category: 'dfm', categoryName: '加工能力检查',
+        target: `GND Via #${d.gndVia.id} × 信号 Via #${d.sigVia.id}`,
+        targetType: '孔盘/孔盘对', layer: d.ruleLayers || '重叠层', item: 'GND 孔盘到信号孔盘间距',
+        actual: `${d.padAirgap.toFixed(2)} mil`, rule: `≥ ${d.threshold.toFixed(1)} mil`, pass: false,
+        deviation: `${(d.padAirgap - d.threshold).toFixed(2)} mil`,
+        reason: `GND 孔盘到信号孔盘实测间隙 ${d.padAirgap.toFixed(2)} mil，低于 ${d.ruleName || '默认'}规则阈值 ${d.threshold.toFixed(1)} mil`,
+        objId: d.gndVia.id, viaId: d.gndVia.id, viaCoord: d.gndVia.origin
       });
     });
     State.dfmSkippedPairs = dfmRun.skippedNonSpanningPairs || 0;
@@ -7037,11 +7028,16 @@ function exportMasterRules() {
     layerCount: parseInt($('cfgLayerCount')?.value, 10) || 21,
     antiPadTol: parseFloat($('cfgAntiPadTol')?.value) || 0.5,
     dfm: {
-      gndAirgap: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-      signalAirgap: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-      gndPadDiam: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-      signalPadDiam: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-      firstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+      gndAirgap: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+      signalAirgap: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+      padPairAirgap: Number($('inpThresholdPadPair')?.value ?? 6),
+      gndPadDiam: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+      signalPadDiam: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+      gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+      signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+      mode: $('selDfmMode')?.value || 'pad_to_trace',
+      netScope: $('selDfmNetScope')?.value || 'diff_net',
+      layerRules: UnifiedDfmLayerRules.rows
     },
     fanout: {
       clusterRadius: parseFloat($('cfgClusterDist')?.value) || 2.0,
@@ -7085,11 +7081,17 @@ function handleRulesFile(e) {
       if (r.layerCount && $('cfgLayerCount')) $('cfgLayerCount').value = r.layerCount;
       if (r.antiPadTol && $('cfgAntiPadTol')) $('cfgAntiPadTol').value = r.antiPadTol;
       if (r.dfm) {
-        if (r.dfm.gndAirgap && $('cfgDfmGndTol')) $('cfgDfmGndTol').value = r.dfm.gndAirgap;
-        if (r.dfm.signalAirgap && $('cfgDfmSigTol')) $('cfgDfmSigTol').value = r.dfm.signalAirgap;
-        if (r.dfm.gndPadDiam && $('cfgDfmGndPadDiam')) $('cfgDfmGndPadDiam').value = r.dfm.gndPadDiam;
-        if (r.dfm.signalPadDiam && $('cfgDfmSigPadDiam')) $('cfgDfmSigPadDiam').value = r.dfm.signalPadDiam;
-        if (r.dfm.firstDrill && $('cfgDfmFirstDrill')) $('cfgDfmFirstDrill').value = r.dfm.firstDrill;
+        if (r.dfm.gndAirgap != null) $('inpThresholdGnd').value = r.dfm.gndAirgap;
+        if (r.dfm.signalAirgap != null) $('inpThresholdSignal').value = r.dfm.signalAirgap;
+        if (r.dfm.padPairAirgap != null) $('inpThresholdPadPair').value = r.dfm.padPairAirgap;
+        if (r.dfm.gndPadDiam != null) $('inpGndPadDiam').value = r.dfm.gndPadDiam;
+        if (r.dfm.signalPadDiam != null) $('inpSignalPadDiam').value = r.dfm.signalPadDiam;
+        if (r.dfm.gndFirstDrill != null) $('inpGndDrillDiam').value = r.dfm.gndFirstDrill;
+        if (r.dfm.signalFirstDrill != null) $('inpSignalDrillDiam').value = r.dfm.signalFirstDrill;
+        if (r.dfm.mode) $('selDfmMode').value = r.dfm.mode;
+        if (r.dfm.netScope) $('selDfmNetScope').value = r.dfm.netScope;
+        if (Array.isArray(r.dfm.layerRules)) { UnifiedDfmLayerRules.rows = r.dfm.layerRules.map(x => ({ layers: x.layers || x.raw || '', gnd: x.gnd ?? x.minClearanceGnd ?? null, sig: x.sig ?? x.minClearanceSignal ?? null, pad: x.pad ?? x.minClearancePadPair ?? null })); UnifiedDfmLayerRules.save(); UnifiedDfmLayerRules.render(); }
+        UnifiedDfmLayerRules.saveDefaults();
       }
       if (r.pourRule1) State.rules.pourRule1 = r.pourRule1;
       if (r.specialShapeTemplates) State.rules.specialShapeTemplates = r.specialShapeTemplates;
@@ -7244,12 +7246,17 @@ function importDfmRulesPrompt() { const input = $('fileDfmRules'); if (input) in
 function exportDfmRulesPrompt() {
   const data = {
     kind: 'pcb-dfm-rules',
-    version: 1,
-    gndAirgap: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-    signalAirgap: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-    gndPadDiameter: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-    signalPadDiameter: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-    firstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+    version: 2,
+    gndAirgap: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+    signalAirgap: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+    padPairAirgap: Number($('inpThresholdPadPair')?.value ?? 6),
+    gndPadDiameter: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+    signalPadDiameter: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+    gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+    signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+    mode: $('selDfmMode')?.value || 'pad_to_trace',
+    netScope: $('selDfmNetScope')?.value || 'diff_net',
+    layerRules: UnifiedDfmLayerRules.rows
   };
   openModal('导出 DFM 制造能力规则 (JSON)', JSON.stringify(data, null, 2), 'PCB_DFM制造能力规则.json');
 }
@@ -7266,13 +7273,21 @@ function handleDfmRulesFile(e) {
       const sAir = r.signalAirgap || r.minClearanceSignal || r.dfm?.signalAirgap;
       const gPad = r.gndPadDiameter || r.gndPadDiam || r.dfm?.gndPadDiam;
       const sPad = r.signalPadDiameter || r.signalPadDiam || r.dfm?.signalPadDiam;
-      const fDrill = r.firstDrill || r.gndFirstDrill || r.dfm?.firstDrill;
+      const pAir = r.padPairAirgap ?? r.minClearancePadPair ?? r.dfm?.padPairAirgap;
+      const gDrill = r.gndFirstDrill ?? r.dfm?.gndFirstDrill ?? r.firstDrill;
+      const sDrill = r.signalFirstDrill ?? r.dfm?.signalFirstDrill ?? r.firstDrill;
 
-      if (gAir && $('cfgDfmGndTol')) $('cfgDfmGndTol').value = gAir;
-      if (sAir && $('cfgDfmSigTol')) $('cfgDfmSigTol').value = sAir;
-      if (gPad && $('cfgDfmGndPadDiam')) $('cfgDfmGndPadDiam').value = gPad;
-      if (sPad && $('cfgDfmSigPadDiam')) $('cfgDfmSigPadDiam').value = sPad;
-      if (fDrill && $('cfgDfmFirstDrill')) $('cfgDfmFirstDrill').value = fDrill;
+      if (gAir != null) $('inpThresholdGnd').value = gAir;
+      if (sAir != null) $('inpThresholdSignal').value = sAir;
+      if (pAir != null) $('inpThresholdPadPair').value = pAir;
+      if (gPad != null) $('inpGndPadDiam').value = gPad;
+      if (sPad != null) $('inpSignalPadDiam').value = sPad;
+      if (gDrill != null) $('inpGndDrillDiam').value = gDrill;
+      if (sDrill != null) $('inpSignalDrillDiam').value = sDrill;
+      if (r.mode) $('selDfmMode').value = r.mode;
+      if (r.netScope) $('selDfmNetScope').value = r.netScope;
+      if (Array.isArray(r.layerRules)) { UnifiedDfmLayerRules.rows = r.layerRules.map(x => ({ layers: x.layers || x.raw || '', gnd: x.gnd ?? x.minClearanceGnd ?? null, sig: x.sig ?? x.minClearanceSignal ?? null, pad: x.pad ?? x.minClearancePadPair ?? null })); UnifiedDfmLayerRules.save(); UnifiedDfmLayerRules.render(); }
+      UnifiedDfmLayerRules.saveDefaults();
 
       if (State.rawText) runMasterInspection();
       showToast('成功导入 DFM 制造能力规则 JSON 并更新参数！');
@@ -7483,6 +7498,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initDragAndDrop();
   renderRulesUI();
   initCanvas();
+  UnifiedDfmLayerRules.init();
   window.addEventListener('resize', () => {
     resizeCanvas();
     renderCanvas();
@@ -7925,6 +7941,7 @@ window.setGlobalWideMode = setGlobalWideMode;
             <input type="checkbox" id="chkUViewDistances" onchange="renderUnifiedViewedFanoutCanvas()">
             <span>显示孔心距 (mil)</span>
           </label>
+          <span id="uViewFanoutDistanceLegend" style="display:inline-flex;align-items:center;gap:5px;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#374151"><span style="display:inline-block;width:18px;border-top:2px dashed #38bdf8"></span>虚线：同孔心距同色（0.1 mil 分组）</span>
           <span id="uViewFanoutPadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#6b7280"></span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
