@@ -150,6 +150,16 @@ function canonicalBlock(page) {
     assert(d.getElementById('unifiedLayerRuleTable').contains(d.getElementById('inpThresholdGnd')), '默认阈值应收在规则表内');
     assert(!d.getElementById('selDfmLayerFilter'), '不应显示旧的单层筛选控件');
     assert(d.getElementById('uViewFanoutDistanceLegend').textContent.includes('同孔心距同色'), '扇出放大预览缺少按间距分色说明');
+    const tableTxt = fs.readFileSync(path.join(DIR, 'sample/约束示例_表格型.txt'), 'utf8');
+    const parsedSets = w.parseConstraintText(tableTxt, '表格示例.txt');
+    assert(parsedSets.length === 22, '表格型 TXT 应拆成 22 条约束，实际 ' + parsedSets.length);
+    assert(parsedSets[0].title === 'SMA-Top-L2' && parsedSets.some(s => s.title === 'BGA-L2-L4-0.5mm'), '表格解析命名未同步到综合页');
+    w.State.rules.constraintSets = parsedSets;
+    w.renderJump(); w.renderConstraintSets();
+    assert(d.querySelectorAll('#setsContainer .set').length === 22 && d.querySelectorAll('#setsContainer .unified-constraint-group').length === 5, '综合页应按五大类分组渲染 22 张约束卡');
+    assert(d.getElementById('unified-constraint-note') || d.querySelector('.unified-constraint-note'), '缺少约束名称与填法说明');
+    assert(d.querySelector('.unified-constraint-note').compareDocumentPosition(d.getElementById('setsContainer')) & w.Node.DOCUMENT_POSITION_PRECEDING, '命名说明应位于约束卡片之后');
+    assert(d.getElementById('unifiedLayerCountHint'), '缺少自动叠层数提示');
     w.eval('UnifiedDfmLayerRules.template()');
     assert(d.querySelectorAll('#unifiedLayerRuleBody tr').length === 2, 'Top/Bot + 内层模板应生成两条分层规则');
     assert(ctx.errors.length === 0, '综合页脚本错误：' + ctx.errors.join('；'));

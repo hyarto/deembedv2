@@ -1233,13 +1233,13 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             <div style="font-size:12px;color:#374151;margin-bottom:8px">
               <b>生成的约束</b>
               <div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.6">
-                名称写在每张表的标题里，按 TXT 生成。例如「一、SMA在bottom面，D2M为6mil的封装方案」加上「1. L19层扇出 SMA」，名称就是 Bot-SMA-L19-D2M6mil。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。
+                点击约束指引可跳转到对应卡片；每张表按层展示反焊盘、焊盘等参数，单元格可直接编辑并注明来源。支持参数行与三列表格两种 TXT 写法。
               </div>
             </div>
 
             <!-- Global Stack & Switches -->
             <div style="font-size:12px;color:#6b7280;display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#f8fafc;padding:8px 12px;border:1px solid #e3e8ef;border-radius:6px;margin-bottom:12px">
-              <div><b>总叠层数:</b> <input type="number" id="cfgLayerCount" value="21" style="width:60px" onchange="onLayerCountChange()"> 层</div>
+              <div><b>总叠层数:</b> <input type="number" id="cfgLayerCount" value="" min="1" max="64" placeholder="自动" style="width:70px" onchange="onLayerCountChange()"> 层 <button type="button" class="btn sec small" onclick="resetAutoLayerCount()">按 TXT 自动</button> <span id="unifiedLayerCountHint" style="font-size:11px;color:#6b7280"></span></div>
               <div><b>反焊盘尺寸容差:</b> <input type="number" id="cfgAntiPadTol" value="0.5" step="0.1" style="width:60px"> mil</div>
               <div><label><input type="checkbox" id="cfgCheckAntiPad" checked> <b>检查反焊盘尺寸</b></label></div>
               <div><label><input type="checkbox" id="cfgCheckPadstackLayers" checked> <b>检查 Padstack 层名包含所有连接层</b></label></div>
@@ -1254,6 +1254,14 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn sec small" onclick="addCustomConstraintSet()">新增约束卡片</button>
               <button class="btn sec small" onclick="resetDefaultConstraintSets()">恢复预设约束方案 (BGA/SMA全套)</button>
+            </div>
+            <div class="unified-constraint-note" style="margin-top:14px;padding:12px 14px;background:#fff;border:1px solid #e3e8ef;border-radius:8px">
+              <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:6px">约束名称与填法说明</div>
+              <div style="font-size:12px;color:#6b7280;line-height:1.9">
+                <div><b>参数行写法</b>：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。</div>
+                <div><b>表格写法</b>：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。</div>
+                <div><b>填法</b>：表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数；出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2102,8 +2110,101 @@ function tryMatrix(raw, filename){
   return sets.filter(s => s.rules.length);
 }
 
+/* ---------- 表格型约束 ----------
+   一、SMA封装方案
+   1. 信号孔连接层Top至L2
+   层 <TAB> 反焊盘尺寸 / 反焊盘半径 (mil) <TAB> 焊盘尺寸 / 焊盘半径 (mil)
+   L1 <TAB> 13 <TAB> 6.5
+   一类下面有好几种，每一种（一张表）就是一条约束，名字按「SMA-Top-L2」「BGA-L2-L4-0.5mm」生成。
+*/
+function tableKindOf(text){
+  const s=String(text||'');
+  if(/BGA/i.test(s))return 'BGA';
+  if(/SMA/i.test(s))return 'SMA';
+  return '';
+}
+function sideWordOf(s){
+  const t=String(s||'').trim();
+  if(/^(top|表层|顶层|正面)$/i.test(t))return 'Top';
+  if(/^(bot|bottom|底层|背面)$/i.test(t))return 'Bot';
+  const m=t.match(/^L\s*(\d+)$/i);
+  if(m)return 'L'+m[1];
+  if(/^\d+$/.test(t))return 'L'+t;
+  return '';
+}
+function connRangeOf(text){
+  const m=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot|表层|顶层|底层)?\s*至\s*L?\s*(\d+)/i);
+  if(m)return {start:sideWordOf(m[1]||''), end:'L'+m[2]};
+  const only=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot)\b/i);
+  if(only)return {start:sideWordOf(only[1]), end:''};
+  return {start:'', end:''};
+}
+function antiNum(v){
+  const m=String(v==null?'':v).match(/-?[0-9]+(?:\.[0-9]+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function tryLayerTable(raw, filename){
+  const src=String(raw||'').replace(/^\uFEFF/,'');
+  if(!/反焊盘/.test(src))return null;                 // 没有反焊盘列，交给别的解析器
+  const lines=src.split(/\r?\n/);
+  let group='', item='', padName='焊盘半径', rows=[], used={}, out=[], headerSeen=false;
+  function flush(){
+    if(!item||!rows.length)return;
+    const it=item, grp=group;
+    const kind=tableKindOf(grp+' '+it)||detectKind(grp||it, grp);
+    const ci=connRangeOf(it), cg=connRangeOf(grp);
+    const start=ci.start||cg.start;
+    const titleEnd=(ci.end||cg.end||'').replace(/^L/i,'');
+    // 连接层＝反焊盘的数值都相同的那一层里层号最大的（标题写错时以表格数据为准）
+    const nums=rows.map(r=>antiNum(r.anti));
+    let maxAnti=-Infinity, endLayer=0;
+    nums.forEach((v,i)=>{if(v==null)return; if(v>maxAnti){maxAnti=v;endLayer=rows[i].layer;} else if(v===maxAnti&&rows[i].layer>endLayer)endLayer=rows[i].layer;});
+    if(titleEnd && nums.every(v=>v===maxAnti))endLayer=+titleEnd;
+    if(!endLayer)endLayer=+titleEnd||0;
+    const pitch=(it.match(/间距\s*(?:为|=|：|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*mm/i)||[])[1]||'';
+    const parts=[kind||'约束'];
+    if(start)parts.push(start);
+    if(endLayer)parts.push('L'+endLayer);
+    if(pitch)parts.push(pitch+'mm');
+    let title=parts.join('-');
+    if(used[title]){ used[title]++; title+='('+used[title]+')'; } else used[title]=1;
+    const rules=[];
+    rows.forEach(function(r){
+      const anti=String(r.anti||'').trim();
+      const pad=String(r.pad||'').trim();
+      if(anti)rules.push({cat:'反焊盘尺寸', name:'反焊盘半径', scope:'L'+r.layer, value:anti, unit:'mil', raw:'L'+r.layer+' 反焊盘 '+anti+'mil'});
+      if(pad)rules.push({cat:'焊盘尺寸', name:padName, scope:'L'+r.layer, value:pad, unit:'mil', raw:'L'+r.layer+' 焊盘 '+pad});
+    });
+    if(!rules.length)return;
+    out.push({kind:kind, title:title, group:grp, item:it, txtHead:it, source:filename||'导入文本', sourceType:'text', image:'', rules:rules});
+  }
+  lines.forEach(function(line0){
+    const line=String(line0||'').trim();
+    if(!line)return;
+    const cols=line.indexOf('\t')>=0?line.split('\t').map(s=>s.trim()):[];
+    if(cols.length>=2 && /^层$/.test(cols[0]) && /反焊盘/.test(line)){
+      padName=/直径/.test(cols[2]||'')?'焊盘直径':'焊盘半径';
+      headerSeen=true;
+      return;
+    }
+    if(headerSeen && cols.length>=2 && /^L?\s*\d+$/i.test(cols[0]) && /[0-9]|无/.test(cols[1]||'')){
+      rows.push({layer:+String(cols[0]).replace(/^L/i,''), anti:cols[1], pad:cols[2]||''});
+      return;
+    }
+    if(/^[一二三四五六七八九十]+\s*[、.．]/.test(line) && line.length<=80){flush(); group=line; item=''; rows=[]; return;}
+    if(/^\d+\s*[.、．]\s*\S/.test(line) && line.length<=80){flush(); item=line; rows=[]; return;}
+  });
+  flush();
+  return out.length?out:null;
+}
+
 function parseConstraintText(text, filename){
   const raw = String(text || '').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n');
+  const table = tryLayerTable(raw, filename);
+  if (table) {
+    table.forEach(set => { set.constraints = buildConstraints(set.rules || []); set.fanLayer = fanLayerOf(set); });
+    return table;
+  }
   const matrix = tryMatrix(raw, filename);
   if (matrix) return matrix;
   const lines = [];
@@ -2246,7 +2347,7 @@ function buildConstraints(rules){
 }
 
 function reexpandAll(){
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
   State.rules.constraintSets.forEach(set => {
     if (!set.constraints) set.constraints = buildConstraints(set.rules || []);
     const fan = fanLayerOf(set);
@@ -3174,10 +3275,15 @@ function renderConstraintSets() {
     container.innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px">暂无约束规则。可点击上方「导入约束 TXT」或「恢复预设约束方案」。</div>';
     return;
   }
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
 
   let html = '';
+  let lastConstraintGroup = '';
   sets.forEach((set, si) => {
+    if (set.group && set.group !== lastConstraintGroup) {
+      html += `<div class="unified-constraint-group" style="margin:14px 0 8px;padding-left:9px;border-left:3px solid #2563eb;font-size:13px;font-weight:700;color:#374151">${escHtml(set.group)}</div>`;
+      lastConstraintGroup = set.group;
+    }
     const kind = set.kind || '其他';
     const cons = set.constraints || [];
     const fan = fanLayerOf(set);
@@ -3307,7 +3413,7 @@ function refillConstraintSet(si) {
   showToast('已按规则重新填充各层参数！');
 }
 function addCustomConstraintSet() {
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
   const newSet = {
     kind: 'SMA',
     title: `Custom-SMA-L${n}-D2M6mil`,
@@ -3330,7 +3436,40 @@ function resetDefaultConstraintSets() {
   renderConstraintSets();
   showToast('成功恢复预设全套 BGA/SMA 约束方案！');
 }
+function unifiedAutoLayerCount() {
+  let max = 0;
+  const bump = text => {
+    String(text || '').split(/\r?\n/).forEach(line => {
+      if (/扇出|出线|总层数/.test(line)) return;
+      for (const m of line.matchAll(/\bL\s*(\d+)\b/gi)) max = Math.max(max, Number(m[1]));
+    });
+  };
+  bump(State.dataInputs?.constraint?.text || '');
+  (State.rules.constraintSets || []).forEach(set => {
+    const fan = fanLayerOf(set);
+    bump(set.title || '');
+    (set.constraints || []).forEach(c => {
+      (c.scopes || []).forEach(sc => { if (!/扇出|出线/.test(String(sc.scope || ''))) bump(sc.scope); });
+      Object.keys(c.values || {}).forEach(k => { const m = /^L(\d+)$/i.exec(k); if (m && Number(m[1]) !== fan) max = Math.max(max, Number(m[1])); });
+    });
+  });
+  return max || 21;
+}
+function unifiedLayerCount() {
+  const manual = parseInt($('cfgLayerCount')?.value, 10);
+  return manual >= 1 && manual <= 64 ? manual : unifiedAutoLayerCount();
+}
+function updateUnifiedLayerCountHint() {
+  const el = $('unifiedLayerCountHint');
+  if (el) el.textContent = $('cfgLayerCount')?.value ? `手动 ${unifiedLayerCount()} 层` : `自动识别 ${unifiedAutoLayerCount()} 层`;
+}
+function resetAutoLayerCount() {
+  const el = $('cfgLayerCount');
+  if (el) el.value = '';
+  onLayerCountChange();
+}
 function onLayerCountChange() {
+  updateUnifiedLayerCountHint();
   reexpandAll();
   renderConstraintSets();
 }
@@ -5600,7 +5739,7 @@ function runMasterInspection() {
   const chkAnti = $('cfgCheckAntiPad') ? $('cfgCheckAntiPad').checked : true;
   const chkPadstack = $('cfgCheckPadstackLayers') ? $('cfgCheckPadstackLayers').checked : true;
   const antiTol = parseFloat($('cfgAntiPadTol')?.value) || 0.5;
-  const layerN = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const layerN = unifiedLayerCount();
 
   if (tConstraint && typeof CopperCheck !== 'undefined' && CopperCheck.runCopperCheck) {
     const boardItems = CopperCheck.parseBoardItems(tConstraint);
@@ -7025,7 +7164,7 @@ function exportMasterRules() {
     checkLayerDiff: $('cfgCheckLayerDiff')?.checked !== false,
     checkTotalDiff: $('cfgCheckTotalDiff')?.checked !== false,
     constraintSets: State.rules.constraintSets,
-    layerCount: parseInt($('cfgLayerCount')?.value, 10) || 21,
+    layerCount: unifiedLayerCount(),
     antiPadTol: parseFloat($('cfgAntiPadTol')?.value) || 0.5,
     dfm: {
       gndAirgap: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
@@ -7178,6 +7317,7 @@ function handleConstraintTxtFile(e) {
       const parsedSets = parseConstraintText(text, file.name);
       if (parsedSets && parsedSets.length) {
         State.rules.constraintSets = parsedSets;
+        updateUnifiedLayerCountHint();
         reexpandAll();
         renderRulesUI();
         if (State.rawText) runMasterInspection();
@@ -7235,7 +7375,7 @@ function exportConstraintJsonPrompt() {
   const data = {
     kind: 'pcb-copper-rules',
     version: 3,
-    layerCount: parseInt($('cfgLayerCount')?.value, 10) || 21,
+    layerCount: unifiedLayerCount(),
     antiPadTol: parseFloat($('cfgAntiPadTol')?.value) || 0.5,
     sets: State.rules.constraintSets
   };
@@ -7499,6 +7639,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderRulesUI();
   initCanvas();
   UnifiedDfmLayerRules.init();
+  updateUnifiedLayerCountHint();
   window.addEventListener('resize', () => {
     resizeCanvas();
     renderCanvas();
