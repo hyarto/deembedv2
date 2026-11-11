@@ -3469,6 +3469,11 @@
   /**
    * 在高清 Canvas 上渲染放大版扇出方案效果图与逐孔 Padstack 标注 (风格对齐缩略星座图)
    */
+  function buildConnectorDistanceColorMap(connectors = []) {
+    const distances = [...new Set((connectors || []).map(c => Math.round(Number(c.dist) * 10) / 10).filter(Number.isFinite))].sort((a, b) => a - b);
+    return new Map(distances.map((d, i) => [d, `hsl(${Math.round((i * 137.508) % 360)}, 88%, 64%)`]));
+  }
+
   function renderSchemeEnlargedCanvas(canvas, scheme, options = {}) {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
@@ -3526,17 +3531,21 @@
       return layout;
     }
 
-    // 2. 虚线拓扑连接网格 (精确复刻缩略效果图青蓝色虚线)
+    // 2. 拓扑虚线按孔心距分色：距离按 0.1 mil 归类，同距同色、不同距尽量使用不同色相。
+    const distanceColors = buildConnectorDistanceColorMap(layout.connectors);
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.30)';
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.8;
     ctx.setLineDash([4, 4]);
     layout.connectors.forEach(c => {
+      const key = Math.round(c.dist * 10) / 10;
+      ctx.strokeStyle = distanceColors.get(key) || '#38bdf8';
+      ctx.globalAlpha = 0.68;
       ctx.beginPath();
       ctx.moveTo(c.x1, c.y1);
       ctx.lineTo(c.x2, c.y2);
       ctx.stroke();
     });
+    ctx.globalAlpha = 1;
     ctx.restore();
 
     // 可选：孔心距标注 (mil)
@@ -3832,6 +3841,7 @@
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,
+    buildConnectorDistanceColorMap,
     renderSchemeEnlargedCanvas,
     MM_PER_MIL,
     MIL_PER_MM,

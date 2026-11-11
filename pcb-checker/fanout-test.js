@@ -17,10 +17,17 @@ const {
   runFanoutInspection,
   getStandardPresetSchemes,
   candidateRotations,
+  buildConnectorDistanceColorMap,
   dist2D
 } = FanoutChecker;
 
 console.log('== 扇出方案检查引擎单元测试 ==');
+{
+  const colors = buildConnectorDistanceColorMap([{ dist: 10.01 }, { dist: 10.04 }, { dist: 12.0 }]);
+  assert.deepStrictEqual([...colors.keys()], [10, 12], '10.01 与 10.04 mil 应并入同一距离类别');
+  assert.notStrictEqual(colors.get(10), colors.get(12), '不同孔心距应使用不同颜色');
+  console.log('  PASS  查看方案虚线按孔心距分组着色：同距同色、异距异色');
+}
 
 // 批量 EDA TXT 无方案标题时，根据孔群特征自动命名且名称保持唯一。
 {
