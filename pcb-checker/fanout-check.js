@@ -2495,6 +2495,7 @@
           const mPad = ib.match(/Padstack\s+Name:\s*([^\r\n]+)/i);
           const mNet = ib.match(/Net:\s*([^\r\n]+)/i);
           const mDrill = ib.match(/Circle\s+Drill:\s*([\d\.\-]+)/i);
+          const mDefined = ib.match(/Padstack\s+Defined\s+from\s+([^\r\n]+)/i);
 
           if (mOrigin) {
             const rawX = parseFloat(mOrigin[1]) || 0;
@@ -2514,6 +2515,7 @@
               x: rawX,
               y: rawY,
               padstack,
+              definedFrom: mDefined ? mDefined[1].trim() : '',
               net: net || (isGnd ? 'GND' : 'SIGNAL'),
               role,
               type,
@@ -2563,32 +2565,61 @@
           });
         }
 
-        // 对没有明确标题的孔群，用 Padstack 家族、主要层跨、孔径与孔数生成可读名称。
-        // EDA 导出的「Total N Items」只是块计数，不应当当作方案标题。
+        // 标题缺失时按孔群的电气/几何特征命名：类型、P/N 对数、差分孔距、信号连接层。
+        // 「Total N Items」是 EDA 的计数，不是方案名。
         if (/^扇出方案_\d+$/.test(schemeName) || /^Total\s+\d+\s+Items?$/i.test(schemeName)) {
-          const padCounts = new Map();
-          const layerCounts = new Map();
-          const drills = new Map();
+          const signals = vias.filter(v => v.type === 'signal');
+          const familyCounts = new Map();
           vias.forEach(v => {
-            const pad = String(v.padstack || 'VIA').trim();
-            padCounts.set(pad, (padCounts.get(pad) || 0) + 1);
-            const span = pad.match(/_L(\d+)_L(\d+)/i);
-            if (span) {
-              const layer = `L${Number(span[1])}-L${Number(span[2])}`;
-              layerCounts.set(layer, (layerCounts.get(layer) || 0) + 1);
-            }
-            const drill = Number(v.drill);
-            if (drill > 0) drills.set(drill, (drills.get(drill) || 0) + 1);
+            const family = (String(v.padstack || '').match(/^(BGA|SMA|PTH)/i)?.[1] || '通用').toUpperCase();
+            familyCounts.set(family, (familyCounts.get(family) || 0) + 1);
           });
-          const topPad = [...padCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || 'VIA';
-          const family = (topPad.match(/^(BGA|SMA|PTH)/i)?.[1] || '通用').toUpperCase();
-          const hdi = /HDI/i.test(topPad) ? 'HDI' : '';
-          const spans = [...layerCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-          const spanLabel = spans.length ? spans.slice(0, 2).map(x => x[0]).join('+') : '';
-          const sigCount = vias.filter(v => v.type === 'signal').length;
-          const gndCount = vias.length - sigCount;
-          const drill = [...drills.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-          const baseName = [family, hdi, spanLabel, drill ? `${drill}mil` : '', `${sigCount}信号${gndCount}地_${vias.length}孔`].filter(Boolean).join('_');
+          const family = [...familyCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || '通用';
+          const pairDistances = [];
+          const nets = [...new Set(signals.map(v => String(v.net || '').trim()))];
+          nets.filter(net => /_P$/i.test(net)).forEach(netP => {
+            const netN = netP.replace(/_P$/i, '_N');
+            const pVias = signals.filter(v => v.net === netP);
+            const nVias = signals.filter(v => v.net === netN);
+            if (!nVias.length) return;
+            pVias.forEach(pv => {
+              const nearest = nVias.reduce((best, nv) => {
+                const d = Math.hypot(pv.rawX - nv.rawX, pv.rawY - nv.rawY);
+                return d < best ? d : best;
+              }, Infinity);
+              if (Number.isFinite(nearest) && nearest > 0.01) pairDistances.push(nearest);
+            });
+          });
+          const pitchCounts = new Map();
+          pairDistances.forEach(d => {
+            const rounded = Math.round(d * 10) / 10;
+            pitchCounts.set(rounded, (pitchCounts.get(rounded) || 0) + 1);
+          });
+          const pitchValues = [...pitchCounts.entries()]
+            .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+            .slice(0, 2).map(x => x[0]).sort((a, b) => a - b);
+          const pitchLabel = pitchValues.length
+            ? `P${pitchValues.map(d => Number.isInteger(d) ? d : d.toFixed(1)).join('/')}`
+            : '';
+          const hasPN = nets.some(net => /_P$/i.test(net)) && nets.some(net => /_N$/i.test(net));
+          const pairCount = hasPN ? Math.floor(signals.length / 2) : 0;
+          const pairLabel = pairCount ? `${pairCount}对` : `${signals.length}信号`;
+          const layerEnds = [];
+          signals.forEach(v => {
+            const m = String(v.definedFrom || '').match(/^\s*(.*?)\s+to\s+(.*?)\s*$/i);
+            if (m) layerEnds.push(m[1].trim(), m[2].trim());
+          });
+          const layerTokens = [...new Set(layerEnds.map(name => {
+            if (/^(?:top|上层)$/i.test(name)) return { label: 'Top', rank: 0 };
+            if (/^(?:bottom|bot|底层)$/i.test(name)) return { label: 'Bot', rank: 9999 };
+            const m = name.match(/(\d+)/);
+            return m ? { label: `L${Number(m[1])}`, rank: Number(m[1]) } : null;
+          }).filter(Boolean).map(x => JSON.stringify(x)))].map(x => JSON.parse(x)).sort((a, b) => a.rank - b.rank);
+          const layerLabel = layerTokens.length > 1
+            ? `${layerTokens[0].label}-${layerTokens[layerTokens.length - 1].label}`
+            : layerTokens[0]?.label || '';
+          const gndCount = vias.filter(v => v.type === 'gnd').length;
+          const baseName = [family, pairLabel, pitchLabel, layerLabel, gndCount ? `G${gndCount}` : ''].filter(Boolean).join('_');
           const sameBase = results.filter(r => r.name === baseName || r.name.startsWith(baseName + '_')).length;
           schemeName = sameBase ? `${baseName}_${String(sameBase + 1).padStart(2, '0')}` : baseName;
         }
