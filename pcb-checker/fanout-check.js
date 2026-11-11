@@ -2563,6 +2563,36 @@
           });
         }
 
+        // 对没有明确标题的孔群，用 Padstack 家族、主要层跨、孔径与孔数生成可读名称。
+        // EDA 导出的「Total N Items」只是块计数，不应当当作方案标题。
+        if (/^扇出方案_\d+$/.test(schemeName) || /^Total\s+\d+\s+Items?$/i.test(schemeName)) {
+          const padCounts = new Map();
+          const layerCounts = new Map();
+          const drills = new Map();
+          vias.forEach(v => {
+            const pad = String(v.padstack || 'VIA').trim();
+            padCounts.set(pad, (padCounts.get(pad) || 0) + 1);
+            const span = pad.match(/_L(\d+)_L(\d+)/i);
+            if (span) {
+              const layer = `L${Number(span[1])}-L${Number(span[2])}`;
+              layerCounts.set(layer, (layerCounts.get(layer) || 0) + 1);
+            }
+            const drill = Number(v.drill);
+            if (drill > 0) drills.set(drill, (drills.get(drill) || 0) + 1);
+          });
+          const topPad = [...padCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || 'VIA';
+          const family = (topPad.match(/^(BGA|SMA|PTH)/i)?.[1] || '通用').toUpperCase();
+          const hdi = /HDI/i.test(topPad) ? 'HDI' : '';
+          const spans = [...layerCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+          const spanLabel = spans.length ? spans.slice(0, 2).map(x => x[0]).join('+') : '';
+          const sigCount = vias.filter(v => v.type === 'signal').length;
+          const gndCount = vias.length - sigCount;
+          const drill = [...drills.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+          const baseName = [family, hdi, spanLabel, drill ? `${drill}mil` : '', `${sigCount}信号${gndCount}地_${vias.length}孔`].filter(Boolean).join('_');
+          const sameBase = results.filter(r => r.name === baseName || r.name.startsWith(baseName + '_')).length;
+          schemeName = sameBase ? `${baseName}_${String(sameBase + 1).padStart(2, '0')}` : baseName;
+        }
+
         results.push({
           id: `scheme_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${results.length + 1}`,
           name: schemeName,
