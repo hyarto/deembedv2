@@ -40,11 +40,11 @@
   - [x] 重构 `fanout.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
   - [x] 通过扇出引擎与扇出 UI 全流程测试
 
-- [ ] **Stage 7：铜皮检查模块 `pour.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/pour.css`
-  - [ ] 将 2105 行内联脚本拆分为 `pcb-checker/packages/pages/pour/{pour-state,pour-results-ui,pour-canvas-viewer}.js`，复用 `PourChecker`
-  - [ ] 重构 `pour.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
-  - [ ] 通过铜皮引擎与铜皮 UI 全流程测试
+- [x] **Stage 7：铜皮检查模块 `pour.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离页面样式 `pcb-checker/assets/styles/pages/pour.css`
+  - [x] 将 2105 行内联脚本拆分为 `pcb-checker/packages/pages/pour/{pour-state,pour-results-ui,pour-canvas-viewer}.js`，复用 `PourChecker`
+  - [x] 重构 `pour.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
+  - [x] 通过铜皮引擎与铜皮 UI 全流程测试
 
 - [ ] **Stage 8：综合一体化工作台 `unified.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离 965 行内联样式至 `pcb-checker/assets/styles/pages/unified.css`
