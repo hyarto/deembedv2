@@ -16,10 +16,12 @@
 
 ```bash
 npm install                 # 只装 jsdom
-node serve.js 8000          # 静态服务，站点根 = pcb-checker/  → http://localhost:8000/
-npm test                    # 全部：引擎单测 + 几何对拍 + 六个页面的 jsdom 全流程 UI 测试
+npm run serve               # 静态服务，默认打开统一入口主页 portal.html → http://localhost:8000/
+npm run serve:pcb           # 静态服务，默认打开 PCB 专项检查页 index.html
+npm run serve:si            # 静态服务，默认打开 SI 综合一体化工作台 unified.html
+npm test                    # 全部：引擎单测 + 几何对拍 + 全站 UI 与控件完整性测试
 npm run test:engine         # 只跑引擎（含 shapely 对拍）
-npm run test:ui             # 只跑 UI（index / copper / dfm / fanout / pour / ui-prefs）
+npm run test:ui             # 只跑 UI（含导航统一、风格统一、统一入口与控件完整性）
 npm run bench               # 走线检查引擎性能对照（合成 15000 项）
 ```
 
