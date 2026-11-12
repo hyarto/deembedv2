@@ -1,0 +1,67 @@
+Total 4 Items
+
+Item 1                < Shape >
+
+  Set:                Route Keepout
+  Subset:             Top
+
+  Type:               Shape(Static)
+
+  Shape is Solid Filled
+  Area:               907.92028  (sq mil)
+
+Exterior Boundary:
+  Arc seg: xy [23269.1300, 27990.2700]  xy [23269.1300, 27990.2700] Width (0.0000)
+    Center-xy:  [23286.1300, 27990.2694] Radius (17.0000) CCW
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Item 2                < Shape >
+
+  Set:                Route Keepout
+  Subset:             02G01P
+
+  Type:               Shape(Static)
+
+  Shape is Solid Filled
+  Area:               452.38934  (sq mil)
+
+Exterior Boundary:
+  Arc seg: xy [23274.1300, 27990.2700]  xy [23274.1300, 27990.2700] Width (0.0000)
+    Center-xy:  [23286.1300, 27990.2694] Radius (12.0000) CCW
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Item 3                < Shape >
+
+  Set:                Route Keepout
+  Subset:             19IS08
+
+  Type:               Shape(Static)
+
+  Shape is Solid Filled
+  Area:               113.09734  (sq mil)
+
+Exterior Boundary:
+  Arc seg: xy [23280.1900, 27990.2700]  xy [23280.1900, 27990.2700] Width (0.0000)
+    Center-xy:  [23286.1300, 27990.2694] Radius (6.0000) CCW
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Item 4                < Via >
+
+  Origin-xy:          [23286.1300, 27990.2700]
+  Rotation:           0.000   degrees
+  Mirror Status:      None
+
+  Net:                63_N
+  Keep Net:           True
+
+  Padstack Name:      BGA_3510_L19_ring3mil_L2pad_0907
+  Usage:              BBVia
+  Circle Drill:       3.9400 Plated
+
+  Padstack Defined from Top to Bottom
+
+  Connections:        
+    Trace:            2 (02G01P 19IS08)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~End~ ~ ~ ~ ~ ~ ~ ~ ~ ~
