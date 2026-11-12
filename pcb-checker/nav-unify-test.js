@@ -3,7 +3,7 @@
  *
  * 约定（见 AGENTS.md）：六个页面共用同一份「全站统一顶栏 + 页签条」样式块
  *   - 顶栏：深色 #0f172a 单行，左起 标题（可带 .tag 徽标）→ 灰色副标题 →
- *           右对齐 .navlinks（6 个站内链接，当前页 = 蓝色实心 pill）→ 显示控件
+ *           右对齐 .navlinks（6 个站内链接，当前页 = 蓝色实心 pill #2563eb）→ 显示控件
  *   - 页签条：nav#tabs 白底 + 蓝色下划线，5 个页签，文案统一 ①②③④⑤ 起头
  *
  * 本测试逐页断言结构与文案，并校验六页的统一样式块完全一致（防止只改了其中几页）。
@@ -107,6 +107,7 @@ function canonicalBlock(page) {
       const ctrl = header.querySelector('.global-display-ctrl');
       assert(ctrl, '顶栏缺少 .global-display-ctrl');
       assert(ctrl.querySelector('#btnGlobalWide'), '缺少「铺满宽屏」按钮');
+      assert(!ctrl.querySelector('#btnGlobalFullscreen'), '全屏工作台按钮应已移除');
       assert(ctx.errors.length === 0, '页面脚本报错：' + ctx.errors[0]);
       ctx.close();
     });
@@ -141,6 +142,31 @@ function canonicalBlock(page) {
     });
   }
 
+  await test('综合一体化同步 DFM 分层规则与扇出预览特征', async () => {
+    const ctx = openPage('unified.html');
+    await ready(ctx.w);
+    const d = ctx.d, w = ctx.w;
+    assert(d.getElementById('unifiedLayerRuleBox'), '综合页缺少分层间距规则表');
+    assert(d.getElementById('inpThresholdPadPair'), '默认行缺少孔盘到孔盘阈值');
+    assert(d.getElementById('unifiedLayerRuleTable').contains(d.getElementById('inpThresholdGnd')), '默认阈值应收在规则表内');
+    assert(!d.getElementById('selDfmLayerFilter'), '不应显示旧的单层筛选控件');
+    assert(d.getElementById('uViewFanoutDistanceLegend').textContent.includes('同孔心距同色'), '扇出放大预览缺少按间距分色说明');
+    const tableTxt = fs.readFileSync(path.join(DIR, 'sample/约束示例_表格型.txt'), 'utf8');
+    const parsedSets = w.parseConstraintText(tableTxt, '表格示例.txt');
+    assert(parsedSets.length === 22, '表格型 TXT 应拆成 22 条约束，实际 ' + parsedSets.length);
+    assert(parsedSets[0].title === 'SMA-Top-L2' && parsedSets.some(s => s.title === 'BGA-L2-L4-0.5mm'), '表格解析命名未同步到综合页');
+    w.State.rules.constraintSets = parsedSets;
+    w.renderJump(); w.renderConstraintSets();
+    assert(d.querySelectorAll('#setsContainer .set').length === 22 && d.querySelectorAll('#setsContainer .unified-constraint-group').length === 5, '综合页应按五大类分组渲染 22 张约束卡');
+    assert(d.getElementById('unified-constraint-note') || d.querySelector('.unified-constraint-note'), '缺少约束名称与填法说明');
+    assert(d.querySelector('.unified-constraint-note').compareDocumentPosition(d.getElementById('setsContainer')) & w.Node.DOCUMENT_POSITION_PRECEDING, '命名说明应位于约束卡片之后');
+    assert(d.getElementById('unifiedLayerCountHint'), '缺少自动叠层数提示');
+    w.eval('UnifiedDfmLayerRules.template()');
+    assert(d.querySelectorAll('#unifiedLayerRuleBody tr').length === 2, 'Top/Bot + 内层模板应生成两条分层规则');
+    assert(ctx.errors.length === 0, '综合页脚本错误：' + ctx.errors.join('；'));
+    ctx.close();
+  });
+
   await test('六页的「统一顶栏 + 页签条」样式块完全一致', async () => {
     const blocks = PAGES.map(p => ({ p, b: canonicalBlock(p) }));
     blocks.forEach(x => assert(x.b, x.p + ' 缺少统一顶栏样式块'));
@@ -148,7 +174,7 @@ function canonicalBlock(page) {
     blocks.forEach(x => assert(x.b === first.b,
       x.p + ' 的统一顶栏样式块与 ' + first.p + ' 不一致（只改了部分页面）'));
     // 关键规则必须存在
-    ['header{flex:none;background:#0f172a', 'header .navlinks a.active{background:#0284c7',
+    ['header{flex:none;background:#0f172a', 'header .navlinks a.active{background:#2563eb',
       'nav#tabs{flex:none;display:flex', 'nav#tabs button.active{color:#2563eb'].forEach(k => {
       assert(first.b.includes(k), '统一块缺少关键规则：' + k);
     });

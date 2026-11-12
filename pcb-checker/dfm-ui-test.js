@@ -427,5 +427,189 @@ test('规律分析渲染不引入 HTML 注入（对象/网络名同样走转义�
   w.renderPatternAnalysis();
 });
 
+test('新增项：GND 孔盘到信号孔盘阈值输入框与历史值', () => {
+  const inp = $('inpThresholdPadPair');
+  if (!inp) throw new Error('缺少 GND 孔盘到信号孔盘阈值输入框');
+  if (Math.abs(parseFloat(inp.value) - 6.0) > 1e-9) throw new Error('默认值应为 6.0，实际 ' + inp.value);
+  if (!d.querySelector('label[for="inpThresholdPadPair"]')) throw new Error('输入框没有 label');
+  if (!d.getElementById('hist_thresh_padpair')) throw new Error('缺少历史值圆钮容器');
+  const label = d.querySelector('label[for="inpThresholdPadPair"]').textContent;
+  if (label.indexOf('GND') < 0 || label.indexOf('信号孔盘') < 0) throw new Error('文案不对：' + label);
+});
+
+test('新增项：跑检查后统计卡与明细卡给出孔盘对结果', () => {
+  const sampleTxt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  // 前面的用例可能改过焊盘/一钻直径，这里固定成界面默认口径再跑，条数才可复现
+  $('inpGndPadDiam').value = '7.906';
+  $('inpSignalPadDiam').value = '12.0';
+  $('inpGndFirstDrill').value = '6.0';
+  $('inpSignalFirstDrill').value = '6.0';
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval(`loadTextData(${JSON.stringify(sampleTxt)}, "via_trace_airgap_sample.txt"); runCheck(true);`);
+  const st = w.State.checkResult.padPairStats;
+  if (!st.enabled) throw new Error('应启用孔盘到孔盘检查');
+  if (st.total !== 22 || st.fail !== 0) throw new Error('应为 22 对全满足，实际 ' + JSON.stringify(st));
+  if ($('statPadPairBadCount').textContent !== '0 / 22') throw new Error('统计卡应为 0 / 22，实际 ' + $('statPadPairBadCount').textContent);
+  if ($('padPairCard').style.display !== 'block') throw new Error('明细卡应显示');
+  if ($('padPairHint').textContent.indexOf('6 mil') < 0) throw new Error('提示里没有阈值：' + $('padPairHint').textContent);
+  if ($('runHint').textContent.indexOf('GND孔盘↔信号孔盘') < 0) throw new Error('运行提示没提到新增项');
+});
+
+test('新增项：阈值调到 10 mil 时明细表列出 8 对不满足', () => {
+  $('inpThresholdPadPair').value = '10';
+  w.eval('runCheck(true)');
+  const st = w.State.checkResult.padPairStats;
+  if (st.fail !== 8) throw new Error('应 8 对不满足，实际 ' + st.fail);
+  if ($('statPadPairBadCount').textContent !== '8 / 34') throw new Error('统计卡应为 8 / 34，实际 ' + $('statPadPairBadCount').textContent);
+  const rows = d.querySelectorAll('#padPairBody tr');
+  if (rows.length !== 8) throw new Error('明细应为 8 行，实际 ' + rows.length);
+  const first = rows[0].textContent;
+  if (first.indexOf('GND') < 0 || first.indexOf('mil') >= 0) { /* 文案里没有单位，仅确认有网络名 */ }
+  if (rows[0].querySelectorAll('td').length !== 8) throw new Error('明细列数不对');
+  if (!/不满足 8 对/.test($('padPairHint').textContent)) throw new Error('提示没给出不满足数量：' + $('padPairHint').textContent);
+});
+
+test('新增项：阈值填 0 时不检查，统计卡显示未启用', () => {
+  $('inpThresholdPadPair').value = '0';
+  w.eval('runCheck(true)');
+  if (w.State.checkResult.padPairStats.enabled) throw new Error('填 0 应关闭');
+  if ($('statPadPairBadCount').textContent !== '未启用') throw new Error('统计卡应显示未启用，实际 ' + $('statPadPairBadCount').textContent);
+  if ($('padPairCard').style.display !== 'none') throw new Error('明细卡应隐藏');
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval('runCheck(true)');
+});
+
+test('新增项：三套预设都会带上孔盘到信号孔盘阈值', () => {
+  const cases = [['eda_project', '6.0'], ['std_6mil', '6.0'], ['high_density_5mil', '5.0']];
+  cases.forEach(([scheme, expect]) => {
+    $('inpThresholdPadPair').value = '99';
+    w.applyPresetScheme(scheme);
+    if (Math.abs(parseFloat($('inpThresholdPadPair').value) - parseFloat(expect)) > 1e-9) {
+      throw new Error(scheme + ' 应为 ' + expect + '，实际 ' + $('inpThresholdPadPair').value);
+    }
+  });
+  $('inpThresholdPadPair').value = '6.0';
+  w.eval('runCheck(true)');
+});
+
+test('新增项：判定口径说明里写了这一条', () => {
+  const legend = d.getElementById('tab-legend').textContent;
+  if (legend.indexOf('GND 孔盘到信号孔盘') < 0) throw new Error('说明页没写判定口径');
+  if (legend.indexOf('Pad to Pad Airgap') < 0) throw new Error('说明页没写算的是孔盘到孔盘间距');
+});
+
+test('分层规则：默认空表 + 一键套用 Top/Bot 与内层两条', () => {
+  const body = $('layerRuleBody');
+  if (!body) throw new Error('缺少分层规则表体');
+  if (body.querySelectorAll('tr[data-row]').length !== 0) throw new Error('默认不该有分层规则行');
+  if ($('layerRuleHint').textContent.indexOf('所有层统一用上面的默认阈值') < 0) throw new Error('空表没给说明');
+  $('btnLayerRuleTemplate').click();
+  const rows = [...body.querySelectorAll('tr[data-row]')];
+  if (rows.length !== 2) throw new Error('应生成 2 条，实际 ' + rows.length);
+  if (rows[0].querySelector('.lrLayers').value.indexOf('Top') < 0) throw new Error('第一行应是 Top/Bot');
+  if (rows[1].querySelector('.lrLayers').value !== '内层') throw new Error('第二行应是内层');
+  if (rows[0].querySelector('.lrPreview').textContent.indexOf('=') < 0) throw new Error('没有解析预览');
+  if ($('layerRuleHint').textContent.indexOf('2 条分层规则') < 0) throw new Error('提示没写条数：' + $('layerRuleHint').textContent);
+});
+
+test('分层规则：跑检查时按层生效，并回填每条命中数', () => {
+  const sampleTxt = fs.readFileSync(path.join(__dirname, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  $('inpGndPadDiam').value = '7.906';
+  $('inpSignalPadDiam').value = '12.0';
+  $('inpGndFirstDrill').value = '6.0';
+  $('inpSignalFirstDrill').value = '6.0';
+  $('inpThresholdGnd').value = '4.01575';
+  $('inpThresholdSignal').value = '5.04725';
+  // 内层放宽到 2 / 2，样本里应一处都不超标
+  const rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  rows[1].querySelector('.lrGnd').value = '2';
+  rows[1].querySelector('.lrSig').value = '2';
+  w.eval(`loadTextData(${JSON.stringify(sampleTxt)}, "via_trace_airgap_sample.txt"); runCheck(true);`);
+  const r = w.State.checkResult;
+  if (!r.layerRuleStats || r.layerRuleStats.length !== 2) throw new Error('结果里没有分层规则统计');
+  if (r.layerRuleStats[1].checked === 0) throw new Error('内层规则一条都没命中');
+  if (r.failCount !== 0) throw new Error('内层放宽到 2 后不该有超标，实际 ' + r.failCount);
+  const hit = [...$('layerRuleBody').querySelectorAll('.lrHit')].map(td => td.textContent).join(' ');
+  if (hit.indexOf('处') < 0) throw new Error('命中列没回填：' + hit);
+  if ($('runHint').textContent.indexOf('分层规则 2 条') < 0) throw new Error('运行提示没写分层规则：' + $('runHint').textContent);
+  // 收紧内层阈值后应出现超标
+  rows[1].querySelector('.lrGnd').value = '6';
+  rows[1].querySelector('.lrSig').value = '7';
+  w.eval('runCheck(true)');
+  if (w.State.checkResult.failCount === 0) throw new Error('收紧内层阈值后应出现超标');
+  if (w.State.checkResult.layerRuleStats[1].fail === 0) throw new Error('内层规则的超标数没统计');
+  // 还原
+  rows[1].querySelector('.lrGnd').value = '4.01575';
+  rows[1].querySelector('.lrSig').value = '5.04725';
+});
+
+test('分层规则：行可增删，删掉后回到默认阈值', () => {
+  $('btnAddLayerRule').click();
+  let rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  if (rows.length !== 3) throw new Error('加一条后应为 3 行，实际 ' + rows.length);
+  rows[2].querySelector('.lrLayers').value = 'L3-L6';
+  rows[2].querySelector('.lrLayers').dispatchEvent(new w.Event('input', { bubbles: true }));
+  if (rows[2].querySelector('.lrPreview').textContent.indexOf('L3–L6') < 0) throw new Error('L3-L6 预览不对：' + rows[2].querySelector('.lrPreview').textContent);
+  rows[2].querySelector('.lrDel').click();
+  rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  if (rows.length !== 2) throw new Error('删一条后应为 2 行，实际 ' + rows.length);
+  while ($('layerRuleBody').querySelector('.lrDel')) $('layerRuleBody').querySelector('.lrDel').click();
+  if ($('layerRuleBody').querySelectorAll('tr[data-row]').length !== 0) throw new Error('全删后应是空表');
+  if ($('layerRuleHint').textContent.indexOf('所有层统一用上面的默认阈值') < 0) throw new Error('空表没回到默认说明');
+  w.eval('runCheck(true)');
+  if ((w.State.checkResult.layerRuleStats || []).length !== 0) throw new Error('没有规则时不该有统计');
+});
+
+test('分层规则：存到 localStorage，刷新后能读回来', () => {
+  // jsdom 里 file:// 是 opaque origin，没有真 localStorage，这里换一个假存储
+  const store = {};
+  Object.defineProperty(w, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: k => (Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null),
+      setItem: (k, v) => { store[k] = String(v); },
+      removeItem: k => { delete store[k]; }
+    }
+  });
+  $('btnLayerRuleTemplate').click();
+  const saved = store[w.LayerRules.key];
+  if (!saved) throw new Error('没写进 localStorage');
+  const arr = JSON.parse(saved);
+  if (arr.length !== 2) throw new Error('存的行数不对：' + arr.length);
+  w.LayerRules.render(w.LayerRules.load());
+  const rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  if (rows.length !== 2) throw new Error('读回来行数不对');
+  if (rows[0].querySelector('.lrLayers').value !== arr[0].layers) throw new Error('读回来的适用层不对');
+});
+
+test('规则配置支持导出完整 JSON 快照与从文件数据恢复', () => {
+  if (!$('btnSaveDfmRules') || !$('btnLoadDfmRules') || !$('fileDfmRules')) throw new Error('缺少规则保存/读取控件');
+  const config = w.DfmRuleConfig;
+  if (!config) throw new Error('规则配置管理器未初始化');
+  $('selMode').value = 'center_to_trace';
+  $('inpGndPadDiam').value = '8.25';
+  $('selPadShape').value = 'rect';
+  $('inpThresholdPadPair').value = '0';
+  config.loadFromObject({
+    kind: config.kind, version: config.version,
+    fields: { selMode: 'pad_to_trace', inpGndPadDiam: '7.906', selPadShape: 'circle', inpThresholdPadPair: '6.25' },
+    layerRules: [{ layers: 'Top、Bot', gnd: 4.5, sig: 5.5, pad: 6.5 }]
+  });
+  if ($('selMode').value !== 'pad_to_trace' || $('inpGndPadDiam').value !== '7.906' || $('selPadShape').value !== 'circle' || $('inpThresholdPadPair').value !== '6.25') throw new Error('基础规则字段恢复不完整');
+  const rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  if (rows.length !== 1 || rows[0].querySelector('.lrLayers').value !== 'Top、Bot' || rows[0].querySelector('.lrPad').value !== '6.5') throw new Error('分层规则恢复不完整');
+  const saved = config.snapshot();
+  if (saved.kind !== 'pcb-dfm-rule-config' || saved.fields.selMode !== 'pad_to_trace' || saved.layerRules.length !== 1) throw new Error('导出的 JSON 快照内容不完整');
+  let rejected = false;
+  try { config.loadFromObject({ fields: {} }); } catch (_) { rejected = true; }
+  if (!rejected) throw new Error('应拒绝不支持的 JSON 格式');
+});
+
+test('分层规则：说明页写了按层覆盖的判定口径', () => {
+  const legend = d.getElementById('tab-legend').textContent;
+  if (legend.indexOf('分层规则（按层覆盖）') < 0) throw new Error('说明页没写分层规则');
+  if (legend.indexOf('Top、Bot') < 0) throw new Error('说明页没给适用层写法示例');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);

@@ -56,6 +56,55 @@
     return null;
   }
 
+  // ===== 分层规则：把「Top、Bot / 内层 / L2-L5 / L2、L3」这类写法解析成层号区间 =====
+  const INNER_FIRST_INDEX = 2;
+  const INNER_LAST_INDEX = BOTTOM_LAYER_INDEX - 1;
+
+  function parseLayerSpec(spec) {
+    const raw = String(spec == null ? '' : spec).trim();
+    if (!raw) return [];
+    const out = [];
+    raw.replace(/[，,、;；/|\s]+/g, ' ').split(' ').filter(Boolean).forEach(tok => {
+      const t = tok.toLowerCase();
+      if (t === 'top' || t === '表层' || t === '顶层') { out.push([1, 1]); return; }
+      if (t === 'bot' || t === 'bottom' || t === '底层' || t === '背面') { out.push([BOTTOM_LAYER_INDEX, BOTTOM_LAYER_INDEX]); return; }
+      if (t === '内层' || t === 'inner') { out.push([INNER_FIRST_INDEX, INNER_LAST_INDEX]); return; }
+      if (t === '全部' || t === 'all' || t === '*') { out.push([1, BOTTOM_LAYER_INDEX]); return; }
+      const range = tok.match(/^L?\s*(\d{1,3})\s*(?:-|~|到|至)\s*L?\s*(\d{1,3})$/i);
+      if (range) {
+        const a = parseInt(range[1], 10), b = parseInt(range[2], 10);
+        if (a > 0 && b > 0) out.push([Math.min(a, b), Math.max(a, b)]);
+        return;
+      }
+      const one = tok.match(/^L?\s*(\d{1,3})$/i);
+      if (one) {
+        const n = parseInt(one[1], 10);
+        if (n > 0) out.push([n, n]);
+      }
+    });
+    return out;
+  }
+
+  function layerSpecMatches(ranges, idx) {
+    if (!ranges || !ranges.length || idx == null || isNaN(idx)) return false;
+    for (let i = 0; i < ranges.length; i++) {
+      if (idx >= ranges[i][0] && idx <= ranges[i][1]) return true;
+    }
+    return false;
+  }
+
+  function layerSpecLabel(ranges) {
+    if (!ranges || !ranges.length) return '';
+    return ranges.map(r => {
+      if (r[0] === 1 && r[1] === 1) return 'L1（Top）';
+      if (r[0] === BOTTOM_LAYER_INDEX && r[1] === BOTTOM_LAYER_INDEX) return 'Bottom';
+      if (r[0] === INNER_FIRST_INDEX && r[1] === INNER_LAST_INDEX) return '内层（L2 起）';
+      if (r[0] === 1 && r[1] === BOTTOM_LAYER_INDEX) return '全部层';
+      if (r[0] === r[1]) return 'L' + r[0];
+      return 'L' + r[0] + '–L' + r[1];
+    }).join('、');
+  }
+
   function formatLayerNumTag(num) {
     if (num === 1) return 'L1(Top)';
     if (num === BOTTOM_LAYER_INDEX) return 'Bottom';
@@ -596,6 +645,35 @@
 
     const maxPassingToKeep = typeof opts.maxPassingToKeep === 'number' ? opts.maxPassingToKeep : 3000;
 
+    // 分层规则：按层覆盖上面的默认阈值。layers 支持 Top、Bot、内层、L2-L5、L2、L3 这类写法
+    const layerRules = (Array.isArray(opts.layerRules) ? opts.layerRules : []).map((r, i) => {
+      if (!r) return null;
+      const spec = r.layers != null ? r.layers : r.spec;
+      const ranges = parseLayerSpec(spec);
+      if (!ranges.length) return null;
+      return {
+        name: r.name || ('规则' + (i + 1)),
+        raw: String(spec),
+        ranges: ranges,
+        gnd: typeof r.minClearanceGnd === 'number' ? r.minClearanceGnd : null,
+        sig: typeof r.minClearanceSignal === 'number' ? r.minClearanceSignal : null,
+        padPair: typeof r.minClearancePadPair === 'number' ? r.minClearancePadPair : null,
+        checked: 0,
+        fail: 0,
+        padPairChecked: 0,
+        padPairFail: 0
+      };
+    }).filter(Boolean);
+    const ruleForLayer = (idx) => {
+      for (let i = 0; i < layerRules.length; i++) {
+        if (layerSpecMatches(layerRules[i].ranges, idx)) return layerRules[i];
+      }
+      return null;
+    };
+
+    // GND 孔盘 ↔ 信号孔盘最小间距（孔盘到孔盘 airgap），0 表示不检查这一项
+    const minClearancePadPair = typeof opts.minClearancePadPair === 'number' ? opts.minClearancePadPair : 0;
+
     const activeTraces = layerFilter ? traces.filter(t => t.subset === layerFilter) : traces;
 
     // Pre-cache parsed physical layer numbers for each unique trace Subset (O(1) lookup)
@@ -712,7 +790,6 @@
       // 焊盘大于默认值时同步放大搜索半径，避免漏检
       const vSearchR = SEARCH_RADIUS + Math.max(0, vPadRadius - maxPadR);
 
-      const targetThreshold = via.isGnd ? minClearanceGnd : minClearanceSignal;
       const targetType = via.isGnd ? '线到GND孔' : '线到信号孔';
 
       layerGrids.forEach((lGrid, traceLayerName) => {
@@ -721,6 +798,12 @@
         if (!doesViaSpanLayer(via, traceLayerName, cachedTraceLayerNum)) {
           return;
         }
+
+        // 分层规则：这一层的阈值优先于全局默认值
+        const layerRule = ruleForLayer(cachedTraceLayerNum);
+        const targetThreshold = (layerRule && (via.isGnd ? layerRule.gnd : layerRule.sig) != null)
+          ? (via.isGnd ? layerRule.gnd : layerRule.sig)
+          : (via.isGnd ? minClearanceGnd : minClearanceSignal);
 
         const gx0 = Math.floor((vx - vSearchR) / CELL_SIZE);
         const gx1 = Math.floor((vx + vSearchR) / CELL_SIZE);
@@ -791,10 +874,17 @@
                 padToCenterline: padToCenterline,
                 evalDist: evalDist,
                 threshold: targetThreshold,
+                ruleName: layerRule ? layerRule.name : '默认',
+                ruleLayers: layerRule ? layerRule.raw : '全部层',
                 status: isFail ? '不满足' : '满足',
                 diff: evalDist - targetThreshold,
                 mode: mode
               };
+
+              if (layerRule) {
+                layerRule.checked++;
+                if (isFail) layerRule.fail++;
+              }
 
               if (isFail) {
                 failCount++;
@@ -808,6 +898,92 @@
         }
       });
     });
+
+    // ================= 孔盘到孔盘：GND 孔盘 ↔ 信号孔盘 =================
+    // 以过孔圆心建网格，只比对邻格里的 GND孔×信号孔 对偶，算焊盘到焊盘的空气间隙。
+    const padPairDefects = [];
+    let padPairTotal = 0;
+    let padPairFail = 0;
+    let padPairMin = Infinity;
+    if (minClearancePadPair > 0 && vias.length > 1) {
+      const cell = Math.max(20.0, minClearancePadPair + maxPadR);
+      const grid = new Map();
+      const keyOf = (x, y) => `${Math.floor(x / cell)}_${Math.floor(y / cell)}`;
+      vias.forEach(v => {
+        const k = keyOf(v.origin[0], v.origin[1]);
+        let bucket = grid.get(k);
+        if (!bucket) { bucket = []; grid.set(k, bucket); }
+        bucket.push(v);
+      });
+      const spanOverlap = (a, b) => {
+        if (!a.hasDefinedSpan || !b.hasDefinedSpan) return true;   // 层名解析不出来时照常检查
+        const a1 = a.minLayerNum, a2 = a.maxLayerNum, b1 = b.minLayerNum, b2 = b.maxLayerNum;
+        if (!(a1 > 0 && a2 > 0 && b1 > 0 && b2 > 0)) return true;
+        return Math.min(a2, b2) >= Math.max(a1, b1);
+      };
+      vias.forEach((v1, i1) => {
+        const cx = Math.floor(v1.origin[0] / cell), cy = Math.floor(v1.origin[1] / cell);
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const bucket = grid.get(`${cx + dx}_${cy + dy}`);
+            if (!bucket) continue;
+            for (let bi = 0; bi < bucket.length; bi++) {
+              const v2 = bucket[bi];
+              if (v2 === v1 || v2.id <= v1.id) continue;           // 每对只算一次
+              if (!!v1.isGnd === !!v2.isGnd) continue;             // 只查 GND孔 ↔ 信号孔
+              if (diffNetOnly && v1.net === v2.net) continue;
+              if (!spanOverlap(v1, v2)) continue;
+              // 两个过孔重叠的层范围里，命中的分层规则取最严的一条
+              let lo = -Infinity, hi = Infinity;
+              if (v1.hasDefinedSpan && v2.hasDefinedSpan && v1.minLayerNum > 0 && v2.minLayerNum > 0) {
+                lo = Math.max(v1.minLayerNum, v2.minLayerNum);
+                hi = Math.min(v1.maxLayerNum, v2.maxLayerNum);
+              }
+              let padRule = null;
+              layerRules.forEach(r => {
+                if (r.padPair == null) return;
+                const hit = r.ranges.some(pair => pair[0] <= hi && pair[1] >= lo);
+                if (hit && (!padRule || r.padPair > padRule.padPair)) padRule = r;
+              });
+              const padThreshold = padRule ? padRule.padPair : minClearancePadPair;
+
+              const m = calcViaToViaMetrics(v1, v2);
+              const gap = m.padAirgap;
+              padPairTotal++;
+              if (gap < padPairMin) padPairMin = gap;
+              if (padRule) padRule.padPairChecked++;
+              const isFail = gap < padThreshold - 1e-4;
+              if (!isFail) continue;
+              padPairFail++;
+              if (padRule) padRule.padPairFail++;
+              const gndVia = v1.isGnd ? v1 : v2;
+              const sigVia = v1.isGnd ? v2 : v1;
+              padPairDefects.push({
+                type: 'via_pad_to_via_pad',
+                gndVia: gndVia,
+                sigVia: sigVia,
+                v1: v1,
+                v2: v2,
+                centerDist: m.centerDist,
+                padAirgap: gap,
+                evalDist: gap,
+                gndPadDiameter: gndVia.padDiameter || (gndVia.padRadius || defaultGndPadDiam / 2) * 2,
+                sigPadDiameter: sigVia.padDiameter || (sigVia.padRadius || defaultSignalPadDiam / 2) * 2,
+                spanGnd: gndVia.spanShort || gndVia.viaTypeLabel || '',
+                spanSig: sigVia.spanShort || sigVia.viaTypeLabel || '',
+                threshold: padThreshold,
+                diff: gap - padThreshold,
+                ruleName: padRule ? padRule.name : '默认',
+                ruleLayers: padRule ? padRule.raw : '全部层',
+                status: '不满足',
+                targetType: 'GND孔盘到信号孔盘'
+              });
+            }
+          }
+        }
+      });
+      padPairDefects.sort((a, b) => a.padAirgap - b.padAirgap);
+    }
 
     defectPairs.sort((a, b) => a.evalDist - b.evalDist);
     closePassingPairs.sort((a, b) => a.evalDist - b.evalDist);
@@ -940,7 +1116,22 @@
       },
       mode: mode,
       diffNetOnly: diffNetOnly,
-      layerFilter: layerFilter
+      layerFilter: layerFilter,
+      padPairStats: {
+        enabled: minClearancePadPair > 0,
+        total: padPairTotal,
+        fail: padPairFail,
+        pass: padPairTotal - padPairFail,
+        minDist: padPairMin === Infinity ? 0 : padPairMin,
+        threshold: minClearancePadPair
+      },
+      padPairDefects: padPairDefects,
+      layerRules: layerRules.map(r => ({ name: r.name, layers: r.raw, gnd: r.gnd, sig: r.sig, padPair: r.padPair })),
+      layerRuleStats: layerRules.map(r => ({
+        name: r.name, layers: r.raw,
+        checked: r.checked, fail: r.fail,
+        padPairChecked: r.padPairChecked, padPairFail: r.padPairFail
+      }))
     };
   }
 
@@ -1011,6 +1202,9 @@
   exports.parseViaLayerSpan = parseViaLayerSpan;
   exports.doesViaSpanLayer = doesViaSpanLayer;
   exports.evaluateViaSpan = evaluateViaSpan;
+  exports.parseLayerSpec = parseLayerSpec;
+  exports.layerSpecMatches = layerSpecMatches;
+  exports.layerSpecLabel = layerSpecLabel;
   exports.parseDfmItems = parseDfmItems;
   exports.ptToSegDist = ptToSegDist;
   exports.ptToArcDist = ptToArcDist;

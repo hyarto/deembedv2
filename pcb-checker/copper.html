@@ -11,9 +11,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
-main{max-width:1100px;margin:0 auto;padding:18px 24px 48px}
+main{max-width:1500px;margin:0 auto;padding:12px 24px 16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-.card h2{font-size:15px;margin-bottom:8px}
+.card h2{font-size:15px;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;margin:12px 0 6px;color:#374151}
 .hint{color:var(--sub);font-size:12px;line-height:1.7}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 label.fld{display:inline-flex;align-items:center;gap:6px;font-size:13px}
@@ -33,22 +34,19 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .filechip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
 .filechip img{width:42px;height:28px;object-fit:cover;border-radius:4px;background:#fff}
 .set{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;background:#fff}
-.set head,.set .hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;color:#fff}
-.set.SMA .hd{background:#15803d}
-.set.BGA .hd{background:#1d4ed8}
-.set.其他 .hd,.set.混合 .hd{background:#334155}
+.setgroup{margin:16px 0 10px;padding-left:9px;border-left:3px solid var(--pri);font-size:13px;font-weight:600;color:var(--txt2,#374151)}
+.set .hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;color:var(--txt);background:#f8fafc;border-bottom:1px solid var(--line)}
 .set .body{padding:12px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
 th{background:#f1f5f9}
-.cat{background:#dcfce7;font-weight:600;width:110px}
-.set.BGA .cat{background:#dbeafe}
+.cat{background:#f8fafc;font-weight:600;width:110px}
 img.ref{max-width:100%;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:#fff}
-.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:rgba(255,255,255,.2)}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#e5e7eb;color:#374151}
 .srcnote{color:var(--sub);font-size:12px;margin-top:4px;line-height:1.4}
 input.cCell.none{color:#94a3b8;background:#f8fafc}
 td.nosrc{background:#f8fafc}
-.hd .txthead{flex-basis:100%;color:#e2e8f0;font-size:12px}
+.hd .txthead{flex-basis:100%;color:var(--sub);font-size:12px}
 .jumpnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;padding:10px 12px;background:#f8fafc;border:1px solid var(--line);border-radius:8px}
 .jumpnav .jlabel{width:100%;font-size:12px;color:var(--sub);font-weight:600}
 .jumpnav a{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid #cbd5e1;color:#1d4ed8;text-decoration:none;font-size:13px}
@@ -56,15 +54,15 @@ td.nosrc{background:#f8fafc}
 .jumpnav a .k{font-size:11px;color:#fff;background:#15803d;border-radius:8px;padding:1px 6px;flex:none}
 .jumpnav a.BGA .k{background:#1d4ed8}
 .jumpnav a.其他 .k,.jumpnav a.混合 .k{background:#334155}
-.jumpnav .cols{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;width:100%}
-.jumpcol{min-width:196px;max-width:250px;border-left:1px solid var(--line);padding-left:10px}
-.jumpcol:first-child{border-left:none;padding-left:0}
-.jumpcol-h{font-size:11px;font-weight:700;color:#475569;margin-bottom:5px;white-space:nowrap}
+.jumpnav .cols{display:flex;flex-direction:column;gap:10px;width:100%}
+.jumpcol{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;min-width:0}
+.jumpcol-h{width:100%;font-size:11px;font-weight:700;color:#6b7280;margin:2px 0 0;white-space:nowrap}
 .jumpcol-h .cnt{color:#94a3b8;font-weight:400}
-.jumpcol .chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
-.jumpcol a{display:flex;width:100%;justify-content:space-between;gap:8px;margin-bottom:4px}
-.jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jumpcol .chipsub{width:100%;font-size:11px;color:#94a3b8;margin:4px 0 0;white-space:nowrap}
+.jumpcol a{margin:0}
+.jumpcol a .jname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
 .set{scroll-margin-top:calc(var(--pin-h, 16px) + 12px)}
+.set.allrev .hd{box-shadow:inset 3px 0 0 var(--ok)}
 section.tab{display:none}
 section.tab.active{display:block}
 .bad{color:#dc2626;font-weight:700}
@@ -82,14 +80,14 @@ section.tab.active{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:14px;max-height:260px;overflow:auto;align-items:flex-start}
 .chipcol{min-width:132px;max-width:190px;border-left:1px solid var(--line);padding-left:10px}
 .chipcol:first-child{border-left:none;padding-left:0}
-.chipcol-h{font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;white-space:nowrap}
-.chipsub{font-size:10px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
+.chipcol-h{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px;white-space:nowrap}
+.chipsub{font-size:11px;color:#94a3b8;margin:6px 0 3px;white-space:nowrap}
 .chipcol .chip{display:flex;width:100%;justify-content:space-between;gap:10px;margin-bottom:4px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#fff;
   border:1px solid #cbd5e1;color:#1f2937;font-size:12px;cursor:pointer;white-space:nowrap}
 .chip:hover{border-color:var(--pri);background:#eff6ff}
 .chip.on{background:#dbeafe;border-color:var(--pri);color:#1d4ed8;font-weight:600}
-.chip .cn{color:#64748b}
+.chip .cn{color:#6b7280}
 .chip.on .cn{color:#1d4ed8}
 .chip.miss{border-style:dashed;color:#6b7280}
 .chip.zero{opacity:.55}
@@ -117,13 +115,12 @@ tr.reviewed td.rvw{background:#fff}
 tr.reviewed td .bad{color:#9ca3af}
 tr.reviewed td .ok{color:#9ca3af}
 .rvTag{display:inline-block;margin-left:4px;font-size:11px;color:#6b7280;background:#e5e7eb;border-radius:8px;padding:0 6px}
-.badge.rev{background:rgba(255,255,255,.25);cursor:pointer}
-.badge.rev:hover{background:rgba(255,255,255,.38)}
+.badge.rev{background:#e5e7eb;cursor:pointer}
+.badge.rev:hover{background:#dbe3ee}
 .grpRvw{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:rgba(255,255,255,.16);
   padding:2px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
 .grpRvw:hover{background:rgba(255,255,255,.3)}
 .grpRvw input{width:14px;height:14px;cursor:pointer}
-.set.allrev .hd{background-image:linear-gradient(0deg,rgba(255,255,255,.08),rgba(255,255,255,.08))}
 tr.reviewed .rvTag{display:inline-block}
 #checkOut{margin-top:12px}
 .pinblock{position:sticky;top:0;z-index:40;background:var(--bg);padding-bottom:6px;max-height:calc(100vh - 12px);overflow:auto}
@@ -136,7 +133,7 @@ table.layertable td.lname,table.layertable th.lname{text-align:left;position:sti
 table.layertable th.lname{background:#e2e8f0}
 table.layertable input.cCell{width:72px;text-align:center}
 table.layertable input.cName{width:128px}
-table.layertable .subh{display:block;font-weight:400;color:#64748b;font-size:11px}
+table.layertable .subh{display:block;font-weight:400;color:#6b7280;font-size:11px}
 tr.extra td{background:#fffbeb}
 tr.extra td.lname{background:#fef3c7}
 tr.over td.lname{color:#b45309}
@@ -150,23 +147,23 @@ pre.ocr{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);bor
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
 .global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#60a5fa;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -212,7 +209,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
   <div class="card">
     <h2>导入文件</h2>
     <div class="hint" id="stackHint" style="margin-bottom:8px"></div>
-    <div class="hint" style="margin-bottom:10px">只接受 TXT。中文若是 GBK 也会按 GB18030 读取，避免乱码。文件里每一类约束单独成一组，每一类里的每一条约束各成一条规则。请重新导入刚才的 copper.txt。</div>
+    <div class="hint" style="margin-bottom:10px">只接受 TXT。中文若是 GBK 也会按 GB18030 读取，避免乱码。两种写法都认：① 参数行「类 → 1. xxx → 名称 数值 mil」；② 三列表格「类 → 1. xxx → 层 / 反焊盘 / 焊盘」，表格里一张表生成一条约束，按「SMA-Top-L2」「BGA-L2-L4-0.5mm」这样命名，同一类下有几张表就有几条约束。</div>
     <div id="drop" tabindex="0">点击选择，或把 TXT 拖到这里<br><span class="hint">只接受 .txt，可多选</span></div>
     <input type="file" id="fileInput" multiple accept=".txt,text/plain" style="display:none">
     <div class="row" style="margin-top:10px">
@@ -220,6 +217,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
       <a class="btn ghost" href="sample/L17层扇出SMA.txt" download>下载 SMA 示例 TXT</a>
       <a class="btn ghost" href="sample/L15层扇出SMA.txt" download>下载 L15 扇出 SMA 示例 TXT</a>
       <a class="btn ghost" href="sample/L19层扇出SMA_bot_D2M5.txt" download>下载 bot 面 D2M5 示例 TXT</a>
+      <a class="btn ghost" href="sample/约束示例_表格型.txt" download>下载表格型约束示例 TXT</a>
       <span class="hint" id="genHint">还没有导入。</span>
     </div>
     <div class="row" id="fileList" style="margin-top:10px"></div>
@@ -236,7 +234,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
 <div id="pinB" class="pinblock">
   <div class="card">
     <h2>生成的约束</h2>
-    <div class="hint" style="margin-bottom:10px">名称写在每张表的标题里，按 TXT 生成。例如「一、SMA在bottom面，D2M为6mil的封装方案」加上「1. L19层扇出 SMA」，名称就是 Bot-SMA-L19-D2M6mil。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+    <div class="hint" style="margin-bottom:10px">点击下面的约束名跳到对应卡片；每个约束里一行一个层，格子可直接改，右边写着来源。</div>
     <div id="jumpNav" class="jumpnav" hidden></div>
   </div>
 </div>
@@ -247,6 +245,15 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
     <button type="button" class="btn gray" id="btnLoad">从本地文件读取</button>
     <input type="file" id="ruleFile" accept=".json,application/json" style="display:none">
     <span class="hint" id="saveHint"></span>
+  </div>
+</div>
+
+<div class="card" id="namingNote" style="margin-top:14px">
+  <h2>约束名称与填法说明</h2>
+  <div class="hint" style="line-height:1.9">
+    <div><b>参数行写法</b>：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。</div>
+    <div><b>表格写法</b>：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。</div>
+    <div><b>填法</b>：表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数；出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
   </div>
 </div>
 </section>
@@ -293,7 +300,7 @@ html.pcb-global-wide main{max-width:100% !important;width:100% !important;paddin
     </div>
     <div class="row searchbar" style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="position:relative;flex:1;min-width:280px;max-width:540px">
-        <input type="text" id="inpResSearch" class="search-inp" placeholder="🔍 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off" data-no-persist>
+        <input type="text" id="inpResSearch" class="search-inp" placeholder=" 搜索孔号 (如 19371 / Via 19371)、网络 (如 GND)、Padstack、约束名称…" autocomplete="off" data-no-persist>
         <button type="button" id="btnClearSearch" title="清空搜索" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;display:none;padding:2px 6px">×</button>
       </div>
       <button type="button" class="btn gray" id="btnSearchGo" title="快速滚动并高亮定位到匹配的过孔">定位到孔</button>
@@ -495,6 +502,93 @@ function setsFromSections(sections, filename){
   });
   return sets;
 }
+/* ---------- 表格型约束 ----------
+   一、SMA封装方案
+   1. 信号孔连接层Top至L2
+   层 <TAB> 反焊盘尺寸 / 反焊盘半径 (mil) <TAB> 焊盘尺寸 / 焊盘半径 (mil)
+   L1 <TAB> 13 <TAB> 6.5
+   一类下面有好几种，每一种（一张表）就是一条约束，名字按「SMA-Top-L2」「BGA-L2-L4-0.5mm」生成。
+*/
+function tableKindOf(text){
+  const s=String(text||'');
+  if(/BGA/i.test(s))return 'BGA';
+  if(/SMA/i.test(s))return 'SMA';
+  return '';
+}
+function sideWordOf(s){
+  const t=String(s||'').trim();
+  if(/^(top|表层|顶层|正面)$/i.test(t))return 'Top';
+  if(/^(bot|bottom|底层|背面)$/i.test(t))return 'Bot';
+  const m=t.match(/^L\s*(\d+)$/i);
+  if(m)return 'L'+m[1];
+  if(/^\d+$/.test(t))return 'L'+t;
+  return '';
+}
+function connRangeOf(text){
+  const m=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot|表层|顶层|底层)?\s*至\s*L?\s*(\d+)/i);
+  if(m)return {start:sideWordOf(m[1]||''), end:'L'+m[2]};
+  const only=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot)\b/i);
+  if(only)return {start:sideWordOf(only[1]), end:''};
+  return {start:'', end:''};
+}
+function antiNum(v){
+  const m=String(v==null?'':v).match(/-?[0-9]+(?:\.[0-9]+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function tryLayerTable(raw, filename){
+  const src=String(raw||'').replace(/^\uFEFF/,'');
+  if(!/反焊盘/.test(src))return null;                 // 没有反焊盘列，交给别的解析器
+  const lines=src.split(/\r?\n/);
+  let group='', item='', padName='焊盘半径', rows=[], used={}, out=[], headerSeen=false;
+  function flush(){
+    if(!item||!rows.length)return;
+    const it=item, grp=group;
+    const kind=tableKindOf(grp+' '+it)||detectKind(grp||it, grp);
+    const ci=connRangeOf(it), cg=connRangeOf(grp);
+    const start=ci.start||cg.start;
+    const titleEnd=(ci.end||cg.end||'').replace(/^L/i,'');
+    // 连接层＝反焊盘的数值都相同的那一层里层号最大的（标题写错时以表格数据为准）
+    const nums=rows.map(r=>antiNum(r.anti));
+    let maxAnti=-Infinity, endLayer=0;
+    nums.forEach((v,i)=>{if(v==null)return; if(v>maxAnti){maxAnti=v;endLayer=rows[i].layer;} else if(v===maxAnti&&rows[i].layer>endLayer)endLayer=rows[i].layer;});
+    if(titleEnd && nums.every(v=>v===maxAnti))endLayer=+titleEnd;
+    if(!endLayer)endLayer=+titleEnd||0;
+    const pitch=(it.match(/间距\s*(?:为|=|：|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*mm/i)||[])[1]||'';
+    const parts=[kind||'约束'];
+    if(start)parts.push(start);
+    if(endLayer)parts.push('L'+endLayer);
+    if(pitch)parts.push(pitch+'mm');
+    let title=parts.join('-');
+    if(used[title]){ used[title]++; title+='('+used[title]+')'; } else used[title]=1;
+    const rules=[];
+    rows.forEach(function(r){
+      const anti=String(r.anti||'').trim();
+      const pad=String(r.pad||'').trim();
+      if(anti)rules.push({cat:'反焊盘尺寸', name:'反焊盘半径', scope:'L'+r.layer, value:anti, unit:'mil', raw:'L'+r.layer+' 反焊盘 '+anti+'mil'});
+      if(pad)rules.push({cat:'焊盘尺寸', name:padName, scope:'L'+r.layer, value:pad, unit:'mil', raw:'L'+r.layer+' 焊盘 '+pad});
+    });
+    if(!rules.length)return;
+    out.push({kind:kind, title:title, group:grp, item:it, txtHead:it, source:filename||'导入文本', sourceType:'text', image:'', rules:rules});
+  }
+  lines.forEach(function(line0){
+    const line=String(line0||'').trim();
+    if(!line)return;
+    const cols=line.indexOf('\t')>=0?line.split('\t').map(s=>s.trim()):[];
+    if(cols.length>=2 && /^层$/.test(cols[0]) && /反焊盘/.test(line)){
+      padName=/直径/.test(cols[2]||'')?'焊盘直径':'焊盘半径';
+      headerSeen=true;
+      return;
+    }
+    if(headerSeen && cols.length>=2 && /^L?\s*\d+$/i.test(cols[0]) && /[0-9]|无/.test(cols[1]||'')){
+      rows.push({layer:+String(cols[0]).replace(/^L/i,''), anti:cols[1], pad:cols[2]||''});
+      return;
+    }
+    if(/^[一二三四五六七八九十]+\s*[、.．]/.test(line) && line.length<=80){flush(); group=line; item=''; rows=[]; return;}
+    if(/^\d+\s*[.、．]\s*\S/.test(line) && line.length<=80){flush(); item=line; rows=[]; return;}
+  });
+  flush();
+  return out.length?out:null;
+}
 function tryMatrix(raw, filename){
   const rows=String(raw||'').split(/\r?\n/).map(s=>s.replace(/\u0000/g,'').trim()).filter(Boolean);
   if(rows.length<2)return null;
@@ -527,6 +621,8 @@ function tryMatrix(raw, filename){
 }
 function parseConstraintText(text, filename){
   const raw=String(text||'').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n');
+  const table=tryLayerTable(raw, filename);
+  if(table)return table;
   const matrix=tryMatrix(raw, filename);
   if(matrix)return matrix;
   const lines=[];
@@ -713,8 +809,8 @@ function jumpItems(){
     const kind=set.kind||'';
     if(/BGA/i.test(kind)||/BGA/i.test(title))return 'BGA';
     if(/SMA/i.test(kind)||/SMA/i.test(title)){
-      if(/^Top/i.test(title))return 'SMA · Top 面';
-      if(/^Bot/i.test(title))return 'SMA · bottom 面';
+      if(/(?:^|[^A-Za-z])Top(?![A-Za-z])/i.test(title))return 'SMA · Top 面';
+      if(/(?:^|[^A-Za-z])(?:Bot|BotTOM)(?![A-Za-z])/i.test(title))return 'SMA · bottom 面';
       return 'SMA · 未标面';
     }
     return kind||'其他';
@@ -748,7 +844,7 @@ function renderJump(){
   if(!S.sets.length){nav.hidden=true; nav.innerHTML=''; return;}
   nav.hidden=false;
   const cols=jumpItems();
-  let h='<div class="jlabel">约束指引 · 按封装/面分列，点击跳到对应约束</div><div class="cols">';
+  let h='<div class="jlabel">约束指引 · 按封装/面分组，点击跳到对应约束</div><div class="cols">';
   cols.forEach(function(col){
     h+='<div class="jumpcol"><div class="jumpcol-h">'+esc(col.group)+'<span class="cnt"> '+col.items.length+'</span></div>';
     const multi=col.items.some(function(x){return x.d2m>0;});
@@ -786,7 +882,10 @@ function render(){
     return;
   }
   let h='';
+  let lastGroup='';
   S.sets.forEach((set,si)=>{
+    const grp=set.group||'';
+    if(grp && grp!==lastGroup){h+='<div class="setgroup">'+esc(grp)+'</div>'; lastGroup=grp;}
     const kind=set.kind||'其他';
     const cons=set.constraints||[];
     const fan=fanLayerOf(set);
@@ -900,17 +999,18 @@ function rebuild(){
         set.constraints=buildConstraints(set.rules||[]);
         sets.push(set);
       });
-      item.status='已生成 '+parsed.map(s=>s.kind).join('、')+' '+parsed.reduce((a,s)=>a+(s.constraints||[]).length,0)+' 个约束';
+      item.status='已生成 '+parsed.length+' 条约束（'+parsed.reduce((a,s)=>a+(s.constraints||[]).length,0)+' 列参数）';
     }else item.status='没有抽出参数。每行写成「名称 数值mil」';
   });
   S.sets=sets;
   reexpandAll();
   const n=S.sets.reduce((a,s)=>a+(s.constraints||[]).length,0);
-  $('genHint').textContent=n?('已从 TXT 生成 '+n+' 个约束，并按当前总层数填入每一层。'):'没有生成出规则。请检查 TXT 格式。';
+  const nSets=S.sets.length;
+  $('genHint').textContent=n?('已从 TXT 生成 '+nSets+' 条约束（共 '+n+' 列参数），并按当前总层数填入每一层。'):'没有生成出规则。请检查 TXT 格式。';
   render();
   if(n && typeof showTab==='function'){
     showTab('sets');
-    $('genHint').textContent='已从 TXT 生成 '+n+' 个约束，并按叠层填入每一层。下面是「② 生成的约束」。';
+    $('genHint').textContent='已从 TXT 生成 '+nSets+' 条约束（共 '+n+' 列参数），并按叠层填入每一层。下面是「② 生成的约束」。';
   }
 }
 
@@ -1306,7 +1406,7 @@ function renderLegend(force){
         const viaStr=viaList.map(function(vid){return '#'+vid;}).join('、');
         return '<span style="display:inline-flex;align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:1px 6px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">'+
           '<code>'+esc(netName)+'</code>'+
-          '<span style="color:#64748b;margin-left:4px;font-size:10px">('+viaList.length+'孔: '+esc(viaStr)+')</span>'+
+          '<span style="color:#6b7280;margin-left:4px;font-size:11px">('+viaList.length+'孔: '+esc(viaStr)+')</span>'+
         '</span>';
       }).join('')+
     '</div>';
@@ -1430,7 +1530,7 @@ function renderLegend(force){
             '<div><b>L'+sr.layer+'</b>：<span class="'+(sr.missing?'bad':'')+'">'+sr.reason+'</span></div>'+
             '<div class="bad" style="font-weight:700;white-space:nowrap">'+sr.n+' 条 ('+Object.keys(sr.vias).length+' 个孔)</div>'+
           '</div>'+
-          '<div style="margin-top:4px;font-size:11px;color:#475569">'+
+          '<div style="margin-top:4px;font-size:11px;color:#6b7280">'+
             '<span style="font-weight:600">对应孔的网络（共 '+netCount+' 个网络，全列出）：</span>'+
             renderReasonNetBadges(sr.byNet)+
           '</div>'+

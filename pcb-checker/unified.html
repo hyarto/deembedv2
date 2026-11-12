@@ -6,17 +6,17 @@
 <title>PCB 综合检查一体化工作台 | 统一检查中心</title>
 <style>
 :root {
-  --bg: #f8fafc;
+  --bg: #f4f6f9;
   --card: #ffffff;
   --card-hover: #f1f5f9;
-  --card-border: #e2e8f0;
-  --line: #e2e8f0;
-  --text: #0f172a;
-  --sub: #64748b;
-  --accent: #0284c7;
-  --accent-hover: #0369a1;
-  --accent-light: rgba(2, 132, 199, 0.08);
-  --ok: #059669;
+  --card-border: #e3e8ef;
+  --line: #e3e8ef;
+  --text: #1f2937;
+  --sub: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: rgba(37, 99, 235, 0.08);
+  --ok: #16a34a;
   --ok-bg: #ecfdf5;
   --ok-line: #a7f3d0;
   --bad: #dc2626;
@@ -25,7 +25,7 @@
   --warn: #d97706;
   --warn-bg: #fffbeb;
   --warn-line: #fde68a;
-  --info: #0284c7;
+  --info: #2563eb;
   --mono: "JetBrains Mono", Consolas, Monaco, "Courier New", monospace;
 }
 
@@ -33,7 +33,8 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  font-size:14px;
   line-height: 1.5;
   min-height: 100vh;
   padding-bottom: 60px;
@@ -45,14 +46,14 @@ body {
 /* Master KPI Banner */
 .kpi-banner {
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e3e8ef;
   padding: 10px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 12px;
+  font-size:12px;
 }
 .kpi-items {
   display: flex;
@@ -64,22 +65,22 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #475569;
+  color:#6b7280;
 }
 .kpi-item b {
   font-family: var(--mono);
-  font-size: 14px;
-  color: #0284c7;
+  font-size:14px;
+  color: #2563eb;
 }
 .kpi-score-badge {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f8fafc;
+  background: #fff;
   padding: 4px 12px;
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  color: #0f172a;
+  border: 1px solid #e3e8ef;
+  color:#111827;
 }
 .score-circle {
   width: 24px;
@@ -89,19 +90,19 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 11px;
+  font-size:11px;
   color: #fff;
 }
 .score-circle.a { background: #10b981; }
-.score-circle.b { background: #0284c7; }
+.score-circle.b { background: #2563eb; }
 .score-circle.c { background: #f59e0b; }
 .score-circle.f { background: #ef4444; }
 
 /* Main Container */
 .container {
-  max-width: 1440px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 16px 20px;
+  padding: 12px 24px 16px;
 }
 
 /* Tab Navigation */
@@ -124,9 +125,8 @@ body {
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: 10px;
-  padding: 16px 20px;
+  padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
 }
 .card-header {
   display: flex;
@@ -137,15 +137,21 @@ body {
   border-bottom: 1px solid #f1f5f9;
 }
 .card-title {
-  font-size: 14px;
+  font-size:15px;
   font-weight: 700;
-  color: #0f172a;
+  color:#111827;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+h3 {
+  font-size:13px;
+  font-weight: 700;
+  color: #374151;
+  margin: 12px 0 6px;
+}
 .card-subtitle {
-  font-size: 12px;
+  font-size:12px;
   color: var(--sub);
   margin-top: 2px;
 }
@@ -177,7 +183,7 @@ body {
   gap: 6px;
   padding: 7px 14px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size:12px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
@@ -186,36 +192,36 @@ body {
   line-height: 1.2;
 }
 .btn.primary {
-  background: #0284c7;
+  background: #2563eb;
   color: #fff;
-  border-color: #0369a1;
+  border-color: #1d4ed8;
 }
-.btn.primary:hover { background: #0369a1; }
+.btn.primary:hover { background: #1d4ed8; }
 .btn.sec {
-  background: #f8fafc;
-  color: #334155;
-  border-color: #cbd5e1;
+  background: #fff;
+  color:#374151;
+  border-color: var(--line);
 }
-.btn.sec:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }
+.btn.sec:hover { background: #f1f5f9; color:#111827; border-color: #94a3b8; }
 .btn.success {
-  background: #059669;
+  background: #16a34a;
   color: #fff;
-  border-color: #047857;
+  border-color: #15803d;
 }
-.btn.success:hover { background: #047857; }
+.btn.success:hover { background: #15803d; }
 .btn.danger {
-  background: #dc2626;
-  color: #fff;
-  border-color: #b91c1c;
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
 }
-.btn.danger:hover { background: #b91c1c; }
+.btn.danger:hover { background: #fecaca; }
 .btn.small {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size:11px;
 }
 .btn.large {
   padding: 10px 20px;
-  font-size: 14px;
+  font-size:14px;
   font-weight: 700;
 }
 
@@ -224,21 +230,21 @@ input, select, textarea {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  color: #0f172a;
+  color:#111827;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size:12px;
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #0284c7;
+  border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
 }
 textarea {
   width: 100%;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size:11px;
   line-height: 1.4;
   resize: vertical;
 }
@@ -256,21 +262,21 @@ textarea {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size:11px;
   font-family: var(--mono);
-  color: #0369a1;
+  color: #1d4ed8;
   cursor: pointer;
   transition: all 0.15s;
 }
 .hist-chip:hover {
-  background: #f0f9ff;
-  color: #0284c7;
+  background: #f8fafc;
+  color: #2563eb;
   border-color: #93c5fd;
 }
 .hist-chip.active {
-  background: #0284c7;
+  background: #2563eb;
   color: #fff;
-  border-color: #0369a1;
+  border-color: #1d4ed8;
 }
 
 /* Tables */
@@ -283,7 +289,7 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size:12px;
   text-align: left;
 }
 th, td {
@@ -292,12 +298,12 @@ th, td {
 }
 th {
   background: #f8fafc;
-  color: #475569;
+  color:#6b7280;
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 2;
-  border-bottom: 1.5px solid #e2e8f0;
+  border-bottom: 1.5px solid #e3e8ef;
 }
 tr:hover { background: #f8fafc; }
 tr.fail-row { background: #fef2f2 !important; }
@@ -311,20 +317,20 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   gap: 4px;
   padding: 2px 7px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size:11px;
   font-weight: 600;
   font-family: var(--mono);
 }
 .tag-badge.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad-line); }
 .tag-badge.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-line); }
 .tag-badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line); }
-.tag-badge.info { background: var(--accent-light); color: var(--info); border: 1px solid #bae6fd; }
+.tag-badge.info { background: var(--accent-light); color: var(--info); border: 1px solid #e3e8ef; }
 
 .cat-pill {
   display: inline-block;
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size:11px;
   font-weight: 700;
 }
 .cat-pill.trace { background: #3b82f6; color: #fff; }
@@ -337,11 +343,11 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   display: inline-block;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size:11px;
   font-family: var(--mono);
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  color: #0369a1;
+  color: #1d4ed8;
   margin: 2px 4px 2px 0;
 }
 .net-pill.bad {
@@ -353,7 +359,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 /* Dashboard Cards */
 .dash-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e8ef;
   border-radius: 8px;
   padding: 14px;
   position: relative;
@@ -363,7 +369,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 }
 .dash-card:hover {
   transform: translateY(-2px);
-  border-color: #0284c7;
+  border-color: #2563eb;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
 }
 .dash-card .cat-header {
@@ -373,25 +379,25 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   margin-bottom: 8px;
 }
 .dash-card .cat-title {
-  font-size: 13px;
+  font-size:13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #0f172a;
+  color:#111827;
 }
 .dash-card .stat-main {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 700;
   font-family: var(--mono);
   margin: 4px 0;
   display: flex;
   align-items: baseline;
   gap: 6px;
-  color: #0f172a;
+  color:#111827;
 }
 .dash-card .stat-sub {
-  font-size: 11px;
+  font-size:11px;
   color: var(--sub);
 }
 .progress-bar-bg {
@@ -440,15 +446,15 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 .canvas-toolbar button {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #334155;
+  color:#374151;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size:11px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.canvas-toolbar button:hover { background: #e2e8f0; color: #0f172a; }
-.canvas-toolbar button.active { background: #0284c7; color: #fff; border-color: #0369a1; font-weight: 700; }
+.canvas-toolbar button:hover { background: #e3e8ef; color:#111827; }
+.canvas-toolbar button.active { background: #2563eb; color: #fff; border-color: #1d4ed8; font-weight: 700; }
 
 .canvas-legend {
   position: absolute;
@@ -458,7 +464,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   border: 1px solid #cbd5e1;
   padding: 8px 12px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size:11px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -466,7 +472,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   z-index: 10;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-.legend-item { display: flex; align-items: center; gap: 6px; color: #334155; }
+.legend-item { display: flex; align-items: center; gap: 6px; color:#374151; }
 .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
 .canvas-hud {
@@ -477,9 +483,9 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   border: 1px solid #cbd5e1;
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size:11px;
   font-family: var(--mono);
-  color: #475569;
+  color:#6b7280;
   pointer-events: none;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -500,7 +506,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 }
 .modal-box {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e8ef;
   border-radius: 10px;
   width: 100%;
   max-width: 820px;
@@ -550,16 +556,16 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   border-bottom: 1px solid #f1f5f9;
 }
 .rule-acc-header h4 {
-  font-size: 13px;
+  font-size:13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #0f172a;
+  color:#111827;
 }
 .rule-acc-body {
   padding: 14px 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e3e8ef;
   display: block;
   background: #ffffff;
 }
@@ -578,9 +584,9 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   background: #f8fafc;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  font-size: 12px;
+  font-size:12px;
   font-weight: 600;
-  color: #475569;
+  color:#6b7280;
   cursor: pointer;
   transition: all 0.15s;
   display: inline-flex;
@@ -589,18 +595,18 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 }
 .filter-chip:hover {
   background: #f1f5f9;
-  color: #0f172a;
+  color:#111827;
 }
 .filter-chip.active {
-  background: #0284c7;
+  background: #2563eb;
   color: #fff;
-  border-color: #0369a1;
+  border-color: #1d4ed8;
 }
 .filter-chip .cnt {
   background: rgba(0,0,0,0.06);
   padding: 1px 6px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size:11px;
   font-family: var(--mono);
 }
 .filter-chip.active .cnt {
@@ -623,33 +629,31 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 }
 .jumpnav .jlabel {
   width: 100%;
-  font-size: 12px;
+  font-size:12px;
   color: var(--sub);
   font-weight: 600;
   margin-bottom: 6px;
 }
 .jumpnav .cols {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
   width: 100%;
 }
 .jumpcol {
-  min-width: 196px;
-  max-width: 250px;
-  border-left: 1px solid var(--line);
-  padding-left: 12px;
-}
-.jumpcol:first-child {
-  border-left: none;
-  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 .jumpcol-h {
-  font-size: 12px;
+  width: 100%;
+  font-size:12px;
   font-weight: 700;
-  color: #334155;
-  margin-bottom: 6px;
+  color:#374151;
+  margin: 2px 0 0;
   white-space: nowrap;
 }
 .jumpcol-h .cnt {
@@ -657,34 +661,33 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   font-weight: 400;
 }
 .jumpcol .chipsub {
-  font-size: 10.5px;
+  width: 100%;
+  font-size:11px;
   color: #94a3b8;
-  margin: 6px 0 4px;
+  margin: 4px 0 0;
   white-space: nowrap;
 }
 .jumpcol a {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 5px;
+  margin: 0;
   padding: 4px 10px;
   border-radius: 999px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   color: #1d4ed8;
   text-decoration: none;
-  font-size: 12px;
+  font-size:12px;
   font-weight: 600;
   transition: all 0.15s;
 }
 .jumpcol a:hover {
-  background: #eff6ff;
+  background: #f8fafc;
   border-color: #2563eb;
 }
 .jumpcol a .k {
-  font-size: 10px;
+  font-size:11px;
   color: #fff;
   background: #15803d;
   border-radius: 8px;
@@ -701,6 +704,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 180px;
 }
 
 /* Constraint Cards & Tables */
@@ -724,8 +728,8 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 .set.其他 .hd, .set.混合 .hd { background: #334155; }
 .set .hd .txthead {
   flex-basis: 100%;
-  color: #e2e8f0;
-  font-size: 11.5px;
+  color: #e3e8ef;
+  font-size:12px;
   margin-top: 2px;
 }
 .set .body { padding: 12px; }
@@ -738,7 +742,7 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
 table.layertable {
   min-width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size:12px;
 }
 table.layertable th, table.layertable td {
   border: 1px solid var(--line);
@@ -748,7 +752,7 @@ table.layertable th, table.layertable td {
 }
 table.layertable th {
   background: #f1f5f9;
-  color: #475569;
+  color:#6b7280;
 }
 table.layertable td.lname, table.layertable th.lname {
   text-align: left;
@@ -760,12 +764,12 @@ table.layertable td.lname, table.layertable th.lname {
   font-weight: 600;
 }
 table.layertable th.lname {
-  background: #e2e8f0;
+  background: #e3e8ef;
 }
 table.layertable input.cCell {
   width: 72px;
   text-align: center;
-  font-size: 12px;
+  font-size:12px;
   padding: 4px 6px;
 }
 table.layertable input.cCell.none {
@@ -774,19 +778,19 @@ table.layertable input.cCell.none {
 }
 table.layertable input.cName {
   width: 128px;
-  font-size: 12px;
+  font-size:12px;
 }
 table.layertable .subh {
   display: block;
   font-weight: 400;
-  color: #64748b;
-  font-size: 10.5px;
+  color:#6b7280;
+  font-size:11px;
 }
 table.layertable tr.fan td.lname { color: #15803d; font-weight: 700; }
 table.layertable tr.over td.lname { color: #b45309; }
 table.layertable .srcnote {
   color: var(--sub);
-  font-size: 10.5px;
+  font-size:11px;
   margin-top: 2px;
   line-height: 1.3;
 }
@@ -803,38 +807,36 @@ table.layertable .srcnote {
   margin-bottom: 8px;
 }
 .drag-zone.dragover {
-  border-color: #0284c7;
-  background: #f0f9ff;
+  border-color: #2563eb;
+  background: #f8fafc;
 }
 
-/* 20% Font Size Enlargement across PCB Workbench */
-html { font-size: 16.5px; }
-body { font-size: 15px; }
+/* 字号统一：与「走线检查」页保持同一套字号阶梯 */
+html { font-size:16px; }
+body { font-size:14px; }
 
+.kpi-banner { font-size:12px !important; padding: 10px 24px !important; }
+.kpi-item b { font-size:14px !important; }
+.score-circle { width: 30px !important; height: 30px !important; font-size:13px !important; }
 
-.kpi-banner { font-size: 14.5px !important; padding: 14px 24px !important; }
-.kpi-item b { font-size: 17px !important; }
-.score-circle { width: 52px !important; height: 52px !important; font-size: 20px !important; }
+.card-title { font-size:15px !important; }
+.card-subtitle { font-size:12px !important; }
 
+.rule-acc-header h4 { font-size:13px !important; }
+.btn { font-size:13px !important; padding: 7px 14px !important; }
+.btn.small { font-size:12px !important; padding: 4px 8px !important; }
+.btn.large { font-size:13px !important; padding: 8px 16px !important; }
 
-.card-title { font-size: 17px !important; }
-.card-subtitle { font-size: 13.5px !important; }
+input, select, textarea { font-size:13px !important; }
+table { font-size:13px !important; }
+th { font-size:13px !important; padding: 6px 10px !important; }
+td { font-size:13px !important; padding: 6px 10px !important; }
 
-.rule-acc-header h4 { font-size: 15.5px !important; }
-.btn { font-size: 14px !important; padding: 6px 14px !important; }
-.btn.small { font-size: 13px !important; padding: 4px 10px !important; }
-.btn.large { font-size: 16px !important; padding: 10px 22px !important; }
+.hist-chip, .chip { font-size:12px !important; padding: 2px 8px !important; }
+.tag-badge, .cat-pill { font-size:12px !important; padding: 1px 8px !important; border-radius: 10px; }
 
-input, select, textarea { font-size: 14px !important; }
-table { font-size: 14px !important; }
-th { font-size: 14px !important; padding: 10px 12px !important; }
-td { font-size: 14px !important; padding: 10px 12px !important; }
-
-.hist-chip, .chip { font-size: 12.5px !important; padding: 3px 8px !important; }
-.tag-badge, .cat-pill { font-size: 12.5px !important; padding: 3px 8px !important; }
-
-.dash-card .cat-title { font-size: 15.5px !important; }
-.dash-score { font-size: 26px !important; }
+.dash-card .cat-title { font-size:13px !important; }
+.dash-score { font-size: 22px !important; }
 
 /* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl {
@@ -851,12 +853,12 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
   gap: 5px;
   padding: 4px 10px !important;
   border-radius: 5px;
-  font-size: 12.5px !important;
+  font-size:12px !important;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid rgba(56, 189, 248, 0.45);
   background: rgba(15, 23, 42, 0.65);
-  color: #e0f2fe !important;
+  color: #f1f5f9 !important;
   text-decoration: none;
   white-space: nowrap;
   transition: all 0.15s ease;
@@ -868,7 +870,7 @@ td { font-size: 14px !important; padding: 10px 12px !important; }
   color: #ffffff !important;
 }
 .global-display-ctrl .gdisp-btn.active {
-  background: #0284c7 !important;
+  background: #2563eb !important;
   border-color: #38bdf8;
   color: #ffffff !important;
 }
@@ -935,8 +937,8 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
   gap: 4px;
 }
 .data-cat-drop:hover, .data-cat-drop.dragover {
-  border-color: #0284c7;
-  background: #f0f9ff;
+  border-color: #2563eb;
+  background: #f8fafc;
 }
 .data-cat-box.loaded .data-cat-drop {
   border-style: solid;
@@ -947,19 +949,25 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
+</style>
+<style>
+.unified-dfm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;font-size:12px;color:#6b7280;margin:10px 0}
+.udfm-item{display:flex;flex-direction:column;gap:3px;min-width:0}.udfm-item label{font-size:12px;font-weight:600;color:#374151}.udfm-item input,.udfm-item select,#unifiedLayerRuleTable input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px;background:#fff;color:#1f2937;font-size:13px}
+.udfm-item .hist-bar{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}.udfm-item .hist-bar button{font-size:11px;padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#f1f5f9;color:#374151;cursor:pointer}#unifiedLayerRuleTable th,#unifiedLayerRuleTable td{padding:5px 7px;text-align:left;border-bottom:1px solid #e3e8ef}#unifiedLayerRuleTable input{padding:4px 6px}#unifiedLayerRuleTable .hist-bar{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}#unifiedLayerRuleTable .hist-bar button{font-size:11px;padding:1px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#f1f5f9;color:#374151;cursor:pointer}
+@media(max-width:760px){.unified-dfm-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -1042,25 +1050,25 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
       <!-- 四个独立 TXT 数据导入框 (无粘贴框，仅限 .txt 文件) -->
       <div class="data-ingest-grid" id="gridCategorizedDataBoxes">
         <!-- Box 1: 走线检查所需的数据 -->
-        <div class="data-cat-box" id="dataBox_trace" style="border-top:3px solid #0284c7">
+        <div class="data-cat-box" id="dataBox_trace" style="border-top:3px solid #2563eb">
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
-              <span style="font-size:13.5px;font-weight:700;color:#0f172a">① 走线检查数据</span>
-              <span id="badgeData_trace" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+              <span style="font-size:13px;font-weight:700;color:#111827">① 走线检查数据</span>
+              <span id="badgeData_trace" class="tag-badge" style="background:#e3e8ef;color:#6b7280;font-size:11px">未导入</span>
             </div>
-            <div style="font-size:11.5px;color:#64748b;line-height:1.4">走线检查所需的网络走线报告数据（线宽组合 / 线长 / 差分线长差 / 弧半径）</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.4">走线检查所需的网络走线报告数据（线宽组合 / 线长 / 差分线长差 / 弧半径）</div>
           </div>
           <div class="data-cat-drop" id="dropZone_trace" onclick="$('fileData_trace').click()">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-            <div id="statusData_trace" style="font-size:12px;font-weight:600;color:#0284c7">点击选择或拖拽 .txt 文件至此</div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div id="statusData_trace" style="font-size:12px;font-weight:600;color:#2563eb">点击选择或拖拽 .txt 文件至此</div>
             <div id="metaData_trace" style="font-size:11px;color:#94a3b8;font-family:var(--mono)">仅支持 .txt 格式（可多选合并）</div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
             <div style="display:flex;gap:5px">
-              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_trace').click()">选择 .txt</button>
-              <button type="button" class="btn ghost small" id="btnAppend_trace" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_trace').click()">+ 追加 .txt</button>
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px" onclick="$('fileData_trace').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_trace" style="padding:2px 8px;font-size:12px;display:none" onclick="$('fileAppend_trace').click()">+ 追加 .txt</button>
             </div>
-            <button type="button" class="btn sec small" id="btnClear_trace" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('trace', event)">清空</button>
+            <button type="button" class="btn sec small" id="btnClear_trace" style="padding:2px 8px;font-size:12px;display:none;color:#dc2626" onclick="clearCategoryData('trace', event)">清空</button>
           </div>
           <input type="file" id="fileData_trace" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('trace', event, false)">
           <input type="file" id="fileAppend_trace" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('trace', event, true)">
@@ -1070,10 +1078,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
         <div class="data-cat-box" id="dataBox_constraint" style="border-top:3px solid #7c3aed">
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
-              <span style="font-size:13.5px;font-weight:700;color:#0f172a">② 约束检查数据</span>
-              <span id="badgeData_constraint" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+              <span style="font-size:13px;font-weight:700;color:#111827">② 约束检查数据</span>
+              <span id="badgeData_constraint" class="tag-badge" style="background:#e3e8ef;color:#6b7280;font-size:11px">未导入</span>
             </div>
-            <div style="font-size:11.5px;color:#64748b;line-height:1.4">约束检查所需的过孔与反焊盘铜皮数据（反焊盘尺寸 / Padstack 层名核对）</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.4">约束检查所需的过孔与反焊盘铜皮数据（反焊盘尺寸 / Padstack 层名核对）</div>
           </div>
           <div class="data-cat-drop" id="dropZone_constraint" onclick="$('fileData_constraint').click()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
@@ -1082,10 +1090,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
             <div style="display:flex;gap:5px">
-              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_constraint').click()">选择 .txt</button>
-              <button type="button" class="btn ghost small" id="btnAppend_constraint" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_constraint').click()">+ 追加 .txt</button>
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px" onclick="$('fileData_constraint').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_constraint" style="padding:2px 8px;font-size:12px;display:none" onclick="$('fileAppend_constraint').click()">+ 追加 .txt</button>
             </div>
-            <button type="button" class="btn sec small" id="btnClear_constraint" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('constraint', event)">清空</button>
+            <button type="button" class="btn sec small" id="btnClear_constraint" style="padding:2px 8px;font-size:12px;display:none;color:#dc2626" onclick="clearCategoryData('constraint', event)">清空</button>
           </div>
           <input type="file" id="fileData_constraint" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('constraint', event, false)">
           <input type="file" id="fileAppend_constraint" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('constraint', event, true)">
@@ -1095,10 +1103,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
         <div class="data-cat-box" id="dataBox_dfmFanout" style="border-top:3px solid #0d9488">
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
-              <span style="font-size:13.5px;font-weight:700;color:#0f172a">③ DFM 与扇出方案数据</span>
-              <span id="badgeData_dfmFanout" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+              <span style="font-size:13px;font-weight:700;color:#111827">③ DFM 与扇出方案数据</span>
+              <span id="badgeData_dfmFanout" class="tag-badge" style="background:#e3e8ef;color:#6b7280;font-size:11px">未导入</span>
             </div>
-            <div style="font-size:11.5px;color:#64748b;line-height:1.4">DFM 加工能力与扇出方案检查共用的过孔与走线数据（线孔间距 / 扇出拓扑）</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.4">DFM 加工能力与扇出方案检查共用的过孔与走线数据（线孔间距 / 扇出拓扑）</div>
           </div>
           <div class="data-cat-drop" id="dropZone_dfmFanout" onclick="$('fileData_dfmFanout').click()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
@@ -1107,10 +1115,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
             <div style="display:flex;gap:5px">
-              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_dfmFanout').click()">选择 .txt</button>
-              <button type="button" class="btn ghost small" id="btnAppend_dfmFanout" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_dfmFanout').click()">+ 追加 .txt</button>
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px" onclick="$('fileData_dfmFanout').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_dfmFanout" style="padding:2px 8px;font-size:12px;display:none" onclick="$('fileAppend_dfmFanout').click()">+ 追加 .txt</button>
             </div>
-            <button type="button" class="btn sec small" id="btnClear_dfmFanout" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('dfmFanout', event)">清空</button>
+            <button type="button" class="btn sec small" id="btnClear_dfmFanout" style="padding:2px 8px;font-size:12px;display:none;color:#dc2626" onclick="clearCategoryData('dfmFanout', event)">清空</button>
           </div>
           <input type="file" id="fileData_dfmFanout" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('dfmFanout', event, false)">
           <input type="file" id="fileAppend_dfmFanout" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('dfmFanout', event, true)">
@@ -1120,10 +1128,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
         <div class="data-cat-box" id="dataBox_pour" style="border-top:3px solid #d97706">
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
-              <span style="font-size:13.5px;font-weight:700;color:#0f172a">④ 铜皮检查数据</span>
-              <span id="badgeData_pour" class="tag-badge" style="background:#e2e8f0;color:#475569;font-size:11px">未导入</span>
+              <span style="font-size:13px;font-weight:700;color:#111827">④ 铜皮检查数据</span>
+              <span id="badgeData_pour" class="tag-badge" style="background:#e3e8ef;color:#6b7280;font-size:11px">未导入</span>
             </div>
-            <div style="font-size:11.5px;color:#64748b;line-height:1.4">铜皮检查所需的 Shape / Via / Trace 数据（铺铜覆盖 / 异型铜皮 / 参考层超宽）</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.4">铜皮检查所需的 Shape / Via / Trace 数据（铺铜覆盖 / 异型铜皮 / 参考层超宽）</div>
           </div>
           <div class="data-cat-drop" id="dropZone_pour" onclick="$('fileData_pour').click()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
@@ -1132,10 +1140,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
             <div style="display:flex;gap:5px">
-              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px" onclick="$('fileData_pour').click()">选择 .txt</button>
-              <button type="button" class="btn ghost small" id="btnAppend_pour" style="padding:2px 8px;font-size:11.5px;display:none" onclick="$('fileAppend_pour').click()">+ 追加 .txt</button>
+              <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px" onclick="$('fileData_pour').click()">选择 .txt</button>
+              <button type="button" class="btn ghost small" id="btnAppend_pour" style="padding:2px 8px;font-size:12px;display:none" onclick="$('fileAppend_pour').click()">+ 追加 .txt</button>
             </div>
-            <button type="button" class="btn sec small" id="btnClear_pour" style="padding:2px 8px;font-size:11.5px;display:none;color:#dc2626" onclick="clearCategoryData('pour', event)">清空</button>
+            <button type="button" class="btn sec small" id="btnClear_pour" style="padding:2px 8px;font-size:12px;display:none;color:#dc2626" onclick="clearCategoryData('pour', event)">清空</button>
           </div>
           <input type="file" id="fileData_pour" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('pour', event, false)">
           <input type="file" id="fileAppend_pour" accept=".txt" multiple style="display:none" onchange="handleCategoryTxtUpload('pour', event, true)">
@@ -1143,10 +1151,10 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:4px">
-        <div id="lblDataSummary" style="font-size:11.5px;color:var(--sub);font-family:var(--mono)">
+        <div id="lblDataSummary" style="font-size:12px;color:var(--sub);font-family:var(--mono)">
           已导入模块: 0 / 4 类 | 汇总元素: 0 孔 | 0 走线段 | 0 铜皮
         </div>
-        <div style="font-size:11px;color:#64748b">
+        <div style="font-size:11px;color:#6b7280">
           提示：各框仅接收 <code>.txt</code> 文件，导入后自动针对已载入数据的模块执行检查（未导入数据的模块不误报）。
         </div>
       </div>
@@ -1201,7 +1209,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
               <button class="btn sec small" onclick="addTraceLayerRuleRow()">新增出线层规则</button>
-              <div style="font-size:11.5px;color:#475569;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                 <span><label><input type="checkbox" id="cfgCheckLayerDiff" checked> <b>检查逐层线长差</b></label>: <input type="number" id="cfgDiffLayerTol" value="0.5" step="0.1" style="width:65px"> mil</span>
                 <span><label><input type="checkbox" id="cfgCheckTotalDiff" checked> <b>检查总线长差</b></label>: <input type="number" id="cfgDiffTol" value="1.0" step="0.1" style="width:65px"> mil</span>
               </div>
@@ -1222,16 +1230,16 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             </div>
           </div>
           <div class="rule-acc-body">
-            <div style="font-size:12px;color:#334155;margin-bottom:8px">
+            <div style="font-size:12px;color:#374151;margin-bottom:8px">
               <b>生成的约束</b>
-              <div style="font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.6">
-                名称写在每张表的标题里，按 TXT 生成。例如「一、SMA在bottom面，D2M为6mil的封装方案」加上「1. L19层扇出 SMA」，名称就是 Bot-SMA-L19-D2M6mil。表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数。出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。
+              <div style="font-size:12px;color:var(--sub);margin-top:2px;line-height:1.6">
+                点击约束指引可跳转到对应卡片；每张表按层展示反焊盘、焊盘等参数，单元格可直接编辑并注明来源。支持参数行与三列表格两种 TXT 写法。
               </div>
             </div>
 
             <!-- Global Stack & Switches -->
-            <div style="font-size:11.5px;color:#475569;display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#f8fafc;padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:12px">
-              <div><b>总叠层数:</b> <input type="number" id="cfgLayerCount" value="21" style="width:60px" onchange="onLayerCountChange()"> 层</div>
+            <div style="font-size:12px;color:#6b7280;display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#f8fafc;padding:8px 12px;border:1px solid #e3e8ef;border-radius:6px;margin-bottom:12px">
+              <div><b>总叠层数:</b> <input type="number" id="cfgLayerCount" value="" min="1" max="64" placeholder="自动" style="width:70px" onchange="onLayerCountChange()"> 层 <button type="button" class="btn sec small" onclick="resetAutoLayerCount()">按 TXT 自动</button> <span id="unifiedLayerCountHint" style="font-size:11px;color:#6b7280"></span></div>
               <div><b>反焊盘尺寸容差:</b> <input type="number" id="cfgAntiPadTol" value="0.5" step="0.1" style="width:60px"> mil</div>
               <div><label><input type="checkbox" id="cfgCheckAntiPad" checked> <b>检查反焊盘尺寸</b></label></div>
               <div><label><input type="checkbox" id="cfgCheckPadstackLayers" checked> <b>检查 Padstack 层名包含所有连接层</b></label></div>
@@ -1247,13 +1255,21 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
               <button class="btn sec small" onclick="addCustomConstraintSet()">新增约束卡片</button>
               <button class="btn sec small" onclick="resetDefaultConstraintSets()">恢复预设约束方案 (BGA/SMA全套)</button>
             </div>
+            <div class="unified-constraint-note" style="margin-top:14px;padding:12px 14px;background:#fff;border:1px solid #e3e8ef;border-radius:8px">
+              <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:6px">约束名称与填法说明</div>
+              <div style="font-size:12px;color:#6b7280;line-height:1.9">
+                <div><b>参数行写法</b>：「一、SMA在bottom面，D2M为6mil的封装方案」+「1. L19层扇出 SMA」→ Bot-SMA-L19-D2M6mil。</div>
+                <div><b>表格写法</b>：「一、SMA封装方案」+「1. 信号孔连接层Top至L2」→ SMA-Top-L2；「1. 信号孔间距为0.5mm」（同一大类下 4 张表）→ BGA-L2-L4-0.5mm / -0.6mm / -0.7mm / -0.8mm，一张表一条约束。</div>
+                <div><b>填法</b>：表中每个有数值的格子写上来源；TXT 没写到的格子填无。L18及以上表示 L1 到 L18 都是该参数；出线层就是名称里的那一层，例如 Bot-SMA-L19-D2M6mil 填到 L19。</div>
+              </div>
+            </div>
           </div>
         </div>
 
                 <!-- 3. DFM Rules (3x3 Grid with Presets and History Chips - Matching image-1.png) -->
         <div class="rule-acc">
           <div class="rule-acc-header" onclick="toggleAcc(this)">
-            <h4>3. DFM 加工能力检查规则 (线到GND孔 / 线到信号孔双独立判定阈值与判定口径)</h4>
+            <h4>3. DFM 加工能力检查规则 (阈值按层设置、孔盘间距与判定口径)</h4>
             <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
               <button class="btn sec small" style="padding:2px 6px" onclick="importDfmRulesPrompt()">导入 DFM JSON</button>
               <button class="btn sec small" style="padding:2px 6px" onclick="exportDfmRulesPrompt()">导出 DFM JSON</button>
@@ -1262,131 +1278,41 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
           </div>
           <div class="rule-acc-body">
             <!-- DFM Preset Toolbar matching image-1.png -->
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">
-              <span style="font-size:12px;color:#475569;font-weight:600">常用配置方案预设:</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px">
+              <span style="font-size:12px;color:#6b7280;font-weight:600">常用配置方案预设:</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="btn primary small" style="padding:3px 10px;font-size:11.5px" onclick="applyDfmPreset('current_eda')" title="线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12">当前 EDA 工程配置</button>
-                <button class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="applyDfmPreset('std_6mil')" title="线到地 6.0 / 线到信号 6.0 / GND盘 8.0 / 信号盘 12">6.0 mil 标准规则</button>
-                <button class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="applyDfmPreset('high_density_5mil')" title="线到地 5.0 / 线到信号 5.0 / GND盘 7.0 / 信号盘 10">5.0 mil 高密规则</button>
+                <button class="btn primary small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('current_eda')" title="线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12">当前 EDA 工程配置</button>
+                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('std_6mil')" title="线到地 6.0 / 线到信号 6.0 / GND盘 8.0 / 信号盘 12">6.0 mil 标准规则</button>
+                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('high_density_5mil')" title="线到地 5.0 / 线到信号 5.0 / GND盘 7.0 / 信号盘 10">5.0 mil 高密规则</button>
               </div>
             </div>
 
-            <!-- 3x3 Grid matching image-1.png -->
-            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:11.5px;color:#475569" id="pnlDfmGrid">
-              <!-- Item 1: Threshold GND -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">线到 GND 孔最小间距规则阈值 (mil) *</div>
-                <input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_tol', this.value)">
-                <div class="hist-bar" id="hist_thresh_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','4.01575')">4.01575 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','6.0')">6.0 mil (标准)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdGnd','8.0')">8.0 mil</span>
-                </div>
+            <!-- Compact DFM options: six common controls in two rows of three -->
+            <div class="unified-dfm-grid" id="pnlDfmGrid">
+              <div class="udfm-item"><label for="selDfmMode">间距计算判定口径</label><select id="selDfmMode"><option value="pad_to_trace" selected>焊盘到走线边缘（EDA Air Gap）</option><option value="drill_to_trace">钻孔孔壁到走线边缘</option><option value="center_to_trace">过孔中心到走线边缘</option><option value="center_to_center">过孔中心到走线中心</option></select></div>
+              <div class="udfm-item"><label for="inpGndPadDiam">GND 焊盘直径 (mil)</label><input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpGndPadDiam','7.906')">7.906</button><button type="button" onclick="fillInput('inpGndPadDiam','5.94')">5.94</button><button type="button" onclick="fillInput('inpGndPadDiam','8')">8</button></div></div>
+              <div class="udfm-item"><label for="inpSignalPadDiam">非 GND / 信号焊盘直径 (mil)</label><input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpSignalPadDiam','12')">12</button><button type="button" onclick="fillInput('inpSignalPadDiam','9.94')">9.94</button><button type="button" onclick="fillInput('inpSignalPadDiam','10')">10</button></div></div>
+              <div class="udfm-item"><label for="inpGndDrillDiam">GND 一钻直径 (mil)</label><input type="number" id="inpGndDrillDiam" value="6.0" step="0.01" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpGndDrillDiam','6')">6</button><button type="button" onclick="fillInput('inpGndDrillDiam','5.54')">5.54</button></div></div>
+              <div class="udfm-item"><label for="inpSignalDrillDiam">非 GND / 信号一钻直径 (mil)</label><input type="number" id="inpSignalDrillDiam" value="6.0" step="0.01" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpSignalDrillDiam','6')">6</button><button type="button" onclick="fillInput('inpSignalDrillDiam','5.54')">5.54</button></div></div>
+              <div class="udfm-item"><label for="selDfmNetScope">网络检查范围</label><select id="selDfmNetScope"><option value="diff_net" selected>仅检查异网络</option><option value="all_net">包含同网络</option></select></div>
+            </div>
+            <details style="border:1px dashed #cbd5e1;border-radius:8px;padding:8px 10px;margin:2px 0 8px">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#374151">焊盘形状（可选 · 非圆形焊盘按真实几何计算）</summary>
+              <div class="unified-dfm-grid" style="margin-top:8px">
+                <div class="udfm-item"><label for="selUnifiedPadShape">焊盘形状</label><select id="selUnifiedPadShape"><option value="circle" selected>圆形</option><option value="oblong">长圆 / 椭圆</option><option value="roundrect">圆角矩形</option><option value="rect">直角矩形</option></select></div>
+                <div class="udfm-item"><label>GND 焊盘长 × 宽 (mil)</label><div style="display:flex;gap:5px"><input id="inpUnifiedGndPadW" type="number" value="7.906"><input id="inpUnifiedGndPadH" type="number" value="7.906"></div></div>
+                <div class="udfm-item"><label>信号焊盘长 × 宽 (mil)</label><div style="display:flex;gap:5px"><input id="inpUnifiedSigPadW" type="number" value="12"><input id="inpUnifiedSigPadH" type="number" value="12"></div></div>
+                <div class="udfm-item"><label for="inpUnifiedPadCorner">圆角半径 (mil)</label><input id="inpUnifiedPadCorner" type="number" value="0" min="0"></div>
+                <div class="udfm-item"><label for="inpUnifiedPadRot">旋转角 (°)</label><input id="inpUnifiedPadRot" type="number" value="0" step="0.5"></div>
               </div>
-
-              <!-- Item 2: Threshold Signal -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">线到信号孔最小间距规则阈值 (mil) *</div>
-                <input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_tol', this.value)">
-                <div class="hist-bar" id="hist_thresh_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','5.04725')">5.04725 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','6.0')">6.0 mil (标准)</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','8.0')">8.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpThresholdSignal','10.0')">10.0 mil</span>
-                </div>
+            </details>
+            <div id="unifiedLayerRuleBox" style="margin-top:10px;border:1px solid #e3e8ef;border-radius:8px;padding:10px 12px;background:#fff">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <div><div style="font-size:13px;font-weight:700;color:#111827">间距规则（按层生效，靠上优先，最后一行是默认）</div><div style="font-size:12px;color:#6b7280;margin-top:2px">适用层支持 Top、Bot、内层、L2-L5；孔盘到孔盘按重叠层取最严规则。默认行用于未命中的层。</div></div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sec small" onclick="UnifiedDfmLayerRules.template()">套用 Top/Bot + 内层</button><button type="button" class="btn sec small" onclick="UnifiedDfmLayerRules.add()">新增规则</button></div>
               </div>
-
-              <!-- Item 3: Mode -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">间距计算判定口径 *</div>
-                <select id="selDfmMode" style="width:100%">
-                  <option value="pad_to_trace" selected>焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
-                  <option value="drill_to_trace">钻孔孔壁到走线边缘 (一钻孔径孔壁到走线，机械孔壁间距)</option>
-                  <option value="center_to_trace">过孔中心到走线边缘 (Center to Trace Edge)</option>
-                  <option value="center_to_center">过孔中心到走线中心 (Center to Center)</option>
-                </select>
-                <div style="font-size:10.5px;color:#64748b;margin-top:6px">
-                  通常以铜皮焊盘边缘到走线边缘作为电气安全净距判据
-                </div>
-              </div>
-
-              <!-- Item 4: GND Pad Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">GND 焊盘直径 (mil) *</div>
-                <input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_pad', this.value)">
-                <div class="hist-bar" id="hist_pad_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','7.906')">7.906 mil (EDA实测)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','7.0')">7.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','5.94')">5.94 mil (一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndPadDiam','8.0')">8.0 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 5: Signal Pad Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">非 GND / 信号焊盘直径 (mil) *</div>
-                <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_pad', this.value)">
-                <div class="hist-bar" id="hist_pad_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','12.0')">12.0 mil (当前EDA)</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','9.0')">9.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','9.94')">9.94 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','7.906')">7.906 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalPadDiam','10.0')">10.0 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 6: GND Drill Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">GND 一钻直径 (mil) *</div>
-                <input type="number" id="inpGndDrillDiam" value="6.0" step="0.01" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_gnd_drill', this.value)">
-                <div class="hist-bar" id="hist_drill_gnd" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','6.0')">6.0 mil (默认一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpGndDrillDiam','5.54')">5.54 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 7: Signal Drill Diameter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">非 GND / 信号一钻直径 (mil) *</div>
-                <input type="number" id="inpSignalDrillDiam" value="6.0" step="0.01" min="0.1" style="width:100%" onchange="recordHistoryChip('dfm_sig_drill', this.value)">
-                <div class="hist-bar" id="hist_drill_sig" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','6.0')">6.0 mil (默认一钻)</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','5.0')">5.0 mil</span>
-                  <span class="hist-chip" onclick="fillInput('inpSignalDrillDiam','5.54')">5.54 mil</span>
-                </div>
-              </div>
-
-              <!-- Item 8: Net Scope Filter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">网络检查范围 *</div>
-                <select id="selDfmNetScope" style="width:100%">
-                  <option value="diff_net" selected>仅检查异网络 (Diff Nets，排除同网络走线，推荐)</option>
-                  <option value="all_net">检查所有网络 (包含同网络走线)</option>
-                </select>
-                <div style="font-size:10.5px;color:#64748b;margin-top:6px">
-                  通常仅异网络过孔与走线才存在蚀刻连锡短路风险
-                </div>
-              </div>
-
-              <!-- Item 9: Layer Filter -->
-              <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #e2e8f0">
-                <div style="margin-bottom:4px;font-weight:600;color:#0f172a">层筛选 (Layer Filter) *</div>
-                <select id="selDfmLayerFilter" style="width:100%" data-no-persist>
-                  <option value="all" selected>全部层 (All Layers)</option>
-                  <option value="02G01P">02G01P</option>
-                  <option value="19IS08">19IS08</option>
-                  <option value="08IS03">08IS03</option>
-                  <option value="L2">L2</option>
-                  <option value="L4">L4</option>
-                  <option value="L17">L17</option>
-                </select>
-                <div style="font-size:10.5px;color:#64748b;margin-top:6px">
-                  可指定仅检查关键内层或高速差分出线层
-                </div>
-              </div>
+              <div class="table-wrap" style="overflow-x:auto"><table id="unifiedLayerRuleTable" style="width:100%;border-collapse:collapse;margin:0"><thead><tr><th style="width:150px">适用层</th><th>线到 GND 孔 (mil)</th><th>线到信号孔 (mil)</th><th>GND 孔盘到信号孔盘 (mil)</th><th style="width:58px"></th></tr></thead><tbody id="unifiedLayerRuleBody"></tbody><tbody><tr style="background:#f8fafc"><td><b>默认</b><div style="font-size:11px;color:#6b7280">未命中上方规则的层</div></td><td><input id="inpThresholdGnd" aria-label="默认线到 GND 孔阈值" type="number" value="4.01575" step="0.00001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdGnd','4.01575')">4.01575</button><button type="button" onclick="fillInput('inpThresholdGnd','5')">5</button><button type="button" onclick="fillInput('inpThresholdGnd','6')">6</button><button type="button" onclick="fillInput('inpThresholdGnd','8')">8</button></div></td><td><input id="inpThresholdSignal" aria-label="默认线到信号孔阈值" type="number" value="5.04725" step="0.00001" min="0.1"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdSignal','5.04725')">5.04725</button><button type="button" onclick="fillInput('inpThresholdSignal','5')">5</button><button type="button" onclick="fillInput('inpThresholdSignal','6')">6</button><button type="button" onclick="fillInput('inpThresholdSignal','8')">8</button><button type="button" onclick="fillInput('inpThresholdSignal','10')">10</button></div></td><td><input id="inpThresholdPadPair" aria-label="默认孔盘到孔盘阈值" type="number" value="6" step="0.00001" min="0"><div class="hist-bar"><button type="button" onclick="fillInput('inpThresholdPadPair','6')">6</button><button type="button" onclick="fillInput('inpThresholdPadPair','5')">5</button><button type="button" onclick="fillInput('inpThresholdPadPair','8')">8</button><button type="button" onclick="fillInput('inpThresholdPadPair','10')">10</button></div></td><td></td></tr></tbody></table></div>
+              <div id="unifiedLayerRuleHint" style="font-size:11px;color:#6b7280;margin-top:6px">未设置分层规则时，所有层使用默认阈值。</div>
             </div>
           </div>
         </div>
@@ -1405,8 +1331,8 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             <!-- Header matching image-2.png -->
             <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
               <div>
-                <div style="font-size:13px;font-weight:700;color:#0f172a">扇出方案库管理 (Fanout Pattern Templates)</div>
-                <div style="font-size:11.5px;color:#64748b;margin-top:2px">
+                <div style="font-size:13px;font-weight:700;color:#111827">扇出方案库管理 (Fanout Pattern Templates)</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:2px">
                   扇出方案定义了特定功能过孔群的几何拓扑：包括各孔的相对坐标、孔与孔中心距 (airgap/pitch)，以及每个孔对应的 Padstack Name (如信号孔与伴随屏蔽地孔)。
                 </div>
               </div>
@@ -1414,7 +1340,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
                 <button class="btn small" style="background:#7c3aed;color:#ffffff;font-weight:700;padding:4px 12px;border-radius:6px" onclick="openFanoutSchemeModal()">
                   新建扇出方案
                 </button>
-                <button class="btn small" style="background:#0284c7;color:#ffffff;font-weight:700;padding:4px 12px;border-radius:6px" onclick="openBatchFanoutModal()">
+                <button class="btn small" style="background:#2563eb;color:#ffffff;font-weight:700;padding:4px 12px;border-radius:6px" onclick="openBatchFanoutModal()">
                   批量导入多方案 (TXT / 粘贴)
                 </button>
                 <button class="btn sec small" onclick="loadFanoutPresets()"><span style="font-size:12px"></span> 载入标准预设方案库</button>
@@ -1426,8 +1352,8 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             </div>
 
             <!-- Clustering & Matching Parameter Toolbar -->
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11.5px;color:#475569">
-              <span style="font-weight:600;color:#0f172a">拓扑检查判据:</span>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px;font-size:12px;color:#6b7280">
+              <span style="font-weight:600;color:#111827">拓扑检查判据:</span>
               <div style="display:flex;align-items:center;gap:4px">
                 <span>孔连通聚类分割判据:</span>
                 <input type="number" id="cfgClusterDist" value="2.0" step="0.1" min="0.1" style="width:60px"> mm
@@ -1496,14 +1422,14 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             <button class="btn sec small" style="margin-bottom:12px" onclick="addPourRule1Row()">新增孔铺铜覆盖规则</button>
 
                         <!-- Rule 2: Special Shaped Copper Template Matching (Matching image-1.png) -->
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+            <div style="background:#ffffff;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">
                 <div>
                   <div style="display:flex;align-items:center;gap:8px">
-                    <span style="font-size:12.5px;font-weight:700;color:#0f172a">2.【特定类型孔在指定层的异型铜皮比对规则】</span>
+                    <span style="font-size:12px;font-weight:700;color:#111827">2.【特定类型孔在指定层的异型铜皮比对规则】</span>
                     <span id="badgePourRule2Count" style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">1 条规则</span>
                   </div>
-                  <div style="font-size:11.5px;color:#64748b;margin-top:3px">
+                  <div style="font-size:12px;color:#6b7280;margin-top:3px">
                     支持配置多种过孔类型与多个目标层。异型铜皮的几何轮廓与面积由导入的 TXT 数据获得，系统比对孔周围铜皮是否符合模板要求。
                   </div>
                 </div>
@@ -1515,7 +1441,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
                 </div>
               </div>
 
-              <div class="table-wrap" style="margin-top:6px;border:1px solid #e2e8f0;border-radius:6px">
+              <div class="table-wrap" style="margin-top:6px;border:1px solid #e3e8ef;border-radius:6px">
                 <table id="tblPourRule2" style="width:100%;font-size:12px">
                   <thead>
                     <tr>
@@ -1558,7 +1484,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
             </div>
             <button class="btn sec small" style="margin-bottom:12px" onclick="addPourRule3Row()">新增走线参考层规则</button>
 
-            <div style="font-size:11.5px;color:#475569;display:flex;gap:14px;flex-wrap:wrap">
+            <div style="font-size:12px;color:#6b7280;display:flex;gap:14px;flex-wrap:wrap">
               <div>孤立小铜皮面积: <input type="number" id="cfgPourSmallArea" value="500.0" style="width:70px"> sq mil</div>
               <div>铜皮最小圆弧半径: <input type="number" id="cfgPourMinArc" value="10.0" style="width:70px"> mil</div>
             </div>
@@ -1761,7 +1687,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
         <div id="unifiedCanvasReviewBox" style="display:none;position:absolute;top:56px;right:14px;width:320px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.4);border-radius:10px;padding:12px 14px;color:#f1f5f9;z-index:20;box-shadow:0 12px 28px rgba(0,0,0,0.45)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(148,163,184,0.2)">
             <strong id="unifiedCanvasRevTitle" style="font-size:13px;color:#38bdf8">缺陷空间定位详情</strong>
-            <span onclick="closeUnifiedCanvasReviewBox()" style="cursor:pointer;color:#94a3b8;font-size:14px">✕</span>
+            <span onclick="closeUnifiedCanvasReviewBox()" style="cursor:pointer;color:#94a3b8;font-size:14px"></span>
           </div>
           <div id="unifiedCanvasRevBody"></div>
         </div>
@@ -1791,7 +1717,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 
       <!-- Table 1 Header: By Target Object -->
       <div style="margin:16px 0 8px 0;display:flex;align-items:center;justify-content:space-between">
-        <h3 style="font-size:14px;color:#38bdf8;display:flex;align-items:center;gap:6px">
+        <h3 style="color:#374151">
           表格一：按目标对象归纳汇总表 (同一个目标对象的所有缺陷放在一起)
         </h3>
         <span class="tag-badge info" id="lblTargetObjectSummary">共 0 个问题对象</span>
@@ -1819,7 +1745,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 
       <!-- Table 2 Header: By Defect Cause -->
       <div style="margin:16px 0 8px 0;display:flex;align-items:center;justify-content:space-between">
-        <h3 style="font-size:14px;color:#f59e0b;display:flex;align-items:center;gap:6px">
+        <h3 style="color:#374151">
           表格二：按缺陷原因与检查项归纳汇总表 (同一缺陷原因的放在一起 · 一一对应全列出)
         </h3>
         <span class="tag-badge warn" id="lblDefectReasonSummary">共 0 种缺陷类型</span>
@@ -1845,7 +1771,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 
       <!-- Table 3 Header: Differential Network Fanout Anomaly Table -->
       <div style="margin:20px 0 8px 0;display:flex;align-items:center;justify-content:space-between">
-        <h3 style="font-size:14px;color:#8b5cf6;display:flex;align-items:center;gap:6px">
+        <h3 style="color:#374151">
           表格三：差分网络扇出打孔异常规律分析表 (Padstack 错误 vs 位置错误明细)
         </h3>
         <span class="tag-badge purple" id="lblFanoutDiffSummary">共 0 组差分网络</span>
@@ -1882,17 +1808,17 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 <!-- Modal: Batch Import Multi-Scheme TXT -->
 <div class="modal-overlay" id="modalBatchFanout" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div class="modal-box" style="background:#ffffff;border-radius:10px;width:100%;max-width:880px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.25);overflow:hidden">
-    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
-      <div style="font-size:14px;font-weight:700;color:#0f172a">批量导入扇出方案 (Multi-Scheme Batch Import)</div>
+    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:16px;font-weight:700;color:#111827">批量导入扇出方案 (Multi-Scheme Batch Import)</div>
       <button class="btn sec small" onclick="closeBatchFanoutModal()">关闭</button>
     </div>
     <div class="modal-body" style="padding:16px 18px;overflow-y:auto;flex:1;font-size:12px">
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:10px 12px;border-radius:6px;margin-bottom:12px;color:#0369a1;font-size:11.5px;line-height:1.6">
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;padding:10px 12px;border-radius:6px;margin-bottom:12px;color:#1d4ed8;font-size:12px;line-height:1.6">
         <b>说明：</b>支持一次性粘贴或上传包含多个扇出方案的 EDA Via TXT 数据。每个扇出方案之间必须包含 <code>end</code> 分界说明（如 <code>~~~end~~~</code>、<code>~End~</code>、<code>===end===</code> 等，不匹配纯 <code>~~~</code>）。系统将自动按分界符拆分并依次生成独立的扇出方案，自动用序号或标题区分命名。
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <label style="font-weight:600;color:#334155">粘贴多方案 TXT 数据：</label>
+        <label style="font-weight:600;color:#374151">粘贴多方案 TXT 数据：</label>
         <div style="display:flex;gap:6px">
           <button class="btn ghost small" style="padding:2px 8px;font-size:11px" onclick="loadBatchFanoutSample()">加载多方案示例 TXT</button>
           <label class="btn sec small" style="padding:2px 8px;font-size:11px;cursor:pointer">
@@ -1903,12 +1829,12 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
         </div>
       </div>
 
-      <textarea id="txtBatchFanoutInput" rows="10" style="width:100%;font-family:var(--mono);font-size:11.5px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical" placeholder="请在此粘贴多个扇出方案数据，每个方案之间用 ~~~end~~~ 分界...&#10;&#10;示例：&#10;方案一：SMA-L2高速扇出&#10;Item 1 < Via >&#10;Origin-xy: [ 17890.3, 36461.68 ]&#10;Padstack Name: SMA-HDI-GND-045drill-ring3_L1_L5&#10;Net: GND&#10;...&#10;~~~end~~~&#10;&#10;方案二：BGA-05PITCH-L4&#10;Item 1 < Via >&#10;...&#10;~~~end~~~" oninput="parseBatchFanoutInput()"></textarea>
+      <textarea id="txtBatchFanoutInput" rows="10" style="width:100%;font-family:var(--mono);font-size:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical" placeholder="请在此粘贴多个扇出方案数据，每个方案之间用 ~~~end~~~ 分界...&#10;&#10;示例：&#10;方案一：SMA-L2高速扇出&#10;Item 1 < Via >&#10;Origin-xy: [ 17890.3, 36461.68 ]&#10;Padstack Name: SMA-HDI-GND-045drill-ring3_L1_L5&#10;Net: GND&#10;...&#10;~~~end~~~&#10;&#10;方案二：BGA-05PITCH-L4&#10;Item 1 < Via >&#10;...&#10;~~~end~~~" oninput="parseBatchFanoutInput()"></textarea>
 
       <!-- Live Parse Result Summary -->
       <div style="margin-top:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-weight:700;color:#0f172a;font-size:12.5px" id="lblBatchFanoutCount">解析结果预览 (0 套方案)</div>
-        <div style="display:flex;gap:12px;font-size:11.5px;color:#475569">
+        <div style="font-weight:700;color:#111827;font-size:12px" id="lblBatchFanoutCount">解析结果预览 (0 套方案)</div>
+        <div style="display:flex;gap:12px;font-size:12px;color:#6b7280">
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
             <input type="radio" name="radBatchMode" id="radBatchAppend" value="append" checked>
             <span>追加到现有方案库</span>
@@ -1921,14 +1847,14 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
       </div>
 
       <!-- Preview Cards Container -->
-      <div id="pnlBatchFanoutPreview" style="max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:8px">
+      <div id="pnlBatchFanoutPreview" style="max-height:220px;overflow-y:auto;border:1px solid #e3e8ef;border-radius:6px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:8px">
         <div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8">暂无解析方案，请在上方粘贴数据或上传 TXT 文件（方案间必须用 ~~~end~~~ 等包含 end 的分界符）</div>
       </div>
     </div>
 
-    <div class="modal-footer" style="padding:12px 18px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#f8fafc">
+    <div class="modal-footer" style="padding:12px 18px;border-top:1px solid #e3e8ef;display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#f8fafc">
       <button class="btn sec small" onclick="closeBatchFanoutModal()">取消</button>
-      <button class="btn primary small" id="btnConfirmBatchFanout" onclick="confirmBatchFanoutImport()" disabled style="background:#0284c7;color:#ffffff;font-weight:700;padding:5px 16px">确认批量导入</button>
+      <button class="btn primary small" id="btnConfirmBatchFanout" onclick="confirmBatchFanoutImport()" disabled style="background:#2563eb;color:#ffffff;font-weight:700;padding:5px 16px">确认批量导入</button>
     </div>
   </div>
 </div>
@@ -1937,7 +1863,7 @@ html.pcb-global-wide #modalViewFanoutScheme .modal-box {
 <div class="modal-overlay" id="modalExport">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 style="font-size:14px;color:#0f172a" id="lblModalExportTitle">导出数据</h3>
+      <h3 style="color:#111827" id="lblModalExportTitle">导出数据</h3>
       <button class="btn sec small" onclick="closeModal()"></button>
     </div>
     <div class="modal-body">
@@ -2006,7 +1932,7 @@ function showToast(msg, isSuccess = true) {
 function chipMeta(name){
   const s = String(name || '');
   const kind = /BGA/i.test(s) ? 'BGA' : (/SMA/i.test(s) ? 'SMA' : '其他');
-  const side = /^Bot/i.test(s) ? 'Bot' : (/^Top/i.test(s) ? 'Top' : '');
+  const side = /(?:^|[^A-Za-z])(?:Bot|Bottom)(?![A-Za-z])/i.test(s) ? 'Bot' : (/(?:^|[^A-Za-z])Top(?![A-Za-z])/i.test(s) ? 'Top' : '');
   const lm = s.match(/L(\d+)/i);
   const layer = lm ? +lm[1] : 0;
   const dm = s.match(/D2M\s*([0-9.]+)/i);
@@ -2184,8 +2110,101 @@ function tryMatrix(raw, filename){
   return sets.filter(s => s.rules.length);
 }
 
+/* ---------- 表格型约束 ----------
+   一、SMA封装方案
+   1. 信号孔连接层Top至L2
+   层 <TAB> 反焊盘尺寸 / 反焊盘半径 (mil) <TAB> 焊盘尺寸 / 焊盘半径 (mil)
+   L1 <TAB> 13 <TAB> 6.5
+   一类下面有好几种，每一种（一张表）就是一条约束，名字按「SMA-Top-L2」「BGA-L2-L4-0.5mm」生成。
+*/
+function tableKindOf(text){
+  const s=String(text||'');
+  if(/BGA/i.test(s))return 'BGA';
+  if(/SMA/i.test(s))return 'SMA';
+  return '';
+}
+function sideWordOf(s){
+  const t=String(s||'').trim();
+  if(/^(top|表层|顶层|正面)$/i.test(t))return 'Top';
+  if(/^(bot|bottom|底层|背面)$/i.test(t))return 'Bot';
+  const m=t.match(/^L\s*(\d+)$/i);
+  if(m)return 'L'+m[1];
+  if(/^\d+$/.test(t))return 'L'+t;
+  return '';
+}
+function connRangeOf(text){
+  const m=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot|表层|顶层|底层)?\s*至\s*L?\s*(\d+)/i);
+  if(m)return {start:sideWordOf(m[1]||''), end:'L'+m[2]};
+  const only=String(text||'').match(/连接层\s*(L\s*\d+|Top|Bot)\b/i);
+  if(only)return {start:sideWordOf(only[1]), end:''};
+  return {start:'', end:''};
+}
+function antiNum(v){
+  const m=String(v==null?'':v).match(/-?[0-9]+(?:\.[0-9]+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function tryLayerTable(raw, filename){
+  const src=String(raw||'').replace(/^\uFEFF/,'');
+  if(!/反焊盘/.test(src))return null;                 // 没有反焊盘列，交给别的解析器
+  const lines=src.split(/\r?\n/);
+  let group='', item='', padName='焊盘半径', rows=[], used={}, out=[], headerSeen=false;
+  function flush(){
+    if(!item||!rows.length)return;
+    const it=item, grp=group;
+    const kind=tableKindOf(grp+' '+it)||detectKind(grp||it, grp);
+    const ci=connRangeOf(it), cg=connRangeOf(grp);
+    const start=ci.start||cg.start;
+    const titleEnd=(ci.end||cg.end||'').replace(/^L/i,'');
+    // 连接层＝反焊盘的数值都相同的那一层里层号最大的（标题写错时以表格数据为准）
+    const nums=rows.map(r=>antiNum(r.anti));
+    let maxAnti=-Infinity, endLayer=0;
+    nums.forEach((v,i)=>{if(v==null)return; if(v>maxAnti){maxAnti=v;endLayer=rows[i].layer;} else if(v===maxAnti&&rows[i].layer>endLayer)endLayer=rows[i].layer;});
+    if(titleEnd && nums.every(v=>v===maxAnti))endLayer=+titleEnd;
+    if(!endLayer)endLayer=+titleEnd||0;
+    const pitch=(it.match(/间距\s*(?:为|=|：|:)?\s*([0-9]+(?:\.[0-9]+)?)\s*mm/i)||[])[1]||'';
+    const parts=[kind||'约束'];
+    if(start)parts.push(start);
+    if(endLayer)parts.push('L'+endLayer);
+    if(pitch)parts.push(pitch+'mm');
+    let title=parts.join('-');
+    if(used[title]){ used[title]++; title+='('+used[title]+')'; } else used[title]=1;
+    const rules=[];
+    rows.forEach(function(r){
+      const anti=String(r.anti||'').trim();
+      const pad=String(r.pad||'').trim();
+      if(anti)rules.push({cat:'反焊盘尺寸', name:'反焊盘半径', scope:'L'+r.layer, value:anti, unit:'mil', raw:'L'+r.layer+' 反焊盘 '+anti+'mil'});
+      if(pad)rules.push({cat:'焊盘尺寸', name:padName, scope:'L'+r.layer, value:pad, unit:'mil', raw:'L'+r.layer+' 焊盘 '+pad});
+    });
+    if(!rules.length)return;
+    out.push({kind:kind, title:title, group:grp, item:it, txtHead:it, source:filename||'导入文本', sourceType:'text', image:'', rules:rules});
+  }
+  lines.forEach(function(line0){
+    const line=String(line0||'').trim();
+    if(!line)return;
+    const cols=line.indexOf('\t')>=0?line.split('\t').map(s=>s.trim()):[];
+    if(cols.length>=2 && /^层$/.test(cols[0]) && /反焊盘/.test(line)){
+      padName=/直径/.test(cols[2]||'')?'焊盘直径':'焊盘半径';
+      headerSeen=true;
+      return;
+    }
+    if(headerSeen && cols.length>=2 && /^L?\s*\d+$/i.test(cols[0]) && /[0-9]|无/.test(cols[1]||'')){
+      rows.push({layer:+String(cols[0]).replace(/^L/i,''), anti:cols[1], pad:cols[2]||''});
+      return;
+    }
+    if(/^[一二三四五六七八九十]+\s*[、.．]/.test(line) && line.length<=80){flush(); group=line; item=''; rows=[]; return;}
+    if(/^\d+\s*[.、．]\s*\S/.test(line) && line.length<=80){flush(); item=line; rows=[]; return;}
+  });
+  flush();
+  return out.length?out:null;
+}
+
 function parseConstraintText(text, filename){
   const raw = String(text || '').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n');
+  const table = tryLayerTable(raw, filename);
+  if (table) {
+    table.forEach(set => { set.constraints = buildConstraints(set.rules || []); set.fanLayer = fanLayerOf(set); });
+    return table;
+  }
   const matrix = tryMatrix(raw, filename);
   if (matrix) return matrix;
   const lines = [];
@@ -2328,7 +2347,7 @@ function buildConstraints(rules){
 }
 
 function reexpandAll(){
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
   State.rules.constraintSets.forEach(set => {
     if (!set.constraints) set.constraints = buildConstraints(set.rules || []);
     const fan = fanLayerOf(set);
@@ -2765,7 +2784,7 @@ function toggleAcc(headerEl) {
 
 // 4-Category TXT Data Ingestion (仅支持 .txt 文件选择或拖拽，不含粘贴输入)
 const DATA_CAT_META = {
-  trace:      { label: '① 走线检查数据', color: '#0284c7' },
+  trace:      { label: '① 走线检查数据', color: '#2563eb' },
   constraint: { label: '② 约束检查数据', color: '#7c3aed' },
   dfmFanout:  { label: '③ DFM 与扇出方案数据', color: '#0d9488' },
   pour:       { label: '④ 铜皮检查数据', color: '#d97706' }
@@ -2811,8 +2830,8 @@ function renderDataIngestionBoxes() {
       else boxEl.classList.remove('loaded');
     }
     if (badgeEl) {
-      badgeEl.textContent = hasData ? '✓ 已导入' : '未导入';
-      badgeEl.style.background = hasData ? '#dcfce7' : '#e2e8f0';
+      badgeEl.textContent = hasData ? ' 已导入' : '未导入';
+      badgeEl.style.background = hasData ? '#dcfce7' : '#e3e8ef';
       badgeEl.style.color = hasData ? '#15803d' : '#475569';
     }
     if (statusEl) {
@@ -3221,7 +3240,7 @@ function renderJump() {
   if (!sets.length) { nav.style.display = 'none'; nav.innerHTML = ''; return; }
   nav.style.display = 'flex';
   const cols = jumpItems();
-  let h = '<div class="jlabel">约束指引 · 按封装/面分列，点击跳到对应约束</div><div class="cols">';
+  let h = '<div class="jlabel">约束指引 · 按封装/面分组，点击跳到对应约束</div><div class="cols">';
   cols.forEach(col => {
     h += `<div class="jumpcol"><div class="jumpcol-h">${col.group}<span class="cnt"> ${col.items.length}</span></div>`;
     const multi = col.items.some(x => x.d2m > 0);
@@ -3243,7 +3262,7 @@ function scrollToSet(si) {
   const el = $(`set-${si}`);
   if (el) {
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    el.style.boxShadow = '0 0 0 2px #0284c7';
+    el.style.boxShadow = '0 0 0 2px #2563eb';
     setTimeout(() => { el.style.boxShadow = ''; }, 1500);
   }
 }
@@ -3253,13 +3272,18 @@ function renderConstraintSets() {
   if (!container) return;
   const sets = State.rules.constraintSets || [];
   if (!sets.length) {
-    container.innerHTML = '<div style="padding:16px;text-align:center;color:#64748b;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px">暂无约束规则。可点击上方「导入约束 TXT」或「恢复预设约束方案」。</div>';
+    container.innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px">暂无约束规则。可点击上方「导入约束 TXT」或「恢复预设约束方案」。</div>';
     return;
   }
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
 
   let html = '';
+  let lastConstraintGroup = '';
   sets.forEach((set, si) => {
+    if (set.group && set.group !== lastConstraintGroup) {
+      html += `<div class="unified-constraint-group" style="margin:14px 0 8px;padding-left:9px;border-left:3px solid #2563eb;font-size:13px;font-weight:700;color:#374151">${escHtml(set.group)}</div>`;
+      lastConstraintGroup = set.group;
+    }
     const kind = set.kind || '其他';
     const cons = set.constraints || [];
     const fan = fanLayerOf(set);
@@ -3269,21 +3293,21 @@ function renderConstraintSets() {
       <div class="set ${kind}" id="set-${si}" data-si="${si}">
         <div class="hd">
           <span class="badge" style="background:rgba(255,255,255,0.25);font-weight:700;padding:2px 8px;border-radius:10px">${kind}</span>
-          <input class="setTitle" data-si="${si}" value="${set.title || ''}" onchange="updateSetTitle(${si}, this.value)" style="width:320px;font-weight:700;background:#ffffff;color:#0f172a;border:none;padding:4px 8px;border-radius:4px" title="约束名称">
-          ${set.txtHead ? `<span class="txthead" style="font-size:11.5px;color:#e2e8f0">TXT: ${set.txtHead}</span>` : ''}
-          <select class="setKind" data-si="${si}" onchange="updateSetKind(${si}, this.value)" style="margin-left:auto;background:#ffffff;color:#0f172a;padding:3px 6px;border-radius:4px">
+          <input class="setTitle" data-si="${si}" value="${set.title || ''}" onchange="updateSetTitle(${si}, this.value)" style="width:320px;font-weight:700;background:#ffffff;color:#111827;border:none;padding:4px 8px;border-radius:4px" title="约束名称">
+          ${set.txtHead ? `<span class="txthead" style="font-size:12px;color:#e3e8ef">TXT: ${set.txtHead}</span>` : ''}
+          <select class="setKind" data-si="${si}" onchange="updateSetKind(${si}, this.value)" style="margin-left:auto;background:#ffffff;color:#111827;padding:3px 6px;border-radius:4px">
             <option value="SMA" ${kind==='SMA'?'selected':''}>SMA</option>
             <option value="BGA" ${kind==='BGA'?'selected':''}>BGA</option>
             <option value="其他" ${kind==='其他'?'selected':''}>其他</option>
           </select>
-          <span style="font-size:11.5px;color:#e2e8f0;margin-left:6px">来源 ${set.source || '03Antipad_via_routekeepout_rule.txt'}</span>
+          <span style="font-size:12px;color:#e3e8ef;margin-left:6px">来源 ${set.source || '03Antipad_via_routekeepout_rule.txt'}</span>
           <button type="button" class="btn danger small" style="background:#fee2e2;color:#dc2626;font-weight:600" onclick="deleteConstraintSet(${si})">删除此类</button>
         </div>
         <div class="body">
     `;
 
     if (!cons.length) {
-      html += '<div style="font-size:12px;color:#64748b;padding:8px">此卡片尚未配置层约束参数。</div>';
+      html += '<div style="font-size:12px;color:#6b7280;padding:8px">此卡片尚未配置层约束参数。</div>';
     } else {
       html += `
         <div class="layerwrap">
@@ -3299,7 +3323,7 @@ function renderConstraintSets() {
             <input class="cName" data-si="${si}" data-ci="${ci}" value="${c.name || ''}" onchange="updateColName(${si}, ${ci}, this.value)" title="约束名称">
             <div class="subh" style="margin-top:2px">
               <input class="cUnit" data-si="${si}" data-ci="${ci}" value="${c.unit || 'mil'}" style="width:48px;text-align:center">
-              <button type="button" class="btn danger small" style="padding:1px 5px;font-size:10px" onclick="deleteConstraintCol(${si}, ${ci})">删除</button>
+              <button type="button" class="btn danger small" style="padding:1px 5px;font-size:11px" onclick="deleteConstraintCol(${si}, ${ci})">删除</button>
             </div>
           </th>
         `;
@@ -3389,7 +3413,7 @@ function refillConstraintSet(si) {
   showToast('已按规则重新填充各层参数！');
 }
 function addCustomConstraintSet() {
-  const n = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const n = unifiedLayerCount();
   const newSet = {
     kind: 'SMA',
     title: `Custom-SMA-L${n}-D2M6mil`,
@@ -3412,7 +3436,40 @@ function resetDefaultConstraintSets() {
   renderConstraintSets();
   showToast('成功恢复预设全套 BGA/SMA 约束方案！');
 }
+function unifiedAutoLayerCount() {
+  let max = 0;
+  const bump = text => {
+    String(text || '').split(/\r?\n/).forEach(line => {
+      if (/扇出|出线|总层数/.test(line)) return;
+      for (const m of line.matchAll(/\bL\s*(\d+)\b/gi)) max = Math.max(max, Number(m[1]));
+    });
+  };
+  bump(State.dataInputs?.constraint?.text || '');
+  (State.rules.constraintSets || []).forEach(set => {
+    const fan = fanLayerOf(set);
+    bump(set.title || '');
+    (set.constraints || []).forEach(c => {
+      (c.scopes || []).forEach(sc => { if (!/扇出|出线/.test(String(sc.scope || ''))) bump(sc.scope); });
+      Object.keys(c.values || {}).forEach(k => { const m = /^L(\d+)$/i.exec(k); if (m && Number(m[1]) !== fan) max = Math.max(max, Number(m[1])); });
+    });
+  });
+  return max || 21;
+}
+function unifiedLayerCount() {
+  const manual = parseInt($('cfgLayerCount')?.value, 10);
+  return manual >= 1 && manual <= 64 ? manual : unifiedAutoLayerCount();
+}
+function updateUnifiedLayerCountHint() {
+  const el = $('unifiedLayerCountHint');
+  if (el) el.textContent = $('cfgLayerCount')?.value ? `手动 ${unifiedLayerCount()} 层` : `自动识别 ${unifiedAutoLayerCount()} 层`;
+}
+function resetAutoLayerCount() {
+  const el = $('cfgLayerCount');
+  if (el) el.value = '';
+  onLayerCountChange();
+}
 function onLayerCountChange() {
+  updateUnifiedLayerCountHint();
   reexpandAll();
   renderConstraintSets();
 }
@@ -3424,21 +3481,78 @@ function onLayerCountChange() {
 // =========================================================================
 // DFM Inspection Presets & History Chips (Matching image-1.png)
 // =========================================================================
+function readUnifiedPadShapes() {
+  const kind = $('selUnifiedPadShape')?.value || 'circle';
+  const gndD = parseFloat($('inpGndPadDiam')?.value) || 7.906;
+  const sigD = parseFloat($('inpSignalPadDiam')?.value) || 12;
+  const corner = parseFloat($('inpUnifiedPadCorner')?.value) || 0;
+  const rot = parseFloat($('inpUnifiedPadRot')?.value) || 0;
+  if (kind === 'circle') return { gndPad: { kind: 'circle', w: gndD }, signalPad: { kind: 'circle', w: sigD } };
+  return {
+    gndPad: { kind, w: parseFloat($('inpUnifiedGndPadW')?.value) || gndD, h: parseFloat($('inpUnifiedGndPadH')?.value) || gndD, corner, rot },
+    signalPad: { kind, w: parseFloat($('inpUnifiedSigPadW')?.value) || sigD, h: parseFloat($('inpUnifiedSigPadH')?.value) || sigD, corner, rot }
+  };
+}
+
+const UnifiedDfmLayerRules = {
+  key: 'pcb.unified.dfm.layerRules.v1',
+  rows: [],
+  load() {
+    try { const value = JSON.parse(localStorage.getItem(this.key) || '[]'); this.rows = Array.isArray(value) ? value : []; }
+    catch (_) { this.rows = []; }
+    this.render();
+  },
+  save() {
+    try { localStorage.setItem(this.key, JSON.stringify(this.rows)); } catch (_) {}
+  },
+  render() {
+    const body = $('unifiedLayerRuleBody');
+    if (!body) return;
+    body.innerHTML = this.rows.map((r, i) => `<tr>
+      <td><input type="text" value="${escHtml(r.layers || '')}" placeholder="Top、Bot / 内层 / L2-L5" oninput="UnifiedDfmLayerRules.rows[${i}].layers=this.value;UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.gnd != null && r.gnd !== '' && Number.isFinite(Number(r.gnd)) ? r.gnd : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].gnd=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.sig != null && r.sig !== '' && Number.isFinite(Number(r.sig)) ? r.sig : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].sig=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><input type="number" value="${r.pad != null && r.pad !== '' && Number.isFinite(Number(r.pad)) ? r.pad : ''}" step="0.00001" min="0" oninput="UnifiedDfmLayerRules.rows[${i}].pad=this.value===''?null:Number(this.value);UnifiedDfmLayerRules.save()"></td>
+      <td><button type="button" class="btn danger small" onclick="UnifiedDfmLayerRules.remove(${i})">删除</button></td></tr>`).join('');
+    const hint = $('unifiedLayerRuleHint');
+    if (hint) hint.textContent = this.rows.length ? `当前 ${this.rows.length} 条按层覆盖规则；同层多条时靠上的优先，孔盘间距按重叠层取最严值。` : '未设置分层规则时，所有层使用默认阈值。';
+  },
+  add(row = {}) { this.rows.push({ layers: row.layers || '', gnd: row.gnd ?? null, sig: row.sig ?? null, pad: row.pad ?? null }); this.save(); this.render(); },
+  remove(i) { this.rows.splice(i, 1); this.save(); this.render(); },
+  template() {
+    const g = parseFloat($('inpThresholdGnd')?.value) || 4.01575;
+    const s = parseFloat($('inpThresholdSignal')?.value) || 5.04725;
+    const p = parseFloat($('inpThresholdPadPair')?.value) || 6;
+    this.rows = [{ layers: 'Top、Bot', gnd: g, sig: s, pad: p }, { layers: '内层', gnd: g, sig: s, pad: p }];
+    this.save(); this.render();
+  },
+  read() { const numberOrUndefined = v => v == null || v === '' || !Number.isFinite(Number(v)) ? undefined : Number(v); return this.rows.map(r => ({ layers: r.layers, minClearanceGnd: numberOrUndefined(r.gnd), minClearanceSignal: numberOrUndefined(r.sig), minClearancePadPair: numberOrUndefined(r.pad) })); },
+  init() {
+    this.load();
+    try { const d = JSON.parse(localStorage.getItem(this.key + '.defaults') || '{}'); if (d.gnd) $('inpThresholdGnd').value = d.gnd; if (d.sig) $('inpThresholdSignal').value = d.sig; if (d.pad) $('inpThresholdPadPair').value = d.pad; } catch (_) {}
+    ['inpThresholdGnd','inpThresholdSignal','inpThresholdPadPair'].forEach(id => $(id)?.addEventListener('change', () => this.saveDefaults()));
+  },
+  saveDefaults() {
+    try { localStorage.setItem(this.key + '.defaults', JSON.stringify({ gnd: $('inpThresholdGnd').value, sig: $('inpThresholdSignal').value, pad: $('inpThresholdPadPair').value })); } catch (_) {}
+  }
+};
+
 function applyDfmPreset(key) {
   if (key === 'current_eda') {
     fillInput('inpThresholdGnd', '4.01575');
     fillInput('inpThresholdSignal', '5.04725');
+    fillInput('inpThresholdPadPair', '6.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '7.906');
     fillInput('inpSignalPadDiam', '12.0');
     fillInput('inpGndDrillDiam', '6.0');
     fillInput('inpSignalDrillDiam', '6.0');
     if ($('selDfmNetScope')) $('selDfmNetScope').value = 'diff_net';
-    if ($('selDfmLayerFilter')) $('selDfmLayerFilter').value = 'all';
     showToast('已成功载入【当前 EDA 工程配置】(线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12)');
   } else if (key === 'std_6mil') {
     fillInput('inpThresholdGnd', '6.0');
     fillInput('inpThresholdSignal', '6.0');
+    fillInput('inpThresholdPadPair', '6.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '8.0');
     fillInput('inpSignalPadDiam', '12.0');
@@ -3448,6 +3562,7 @@ function applyDfmPreset(key) {
   } else if (key === 'high_density_5mil') {
     fillInput('inpThresholdGnd', '5.0');
     fillInput('inpThresholdSignal', '5.0');
+    fillInput('inpThresholdPadPair', '5.0');
     if ($('selDfmMode')) $('selDfmMode').value = 'pad_to_trace';
     fillInput('inpGndPadDiam', '7.0');
     fillInput('inpSignalPadDiam', '10.0');
@@ -3583,13 +3698,13 @@ function renderFanoutSchemesGrid() {
       legendBar.innerHTML = '';
     } else {
       legendBar.innerHTML = `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
+        <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:700;color:#374151;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
           ${legendItems.map(item => `
-            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#0f172a" title="Padstack: ${item.padstack} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#111827" title="Padstack: ${item.padstack} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
               <span style="width:9px;height:9px;border-radius:50%;background:${item.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span>
               <span style="font-weight:600">${item.padstack}</span>
-              <span style="font-size:10px;color:#64748b">(${item.schemeCount}方案/${item.totalVias}孔)</span>
+              <span style="font-size:11px;color:#6b7280">(${item.schemeCount}方案/${item.totalVias}孔)</span>
             </span>
           `).join('')}
         </div>
@@ -3604,23 +3719,23 @@ function renderFanoutSchemesGrid() {
     const vCount = sc.vias ? sc.vias.length : (sc.viaCount || 0);
 
     return `
-      <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
+      <div style="background:#ffffff;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
         <div>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <div onclick="openUnifiedQuickRenameModal(${idx})" style="font-size:14.5px;font-weight:700;color:#0f172a;cursor:pointer" title="点击通过关键词快捷修改方案名称">${sc.name}</div>
-              <span onclick="openUnifiedQuickRenameModal(${idx})" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:1px 6px;white-space:nowrap">✎ 改名</span>
+              <div onclick="openUnifiedQuickRenameModal(${idx})" style="font-size:14px;font-weight:700;color:#111827;cursor:pointer" title="点击通过关键词快捷修改方案名称">${sc.name}</div>
+              <span onclick="openUnifiedQuickRenameModal(${idx})" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:#1d4ed8;background:#f8fafc;border:1px solid #e3e8ef;border-radius:4px;padding:1px 6px;white-space:nowrap"> 改名</span>
             </div>
-            <span style="background:#f1f5f9;color:#475569;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;white-space:nowrap">${sc.tag || '扇出方案'}</span>
+            <span style="background:#f1f5f9;color:#6b7280;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;white-space:nowrap">${sc.tag || '扇出方案'}</span>
           </div>
-          <div style="font-size:13px;color:#64748b;margin-bottom:10px;line-height:1.4">${sc.desc || ''}</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:10px;line-height:1.4">${sc.desc || ''}</div>
 
           <div style="display:flex;gap:12px;align-items:center;background:#f8fafc;padding:10px 12px;border-radius:6px;border:1px solid #f1f5f9">
             <div onclick="viewFanoutScheme(${idx})" style="cursor:zoom-in;flex-shrink:0;display:flex" title="点击放大查看方案效果图与逐孔 Padstack 标注">${svgThumb}</div>
-            <div style="flex:1;font-size:13px;color:#475569;line-height:1.6">
-              <div>过孔总数: <b style="color:#0f172a">${vCount} 个孔</b></div>
-              <div>孔中心距范围: <b style="color:#0f172a">${pitchStr}</b></div>
-              <div style="font-size:12px;color:#64748b;margin-top:2px;word-break:break-all">焊盘: ${padStrRich}</div>
+            <div style="flex:1;font-size:13px;color:#6b7280;line-height:1.6">
+              <div>过孔总数: <b style="color:#111827">${vCount} 个孔</b></div>
+              <div>孔中心距范围: <b style="color:#111827">${pitchStr}</b></div>
+              <div style="font-size:12px;color:#6b7280;margin-top:2px;word-break:break-all">焊盘: ${padStrRich}</div>
             </div>
           </div>
         </div>
@@ -3648,7 +3763,7 @@ function setFanoutViaInputMode(mode) {
     if (pnlTxt) pnlTxt.style.display = 'block';
     if (pnlTbl) pnlTbl.style.display = 'none';
     if (btnTxt) {
-      btnTxt.style.background = '#0284c7';
+      btnTxt.style.background = '#2563eb';
       btnTxt.style.color = '#ffffff';
       btnTxt.style.border = 'none';
     }
@@ -3664,7 +3779,7 @@ function setFanoutViaInputMode(mode) {
     if (pnlTxt) pnlTxt.style.display = 'none';
     if (pnlTbl) pnlTbl.style.display = 'block';
     if (btnTbl) {
-      btnTbl.style.background = '#0284c7';
+      btnTbl.style.background = '#2563eb';
       btnTbl.style.color = '#ffffff';
       btnTbl.style.border = 'none';
     }
@@ -3746,7 +3861,7 @@ function renderModalFanoutViasTable() {
 
   tbody.innerHTML = g_modalFanoutVias.map((v, i) => `
     <tr>
-      <td style="font-weight:600;color:#64748b">${i + 1}</td>
+      <td style="font-weight:600;color:#6b7280">${i + 1}</td>
       <td>
         <select onchange="g_modalFanoutVias[${i}].role=this.value;g_modalFanoutVias[${i}].type=(this.value==='Signal'?'signal':'gnd');updateModalFanoutPreview()" style="width:100%">
           <option value="Signal" ${v.role === 'Signal' || v.type === 'signal' ? 'selected' : ''}>信号孔</option>
@@ -4095,13 +4210,13 @@ function renderBatchFanoutPreview() {
     return `
       <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">
-          <input type="text" value="${s.name}" oninput="g_parsedBatchSchemes[${idx}].name=this.value" style="font-size:11.5px;font-weight:700;color:#0f172a;width:100%;border:1px solid #e2e8f0;padding:2px 4px;border-radius:4px" placeholder="方案名称">
-          <span style="font-size:10.5px;color:#7c3aed;background:#f3e8ff;padding:1px 5px;border-radius:3px;white-space:nowrap">${s.vias.length} 孔</span>
+          <input type="text" value="${s.name}" oninput="g_parsedBatchSchemes[${idx}].name=this.value" style="font-size:12px;font-weight:700;color:#111827;width:100%;border:1px solid #e3e8ef;padding:2px 4px;border-radius:4px" placeholder="方案名称">
+          <span style="font-size:11px;color:#7c3aed;background:#f3e8ff;padding:1px 5px;border-radius:3px;white-space:nowrap">${s.vias.length} 孔</span>
         </div>
-        <div style="font-size:11px;color:#475569;margin-bottom:3px">
-          <span style="color:#0284c7;font-weight:600">${sigCount} 信号孔</span> + <span style="color:#64748b">${gndCount} 伴随地孔</span>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:3px">
+          <span style="color:#2563eb;font-weight:600">${sigCount} 信号孔</span> + <span style="color:#6b7280">${gndCount} 伴随地孔</span>
         </div>
-        <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${padstacks.join(', ')}">
+        <div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${padstacks.join(', ')}">
           Padstack: ${padstacks.slice(0, 2).join(', ')}${padstacks.length > 2 ? ' 等' : ''}
         </div>
       </div>
@@ -4329,11 +4444,11 @@ function renderUnifiedKwUI(ctx) {
   seq.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
 
   if (seq.length === 0) {
-    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:11.5px">尚未点选关键词 — 请按顺序点击下方关键词自动以 <code>_</code> 连接生成名称</span>`;
+    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:12px">尚未点选关键词 — 请按顺序点击下方关键词自动以 <code>_</code> 连接生成名称</span>`;
   } else {
     seqBar.innerHTML = seq.map((tok, idx) => `
-      <span onclick="removeUnifiedKwAt('${ctx}', ${idx})" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:11.5px;font-weight:700">
-        <span style="font-size:9.5px;color:#0284c7">${idx + 1}.</span>${tok}<span style="color:#0284c7;font-weight:900">×</span>
+      <span onclick="removeUnifiedKwAt('${ctx}', ${idx})" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;color:#1d4ed8;border:1px solid #cbd5e1;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:12px;font-weight:700">
+        <span style="font-size:11px;color:#2563eb">${idx + 1}.</span>${tok}<span style="color:#2563eb;font-weight:900">×</span>
       </span>
     `).join('<span style="color:#94a3b8;font-family:var(--mono);font-weight:700">_</span>');
   }
@@ -4342,14 +4457,14 @@ function renderUnifiedKwUI(ctx) {
     const cnt = counts[kw] || 0;
     const isCustom = UnifiedNameBuilder.customKeywords.includes(kw);
     const activeStyle = cnt > 0
-      ? 'background:#0284c7;color:#ffffff;border:1px solid #0369a1'
+      ? 'background:#2563eb;color:#ffffff;border:1px solid #1d4ed8'
       : 'background:#ffffff;color:#1e293b;border:1px solid #cbd5e1';
     const kwSafe = String(kw).replace(/'/g, "\\'");
     return `
       <button type="button" onclick="clickUnifiedKw('${ctx}', '${kwSafe}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;${activeStyle}">
         <span>${kw}</span>
-        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800">×${cnt}</span>` : ''}
-        ${isCustom ? `<span onclick="deleteUnifiedCustomKw('${kwSafe}', event)" style="margin-left:2px;font-size:11px;opacity:0.75">✕</span>` : ''}
+        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:11px;font-weight:800">×${cnt}</span>` : ''}
+        ${isCustom ? `<span onclick="deleteUnifiedCustomKw('${kwSafe}', event)" style="margin-left:2px;font-size:11px;opacity:0.75"></span>` : ''}
       </button>
     `;
   }).join('');
@@ -4487,7 +4602,7 @@ function renderUnifiedViewMeasureUI() {
   const panel = $('uViewFanoutMeasurePanel');
   if (btn) {
     btn.className = UnifiedViewFanoutState.measureMode ? 'btn primary small' : 'btn sec small';
-    btn.textContent = UnifiedViewFanoutState.measureMode ? '⇔ 测孔中心距 (开启中)' : '⇔ 测孔中心距';
+    btn.textContent = UnifiedViewFanoutState.measureMode ? '测孔中心距 (开启中)' : '测孔中心距';
   }
   const hasAny = UnifiedViewFanoutState.measuredPairs.length > 0 || UnifiedViewFanoutState.measureStartIndex >= 0;
   if (clearBtn) clearBtn.style.display = hasAny ? 'inline-flex' : 'none';
@@ -4505,10 +4620,10 @@ function renderUnifiedViewMeasureUI() {
   let statusHtml = '';
   if (UnifiedViewFanoutState.measureMode) {
     if (UnifiedViewFanoutState.measureStartIndex < 0) {
-      statusHtml = `<div style="color:#0369a1;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】</div>`;
+      statusHtml = `<div style="color:#1d4ed8;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】</div>`;
     } else {
       const sv = vias[UnifiedViewFanoutState.measureStartIndex];
-      statusHtml = `<div style="color:#0284c7;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : UnifiedViewFanoutState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
+      statusHtml = `<div style="color:#2563eb;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : UnifiedViewFanoutState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
     }
   }
 
@@ -4519,21 +4634,21 @@ function renderUnifiedViewMeasureUI() {
     return `
       <div style="margin-top:6px;padding:6px 8px;background:#fff;border:1px solid #bfdbfe;border-radius:6px;font-family:var(--mono);font-size:11px">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:700;color:#0f172a">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
+          <span style="font-weight:700;color:#111827">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-weight:800;font-size:12.5px;color:#0284c7">${m.distMil.toFixed(2)} mil</span>
-            <span style="color:#475569">(${m.distMm.toFixed(3)} mm)</span>
-            <span onclick="removeUnifiedViewMeasuredPair(${idx})" style="cursor:pointer;color:#ef4444;font-weight:700">✕</span>
+            <span style="font-weight:800;font-size:12px;color:#2563eb">${m.distMil.toFixed(2)} mil</span>
+            <span style="color:#6b7280">(${m.distMm.toFixed(3)} mm)</span>
+            <span onclick="removeUnifiedViewMeasuredPair(${idx})" style="cursor:pointer;color:#ef4444;font-weight:700"></span>
           </div>
         </div>
-        <div style="color:#64748b;font-size:10.5px;margin-top:2px">|ΔX| = ${m.absDx.toFixed(2)} mil · |ΔY| = ${m.absDy.toFixed(2)} mil</div>
+        <div style="color:#6b7280;font-size:11px;margin-top:2px">|ΔX| = ${m.absDx.toFixed(2)} mil · |ΔY| = ${m.absDy.toFixed(2)} mil</div>
       </div>
     `;
   }).join('');
 
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-weight:700;color:#1e3a8a">⇔ 孔到孔中心距测量</span>
+      <span style="font-weight:700;color:#1e3a8a">孔到孔中心距测量</span>
       ${hasAny ? `<span onclick="clearUnifiedViewMeasurements()" style="cursor:pointer;font-size:11px;color:#dc2626;font-weight:600">清空全部</span>` : ''}
     </div>
     ${statusHtml}
@@ -4708,18 +4823,18 @@ function populateUnifiedViewedFanoutDetails(idx) {
   }
 
   const padTags = padColorList.map(pc =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#0f172a;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${pc.padstack}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
+    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e3e8ef;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#111827;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${pc.padstack}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
   ).join('');
 
   if ($('uViewFanoutSummaryBox')) {
     $('uViewFanoutSummaryBox').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px">
-        <div>过孔总数: <b style="color:#0f172a">${summary.viaCount} 个孔</b></div>
-        <div>信号 / 地孔: <b style="color:#0284c7">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
-        <div style="grid-column:1/-1">孔心距范围: <b style="color:#0f172a;font-family:var(--mono)">${pitchRange}</b></div>
+        <div>过孔总数: <b style="color:#111827">${summary.viaCount} 个孔</b></div>
+        <div>信号 / 地孔: <b style="color:#2563eb">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
+        <div style="grid-column:1/-1">孔心距范围: <b style="color:#111827;font-family:var(--mono)">${pitchRange}</b></div>
       </div>
       <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #cbd5e1">
-        <div style="font-weight:700;color:#334155;font-size:11.5px">焊盘 (Padstack) 专属颜色汇总：</div>
+        <div style="font-weight:700;color:#374151;font-size:12px">焊盘 (Padstack) 专属颜色汇总：</div>
         ${padTags || '<div style="color:#94a3b8">无焊盘定义</div>'}
       </div>
     `;
@@ -4728,17 +4843,17 @@ function populateUnifiedViewedFanoutDetails(idx) {
   if ($('uViewFanoutViaTableBody')) {
     $('uViewFanoutViaTableBody').innerHTML = vias.map((v, i) => `
       <tr onmouseenter="setUnifiedViewFanoutHoveredVia(${i})" onmouseleave="setUnifiedViewFanoutHoveredVia(-1)" onclick="if(!UnifiedViewFanoutState.measureMode) toggleUnifiedViewMeasureMode(true); handleUnifiedViewViaClick(${i});" title="点击可选取该孔测量中心距" style="cursor:pointer;transition:background .12s">
-        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#0f172a">
+        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#111827">
           <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:${v.padColor};border:1px solid #0f172a;display:inline-block"></span>#${v.labelNum}</span>
         </td>
         <td style="padding:6px 8px">
-          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#e0f2fe' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#0369a1' : '#15803d')}">
+          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#f1f5f9' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#1d4ed8' : '#15803d')}">
             ${v.isSig ? '信号' : 'GND'}
           </span>
         </td>
         <td style="padding:6px 8px">
-          <div style="font-family:var(--mono);font-weight:700;color:#0f172a;word-break:break-all;font-size:11.5px">${v.padstack}</div>
-          <div style="font-size:10.5px;color:#64748b;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${v.role}</div>
+          <div style="font-family:var(--mono);font-weight:700;color:#111827;word-break:break-all;font-size:12px">${v.padstack}</div>
+          <div style="font-size:11px;color:#6b7280;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${v.role}</div>
         </td>
       </tr>
     `).join('');
@@ -5102,13 +5217,13 @@ function renderRulesUI() {
   if (pnlFanout) {
     const list = State.rules.fanoutSchemes || [];
     if (list.length === 0) {
-      pnlFanout.innerHTML = '<span style="color:#64748b">方案库为空，请点击「导入方案库 JSON」或恢复预设</span>';
+      pnlFanout.innerHTML = '<span style="color:#6b7280">方案库为空，请点击「导入方案库 JSON」或恢复预设</span>';
     } else {
       pnlFanout.innerHTML = list.map((sc, i) => {
         const viaCnt = (sc.vias && Array.isArray(sc.vias)) ? sc.vias.length : (sc.viaCount || '?');
         return `
           <div style="background:#ffffff;border:1px solid #cbd5e1;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:8px">
-            <span style="font-weight:700;color:#0284c7">#${i+1} ${sc.name || `扇出方案_${i+1}`}</span>
+            <span style="font-weight:700;color:#2563eb">#${i+1} ${sc.name || `扇出方案_${i+1}`}</span>
             <span class="tag-badge info">${sc.category || '通用扇出'}</span>
             <span class="tag-badge ok" style="font-size:11px">${viaCnt} 孔</span>
             <button class="btn danger small" style="padding:2px 8px;font-size:12px" onclick="deleteFanoutScheme(${i})">删除</button>
@@ -5149,11 +5264,11 @@ function renderRulesUI() {
   if (badgePour2) badgePour2.textContent = `${r2List.length} 条规则`;
   if (tbodyPour2) {
     if (r2List.length === 0) {
-      tbodyPour2.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:16px;color:#64748b">暂未配置异型铜皮模板。可点击上方「导入异型铜皮模板 (TXT)」或下方「新增模板规则」。</td></tr>`;
+      tbodyPour2.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:16px;color:#6b7280">暂未配置异型铜皮模板。可点击上方「导入异型铜皮模板 (TXT)」或下方「新增模板规则」。</td></tr>`;
     } else {
       tbodyPour2.innerHTML = r2List.map((r, i) => `
         <tr>
-          <td style="font-weight:700;color:#64748b">#${i + 1}</td>
+          <td style="font-weight:700;color:#6b7280">#${i + 1}</td>
           <td>
             <div style="width:48px;height:48px;background:#0b1120;border-radius:6px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 4px rgba(0,0,0,0.5)">
               <svg width="34" height="34" viewBox="0 0 34 34">
@@ -5171,11 +5286,11 @@ function renderRulesUI() {
             </span>
           </td>
           <td>
-            <span style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:2px 8px;border-radius:4px;font-weight:600;font-family:var(--mono);display:inline-block">
-              <input type="text" value="${escHtml(r.layer || '02G01P')}" onchange="State.rules.specialShapeTemplates[${i}].layer=this.value" style="background:transparent;border:none;color:#334155;font-weight:700;width:65px;font-family:var(--mono)">
+            <span style="background:#f1f5f9;color:#374151;border:1px solid #cbd5e1;padding:2px 8px;border-radius:4px;font-weight:600;font-family:var(--mono);display:inline-block">
+              <input type="text" value="${escHtml(r.layer || '02G01P')}" onchange="State.rules.specialShapeTemplates[${i}].layer=this.value" style="background:transparent;border:none;color:#374151;font-weight:700;width:65px;font-family:var(--mono)">
             </span>
           </td>
-          <td style="font-family:var(--mono);font-size:12px;font-weight:600;color:#0f172a">
+          <td style="font-family:var(--mono);font-size:12px;font-weight:600;color:#111827">
             <input type="number" step="0.1" value="${r.expectedArea || 452.4}" onchange="State.rules.specialShapeTemplates[${i}].expectedArea=parseFloat(this.value)" style="width:65px"> sq mil (±<input type="number" step="1" value="${r.areaTolerance || 30}" onchange="State.rules.specialShapeTemplates[${i}].areaTolerance=parseFloat(this.value)" style="width:40px">)
           </td>
           <td style="text-align:right">
@@ -5624,7 +5739,7 @@ function runMasterInspection() {
   const chkAnti = $('cfgCheckAntiPad') ? $('cfgCheckAntiPad').checked : true;
   const chkPadstack = $('cfgCheckPadstackLayers') ? $('cfgCheckPadstackLayers').checked : true;
   const antiTol = parseFloat($('cfgAntiPadTol')?.value) || 0.5;
-  const layerN = parseInt($('cfgLayerCount')?.value, 10) || 21;
+  const layerN = unifiedLayerCount();
 
   if (tConstraint && typeof CopperCheck !== 'undefined' && CopperCheck.runCopperCheck) {
     const boardItems = CopperCheck.parseBoardItems(tConstraint);
@@ -5713,15 +5828,20 @@ function runMasterInspection() {
   const dfmChecks = [];
   if (tDfmFanout && typeof DfmCheck !== 'undefined' && DfmCheck.parseDfmItems) {
     const dfmData = DfmCheck.parseDfmItems(tDfmFanout, {
-      gndPadDiameter: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-      signalPadDiameter: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-      gndFirstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54,
-      signalFirstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+      gndPadDiameter: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+      signalPadDiameter: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+      gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+      signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+      ...readUnifiedPadShapes()
     });
+    const padPairThreshold = Number($('inpThresholdPadPair')?.value ?? 6);
     const dfmRun = DfmCheck.runDfmCheck(dfmData.vias, dfmData.traces, {
-      minClearanceGnd: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-      minClearanceSignal: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-      mode: 'pad_to_trace'
+      minClearanceGnd: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+      minClearanceSignal: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+      minClearancePadPair: Number.isFinite(padPairThreshold) ? padPairThreshold : 6,
+      mode: $('selDfmMode')?.value || 'pad_to_trace',
+      diffNetOnly: $('selDfmNetScope')?.value !== 'all_net',
+      layerRules: UnifiedDfmLayerRules.read()
     });
 
     const defectList = dfmRun.defectPairs || [];
@@ -5743,6 +5863,18 @@ function runMasterInspection() {
         objId: d.trace.id,
         viaId: d.via.id,
         viaCoord: d.via.origin
+      });
+    });
+    (dfmRun.padPairDefects || []).forEach(d => {
+      dfmChecks.push({
+        id: `dfm_pad_pair_${d.gndVia.id}_${d.sigVia.id}`,
+        category: 'dfm', categoryName: '加工能力检查',
+        target: `GND Via #${d.gndVia.id} × 信号 Via #${d.sigVia.id}`,
+        targetType: '孔盘/孔盘对', layer: d.ruleLayers || '重叠层', item: 'GND 孔盘到信号孔盘间距',
+        actual: `${d.padAirgap.toFixed(2)} mil`, rule: `≥ ${d.threshold.toFixed(1)} mil`, pass: false,
+        deviation: `${(d.padAirgap - d.threshold).toFixed(2)} mil`,
+        reason: `GND 孔盘到信号孔盘实测间隙 ${d.padAirgap.toFixed(2)} mil，低于 ${d.ruleName || '默认'}规则阈值 ${d.threshold.toFixed(1)} mil`,
+        objId: d.gndVia.id, viaId: d.gndVia.id, viaCoord: d.gndVia.origin
       });
     });
     State.dfmSkippedPairs = dfmRun.skippedNonSpanningPairs || 0;
@@ -6054,7 +6186,7 @@ function renderDashboard() {
           <b><span class="cat-pill ${f.category}">${f.categoryName}</span> ${escHtml(f.target)}</b>
           <span class="tag-badge bad">${f.item}</span>
         </div>
-        <div style="color:#64748b;font-size:11.5px;margin-top:4px">${escHtml(f.reason)}</div>
+        <div style="color:#6b7280;font-size:12px;margin-top:4px">${escHtml(f.reason)}</div>
       </div>
     `).join('');
   }
@@ -6119,9 +6251,9 @@ function renderMasterDefectsTable() {
         <td>
           <span class="tag-badge ${c.pass ? 'ok' : 'bad'}">${c.pass ? '符合' : '不符合'}</span>
         </td>
-        <td style="color:#475569">${escHtml(c.reason)}</td>
+        <td style="color:#6b7280">${escHtml(c.reason)}</td>
         <td style="text-align:center">
-          <button class="btn sec small" style="background:#0284c7;color:#ffffff;font-weight:600;padding:3px 10px;border:none" onclick="locateDefectInCanvas('${c.category}', '${c.id}')">定位</button>
+          <button class="btn sec small" style="background:#2563eb;color:#ffffff;font-weight:600;padding:3px 10px;border:none" onclick="locateDefectInCanvas('${c.category}', '${c.id}')">定位</button>
         </td>
       </tr>
     `;
@@ -6183,19 +6315,19 @@ function renderAnalysisGuidance() {
   });
 
   const layerChipsStr = Object.entries(layerCounts).map(([layer, count]) => `
-    <span class="tag-badge bad" style="font-size:11.5px;padding:3px 8px">${layer}: <b>${count}</b>条</span>
+    <span class="tag-badge bad" style="font-size:12px;padding:3px 8px">${layer}: <b>${count}</b>条</span>
   `).join(' ');
 
   $('pnlAnalysisTopChips').innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 12px;border-radius:6px;width:100%">
-      <span style="font-size:12px;color:#0f172a"><b>缺陷统计总览:</b> 检出总缺陷 <b>${fails.length}</b> 条</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f8fafc;border:1px solid #e3e8ef;padding:8px 12px;border-radius:6px;width:100%">
+      <span style="font-size:12px;color:#111827"><b>缺陷统计总览:</b> 检出总缺陷 <b>${fails.length}</b> 条</span>
       <span class="cat-pill trace">走线: ${catCounts.trace}条</span>
       <span class="cat-pill copper">约束: ${catCounts.copper}条</span>
       <span class="cat-pill dfm">DFM: ${catCounts.dfm}条</span>
       <span class="cat-pill fanout">扇出: ${catCounts.fanout}条</span>
       <span class="cat-pill pour">铜皮: ${catCounts.pour}条</span>
-      <div style="width:100%;height:1px;background:#e2e8f0;margin:4px 0"></div>
-      <span style="font-size:11.5px;color:#64748b">按物理层分布概览:</span>
+      <div style="width:100%;height:1px;background:#e3e8ef;margin:4px 0"></div>
+      <span style="font-size:12px;color:#6b7280">按物理层分布概览:</span>
       ${layerChipsStr || '<span style="color:#059669">全层无缺陷</span>'}
     </div>
   `;
@@ -6235,20 +6367,20 @@ function renderAnalysisGuidance() {
       const isAllReviewed = t.defects.every(d => State.reviewedSet.has(d.id));
 
       const defectItemsHtml = t.defects.map(d => `
-        <div style="padding:4px 0;border-bottom:1px dashed #e2e8f0;font-size:11.5px">
+        <div style="padding:4px 0;border-bottom:1px dashed #e3e8ef;font-size:12px">
           <span class="cat-pill ${d.category}">${d.categoryName}</span>
-          <b>${escHtml(d.item)}</b> [${escHtml(d.layer)}]: 实测 <code style="color:#0f172a;background:#f1f5f9;padding:1px 4px;border-radius:3px">${d.actual}</code> vs 规则 <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">${d.rule}</code>
-          <div style="color:#475569;margin-top:2px">↳ ${escHtml(d.reason)}</div>
+          <b>${escHtml(d.item)}</b> [${escHtml(d.layer)}]: 实测 <code style="color:#111827;background:#f1f5f9;padding:1px 4px;border-radius:3px">${d.actual}</code> vs 规则 <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">${d.rule}</code>
+          <div style="color:#6b7280;margin-top:2px"> ${escHtml(d.reason)}</div>
         </div>
       `).join('');
 
       return `
         <tr>
-          <td><b style="color:#0284c7">${escHtml(t.target)}</b></td>
+          <td><b style="color:#2563eb">${escHtml(t.target)}</b></td>
           <td><span class="tag-badge info">${t.targetType}</span></td>
           <td><span class="tag-badge bad" style="font-weight:700">${t.defectCount} 处</span></td>
           <td>${catPills}</td>
-          <td><span style="font-family:var(--mono);color:#475569">${layerStr}</span></td>
+          <td><span style="font-family:var(--mono);color:#6b7280">${layerStr}</span></td>
           <td>${defectItemsHtml}</td>
           <td style="text-align:center">
             ${isAllReviewed ? '<span class="tag-badge ok">已复核</span>' : '<span class="tag-badge warn">待复核</span>'}
@@ -6300,16 +6432,16 @@ function renderAnalysisGuidance() {
         <tr>
           <td>
             <span class="cat-pill ${r.category}">${r.categoryName}</span>
-            <div style="font-weight:700;margin-top:4px;color:#0f172a">${r.item}</div>
+            <div style="font-weight:700;margin-top:4px;color:#111827">${r.item}</div>
           </td>
           <td><span class="tag-badge bad" style="font-size:12px;font-weight:700">${r.targets.length} 条</span></td>
           <td>
-            <div style="color:#475569;font-size:12px;margin-bottom:6px"><b>不符合原因:</b> ${escHtml(r.reason)}</div>
-            <div style="font-size:11.5px;color:#64748b;margin-bottom:4px"><b>对应目标对象明细 (一一对应全列出):</b></div>
+            <div style="color:#6b7280;font-size:12px;margin-bottom:6px"><b>不符合原因:</b> ${escHtml(r.reason)}</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px"><b>对应目标对象明细 (一一对应全列出):</b></div>
             <div>${targetPills}</div>
           </td>
           <td><span class="tag-badge info">${layerStr}</span></td>
-          <td style="font-size:11.5px;color:#475569">${guidance}</td>
+          <td style="font-size:12px;color:#6b7280">${guidance}</td>
         </tr>
       `;
     }).join('');
@@ -6873,17 +7005,17 @@ function renderUnifiedCanvasReviewBox(checkId) {
           <span>${isReviewed ? '已复核 (清单已同步勾选)' : '勾选复核此异常'}</span>
         </label>
         <button class="btn small" onclick="toggleReview('${chk.id}', ${!isReviewed})" style="padding:3px 9px;font-size:11px;border:none;background:${isReviewed ? 'rgba(51,65,85,.9)' : '#10b981'};color:#fff">
-          ${isReviewed ? '取消复核' : '✓ 确认复核'}
+          ${isReviewed ? '取消复核' : ' 确认复核'}
         </button>
       </div>
     ` : ''}
-    <div style="font-size:11.5px;color:#cbd5e1;line-height:1.55;margin-bottom:8px">
-      <div>物理层: <strong style="color:#7dd3fc">${escHtml(chk.layer || '-')}</strong> | 检查项: <strong>${escHtml(chk.item || '-')}</strong></div>
+    <div style="font-size:12px;color:#cbd5e1;line-height:1.55;margin-bottom:8px">
+      <div>物理层: <strong style="color:#cbd5e1">${escHtml(chk.layer || '-')}</strong> | 检查项: <strong>${escHtml(chk.item || '-')}</strong></div>
       <div>实测 vs 规则: <strong style="font-family:var(--mono);color:#fef08a">${chk.actual || '-'}</strong> / <span style="font-family:var(--mono)">${chk.rule || '-'}</span></div>
       <div style="margin-top:4px;color:#94a3b8">${escHtml(chk.reason || '')}</div>
     </div>
     <div style="display:flex;justify-content:flex-end">
-      <button class="btn sec small" onclick="switchTab('tabDefects')" style="padding:4px 10px;font-size:11.5px">返回检查结果清单</button>
+      <button class="btn sec small" onclick="switchTab('tabDefects')" style="padding:4px 10px;font-size:12px">返回检查结果清单</button>
     </div>
   `;
   box.style.display = 'block';
@@ -7032,14 +7164,19 @@ function exportMasterRules() {
     checkLayerDiff: $('cfgCheckLayerDiff')?.checked !== false,
     checkTotalDiff: $('cfgCheckTotalDiff')?.checked !== false,
     constraintSets: State.rules.constraintSets,
-    layerCount: parseInt($('cfgLayerCount')?.value, 10) || 21,
+    layerCount: unifiedLayerCount(),
     antiPadTol: parseFloat($('cfgAntiPadTol')?.value) || 0.5,
     dfm: {
-      gndAirgap: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-      signalAirgap: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-      gndPadDiam: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-      signalPadDiam: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-      firstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+      gndAirgap: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+      signalAirgap: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+      padPairAirgap: Number($('inpThresholdPadPair')?.value ?? 6),
+      gndPadDiam: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+      signalPadDiam: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+      gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+      signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+      mode: $('selDfmMode')?.value || 'pad_to_trace',
+      netScope: $('selDfmNetScope')?.value || 'diff_net',
+      layerRules: UnifiedDfmLayerRules.rows
     },
     fanout: {
       clusterRadius: parseFloat($('cfgClusterDist')?.value) || 2.0,
@@ -7083,11 +7220,17 @@ function handleRulesFile(e) {
       if (r.layerCount && $('cfgLayerCount')) $('cfgLayerCount').value = r.layerCount;
       if (r.antiPadTol && $('cfgAntiPadTol')) $('cfgAntiPadTol').value = r.antiPadTol;
       if (r.dfm) {
-        if (r.dfm.gndAirgap && $('cfgDfmGndTol')) $('cfgDfmGndTol').value = r.dfm.gndAirgap;
-        if (r.dfm.signalAirgap && $('cfgDfmSigTol')) $('cfgDfmSigTol').value = r.dfm.signalAirgap;
-        if (r.dfm.gndPadDiam && $('cfgDfmGndPadDiam')) $('cfgDfmGndPadDiam').value = r.dfm.gndPadDiam;
-        if (r.dfm.signalPadDiam && $('cfgDfmSigPadDiam')) $('cfgDfmSigPadDiam').value = r.dfm.signalPadDiam;
-        if (r.dfm.firstDrill && $('cfgDfmFirstDrill')) $('cfgDfmFirstDrill').value = r.dfm.firstDrill;
+        if (r.dfm.gndAirgap != null) $('inpThresholdGnd').value = r.dfm.gndAirgap;
+        if (r.dfm.signalAirgap != null) $('inpThresholdSignal').value = r.dfm.signalAirgap;
+        if (r.dfm.padPairAirgap != null) $('inpThresholdPadPair').value = r.dfm.padPairAirgap;
+        if (r.dfm.gndPadDiam != null) $('inpGndPadDiam').value = r.dfm.gndPadDiam;
+        if (r.dfm.signalPadDiam != null) $('inpSignalPadDiam').value = r.dfm.signalPadDiam;
+        if (r.dfm.gndFirstDrill != null) $('inpGndDrillDiam').value = r.dfm.gndFirstDrill;
+        if (r.dfm.signalFirstDrill != null) $('inpSignalDrillDiam').value = r.dfm.signalFirstDrill;
+        if (r.dfm.mode) $('selDfmMode').value = r.dfm.mode;
+        if (r.dfm.netScope) $('selDfmNetScope').value = r.dfm.netScope;
+        if (Array.isArray(r.dfm.layerRules)) { UnifiedDfmLayerRules.rows = r.dfm.layerRules.map(x => ({ layers: x.layers || x.raw || '', gnd: x.gnd ?? x.minClearanceGnd ?? null, sig: x.sig ?? x.minClearanceSignal ?? null, pad: x.pad ?? x.minClearancePadPair ?? null })); UnifiedDfmLayerRules.save(); UnifiedDfmLayerRules.render(); }
+        UnifiedDfmLayerRules.saveDefaults();
       }
       if (r.pourRule1) State.rules.pourRule1 = r.pourRule1;
       if (r.specialShapeTemplates) State.rules.specialShapeTemplates = r.specialShapeTemplates;
@@ -7174,6 +7317,7 @@ function handleConstraintTxtFile(e) {
       const parsedSets = parseConstraintText(text, file.name);
       if (parsedSets && parsedSets.length) {
         State.rules.constraintSets = parsedSets;
+        updateUnifiedLayerCountHint();
         reexpandAll();
         renderRulesUI();
         if (State.rawText) runMasterInspection();
@@ -7231,7 +7375,7 @@ function exportConstraintJsonPrompt() {
   const data = {
     kind: 'pcb-copper-rules',
     version: 3,
-    layerCount: parseInt($('cfgLayerCount')?.value, 10) || 21,
+    layerCount: unifiedLayerCount(),
     antiPadTol: parseFloat($('cfgAntiPadTol')?.value) || 0.5,
     sets: State.rules.constraintSets
   };
@@ -7242,12 +7386,17 @@ function importDfmRulesPrompt() { const input = $('fileDfmRules'); if (input) in
 function exportDfmRulesPrompt() {
   const data = {
     kind: 'pcb-dfm-rules',
-    version: 1,
-    gndAirgap: parseFloat($('cfgDfmGndTol')?.value) || 6.0,
-    signalAirgap: parseFloat($('cfgDfmSigTol')?.value) || 6.0,
-    gndPadDiameter: parseFloat($('cfgDfmGndPadDiam')?.value) || 7.906,
-    signalPadDiameter: parseFloat($('cfgDfmSigPadDiam')?.value) || 9.94,
-    firstDrill: parseFloat($('cfgDfmFirstDrill')?.value) || 5.54
+    version: 2,
+    gndAirgap: parseFloat($('inpThresholdGnd')?.value) || 4.01575,
+    signalAirgap: parseFloat($('inpThresholdSignal')?.value) || 5.04725,
+    padPairAirgap: Number($('inpThresholdPadPair')?.value ?? 6),
+    gndPadDiameter: parseFloat($('inpGndPadDiam')?.value) || 7.906,
+    signalPadDiameter: parseFloat($('inpSignalPadDiam')?.value) || 12.0,
+    gndFirstDrill: parseFloat($('inpGndDrillDiam')?.value) || 6.0,
+    signalFirstDrill: parseFloat($('inpSignalDrillDiam')?.value) || 6.0,
+    mode: $('selDfmMode')?.value || 'pad_to_trace',
+    netScope: $('selDfmNetScope')?.value || 'diff_net',
+    layerRules: UnifiedDfmLayerRules.rows
   };
   openModal('导出 DFM 制造能力规则 (JSON)', JSON.stringify(data, null, 2), 'PCB_DFM制造能力规则.json');
 }
@@ -7264,13 +7413,21 @@ function handleDfmRulesFile(e) {
       const sAir = r.signalAirgap || r.minClearanceSignal || r.dfm?.signalAirgap;
       const gPad = r.gndPadDiameter || r.gndPadDiam || r.dfm?.gndPadDiam;
       const sPad = r.signalPadDiameter || r.signalPadDiam || r.dfm?.signalPadDiam;
-      const fDrill = r.firstDrill || r.gndFirstDrill || r.dfm?.firstDrill;
+      const pAir = r.padPairAirgap ?? r.minClearancePadPair ?? r.dfm?.padPairAirgap;
+      const gDrill = r.gndFirstDrill ?? r.dfm?.gndFirstDrill ?? r.firstDrill;
+      const sDrill = r.signalFirstDrill ?? r.dfm?.signalFirstDrill ?? r.firstDrill;
 
-      if (gAir && $('cfgDfmGndTol')) $('cfgDfmGndTol').value = gAir;
-      if (sAir && $('cfgDfmSigTol')) $('cfgDfmSigTol').value = sAir;
-      if (gPad && $('cfgDfmGndPadDiam')) $('cfgDfmGndPadDiam').value = gPad;
-      if (sPad && $('cfgDfmSigPadDiam')) $('cfgDfmSigPadDiam').value = sPad;
-      if (fDrill && $('cfgDfmFirstDrill')) $('cfgDfmFirstDrill').value = fDrill;
+      if (gAir != null) $('inpThresholdGnd').value = gAir;
+      if (sAir != null) $('inpThresholdSignal').value = sAir;
+      if (pAir != null) $('inpThresholdPadPair').value = pAir;
+      if (gPad != null) $('inpGndPadDiam').value = gPad;
+      if (sPad != null) $('inpSignalPadDiam').value = sPad;
+      if (gDrill != null) $('inpGndDrillDiam').value = gDrill;
+      if (sDrill != null) $('inpSignalDrillDiam').value = sDrill;
+      if (r.mode) $('selDfmMode').value = r.mode;
+      if (r.netScope) $('selDfmNetScope').value = r.netScope;
+      if (Array.isArray(r.layerRules)) { UnifiedDfmLayerRules.rows = r.layerRules.map(x => ({ layers: x.layers || x.raw || '', gnd: x.gnd ?? x.minClearanceGnd ?? null, sig: x.sig ?? x.minClearanceSignal ?? null, pad: x.pad ?? x.minClearancePadPair ?? null })); UnifiedDfmLayerRules.save(); UnifiedDfmLayerRules.render(); }
+      UnifiedDfmLayerRules.saveDefaults();
 
       if (State.rawText) runMasterInspection();
       showToast('成功导入 DFM 制造能力规则 JSON 并更新参数！');
@@ -7481,6 +7638,8 @@ window.addEventListener('DOMContentLoaded', () => {
   initDragAndDrop();
   renderRulesUI();
   initCanvas();
+  UnifiedDfmLayerRules.init();
+  updateUnifiedLayerCountHint();
   window.addEventListener('resize', () => {
     resizeCanvas();
     renderCanvas();
@@ -7641,14 +7800,14 @@ window.setGlobalWideMode = setGlobalWideMode;
 <!-- Modal: Add/Edit Fanout Scheme (Matching image-2.png) -->
 <div class="modal-overlay" id="modalFanoutScheme" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div class="modal-box" style="background:#ffffff;border-radius:10px;width:100%;max-width:820px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.25);overflow:hidden">
-    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
-      <div style="font-size:14px;font-weight:700;color:#0f172a" id="modalFanoutTitle">编辑扇出方案 (Fanout Scheme Editor)</div>
+    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:16px;font-weight:700;color:#111827" id="modalFanoutTitle">编辑扇出方案 (Fanout Scheme Editor)</div>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closeFanoutSchemeModal()"></span>
     </div>
     <div class="modal-body" style="padding:16px 18px;overflow-y:auto;flex:1;font-size:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">方案名称 *</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">方案名称 *</label>
           <input type="text" id="modalFanoutInpName" style="width:100%" placeholder="例如: SMA-Bot-L19-5孔标准十字扇出" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span class="hist-chip" onclick="fillInput('modalFanoutInpName','SMA-Bot-L19-5孔标准十字扇出')">SMA-Bot-L19-5孔十字</span>
@@ -7658,7 +7817,7 @@ window.setGlobalWideMode = setGlobalWideMode;
           </div>
         </div>
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">方案类型 / 分类标签 *</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">方案类型 / 分类标签 *</label>
           <input type="text" id="modalFanoutInpTag" style="width:100%" placeholder="例如: SMA接插件扇出 或 BGA差分扇出" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
             <span class="hist-chip" onclick="fillInput('modalFanoutInpTag','SMA接插件扇出')">SMA接插件扇出</span>
@@ -7672,36 +7831,36 @@ window.setGlobalWideMode = setGlobalWideMode;
       <!-- 快捷点选关键词生成方案名称面板 -->
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:#0f172a">🏷️ 关键词快捷组合命名 <span style="font-weight:400;color:#64748b;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
+          <span style="font-size:12px;font-weight:700;color:#111827"> 关键词快捷组合命名 <span style="font-weight:400;color:#6b7280;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
           <div style="display:flex;gap:6px">
-            <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoUnifiedKw('modal')">⌫ 撤销上一个</button>
+            <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoUnifiedKw('modal')"> 撤销上一个</button>
             <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearUnifiedKws('modal')">清空词序</button>
           </div>
         </div>
-        <div id="uModalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
+        <div id="uModalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:12px;color:#6b7280"></div>
         <div id="uModalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:11.5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}" data-no-persist>
-          <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addUnifiedCustomKw('modal')">+ 新增关键词</button>
+          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:12px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}" data-no-persist>
+          <button type="button" class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="addUnifiedCustomKw('modal')">+ 新增关键词</button>
         </div>
       </div>
 
       <!-- Via Definition Mode Switcher matching image-1.png -->
       <div style="margin-bottom:14px">
-        <div style="font-weight:700;color:#0f172a;font-size:14px;margin-bottom:8px">过孔定义方式:</div>
+        <div style="font-weight:700;color:#111827;font-size:14px;margin-bottom:8px">过孔定义方式:</div>
         <div style="display:flex;gap:8px;margin-bottom:10px">
-          <button type="button" id="btnFanoutModeTxt" class="btn small" style="background:#0284c7;color:#ffffff;font-weight:700;padding:6px 14px;border-radius:6px;border:none;cursor:pointer" onclick="setFanoutViaInputMode('txt')">
+          <button type="button" id="btnFanoutModeTxt" class="btn small" style="background:#2563eb;color:#ffffff;font-weight:700;padding:6px 14px;border-radius:6px;border:none;cursor:pointer" onclick="setFanoutViaInputMode('txt')">
             方式一: 直接粘贴 EDA Via TXT 片段
           </button>
-          <button type="button" id="btnFanoutModeTable" class="btn sec small" style="background:#ffffff;color:#334155;border:1px solid #cbd5e1;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer" onclick="setFanoutViaInputMode('table')">
+          <button type="button" id="btnFanoutModeTable" class="btn sec small" style="background:#ffffff;color:#374151;border:1px solid #cbd5e1;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer" onclick="setFanoutViaInputMode('table')">
             方式二: 逐孔坐标与 Padstack 表格录入
           </button>
         </div>
 
         <!-- Mode 1: TXT Segment Paste (matching image-1.png) -->
         <div id="pnlFanoutViaModeTxt" style="display:block">
-          <textarea id="modalFanoutViaTxt" rows="7" style="width:100%;font-family:var(--mono);font-size:13.5px;line-height:1.45;padding:10px 12px;border:2px solid #0f172a;border-radius:6px;background:#ffffff;color:#0f172a" placeholder="粘贴 2~10 个过孔的 EDA Item 文本片段，系统将自动提取相对坐标、孔心距与 Padstack:&#10;Item 1  < Via >&#10;  Origin-xy: [0.0, 0.0]&#10;  Padstack Name: SMA_Bot-L19_d2m6mil_via-0902&#10;  Net: SIG&#10;Item 2  < Via >&#10;  Origin-xy: [0.0, 20.0]&#10;  Padstack Name: BGA_GND_pad1mil_0902&#10;  Net: GND" oninput="parseModalFanoutViaTxt()"></textarea>
-          <div style="font-size:12px;color:#64748b;margin-top:4px">
+          <textarea id="modalFanoutViaTxt" rows="7" style="width:100%;font-family:var(--mono);font-size:13px;line-height:1.45;padding:10px 12px;border:2px solid #0f172a;border-radius:6px;background:#ffffff;color:#111827" placeholder="粘贴 2~10 个过孔的 EDA Item 文本片段，系统将自动提取相对坐标、孔心距与 Padstack:&#10;Item 1  < Via >&#10;  Origin-xy: [0.0, 0.0]&#10;  Padstack Name: SMA_Bot-L19_d2m6mil_via-0902&#10;  Net: SIG&#10;Item 2  < Via >&#10;  Origin-xy: [0.0, 20.0]&#10;  Padstack Name: BGA_GND_pad1mil_0902&#10;  Net: GND" oninput="parseModalFanoutViaTxt()"></textarea>
+          <div style="font-size:12px;color:#6b7280;margin-top:4px">
             支持直接粘贴 EDA 报告文本，系统将以第一个信号孔作为坐标原点 (0, 0) 并自动计算相对几何拓扑。
           </div>
         </div>
@@ -7709,11 +7868,11 @@ window.setGlobalWideMode = setGlobalWideMode;
         <!-- Mode 2: Table Input -->
         <div id="pnlFanoutViaModeTable" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:13px;color:#64748b">手动录入各过孔相对坐标与 Padstack:</span>
+            <span style="font-size:13px;color:#6b7280">手动录入各过孔相对坐标与 Padstack:</span>
             <button class="btn sec small" style="padding:4px 10px" onclick="addModalFanoutViaRow()">添加过孔点</button>
           </div>
-          <div class="table-wrap" style="max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px">
-            <table id="tblModalFanoutVias" style="width:100%;font-size:13.5px">
+          <div class="table-wrap" style="max-height:220px;overflow-y:auto;border:1px solid #e3e8ef;border-radius:6px">
+            <table id="tblModalFanoutVias" style="width:100%;font-size:13px">
               <thead>
                 <tr>
                   <th style="width:45px">#</th>
@@ -7737,7 +7896,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         <div id="modalFanoutConstellationBox" style="width:120px;height:120px;background:#0b1329;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
           <!-- Rendered SVG Constellation -->
         </div>
-        <div style="flex:1;font-size:11.5px;color:#94a3b8">
+        <div style="flex:1;font-size:12px;color:#94a3b8">
           <div style="font-weight:700;color:#38bdf8;font-size:12px" id="modalFanoutPreviewTitle">实时拓扑星座预览</div>
           <div id="modalFanoutPreviewStats" style="margin-top:4px;line-height:1.6">
             过孔总数: <b style="color:#ffffff">5 个孔</b> | 拓扑跨度: 40.0 × 40.0 mil<br>
@@ -7746,7 +7905,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;background:#f8fafc">
+    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e3e8ef;display:flex;justify-content:flex-end;gap:8px;background:#f8fafc">
       <button class="btn sec" onclick="closeFanoutSchemeModal()">取消</button>
       <button class="btn primary" style="background:#7c3aed;border-color:#6d28d9" onclick="saveFanoutSchemeFromModal()">保存扇出方案</button>
     </div>
@@ -7756,18 +7915,18 @@ window.setGlobalWideMode = setGlobalWideMode;
 <!-- Modal: Add/Edit Pour Rule 2 Shape Template (Matching image-3.png) -->
 <div class="modal-overlay" id="modalPourShape" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div class="modal-box" style="background:#ffffff;border-radius:10px;width:100%;max-width:780px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.25);overflow:hidden">
-    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
-      <div style="font-size:14px;font-weight:700;color:#0f172a" id="modalPourShapeTitle">新增特定异型铜皮模板 (导入 Shape TXT)</div>
+    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:16px;font-weight:700;color:#111827" id="modalPourShapeTitle">新增特定异型铜皮模板 (导入 Shape TXT)</div>
       <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closePourShapeModal()"></span>
     </div>
     <div class="modal-body" style="padding:16px 18px;overflow-y:auto;flex:1;font-size:12px">
       <!-- Row 1: Template Name (editable) & Padstack (locked in edit mode) -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">模板名称 *</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">模板名称 *</label>
           <input type="text" id="modalPourShapeInpName" style="width:100%" placeholder="例如: L2特定异型铜皮_1" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
-            <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
+            <span style="font-size:11px;color:#6b7280;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpName','L2特定异型泪滴铜皮')">L2特定异型泪滴铜皮</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpName','L19特定异型铜皮')">L19特定异型铜皮</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpName','SMA专用接地异型铜皮')">SMA专用接地异型铜皮</span>
@@ -7775,10 +7934,10 @@ window.setGlobalWideMode = setGlobalWideMode;
           </div>
         </div>
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">过孔类型 (Padstack 关键字) *</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">过孔类型 (Padstack 关键字) *</label>
           <input type="text" id="modalPourShapeInpPadstack" style="width:100%" placeholder="例如: BGA_3510" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px" id="chipsModalPourPadstack">
-            <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
+            <span style="font-size:11px;color:#6b7280;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpPadstack','BGA_3510')">BGA_3510</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpPadstack','HDI_045drill')">HDI_045drill</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpPadstack','SMA_Bot-L19')">SMA_Bot-L19</span>
@@ -7790,10 +7949,10 @@ window.setGlobalWideMode = setGlobalWideMode;
       <!-- Row 2: Target Layer & Area Tolerance -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">目标层别 (Layer / Subset) *</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">目标层别 (Layer / Subset) *</label>
           <input type="text" id="modalPourShapeInpLayer" style="width:100%" placeholder="例如: 02G01P" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px" id="chipsModalPourLayer">
-            <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
+            <span style="font-size:11px;color:#6b7280;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpLayer','02G01P')">02G01P</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpLayer','19IS08')">19IS08</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpLayer','L2')">L2</span>
@@ -7802,10 +7961,10 @@ window.setGlobalWideMode = setGlobalWideMode;
           </div>
         </div>
         <div>
-          <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">面积允许容差 (± sq mil)</label>
+          <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">面积允许容差 (± sq mil)</label>
           <input type="number" id="modalPourShapeInpTol" value="30.0" step="5.0" style="width:100%" data-no-persist>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
-            <span style="font-size:11px;color:#64748b;margin-right:2px">快捷选项:</span>
+            <span style="font-size:11px;color:#6b7280;margin-right:2px">快捷选项:</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpTol','30.0')">30.0 sq mil</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpTol','20.0')">20.0 sq mil</span>
             <span class="hist-chip" onclick="fillInput('modalPourShapeInpTol','10.0')">10.0 sq mil</span>
@@ -7816,7 +7975,7 @@ window.setGlobalWideMode = setGlobalWideMode;
 
       <!-- Row 3: Shape Item TXT Data -->
       <div style="margin-bottom:12px">
-        <label style="font-weight:600;color:#334155;display:block;margin-bottom:4px">导入异型铜皮 Item TXT 数据 (包含 Exterior Boundary 与 Area):</label>
+        <label style="font-weight:600;color:#374151;display:block;margin-bottom:4px">导入异型铜皮 Item TXT 数据 (包含 Exterior Boundary 与 Area):</label>
         <textarea id="modalPourShapeTxt" rows="4" style="width:100%;font-family:monospace;font-size:11px" placeholder="在此粘贴包含 Item <Shape>, Subset, Area, Exterior Boundary 的 TXT 文本..." oninput="previewModalPourShape()"></textarea>
       </div>
 
@@ -7830,7 +7989,7 @@ window.setGlobalWideMode = setGlobalWideMode;
           </svg>
         </div>
         <div style="flex:1;font-size:12px;color:#94a3b8">
-          <div style="font-weight:700;color:#38bdf8;font-size:12.5px" id="modalPourShapePreviewTitle">已成功解析 Shape 几何 (所在层: 02G01P)</div>
+          <div style="font-weight:700;color:#38bdf8;font-size:12px" id="modalPourShapePreviewTitle">已成功解析 Shape 几何 (所在层: 02G01P)</div>
           <div id="modalPourShapePreviewStats" style="margin-top:6px;line-height:1.7;color:#cbd5e1">
             实测面积: <b style="color:#ffffff">452.39 sq mil</b> (0.2919 mm²)<br>
             边界包含: 1 段 (直线 0 / 圆弧 1)
@@ -7838,7 +7997,7 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;background:#f8fafc">
+    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e3e8ef;display:flex;justify-content:flex-end;gap:8px;background:#f8fafc">
       <button class="btn sec" onclick="closePourShapeModal()">取消</button>
       <button class="btn" style="background:#b45309;color:#ffffff;font-weight:600;border:none" onclick="savePourShapeFromModal()">保存异型铜皮模板</button>
     </div>
@@ -7848,24 +8007,24 @@ window.setGlobalWideMode = setGlobalWideMode;
 <!-- Modal: Quick Rename Fanout Scheme in Unified Workbench -->
 <div class="modal-overlay" id="modalUnifiedQuickRename" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);z-index:10020;align-items:center;justify-content:center;padding:20px">
   <div class="modal-box" style="background:#ffffff;border-radius:10px;width:96%;max-width:680px;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.28);overflow:hidden">
-    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
-      <div style="font-size:14px;font-weight:700;color:#0f172a">🏷️ 快捷修改扇出方案名称</div>
-      <button class="btn sec small" onclick="closeUnifiedQuickRenameModal()">✕ 关闭</button>
+    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;background:#f8fafc">
+      <div style="font-size:16px;font-weight:700;color:#111827"> 快捷修改扇出方案名称</div>
+      <button class="btn sec small" onclick="closeUnifiedQuickRenameModal()"> 关闭</button>
     </div>
     <div class="modal-body" style="padding:14px 18px;font-size:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#64748b">
-        <span>原方案名称：<b id="lblUQuickRenameOld" style="color:#0f172a;font-family:var(--mono)">-</b></span>
-        <span id="lblUQuickRenameIdx" style="font-family:var(--mono);color:#0284c7"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#6b7280">
+        <span>原方案名称：<b id="lblUQuickRenameOld" style="color:#111827;font-family:var(--mono)">-</b></span>
+        <span id="lblUQuickRenameIdx" style="font-family:var(--mono);color:#2563eb"></span>
       </div>
       <div style="margin-bottom:10px">
-        <label style="font-weight:700;color:#0f172a;display:block;margin-bottom:4px">新方案名称（按点选顺序自动用 <code>_</code> 连接，也可手动编辑）*</label>
-        <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff;padding:6px 10px;border-radius:6px" data-no-persist>
+        <label style="font-weight:700;color:#111827;display:block;margin-bottom:4px">新方案名称（按点选顺序自动用 <code>_</code> 连接，也可手动编辑）*</label>
+        <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#1d4ed8;border:1.5px solid #38bdf8;background:#f8fafc;padding:6px 10px;border-radius:6px" data-no-persist>
       </div>
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-weight:700;color:#334155">已点选词序 <span style="font-weight:400;color:#64748b;font-size:11px">（同一关键词可点选两次或多次）</span></span>
+          <span style="font-weight:700;color:#374151">已点选词序 <span style="font-weight:400;color:#374151;font-size:11px">（同一关键词可点选两次或多次）</span></span>
           <div style="display:flex;gap:6px">
-            <button type="button" class="btn sec small" style="padding:2px 8px" onclick="undoUnifiedKw('quick')">⌫ 撤销上一个</button>
+            <button type="button" class="btn sec small" style="padding:2px 8px" onclick="undoUnifiedKw('quick')"> 撤销上一个</button>
             <button type="button" class="btn sec small" style="padding:2px 8px" onclick="clearUnifiedKws('quick')">清空重选</button>
           </div>
         </div>
@@ -7877,11 +8036,11 @@ window.setGlobalWideMode = setGlobalWideMode;
         </div>
       </div>
     </div>
-    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;background:#f8fafc">
-      <button type="button" class="btn sec small" onclick="saveUnifiedQuickRename(true)">✓ 保存并改下一个 ▶</button>
+    <div class="modal-footer" style="padding:10px 18px;border-top:1px solid #e3e8ef;display:flex;justify-content:space-between;background:#f8fafc">
+      <button type="button" class="btn sec small" onclick="saveUnifiedQuickRename(true)"> 保存并改下一个 ▶</button>
       <div style="display:flex;gap:8px">
         <button type="button" class="btn sec" onclick="closeUnifiedQuickRenameModal()">取消</button>
-        <button type="button" class="btn primary" onclick="saveUnifiedQuickRename(false)">✓ 确认修改名称</button>
+        <button type="button" class="btn primary" onclick="saveUnifiedQuickRename(false)"> 确认修改名称</button>
       </div>
     </div>
   </div>
@@ -7890,27 +8049,27 @@ window.setGlobalWideMode = setGlobalWideMode;
 <!-- Modal: View / Enlarge Fanout Scheme & Padstack Annotations -->
 <div class="modal-overlay" id="modalViewFanoutScheme" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div class="modal-box" style="background:#ffffff;border-radius:10px;width:96%;max-width:1140px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,0.28);overflow:hidden">
-    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc">
+    <div class="modal-header" style="padding:12px 18px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div style="font-size:15px;font-weight:700;color:#0f172a" id="uViewFanoutTitle">扇出方案放大预览</div>
-        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px;color:#0369a1;border-color:#7dd3fc;background:#f0f9ff" onclick="openUnifiedQuickRenameModal(UnifiedViewFanoutState.idx)">✎ 快捷改名</button>
-        <span style="background:#e0f2fe;color:#0369a1;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600" id="uViewFanoutTag">扇出方案</span>
-        <span id="uViewFanoutIndexBadge" style="font-size:11.5px;color:#64748b;font-family:var(--mono)"></span>
+        <div style="font-size:15px;font-weight:700;color:#111827" id="uViewFanoutTitle">扇出方案放大预览</div>
+        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px;color:#1d4ed8;border-color:#cbd5e1;background:#f8fafc" onclick="openUnifiedQuickRenameModal(UnifiedViewFanoutState.idx)"> 快捷改名</button>
+        <span style="background:#f1f5f9;color:#1d4ed8;font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600" id="uViewFanoutTag">扇出方案</span>
+        <span id="uViewFanoutIndexBadge" style="font-size:12px;color:#6b7280;font-family:var(--mono)"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <button class="btn sec small" onclick="stepUnifiedViewFanoutScheme(-1)">◀ 上一方案</button>
         <button class="btn sec small" onclick="stepUnifiedViewFanoutScheme(1)">下一方案 ▶</button>
         <button class="btn sec small" onclick="editCurrentUnifiedViewedFanout()">编辑方案</button>
-        <button class="btn sec small" onclick="closeViewFanoutSchemeModal()" style="font-weight:700">✕ 关闭</button>
+        <button class="btn sec small" onclick="closeViewFanoutSchemeModal()" style="font-weight:700"> 关闭</button>
       </div>
     </div>
 
     <div class="modal-body" style="padding:14px 18px;overflow-y:auto;flex:1;display:flex;flex-direction:column">
-      <div id="uViewFanoutDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+      <div id="uViewFanoutDesc" style="font-size:12px;color:#6b7280;margin-bottom:10px"></div>
 
       <!-- Toolbar -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#334155">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#374151">
           <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
             <input type="checkbox" id="chkUViewPadstack" checked onchange="renderUnifiedViewedFanoutCanvas()">
             <span>标注每个孔 Padstack</span>
@@ -7923,10 +8082,11 @@ window.setGlobalWideMode = setGlobalWideMode;
             <input type="checkbox" id="chkUViewDistances" onchange="renderUnifiedViewedFanoutCanvas()">
             <span>显示孔心距 (mil)</span>
           </label>
-          <span id="uViewFanoutPadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#475569"></span>
+          <span id="uViewFanoutDistanceLegend" style="display:inline-flex;align-items:center;gap:5px;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#374151"><span style="display:inline-block;width:18px;border-top:2px dashed #38bdf8"></span>虚线：同孔心距同色（0.1 mil 分组）</span>
+          <span id="uViewFanoutPadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#6b7280"></span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <button type="button" class="btn sec small" id="btnUViewMeasure" onclick="toggleUnifiedViewMeasureMode()" style="border-color:#0284c7;color:#0369a1;font-weight:700">⇔ 测孔中心距</button>
+          <button type="button" class="btn sec small" id="btnUViewMeasure" onclick="toggleUnifiedViewMeasureMode()" style="border-color:#2563eb;color:#1d4ed8;font-weight:700">测孔中心距</button>
           <button type="button" class="btn sec small" id="btnUViewClearMeasure" onclick="clearUnifiedViewMeasurements()" style="display:none">清除测量</button>
           <button class="btn sec small" onclick="zoomUnifiedViewFanout(1.2)">放大 +</button>
           <button class="btn sec small" onclick="zoomUnifiedViewFanout(1/1.2)">缩小 -</button>
@@ -7941,21 +8101,21 @@ window.setGlobalWideMode = setGlobalWideMode;
           <div id="uViewFanoutCanvasWrap" style="position:relative;flex:1;min-height:490px;background:#0f172a;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.22);border:1px solid #1e293b">
             <canvas id="uViewFanoutCanvas" width="760" height="520" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
           </div>
-          <div style="font-size:11px;color:#64748b;text-align:right;font-family:var(--mono)">
-            滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距
+          <div style="font-size:11px;color:#6b7280;text-align:right;font-family:var(--mono)">
+            滚轮缩放 · 按住拖拽平移 · 点击「测孔中心距」后依次点选任意两孔可精准测量中心距
           </div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">
-          <div id="uViewFanoutMeasurePanel" style="display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:11.5px;line-height:1.55"></div>
-          <div id="uViewFanoutSummaryBox" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65"></div>
-          <div style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff">
-            <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+          <div id="uViewFanoutMeasurePanel" style="display:none;background:#f8fafc;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.55"></div>
+          <div id="uViewFanoutSummaryBox" style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65"></div>
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid #e3e8ef;border-radius:8px;overflow:hidden;background:#fff">
+            <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e3e8ef;font-size:12px;font-weight:700;color:#111827;display:flex;justify-content:space-between;align-items:center">
               <span>逐孔 Padstack 明细清单</span>
-              <span style="font-size:11px;font-weight:400;color:#64748b">悬停联动高亮</span>
+              <span style="font-size:11px;font-weight:400;color:#6b7280">悬停联动高亮</span>
             </div>
             <div style="flex:1;overflow-y:auto">
-              <table style="font-size:11.5px;margin:0;width:100%">
+              <table style="font-size:12px;margin:0;width:100%">
                 <thead>
                   <tr>
                     <th style="padding:7px 8px;width:48px;white-space:nowrap">孔号</th>

@@ -6,53 +6,53 @@
 <title>PCB 扇出方案检查工具 (Fanout Pattern &amp; Scheme Checker)</title>
 <style>
 :root{
-  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
-  --pri:#0284c7;--pri-bg:#e0f2fe;--pri-hover:#0369a1;
+  --bg:#f4f6f9;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--line:#e3e8ef;
+  --pri:#2563eb;--pri-bg:#f8fafc;--pri-hover:#1d4ed8;
   --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
   --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
   --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
   --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-line:#ddd6fe;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
 
 
 nav#tabs button .badge{font-size:11px;padding:1px 6px;border-radius:10px;background:#334155;color:#f1f5f9}
-nav#tabs button.active .badge{background:#0284c7;color:#fff}
+nav#tabs button.active .badge{background:#2563eb;color:#fff}
 
-main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
+main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .tab{display:none}
 .tab.active{display:block}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
-.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b;display:flex;align-items:center;gap:8px}
-.card h3{font-size:13px;font-weight:700;margin:14px 0 8px 0;color:#334155}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#374151}
 .hint{font-size:12px;color:var(--sub);line-height:1.6}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
 .btn.pri{background:var(--pri);color:#fff}
 .btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;border-color:var(--line);color:#334155}
+.btn.sec{background:#fff;border-color:var(--line);color:#374151}
 .btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
-.btn.bad{background:var(--bad);color:#fff}
-.btn.bad:hover{background:#b91c1c}
-.btn.purple{background:var(--purple);color:#fff}
-.btn.purple:hover{background:#6d28d9}
+.btn.bad{background:#fee2e2;color:var(--bad);border-color:#fecaca}
+.btn.bad:hover{background:#fecaca}
+.btn.purple{background:var(--pri);color:#fff}
+.btn.purple:hover{background:var(--pri-hover)}
 .btn.small{font-size:12px;padding:4px 8px}
 
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
-.stat-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden}
-.stat-box .lbl{font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
-.stat-box .val{font-size:20px;font-weight:800;color:#0f172a;margin-top:2px;font-family:var(--mono)}
-.stat-box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.stat-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.stat-box .lbl{font-size:12px;color:var(--sub)}
+.stat-box .val{font-size:22px;font-weight:700;color:#111827;margin-top:2px;font-family:var(--mono)}
+
 .stat-box.ok .val{color:var(--ok)}
-.stat-box.bad{border-color:var(--bad-line);background:var(--bad-bg)}
+
 .stat-box.bad .val{color:var(--bad)}
-.stat-box.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+
 .stat-box.warn .val{color:var(--warn)}
-.stat-box.purple{border-color:var(--purple-line);background:var(--purple-bg)}
+
 .stat-box.purple .val{color:var(--purple)}
 
 .dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all .15s}
@@ -62,46 +62,46 @@ main{flex:1;max-width:1480px;width:100%;margin:0 auto;padding:16px 24px}
 
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
 .form-item{display:flex;flex-direction:column;gap:4px}
-.form-item label{font-size:12px;font-weight:600;color:#334155}
+.form-item label{font-size:12px;font-weight:600;color:#374151}
 .form-item input, .form-item select, .form-item textarea{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text);font-family:inherit}
 .form-item textarea{font-family:var(--mono);font-size:12px;resize:vertical}
 
 .chip-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:12px;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;cursor:pointer;transition:all .15s;font-family:var(--mono)}
-.chip:hover{background:#e0f2fe;border-color:#38bdf8;color:#0284c7}
-.chip.active{background:#0284c7;color:#fff;border-color:#0284c7}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:12px;background:#f1f5f9;border:1px solid #e3e8ef;color:#6b7280;cursor:pointer;transition:all .15s;font-family:var(--mono)}
+.chip:hover{background:#f1f5f9;border-color:#38bdf8;color:#2563eb}
+.chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
 
 /* Scheme Cards Grid */
 .scheme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:12px}
-.scheme-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:all .2s}
-.scheme-card:hover{border-color:#94a3b8;box-shadow:0 4px 12px rgba(15,23,42,.06)}
-.scheme-card.highlight{border-color:#0284c7;background:#f0f9ff}
+.scheme-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s}
+.scheme-card:hover{border-color:#94a3b8}
+.scheme-card.highlight{border-color:#2563eb;background:#f8fafc}
 .scheme-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.scheme-title{font-size:14px;font-weight:700;color:#0f172a}
-.scheme-cat{font-size:11px;background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;font-weight:600}
+.scheme-title{font-size:13px;font-weight:700;color:#111827}
+.scheme-cat{font-size:11px;background:#f1f5f9;color:#6b7280;padding:2px 6px;border-radius:4px;font-weight:600}
 .scheme-body{display:flex;gap:12px;align-items:center}
 .scheme-canvas-wrap{width:110px;height:110px;background:#0f172a;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative}
 .scheme-canvas-wrap canvas{width:100%;height:100%}
 .scheme-info{flex:1;font-size:12px;color:var(--sub);display:flex;flex-direction:column;gap:4px}
-.scheme-info .metric{font-weight:600;color:#0f172a}
+.scheme-info .metric{font-weight:600;color:#111827}
 .scheme-actions{display:flex;gap:6px;margin-top:auto;padding-top:6px;border-top:1px solid #f1f5f9}
 
 /* Table styles */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:12px}
-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
-th{background:#f8fafc;padding:10px 12px;font-weight:700;color:#334155;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:9px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+th{background:#f1f5f9;padding:8px 10px;font-weight:600;color:#334155;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);color:#1f2937;vertical-align:middle}
 tr:hover td{background:#f8fafc}
 tr.reviewed td{opacity:.55;background:#fcfcfc}
 tr.row-fail td{background:#fffaf0}
 tr.row-pass td{background:#fafdfb}
 
-.badge-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.badge-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px}
 .badge-tag.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
 .badge-tag.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
 .badge-tag.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
 .badge-tag.purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-line)}
-.badge-tag.gray{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+.badge-tag.gray{background:#f1f5f9;color:#6b7280;border:1px solid #e3e8ef}
 
 /* Canvas Viewport */
 .canvas-container{position:relative;width:100%;height:680px;background:#0f172a;border-radius:8px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
@@ -111,9 +111,9 @@ canvas#mainCanvas:active{cursor:grabbing}
 .canvas-toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;background:rgba(15,23,42,.85);backdrop-filter:blur(6px);padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.15);z-index:10}
 .canvas-toolbar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 10px;font-size:12px;border-radius:4px;cursor:pointer;font-weight:600;transition:all .15s}
 .canvas-toolbar button:hover{background:rgba(255,255,255,.25)}
-.canvas-toolbar button.active{background:#0284c7;border-color:#38bdf8}
+.canvas-toolbar button.active{background:#2563eb;border-color:#38bdf8}
 
-.canvas-legend{position:absolute;bottom:12px;left:12px;background:rgba(15,23,42,.88);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.15);color:#e2e8f0;font-size:11px;display:flex;gap:12px;align-items:center;z-index:10}
+.canvas-legend{position:absolute;bottom:12px;left:12px;background:rgba(15,23,42,.88);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.15);color:#e3e8ef;font-size:11px;display:flex;gap:12px;align-items:center;z-index:10}
 .legend-item{display:flex;align-items:center;gap:6px}
 .legend-color{width:12px;height:12px;border-radius:3px}
 
@@ -130,37 +130,37 @@ canvas#mainCanvas:active{cursor:grabbing}
 .modal-mask.open{opacity:1;pointer-events:auto}
 .modal-box{background:#fff;border-radius:10px;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2);padding:20px;position:relative}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.modal-header h3{font-size:16px;font-weight:700;color:#0f172a}
+.modal-header h3{font-size:16px;font-weight:700;color:#111827}
 
 .code-box{background:#0f172a;color:#f8fafc;font-family:var(--mono);font-size:11px;padding:10px 12px;border-radius:6px;max-height:220px;overflow-y:auto;white-space:pre-wrap;line-height:1.4}
 .text-mono{font-family:var(--mono)}
-.canvas-info-box table th{background:rgba(30,41,59,.96);color:#93c5fd;border-bottom:1px solid rgba(148,163,184,.28);padding:5px 6px;font-size:10.5px}
-.canvas-info-box table td{color:#f1f5f9;border-bottom:1px solid rgba(148,163,184,.14);padding:5px 6px;font-size:10.5px;background:transparent}
+.canvas-info-box table th{background:rgba(30,41,59,.96);color:#93c5fd;border-bottom:1px solid rgba(148,163,184,.28);padding:5px 6px;font-size:11px}
+.canvas-info-box table td{color:#f1f5f9;border-bottom:1px solid rgba(148,163,184,.14);padding:5px 6px;font-size:11px;background:transparent}
 .canvas-info-box table tr:hover td{background:rgba(56,189,248,.12)}
 
 /* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#f1f5f9 !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#38bdf8;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
 html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min-height:580px !important}
 html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width:96vw !important;max-height:94vh !important}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -199,22 +199,22 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="summary-grid">
     <div class="stat-box">
       <div class="lbl">导入过孔总数</div>
-      <div class="val"><span id="statTotalVias">0</span> <span style="font-size:12px;font-weight:normal;color:#64748b">个孔</span></div>
+      <div class="val"><span id="statTotalVias">0</span> <span style="font-size:12px;font-weight:normal;color:#6b7280">个孔</span></div>
     </div>
-    <div class="stat-box" style="border-color:#bae6fd;background:#f0f9ff">
-      <div class="lbl" style="color:#0369a1">导入走线数据 (Trace)</div>
-      <div class="val" style="color:#0284c7"><span id="statTotalTraces">0</span> <span style="font-size:12px;font-weight:normal;color:#0369a1" id="statTraceMeta">段 (0层/0网络)</span></div>
+    <div class="stat-box" style="border-color:#e3e8ef">
+      <div class="lbl">导入走线数据 (Trace)</div>
+      <div class="val"><span id="statTotalTraces">0</span> <span style="font-size:12px;font-weight:normal;color:#1d4ed8" id="statTraceMeta">段 (0层/0网络)</span></div>
     </div>
     <div class="stat-box">
       <div class="lbl">分割孔群数 (连通分量)</div>
-      <div class="val"><span id="statTotalClusters">0</span> <span style="font-size:12px;font-weight:normal;color:#64748b">组</span></div>
+      <div class="val"><span id="statTotalClusters">0</span> <span style="font-size:12px;font-weight:normal;color:#6b7280">组</span></div>
     </div>
     <div class="stat-box ok">
-      <div class="lbl">✅ 完全匹配通过方案</div>
+      <div class="lbl"> 完全匹配通过方案</div>
       <div class="val"><span id="statPassClusters">0</span> <span style="font-size:12px;font-weight:normal" id="statPassRate">(0%)</span></div>
     </div>
     <div class="stat-box bad">
-      <div class="lbl">❌ 异常/不匹配孔群</div>
+      <div class="lbl"> 异常/不匹配孔群</div>
       <div class="val"><span id="statFailClusters">0</span> <span style="font-size:12px;font-weight:normal;color:#dc2626">处超标/错误</span></div>
     </div>
     <div class="stat-box purple">
@@ -228,24 +228,23 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2>📚 扇出方案库管理 (Fanout Pattern Templates)</h2>
+          <h2>扇出方案库管理 (Fanout Pattern Templates)</h2>
           <p class="hint">扇出方案定义了特定功能过孔群的几何拓扑：包括各孔的相对坐标、孔与孔中心距 (airgap/pitch)，以及每个孔对应的 Padstack Name (如信号孔与伴随屏蔽地孔)。</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn purple" onclick="openSchemeModal()"><span style="font-size:14px">➕</span> 新建扇出方案</button>
-          <button class="btn pri" style="background:#0284c7" onclick="openBatchFanoutModal()"><span style="font-size:14px">📑</span> 批量导入多方案 (TXT / 粘贴)</button>
-          <button class="btn sec small" onclick="loadPresets()"><span style="font-size:12px">⚡</span> 载入标准预设方案库</button>
-          <button class="btn sec small" onclick="exportLibraryJSON()">📤 导出方案库 (JSON)</button>
+          <button class="btn purple" onclick="openSchemeModal()"><span style="font-size:14px"></span> 新建扇出方案</button>
+          <button class="btn pri" style="background:#2563eb" onclick="openBatchFanoutModal()"><span style="font-size:14px"></span> 批量导入多方案 (TXT / 粘贴)</button>
+          <button class="btn sec small" onclick="loadPresets()"><span style="font-size:12px"></span> 载入标准预设方案库</button>
+          <button class="btn sec small" onclick="exportLibraryJSON()"> 导出方案库 (JSON)</button>
           <label class="btn sec small" style="cursor:pointer">
-            📥 导入方案库 (JSON)
+             导入方案库 (JSON)
             <input type="file" id="fileImportScheme" accept=".json" style="display:none" onchange="importLibraryJSON(event)">
           </label>
-          <button class="btn bad small" onclick="clearLibrary()">🗑️ 清空方案库</button>
+          <button class="btn bad small" onclick="clearLibrary()"> 清空方案库</button>
         </div>
       </div>
 
-      <!-- Global Library Padstack Unified Color Legend -->
-      <div id="libraryPadstackLegendBar" style="margin-top:12px"></div>
+      <!-- 方案库配色色卡已移到本页底部（见 libraryPadstackLegendBar） -->
 
       <!-- Scheme Cards List -->
       <div class="scheme-grid" id="schemeContainer">
@@ -257,12 +256,12 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <!-- TAB 2: 检查数据导入 (Import Via & Trace Data & Parameters) -->
   <section id="tabImport" class="tab">
     <div class="card">
-      <h2>📥 导入待检查的 PCB 过孔与走线数据 (Allegro/EDA Via &amp; Trace TXT)</h2>
+      <h2>导入待检查的 PCB 过孔与走线数据 (Allegro/EDA Via &amp; Trace TXT)</h2>
       <p class="hint">导入待检查工程的全板或局部过孔与走线数据。系统将<strong>同时解析读取 <code>&lt; Via &gt;</code> 过孔与 <code>&lt; Trace &gt; / &lt; Trace Seg &gt;</code> 走线（含直线段 <code>Seg</code>、圆弧段 <code>Arc seg</code>、层别 <code>Subset</code>、线宽 <code>Width</code> 与网络 <code>Net</code>）</strong>：一方面按中心距阈值将过孔聚类并与方案库做刚体几何/Padstack 比对，另一方面自动关联扇出走线并在 2D 空间画布中真实还原渲染。</p>
 
       <div class="form-grid" style="margin-top:14px">
         <div class="form-item">
-          <label>🧩 孔连通聚类分割判据 (同属于一个扇出方案的中心距阈值)</label>
+          <label> 孔连通聚类分割判据 (同属于一个扇出方案的中心距阈值)</label>
           <div style="display:flex;gap:6px">
             <input type="number" id="inpClusterDist" value="2.0" step="0.1" min="0.1" max="100.0" style="flex:1" onchange="syncClusterDistUnit()">
             <select id="selClusterUnit" style="width:75px" onchange="toggleClusterUnit()">
@@ -271,7 +270,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
             </select>
           </div>
           <div class="chip-bar" id="historyClusterChips">
-            <span style="font-size:11px;color:#64748b">快捷预设:</span>
+            <span style="font-size:11px;color:#6b7280">快捷预设:</span>
             <span class="chip" onclick="setClusterThresh(2.0, 'mm')">2.0 mm (默认)</span>
             <span class="chip" onclick="setClusterThresh(1.5, 'mm')">1.5 mm</span>
             <span class="chip" onclick="setClusterThresh(1.0, 'mm')">1.0 mm</span>
@@ -281,13 +280,13 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         </div>
 
         <div class="form-item">
-          <label>📏 几何中心距比对匹配容差 (Distance Tolerance)</label>
+          <label> 几何中心距比对匹配容差 (Distance Tolerance)</label>
           <div style="display:flex;gap:6px">
             <input type="number" id="inpDistTol" value="2.0" step="0.5" min="0.1" max="20.0" style="flex:1">
-            <span style="display:flex;align-items:center;font-size:12px;color:#64748b;padding:0 6px">mil</span>
+            <span style="display:flex;align-items:center;font-size:12px;color:#6b7280;padding:0 6px">mil</span>
           </div>
           <div class="chip-bar">
-            <span style="font-size:11px;color:#64748b">容差预设:</span>
+            <span style="font-size:11px;color:#6b7280">容差预设:</span>
             <span class="chip" onclick="setDistTol(1.0)">±1.0 mil</span>
             <span class="chip" onclick="setDistTol(2.0)">±2.0 mil (推荐)</span>
             <span class="chip" onclick="setDistTol(3.0)">±3.0 mil</span>
@@ -295,7 +294,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         </div>
 
         <div class="form-item">
-          <label>🔄 刚体几何旋转与镜像匹配选项</label>
+          <label> 刚体几何旋转与镜像匹配选项</label>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
             <label style="font-size:12px;font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
               <input type="checkbox" id="chkAllowRotation" checked> 允许正交旋转比对 (0° / 90° / 180° / 270°)
@@ -310,13 +309,13 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         </div>
 
         <div class="form-item">
-          <label>🧩 子集/局部拓扑匹配与冗余孔容差规则</label>
+          <label> 子集/局部拓扑匹配与冗余孔容差规则</label>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
             <label style="font-size:12px;font-weight:normal;display:flex;align-items:center;gap:6px;cursor:pointer">
               <input type="checkbox" id="chkAllowSubsetMatch" checked> 允许孔阵列子集匹配方案库 (智能识别外围冗余伴随孔)
             </label>
             <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-              <span style="font-size:11px;color:#64748b">冗余孔容差策略:</span>
+              <span style="font-size:11px;color:#6b7280">冗余孔容差策略:</span>
               <select id="selRedundantPolicy" style="font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid #cbd5e1;background:#fff">
                 <option value="ANY_GND_REDUNDANT" selected>仅允许GND冗余地孔 (推荐)</option>
                 <option value="ALLOW_ANY">允许任意冗余孔</option>
@@ -328,7 +327,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 
       <div class="dropzone" id="dropzoneVia" onclick="document.getElementById('fileViaInput').click()">
         <input type="file" id="fileViaInput" accept=".txt,.csv,.dat" style="display:none" onchange="handleViaFileUpload(event)">
-        <div class="t1">📁 点击上传或将 EDA 过孔 + 走线 (Via &amp; Trace) TXT 文件拖拽至此</div>
+        <div class="t1"> 点击上传或将 EDA 过孔 + 走线 (Via &amp; Trace) TXT 文件拖拽至此</div>
         <div class="t2">支持同时读取 &lt; Via &gt;、&lt; Trace &gt;、&lt; Trace Seg &gt; 块（含直线段与 CW/CCW 圆弧段）或通用 CSV/TSV 清单</div>
       </div>
 
@@ -339,13 +338,13 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 
       <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
         <button class="btn pri" id="btnRunCheck" onclick="executeFanoutCheck()">
-          <span style="font-size:14px">🚀</span> 立即运行扇出方案检查
+          <span style="font-size:14px"></span> 立即运行扇出方案检查
         </button>
         <button class="btn sec" onclick="loadSample26Vias()">
-          <span>⚡</span> 载入 26孔+71段走线测试数据
+          <span></span> 载入 26孔+71段走线测试数据
         </button>
         <button class="btn sec" onclick="loadSampleTraceOnly()">
-          <span>⚡</span> 载入纯走线示例 (10条 Trace)
+          <span></span> 载入纯走线示例 (10条 Trace)
         </button>
       </div>
     </div>
@@ -354,7 +353,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     <div class="card" id="cardImportedTraceOverview" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
         <div>
-          <h2 style="margin-bottom:4px">📐 已读取过孔与走线 (Via &amp; Trace) 数据解析概览</h2>
+          <h2 style="margin-bottom:4px">已读取过孔与走线 (Via &amp; Trace) 数据解析概览</h2>
           <p class="hint" id="lblImportParseHint">已从导入文本中实时提取过孔与走线几何信息（直线段与圆弧段均已解析）。</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -399,13 +398,13 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2>📋 扇出孔群分割与比对检查结果明细</h2>
+          <h2>扇出孔群分割与比对检查结果明细</h2>
           <p class="hint">所有中心距 ≤ 2mm 的过孔已自动划分为独立孔群整体，并与方案库中的孔心距及 Padstack Name 进行了严格校验。</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <span class="badge-tag ok" id="badgeResultsReviewProgress" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:4px 10px;font-size:12px">已复核: 0 / 0</span>
-          <button class="btn sec small" onclick="exportResultsCSV()">📥 导出检查结果 (CSV)</button>
-          <button class="btn sec small" onclick="switchTab('tabCanvas')">🔍 切换至 2D 空间可视化画布</button>
+          <button class="btn sec small" onclick="exportResultsCSV()"> 导出检查结果 (CSV)</button>
+          <button class="btn sec small" onclick="switchTab('tabCanvas')"> 切换至 2D 空间可视化画布</button>
         </div>
       </div>
 
@@ -413,20 +412,20 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn small pri" id="btnFilterAll" onclick="setResultFilter('all')">全部 (<span id="cntFilterAll">0</span>)</button>
-          <button class="btn small sec" id="btnFilterPass" onclick="setResultFilter('pass')">✅ 匹配通过 (<span id="cntFilterPass">0</span>)</button>
-          <button class="btn small sec" id="btnFilterSubset" onclick="setResultFilter('subset')">🧩 子集匹配含冗余孔 (<span id="cntFilterSubset">0</span>)</button>
-          <button class="btn small sec" id="btnFilterFail" onclick="setResultFilter('fail')">❌ 异常/不匹配 (<span id="cntFilterFail">0</span>)</button>
-          <button class="btn small sec" id="btnFilterPadstack" onclick="setResultFilter('padstack')">⚡ Padstack 不符 (<span id="cntFilterPadstack">0</span>)</button>
-          <button class="btn small sec" id="btnFilterDist" onclick="setResultFilter('dist')">📏 中心距超差 (<span id="cntFilterDist">0</span>)</button>
-          <button class="btn small sec" id="btnFilterIsolated" onclick="setResultFilter('unmatched')">⚠️ 未匹配方案 (<span id="cntFilterIsolated">0</span>)</button>
+          <button class="btn small sec" id="btnFilterPass" onclick="setResultFilter('pass')"> 匹配通过 (<span id="cntFilterPass">0</span>)</button>
+          <button class="btn small sec" id="btnFilterSubset" onclick="setResultFilter('subset')"> 子集匹配含冗余孔 (<span id="cntFilterSubset">0</span>)</button>
+          <button class="btn small sec" id="btnFilterFail" onclick="setResultFilter('fail')"> 异常/不匹配 (<span id="cntFilterFail">0</span>)</button>
+          <button class="btn small sec" id="btnFilterPadstack" onclick="setResultFilter('padstack')"> Padstack 不符 (<span id="cntFilterPadstack">0</span>)</button>
+          <button class="btn small sec" id="btnFilterDist" onclick="setResultFilter('dist')"> 中心距超差 (<span id="cntFilterDist">0</span>)</button>
+          <button class="btn small sec" id="btnFilterIsolated" onclick="setResultFilter('unmatched')"> 未匹配方案 (<span id="cntFilterIsolated">0</span>)</button>
         </div>
 
         <select id="selSchemeFilter" style="border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;background:#fff" onchange="applyFilters()" data-no-persist>
-          <option value="">📚 所有匹配方案</option>
+          <option value=""> 所有匹配方案</option>
         </select>
 
         <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索孔号/网络/Padstack/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()" data-no-persist>
+          <input type="text" id="inpSearch" placeholder=" 搜索孔号/网络/Padstack/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()" data-no-persist>
         </div>
       </div>
 
@@ -448,7 +447,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
           </thead>
           <tbody id="tblResultsBody">
             <tr>
-              <td colspan="10" style="text-align:center;padding:30px;color:#94a3b8">请先在「📥 检查数据导入」页面导入或载入过孔数据并运行检查</td>
+              <td colspan="10" style="text-align:center;padding:30px;color:#94a3b8">请先在「 检查数据导入」页面导入或载入过孔数据并运行检查</td>
             </tr>
           </tbody>
         </table>
@@ -472,18 +471,18 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
       <div class="canvas-container" id="canvasContainer">
         <!-- Floating Canvas Toolbar -->
         <div class="canvas-toolbar">
-          <button onclick="resetCanvasView()" title="重置并自动居中视野">🎯 居中重置</button>
-          <button onclick="zoomCanvas(1.2)" title="放大">➕ 放大</button>
-          <button onclick="zoomCanvas(0.8)" title="缩小">➖ 缩小</button>
+          <button onclick="resetCanvasView()" title="重置并自动居中视野"> 居中重置</button>
+          <button onclick="zoomCanvas(1.2)" title="放大"> 放大</button>
+          <button onclick="zoomCanvas(0.8)" title="缩小"> 缩小</button>
           <button id="btnToggleTraces" class="active" onclick="toggleCanvasLayer('traces')">扇出走线</button>
-          <select id="selCanvasTraceLayer" onchange="onCanvasTraceLayerChange()" style="background:rgba(15,23,42,0.88);color:#e2e8f0;border:1px solid rgba(148,163,184,0.35);border-radius:6px;padding:4px 8px;font-size:11.5px;cursor:pointer" title="按层别筛选显示走线">
+          <select id="selCanvasTraceLayer" onchange="onCanvasTraceLayerChange()" style="background:rgba(15,23,42,0.88);color:#e3e8ef;border:1px solid rgba(148,163,184,0.35);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer" title="按层别筛选显示走线">
             <option value="">全部走线层</option>
           </select>
-          <button id="btnToggleHulls" class="active" onclick="toggleCanvasLayer('hulls')">🟩 孔群轮廓</button>
-          <button id="btnToggleLabels" class="active" onclick="toggleCanvasLayer('labels')">🏷️ 过孔标号</button>
-          <button id="btnToggleDims" class="active" onclick="toggleCanvasLayer('dims')">📏 尺寸标注</button>
-          <button id="btnToggleBadges" class="active" onclick="toggleCanvasLayer('badges')">📌 方案标签</button>
-          <button id="btnMeasureMode" onclick="toggleMeasureMode()">📐 测距标尺</button>
+          <button id="btnToggleHulls" class="active" onclick="toggleCanvasLayer('hulls')"> 孔群轮廓</button>
+          <button id="btnToggleLabels" class="active" onclick="toggleCanvasLayer('labels')"> 过孔标号</button>
+          <button id="btnToggleDims" class="active" onclick="toggleCanvasLayer('dims')"> 尺寸标注</button>
+          <button id="btnToggleBadges" class="active" onclick="toggleCanvasLayer('badges')"> 方案标签</button>
+          <button id="btnMeasureMode" onclick="toggleMeasureMode()"> 测距标尺</button>
         </div>
 
         <!-- Canvas -->
@@ -493,11 +492,11 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <div class="canvas-legend">
           <div class="legend-item">
             <div class="legend-color" style="background:#38bdf8;box-shadow:0 0 6px #38bdf8"></div>
-            <span>🔵 信号孔</span>
+            <span> 信号孔</span>
           </div>
           <div class="legend-item">
             <div class="legend-color" style="background:#10b981;box-shadow:0 0 6px #10b981"></div>
-            <span>🟢 正常伴随地孔</span>
+            <span> 正常伴随地孔</span>
           </div>
           <div class="legend-item">
             <div class="legend-color" style="background:linear-gradient(90deg,#f59e0b,#a855f7);height:4px;border-radius:2px;box-shadow:0 0 6px #f59e0b"></div>
@@ -505,11 +504,11 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
           </div>
           <div class="legend-item">
             <div class="legend-color" style="background:#ef4444;box-shadow:0 0 8px #ef4444"></div>
-            <span>🔴 Padstack 异常孔 (标红)</span>
+            <span> Padstack 异常孔 (标红)</span>
           </div>
           <div class="legend-item">
             <div class="legend-color" style="border:2px dashed #f59e0b;background:rgba(245,158,11,0.2)"></div>
-            <span>🟡 虚线圆: 缺失/建议补孔位置</span>
+            <span> 虚线圆: 缺失/建议补孔位置</span>
           </div>
         </div>
 
@@ -520,7 +519,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <div class="canvas-info-box" id="canvasInfoBox">
           <h4>
             <span id="infoBoxTitle">孔群详情 (Cluster_1)</span>
-            <span class="close-btn" onclick="closeInfoBox()">✕</span>
+            <span class="close-btn" onclick="closeInfoBox()"></span>
           </h4>
           <div id="infoBoxContent">
             <!-- Rendered by JS -->
@@ -535,11 +534,11 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <h2>📊 差分网络扇出打孔异常规律分析表</h2>
+          <h2>差分网络扇出打孔异常规律分析表</h2>
           <p class="hint">以差分网络/信号孔对为对象，归纳分析各差分对在扇出打孔中的 Padstack 错误数量（区分信号孔与 GND 孔）与相对位置错误数量（区分信号孔与 GND 孔），直观呈现全板扇出问题分布规律。</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn sec small" onclick="exportDiffAnalysisCSV()">📥 导出差分规律分析 (CSV)</button>
+          <button class="btn sec small" onclick="exportDiffAnalysisCSV()"> 导出差分规律分析 (CSV)</button>
         </div>
       </div>
 
@@ -547,14 +546,14 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn small pri" id="btnAnaFilterAll" onclick="setAnalysisFilter('all')">全部差分网络 (<span id="cntAnaFilterAll">0</span>)</button>
-          <button class="btn small sec" id="btnAnaFilterPass" onclick="setAnalysisFilter('pass')">✅ 匹配通过 (<span id="cntAnaFilterPass">0</span>)</button>
-          <button class="btn small sec" id="btnAnaFilterPadstack" onclick="setAnalysisFilter('padstack')">⚡ Padstack 错误 (<span id="cntAnaFilterPadstack">0</span>)</button>
-          <button class="btn small sec" id="btnAnaFilterPos" onclick="setAnalysisFilter('pos')">📏 位置错误/缺失 (<span id="cntAnaFilterPos">0</span>)</button>
-          <button class="btn small sec" id="btnAnaFilterFail" onclick="setAnalysisFilter('fail')">❌ 存在任一异常 (<span id="cntAnaFilterFail">0</span>)</button>
+          <button class="btn small sec" id="btnAnaFilterPass" onclick="setAnalysisFilter('pass')"> 匹配通过 (<span id="cntAnaFilterPass">0</span>)</button>
+          <button class="btn small sec" id="btnAnaFilterPadstack" onclick="setAnalysisFilter('padstack')"> Padstack 错误 (<span id="cntAnaFilterPadstack">0</span>)</button>
+          <button class="btn small sec" id="btnAnaFilterPos" onclick="setAnalysisFilter('pos')"> 位置错误/缺失 (<span id="cntAnaFilterPos">0</span>)</button>
+          <button class="btn small sec" id="btnAnaFilterFail" onclick="setAnalysisFilter('fail')"> 存在任一异常 (<span id="cntAnaFilterFail">0</span>)</button>
         </div>
 
         <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpAnaSearch" placeholder="🔍 搜索差分网络/孔号/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyAnalysisFilters()" data-no-persist>
+          <input type="text" id="inpAnaSearch" placeholder=" 搜索差分网络/孔号/方案..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyAnalysisFilters()" data-no-persist>
         </div>
       </div>
 
@@ -623,6 +622,9 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     </div>
   </section>
 
+  <!-- 方案库 Padstack 统一色卡（按要求放在本页底部） -->
+  <div id="libraryPadstackLegendBar" style="margin-top:16px"></div>
+
 </main>
 
 
@@ -630,16 +632,16 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 <div class="modal-mask" id="modalBatchFanout">
   <div class="modal-box" style="max-width:880px">
     <div class="modal-header">
-      <h3 style="font-size:15px;color:#0f172a">📑 批量导入扇出方案 (Multi-Scheme Batch Import)</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closeBatchFanoutModal()">✕</span>
+      <h3 style="color:#111827">批量导入扇出方案 (Multi-Scheme Batch Import)</h3>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closeBatchFanoutModal()"></span>
     </div>
     <div style="padding:16px 0;max-height:calc(85vh - 120px);overflow-y:auto;font-size:12px">
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:10px 12px;border-radius:6px;margin-bottom:12px;color:#0369a1;font-size:11.5px;line-height:1.6">
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;padding:10px 12px;border-radius:6px;margin-bottom:12px;color:#1d4ed8;font-size:12px;line-height:1.6">
         <b>说明：</b>支持一次性粘贴或上传包含多个扇出方案的 EDA Via TXT 数据。每个扇出方案之间必须包含 <code>end</code> 分界说明（如 <code>~~~end~~~</code>、<code>~End~</code>、<code>===end===</code> 等，不匹配纯 <code>~~~</code>）。系统将自动按分界符拆分并依次生成独立的扇出方案，自动用序号或标题区分命名。
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <label style="font-weight:600;color:#334155">粘贴多方案 TXT 数据：</label>
+        <label style="font-weight:600;color:#374151">粘贴多方案 TXT 数据：</label>
         <div style="display:flex;gap:6px">
           <button class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="loadBatchFanoutSample()">加载多方案示例 TXT</button>
           <label class="btn sec small" style="padding:2px 8px;font-size:11px;cursor:pointer">
@@ -650,12 +652,12 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         </div>
       </div>
 
-      <textarea id="txtBatchFanoutInput" rows="10" style="width:100%;font-family:var(--mono);font-size:11.5px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;box-sizing:border-box" placeholder="请在此粘贴多个扇出方案数据，每个方案之间用 ~~~end~~~ 分界...&#10;&#10;示例：&#10;方案一：SMA-L2高速扇出&#10;Item 1 < Via >&#10;Origin-xy: [ 17890.3, 36461.68 ]&#10;Padstack Name: SMA-HDI-GND-045drill-ring3_L1_L5&#10;Net: GND&#10;...&#10;~~~end~~~&#10;&#10;方案二：BGA-05PITCH-L4&#10;Item 1 < Via >&#10;...&#10;~~~end~~~" oninput="parseBatchFanoutInput()"></textarea>
+      <textarea id="txtBatchFanoutInput" rows="10" style="width:100%;font-family:var(--mono);font-size:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;box-sizing:border-box" placeholder="请在此粘贴多个扇出方案数据，每个方案之间用 ~~~end~~~ 分界...&#10;&#10;示例：&#10;方案一：SMA-L2高速扇出&#10;Item 1 < Via >&#10;Origin-xy: [ 17890.3, 36461.68 ]&#10;Padstack Name: SMA-HDI-GND-045drill-ring3_L1_L5&#10;Net: GND&#10;...&#10;~~~end~~~&#10;&#10;方案二：BGA-05PITCH-L4&#10;Item 1 < Via >&#10;...&#10;~~~end~~~" oninput="parseBatchFanoutInput()"></textarea>
 
       <!-- Live Parse Result Summary -->
       <div style="margin-top:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-weight:700;color:#0f172a;font-size:12.5px" id="lblBatchFanoutCount">解析结果预览 (0 套方案)</div>
-        <div style="display:flex;gap:12px;font-size:11.5px;color:#475569">
+        <div style="font-weight:700;color:#111827;font-size:12px" id="lblBatchFanoutCount">解析结果预览 (0 套方案)</div>
+        <div style="display:flex;gap:12px;font-size:12px;color:#6b7280">
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
             <input type="radio" name="radBatchModeFanout" id="radBatchAppendFanout" value="append" checked>
             <span>追加到现有方案库</span>
@@ -668,14 +670,14 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
       </div>
 
       <!-- Preview Cards Container -->
-      <div id="pnlBatchFanoutPreview" style="max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:8px">
+      <div id="pnlBatchFanoutPreview" style="max-height:220px;overflow-y:auto;border:1px solid #e3e8ef;border-radius:6px;padding:8px;background:#f8fafc;display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:8px">
         <div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8">暂无解析方案，请在上方粘贴数据或上传 TXT 文件（方案间必须用 ~~~end~~~ 等包含 end 的分界符）</div>
       </div>
     </div>
 
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;border-top:1px solid #e3e8ef;padding-top:12px">
       <button class="btn sec" onclick="closeBatchFanoutModal()">取消</button>
-      <button class="btn pri" id="btnConfirmBatchFanout" onclick="confirmBatchFanoutImport()" disabled style="background:#0284c7">确认批量导入</button>
+      <button class="btn pri" id="btnConfirmBatchFanout" onclick="confirmBatchFanoutImport()" disabled style="background:#2563eb">确认批量导入</button>
     </div>
   </div>
 </div>
@@ -684,8 +686,8 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 <div class="modal-mask" id="modalScheme">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 id="modalSchemeTitle">➕ 新建扇出方案模板</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeSchemeModal()">✕</span>
+      <h3 id="modalSchemeTitle">新建扇出方案模板</h3>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeSchemeModal()"></span>
     </div>
 
     <div class="form-grid">
@@ -708,17 +710,17 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     <!-- 快捷点选关键词生成方案名称面板 (Modal 内嵌版) -->
     <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:#0f172a">✎ 关键词快捷组合命名 <span style="font-weight:400;color:#64748b;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
+        <span style="font-size:12px;font-weight:700;color:#111827"> 关键词快捷组合命名 <span style="font-weight:400;color:#6b7280;font-size:11px">（按点选顺序以 <code>_</code> 连接，同一关键词可点选两次或多次）</span></span>
         <div style="display:flex;gap:6px;align-items:center">
-          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('modal')">⌫ 撤销上一个</button>
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('modal')"> 撤销上一个</button>
           <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearSchemeKeywords('modal')">清空词序</button>
         </div>
       </div>
-      <div id="modalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#64748b"></div>
+      <div id="modalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:12px;color:#6b7280"></div>
       <div id="modalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <input type="text" id="inpAddKwModal" placeholder="输入新关键词 (如 bottom / 10pitch / L5)..." style="width:220px;padding:4px 8px;font-size:11.5px;border:1px solid #cbd5e1;border-radius:5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('modal');}" data-no-persist>
-        <button type="button" class="btn sec small" style="padding:3px 10px;font-size:11.5px" onclick="addCustomSchemeKeyword('modal')">+ 新增关键词</button>
+        <input type="text" id="inpAddKwModal" placeholder="输入新关键词 (如 bottom / 10pitch / L5)..." style="width:220px;padding:4px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:5px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSchemeKeyword('modal');}" data-no-persist>
+        <button type="button" class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="addCustomSchemeKeyword('modal')">+ 新增关键词</button>
       </div>
     </div>
 
@@ -728,7 +730,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     </div>
 
     <div style="margin-top:12px">
-      <label style="font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:4px">
+      <label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:4px">
         过孔定义方式：
       </label>
       <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -744,7 +746,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
       <!-- Mode B: Table -->
       <div id="modalWrapTable" style="display:none">
         <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
-          <button class="btn small sec" onclick="addModalTableRow()">➕ 增加一行孔定义</button>
+          <button class="btn small sec" onclick="addModalTableRow()"> 增加一行孔定义</button>
         </div>
         <div class="table-wrap" style="max-height:180px;overflow-y:auto">
           <table style="font-size:11px">
@@ -773,7 +775,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <canvas id="modalPreviewCanvas" width="120" height="120"></canvas>
       </div>
       <div style="flex:1;font-size:12px;color:var(--sub)">
-        <div style="font-weight:700;color:#0f172a" id="modalPreviewTitle">方案几何预览 (0 个过孔)</div>
+        <div style="font-weight:700;color:#111827" id="modalPreviewTitle">方案几何预览 (0 个过孔)</div>
         <div id="modalPreviewMetrics" style="margin-top:4px;line-height:1.5">
           请输入或粘贴过孔坐标以生成两两中心距与拓扑预览...
         </div>
@@ -782,7 +784,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
       <button class="btn sec" onclick="closeSchemeModal()">取消</button>
-      <button class="btn pri" onclick="saveSchemeFromModal()">💾 保存到扇出方案库</button>
+      <button class="btn pri" onclick="saveSchemeFromModal()"> 保存到扇出方案库</button>
     </div>
   </div>
 </div>
@@ -791,16 +793,16 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 <div class="modal-mask" id="modalExport">
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
-      <h3 id="exportModalTitle">📤 导出文件</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeExportBox()">✕</span>
+      <h3 id="exportModalTitle">导出文件</h3>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeExportBox()"></span>
     </div>
     <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出数据，可直接点击下载文件或一键复制全部内容：</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <a class="btn pri" id="exportDownloadBtn" download="export.json" href="#">📥 点击下载文件</a>
-      <button class="btn sec" id="btnCopyExport" onclick="copyExportContent()">📋 一键复制全部内容</button>
-      <span id="copySuccessTip" style="font-size:12px;color:#16a34a;display:none;align-items:center;font-weight:600">✅ 复制成功！</span>
+      <a class="btn pri" id="exportDownloadBtn" download="export.json" href="#"> 点击下载文件</a>
+      <button class="btn sec" id="btnCopyExport" onclick="copyExportContent()"> 一键复制全部内容</button>
+      <span id="copySuccessTip" style="font-size:12px;color:#16a34a;display:none;align-items:center;font-weight:600"> 复制成功！</span>
     </div>
-    <textarea id="exportModalText" rows="12" readonly style="width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;background:#f8fafc;color:#0f172a;resize:vertical"></textarea>
+    <textarea id="exportModalText" rows="12" readonly style="width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;background:#f8fafc;color:#111827;resize:vertical"></textarea>
     <div style="display:flex;justify-content:flex-end;margin-top:14px">
       <button class="btn sec" onclick="closeExportBox()">关闭窗口</button>
     </div>
@@ -811,32 +813,32 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 <div class="modal-mask" id="modalQuickRename">
   <div class="modal-box" style="max-width:680px">
     <div class="modal-header">
-      <h3 id="quickRenameTitle">✎ 快捷修改扇出方案名称</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeQuickRenameModal()">✕</span>
+      <h3 id="quickRenameTitle">快捷修改扇出方案名称</h3>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeQuickRenameModal()"></span>
     </div>
 
-    <div style="font-size:12px;color:#64748b;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-      <span>原方案名称：<b id="lblQuickRenameOld" style="color:#0f172a;font-family:var(--mono)">-</b></span>
-      <span id="lblQuickRenameIdx" style="font-family:var(--mono);font-size:11px;color:#0284c7"></span>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <span>原方案名称：<b id="lblQuickRenameOld" style="color:#111827;font-family:var(--mono)">-</b></span>
+      <span id="lblQuickRenameIdx" style="font-family:var(--mono);font-size:11px;color:#2563eb"></span>
     </div>
 
     <div class="form-item" style="margin-bottom:10px">
-      <label style="font-weight:700;color:#0f172a">新方案名称（点选下方关键词按顺序自动用 <code>_</code> 分隔生成，也可手动微调）*</label>
-      <input type="text" id="inpQuickRenameName" style="font-family:var(--mono);font-weight:700;font-size:14px;color:#0369a1;border:1.5px solid #38bdf8;background:#f0f9ff" placeholder="请点选下方关键词自动生成名称..." data-no-persist>
+      <label style="font-weight:700;color:#111827">新方案名称（点选下方关键词按顺序自动用 <code>_</code> 分隔生成，也可手动微调）*</label>
+      <input type="text" id="inpQuickRenameName" style="font-family:var(--mono);font-weight:700;font-size:14px;color:#1d4ed8;border:1.5px solid #38bdf8;background:#f8fafc" placeholder="请点选下方关键词自动生成名称..." data-no-persist>
     </div>
 
     <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:#334155">已点选词序 <span style="font-weight:400;color:#64748b;font-size:11px">（同一关键词可点选两次或多次；点击单个词块可移除）</span></span>
+        <span style="font-size:12px;font-weight:700;color:#374151">已点选词序 <span style="font-weight:400;color:#374151;font-size:11px">（同一关键词可点选两次或多次；点击单个词块可移除）</span></span>
         <div style="display:flex;gap:6px">
-          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('quick')">⌫ 撤销上一个</button>
+          <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="undoSchemeKeyword('quick')"> 撤销上一个</button>
           <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11px" onclick="clearSchemeKeywords('quick')">清空重选</button>
         </div>
       </div>
 
-      <div id="quickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center;padding:6px 8px;background:#ffffff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px;font-size:12px;color:#64748b"></div>
+      <div id="quickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center;padding:6px 8px;background:#ffffff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px;font-size:12px;color:#6b7280"></div>
 
-      <div style="font-size:11.5px;font-weight:700;color:#475569;margin-bottom:6px">点选关键词（点击即按顺序追加）：</div>
+      <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px">点选关键词（点击即按顺序追加）：</div>
       <div id="quickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
 
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px dashed #cbd5e1">
@@ -846,10 +848,10 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap">
-      <button type="button" class="btn sec small" onclick="saveQuickRename(true)" title="保存当前方案名称并直接切换到下一个方案继续改名">✓ 保存并改下一个方案 ▶</button>
+      <button type="button" class="btn sec small" onclick="saveQuickRename(true)" title="保存当前方案名称并直接切换到下一个方案继续改名"> 保存并改下一个方案 ▶</button>
       <div style="display:flex;gap:8px">
         <button type="button" class="btn sec" onclick="closeQuickRenameModal()">取消</button>
-        <button type="button" class="btn pri" onclick="saveQuickRename(false)">✓ 确认修改名称</button>
+        <button type="button" class="btn pri" onclick="saveQuickRename(false)"> 确认修改名称</button>
       </div>
     </div>
   </div>
@@ -860,24 +862,24 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="modal-box" style="max-width:1140px;width:96%;max-height:92vh;padding:16px 20px;display:flex;flex-direction:column;overflow:hidden">
     <div class="modal-header" style="margin-bottom:10px;padding-bottom:10px;flex-wrap:wrap;gap:10px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <h3 id="viewSchemeTitle" style="font-size:16px;color:#0f172a">扇出方案放大预览</h3>
-        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:11.5px;color:#0369a1;border-color:#7dd3fc;background:#f0f9ff" onclick="openQuickRenameModal(ViewSchemeState.schemeId)">✎ 快捷改名</button>
+        <h3 id="viewSchemeTitle" style="color:#111827">扇出方案放大预览</h3>
+        <button type="button" class="btn sec small" style="padding:2px 8px;font-size:12px;color:#1d4ed8;border-color:#cbd5e1;background:#f8fafc" onclick="openQuickRenameModal(ViewSchemeState.schemeId)"> 快捷改名</button>
         <span class="scheme-cat" id="viewSchemeCat">扇出方案</span>
-        <span id="viewSchemeIndexBadge" style="font-size:11px;color:#64748b;font-family:var(--mono)"></span>
+        <span id="viewSchemeIndexBadge" style="font-size:11px;color:#6b7280;font-family:var(--mono)"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <button class="btn sec small" id="btnViewPrevScheme" onclick="stepViewScheme(-1)">◀ 上一方案</button>
         <button class="btn sec small" id="btnViewNextScheme" onclick="stepViewScheme(1)">下一方案 ▶</button>
         <button class="btn sec small" onclick="editCurrentViewedScheme()">编辑方案</button>
-        <button class="btn sec small" onclick="closeViewSchemeModal()" style="font-weight:700">✕ 关闭</button>
+        <button class="btn sec small" onclick="closeViewSchemeModal()" style="font-weight:700"> 关闭</button>
       </div>
     </div>
 
-    <div id="viewSchemeDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+    <div id="viewSchemeDesc" style="font-size:12px;color:#6b7280;margin-bottom:10px"></div>
 
     <!-- Toolbar -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#334155">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#374151">
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
           <input type="checkbox" id="chkViewPadstack" checked onchange="onViewSchemeOptionChange()">
           <span>标注每个孔 Padstack</span>
@@ -890,10 +892,11 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
           <input type="checkbox" id="chkViewDistances" onchange="onViewSchemeOptionChange()">
           <span>显示孔心距 (mil)</span>
         </label>
-        <span id="viewSchemePadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#475569"></span>
+        <span id="viewSchemeDistanceLegend" style="display:inline-flex;align-items:center;gap:5px;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#374151"><span style="display:inline-block;width:18px;border-top:2px dashed #38bdf8"></span>虚线：同孔心距同色（0.1 mil 分组）</span>
+        <span id="viewSchemePadLegend" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:2px;padding-left:10px;border-left:1px solid #cbd5e1;font-size:11px;color:#6b7280"></span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <button type="button" class="btn sec small" id="btnViewSchemeMeasure" onclick="toggleViewSchemeMeasureMode()" style="border-color:#0284c7;color:#0369a1;font-weight:700">⇔ 测孔中心距</button>
+        <button type="button" class="btn sec small" id="btnViewSchemeMeasure" onclick="toggleViewSchemeMeasureMode()" style="border-color:#2563eb;color:#1d4ed8;font-weight:700">测孔中心距</button>
         <button type="button" class="btn sec small" id="btnViewSchemeClearMeasure" onclick="clearViewSchemeMeasurements()" style="display:none">清除测量</button>
         <button class="btn sec small" onclick="zoomViewScheme(1.2)">放大 +</button>
         <button class="btn sec small" onclick="zoomViewScheme(1/1.2)">缩小 -</button>
@@ -908,21 +911,21 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <div id="viewSchemeCanvasWrap" style="position:relative;flex:1;min-height:500px;background:#0f172a;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.22);border:1px solid #1e293b">
           <canvas id="viewSchemeCanvas" width="760" height="520" style="width:100%;height:100%;display:block;cursor:grab"></canvas>
         </div>
-        <div id="viewSchemeBottomHint" style="font-size:11px;color:#64748b;text-align:right;font-family:var(--mono)">
-          滚轮缩放 · 按住拖拽平移 · 点击「⇔ 测孔中心距」后依次点选任意两孔可精准测量中心距
+        <div id="viewSchemeBottomHint" style="font-size:11px;color:#6b7280;text-align:right;font-family:var(--mono)">
+          滚轮缩放 · 按住拖拽平移 · 点击「测孔中心距」后依次点选任意两孔可精准测量中心距
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">
-        <div id="viewSchemeMeasurePanel" style="display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:11.5px;line-height:1.55"></div>
+        <div id="viewSchemeMeasurePanel" style="display:none;background:#f8fafc;border:1px solid #93c5fd;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.55"></div>
         <div id="viewSchemeSummaryBox" style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65"></div>
         <div style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff">
-          <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+          <div style="padding:8px 12px;background:#f8fafc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:#111827;display:flex;justify-content:space-between;align-items:center">
             <span>逐孔 Padstack 明细清单</span>
-            <span style="font-size:11px;font-weight:400;color:#64748b">悬停联动高亮</span>
+            <span style="font-size:11px;font-weight:400;color:#6b7280">悬停联动高亮</span>
           </div>
           <div style="flex:1;overflow-y:auto">
-            <table style="font-size:11.5px;margin:0">
+            <table style="font-size:12px;margin:0">
               <thead>
                 <tr>
                   <th style="padding:7px 8px;width:48px;white-space:nowrap">孔号</th>
@@ -1058,13 +1061,13 @@ function renderSchemeCards() {
       globalLegendEl.innerHTML = '';
     } else {
       globalLegendEl.innerHTML = `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11.5px;font-weight:700;color:#334155;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
+        <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:700;color:#374151;white-space:nowrap">● 方案库全局 Padstack 统一色卡 (${legendItems.length} 种):</span>
           ${legendItems.map(item => `
-            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#0f172a" title="Padstack: ${escapeHtml(item.padstack)} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#ffffff;border:1px solid #cbd5e1;font-family:var(--mono);font-size:11px;color:#111827" title="Padstack: ${escapeHtml(item.padstack)} · 共用于 ${item.schemeCount} 套方案 / ${item.totalVias} 个孔">
               <span style="width:9px;height:9px;border-radius:50%;background:${item.fill};border:1px solid #0f172a;display:inline-block;flex-shrink:0"></span>
               <span style="font-weight:600">${escapeHtml(item.padstack)}</span>
-              <span style="font-size:10px;color:#64748b">(${item.schemeCount}方案/${item.totalVias}孔)</span>
+              <span style="font-size:11px;color:#6b7280">(${item.schemeCount}方案/${item.totalVias}孔)</span>
             </span>
           `).join('')}
         </div>
@@ -1074,7 +1077,7 @@ function renderSchemeCards() {
 
   // Update dropdown filter in tab 3
   if (selFilter) {
-    selFilter.innerHTML = '<option value="">📚 所有匹配方案</option>' + schemes.map(s => 
+    selFilter.innerHTML = '<option value=""> 所有匹配方案</option>' + schemes.map(s => 
       `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)} (${s.viaCount}孔)</option>`
     ).join('');
   }
@@ -1082,7 +1085,7 @@ function renderSchemeCards() {
   if (schemes.length === 0) {
     container.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border:1px dashed var(--line);border-radius:8px;color:#94a3b8">
-        方案库当前为空。点击右上角「➕ 新建扇出方案」或「⚡ 载入标准预设方案库」开始。
+        方案库当前为空。点击右上角「 新建扇出方案」或「 载入标准预设方案库」开始。
       </div>
     `;
     return;
@@ -1104,9 +1107,9 @@ function renderSchemeCards() {
           <div style="min-width:0;flex:1">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <div class="scheme-title" onclick="openQuickRenameModal('${s.id}')" style="cursor:pointer" title="点击通过关键词快捷修改方案名称">${escapeHtml(s.name)}</div>
-              <span onclick="openQuickRenameModal('${s.id}')" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:1px 6px;white-space:nowrap">✎ 改名</span>
+              <span onclick="openQuickRenameModal('${s.id}')" title="点击点选关键词快捷修改方案名称" style="cursor:pointer;display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:#1d4ed8;background:#f8fafc;border:1px solid #e3e8ef;border-radius:4px;padding:1px 6px;white-space:nowrap"> 改名</span>
             </div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px">${escapeHtml(s.description || '标准扇出拓扑')}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">${escapeHtml(s.description || '标准扇出拓扑')}</div>
           </div>
           <span class="scheme-cat">${escapeHtml(s.category)}</span>
         </div>
@@ -1117,14 +1120,14 @@ function renderSchemeCards() {
           <div class="scheme-info">
             <div>过孔总数: <span class="metric">${s.viaCount} 个孔</span></div>
             <div>孔中心距范围: <span class="metric">${minD} ~ ${maxD} mil</span></div>
-            <div style="font-size:11px;color:#475569;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escapeHtml(pCountsPlain)}">
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" title="${escapeHtml(pCountsPlain)}">
               焊盘: ${pCountsRich}
             </div>
           </div>
         </div>
         <div class="scheme-actions">
-          <button class="btn sec small" onclick="editScheme('${s.id}')">✏️ 编辑</button>
-          <button class="btn bad small" onclick="deleteScheme('${s.id}')">🗑️ 删除</button>
+          <button class="btn sec small" onclick="editScheme('${s.id}')"> 编辑</button>
+          <button class="btn bad small" onclick="deleteScheme('${s.id}')"> 删除</button>
           <button class="btn pri small" onclick="viewScheme('${s.id}')">查看</button>
         </div>
       </div>
@@ -1226,7 +1229,7 @@ function showExportBox(filename, text, hint = '', mimeType = 'application/json')
   const dlBtn = document.getElementById('exportDownloadBtn');
   const tip = document.getElementById('copySuccessTip');
 
-  if (title) title.textContent = `📤 导出: ${filename}`;
+  if (title) title.textContent = ` 导出: ${filename}`;
   if (hintEl) hintEl.textContent = hint || `已成功生成 ${filename}，可点击下方按钮下载或直接复制内容：`;
   if (txtArea) txtArea.value = text;
   if (tip) tip.style.display = 'none';
@@ -1571,11 +1574,11 @@ function renderSchemeKeywordUI(ctx) {
   seq.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
 
   if (seq.length === 0) {
-    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:11.5px">尚未点选关键词 — 请按顺序点击下方关键词按钮自动用 <code>_</code> 拼接生成名称</span>`;
+    seqBar.innerHTML = `<span style="color:#94a3b8;font-size:12px">尚未点选关键词 — 请按顺序点击下方关键词按钮自动用 <code>_</code> 拼接生成名称</span>`;
   } else {
     seqBar.innerHTML = seq.map((tok, idx) => `
-      <span onclick="removeSchemeKeywordAt('${ctx}', ${idx})" title="点击移除该词块" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:11.5px;font-weight:700">
-        <span style="font-size:9.5px;color:#0284c7;opacity:0.8">${idx + 1}.</span>${escapeHtml(tok)}<span style="color:#0284c7;font-weight:900;margin-left:1px">×</span>
+      <span onclick="removeSchemeKeywordAt('${ctx}', ${idx})" title="点击移除该词块" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;color:#1d4ed8;border:1px solid #cbd5e1;border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:12px;font-weight:700">
+        <span style="font-size:11px;color:#2563eb;opacity:0.8">${idx + 1}.</span>${escapeHtml(tok)}<span style="color:#2563eb;font-weight:900;margin-left:1px">×</span>
       </span>
     `).join('<span style="color:#94a3b8;font-family:var(--mono);font-weight:700">_</span>');
   }
@@ -1585,14 +1588,14 @@ function renderSchemeKeywordUI(ctx) {
     const cnt = counts[kw] || 0;
     const isCustom = SchemeNameBuilder.customKeywords.includes(kw);
     const activeStyle = cnt > 0
-      ? 'background:#0284c7;color:#ffffff;border:1px solid #0369a1;box-shadow:0 1px 3px rgba(2,132,199,0.25)'
+      ? 'background:#2563eb;color:#ffffff;border:1px solid #1d4ed8;box-shadow:0 1px 3px rgba(2,132,199,0.25)'
       : 'background:#ffffff;color:#1e293b;border:1px solid #cbd5e1';
     const kwEsc = escapeHtml(kw).replace(/'/g, "\\'");
     return `
       <button type="button" onclick="clickSchemeKeyword('${ctx}', '${kwEsc}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;transition:all .12s;${activeStyle}" title="点击追加「${escapeHtml(kw)}」（可重复点击两次或多次）">
         <span>${escapeHtml(kw)}</span>
-        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800">×${cnt}</span>` : ''}
-        ${isCustom ? `<span onclick="deleteCustomSchemeKeyword('${kwEsc}', event)" title="删除此自定义关键词" style="margin-left:2px;font-size:11px;opacity:0.75;padding:0 2px">✕</span>` : ''}
+        ${cnt > 0 ? `<span style="background:rgba(255,255,255,0.25);color:#fff;border-radius:9px;padding:0 5px;font-size:11px;font-weight:800">×${cnt}</span>` : ''}
+        ${isCustom ? `<span onclick="deleteCustomSchemeKeyword('${kwEsc}', event)" title="删除此自定义关键词" style="margin-left:2px;font-size:11px;opacity:0.75;padding:0 2px"></span>` : ''}
       </button>
     `;
   }).join('');
@@ -1796,7 +1799,7 @@ function renderViewSchemeMeasureUI() {
   const panel = document.getElementById('viewSchemeMeasurePanel');
   if (btn) {
     btn.className = ViewSchemeState.measureMode ? 'btn pri small' : 'btn sec small';
-    btn.textContent = ViewSchemeState.measureMode ? '⇔ 测孔中心距 (开启中)' : '⇔ 测孔中心距';
+    btn.textContent = ViewSchemeState.measureMode ? '测孔中心距 (开启中)' : '测孔中心距';
   }
   const hasAny = ViewSchemeState.measuredPairs.length > 0 || ViewSchemeState.measureStartIndex >= 0;
   if (clearBtn) {
@@ -1817,10 +1820,10 @@ function renderViewSchemeMeasureUI() {
   let statusHtml = '';
   if (ViewSchemeState.measureMode) {
     if (ViewSchemeState.measureStartIndex < 0) {
-      statusHtml = `<div style="color:#0369a1;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】作为测量起点</div>`;
+      statusHtml = `<div style="color:#1d4ed8;font-weight:700">● 请点击效果图或下方列表中的【第 1 个孔】作为测量起点</div>`;
     } else {
       const sv = vias[ViewSchemeState.measureStartIndex];
-      statusHtml = `<div style="color:#0284c7;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : ViewSchemeState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
+      statusHtml = `<div style="color:#2563eb;font-weight:700">● 已选起点 <b>#${sv ? sv.labelNum : ViewSchemeState.measureStartIndex + 1}</b>，请点击【第 2 个孔】得出中心距</div>`;
     }
   }
 
@@ -1831,14 +1834,14 @@ function renderViewSchemeMeasureUI() {
     return `
       <div style="margin-top:6px;padding:6px 8px;background:#ffffff;border:1px solid #bfdbfe;border-radius:6px;font-family:var(--mono);font-size:11px">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:700;color:#0f172a">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
+          <span style="font-weight:700;color:#111827">#${m.v1Label} - #${m.v2Label} 孔中心距</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-weight:800;font-size:12.5px;color:#0284c7">${m.distMil.toFixed(2)} mil</span>
-            <span style="color:#475569">(${m.distMm.toFixed(3)} mm)</span>
-            <span onclick="removeViewSchemeMeasuredPair(${idx})" title="移除此条测量" style="cursor:pointer;color:#ef4444;font-weight:700;padding:0 3px">✕</span>
+            <span style="font-weight:800;font-size:12px;color:#2563eb">${m.distMil.toFixed(2)} mil</span>
+            <span style="color:#6b7280">(${m.distMm.toFixed(3)} mm)</span>
+            <span onclick="removeViewSchemeMeasuredPair(${idx})" title="移除此条测量" style="cursor:pointer;color:#ef4444;font-weight:700;padding:0 3px"></span>
           </div>
         </div>
-        <div style="color:#64748b;font-size:10.5px;margin-top:2px">
+        <div style="color:#6b7280;font-size:11px;margin-top:2px">
           |ΔX| = ${m.absDx.toFixed(2)} mil (${m.absDxMm.toFixed(3)} mm) · |ΔY| = ${m.absDy.toFixed(2)} mil (${m.absDyMm.toFixed(3)} mm)
         </div>
       </div>
@@ -1847,7 +1850,7 @@ function renderViewSchemeMeasureUI() {
 
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-weight:700;color:#1e3a8a">⇔ 孔到孔中心距测量</span>
+      <span style="font-weight:700;color:#1e3a8a">孔到孔中心距测量</span>
       ${hasAny ? `<span onclick="clearViewSchemeMeasurements()" style="cursor:pointer;font-size:11px;color:#dc2626;font-weight:600">清空全部</span>` : ''}
     </div>
     ${statusHtml}
@@ -2034,18 +2037,18 @@ function populateViewedSchemeDetails(scheme) {
   }
 
   const padTags = padColorList.map(pc =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#0f172a;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${escapeHtml(pc.padstack)}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
+    `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;background:#fff;border:1px solid #e3e8ef;border-left:4px solid ${pc.fill};border-radius:5px;margin-top:4px;font-family:var(--mono);font-size:11px"><span style="display:inline-flex;align-items:center;gap:6px;word-break:break-all;color:#111827;font-weight:600"><span style="width:9px;height:9px;border-radius:50%;background:${pc.fill};flex-shrink:0"></span>${escapeHtml(pc.padstack)}</span><span style="color:${pc.badgeText};background:${pc.badgeBg};padding:0 6px;border-radius:4px;font-weight:700;white-space:nowrap">×${pc.count}</span></div>`
   ).join('');
 
   if (summaryEl) {
     summaryEl.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px">
-        <div>过孔总数: <b style="color:#0f172a">${summary.viaCount} 个孔</b></div>
-        <div>信号 / 地孔: <b style="color:#0284c7">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
-        <div style="grid-column:1/-1">孔心距范围: <b style="color:#0f172a;font-family:var(--mono)">${pitchRange}</b></div>
+        <div>过孔总数: <b style="color:#111827">${summary.viaCount} 个孔</b></div>
+        <div>信号 / 地孔: <b style="color:#2563eb">${summary.sigCount}</b> / <b style="color:#059669">${summary.gndCount}</b></div>
+        <div style="grid-column:1/-1">孔心距范围: <b style="color:#111827;font-family:var(--mono)">${pitchRange}</b></div>
       </div>
       <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #cbd5e1">
-        <div style="font-weight:700;color:#334155;font-size:11.5px">焊盘 (Padstack) 专属颜色汇总：</div>
+        <div style="font-weight:700;color:#374151;font-size:12px">焊盘 (Padstack) 专属颜色汇总：</div>
         ${padTags || '<div style="color:#94a3b8">无焊盘定义</div>'}
       </div>
     `;
@@ -2054,17 +2057,17 @@ function populateViewedSchemeDetails(scheme) {
   if (tbodyEl) {
     tbodyEl.innerHTML = vias.map((v, i) => `
       <tr onmouseenter="setViewSchemeHoveredVia(${i})" onmouseleave="setViewSchemeHoveredVia(-1)" onclick="if(!ViewSchemeState.measureMode) toggleViewSchemeMeasureMode(true); handleViewSchemeViaClick(${i});" title="点击可选取该孔测量中心距" style="cursor:pointer;transition:background .12s">
-        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#0f172a">
+        <td style="padding:6px 8px;font-family:var(--mono);font-weight:700;color:#111827">
           <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:${v.padColor};border:1px solid #0f172a;display:inline-block"></span>#${v.labelNum}</span>
         </td>
         <td style="padding:6px 8px">
-          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#e0f2fe' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#0369a1' : '#15803d')}">
+          <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:700;background:${v.padBadgeBg || (v.isSig ? '#f1f5f9' : '#dcfce7')};color:${v.padBadgeText || (v.isSig ? '#1d4ed8' : '#15803d')}">
             ${v.isSig ? '信号' : 'GND'}
           </span>
         </td>
         <td style="padding:6px 8px">
-          <div style="font-family:var(--mono);font-weight:700;color:#0f172a;word-break:break-all;font-size:11.5px">${escapeHtml(v.padstack)}</div>
-          <div style="font-size:10.5px;color:#64748b;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${escapeHtml(v.role)}</div>
+          <div style="font-family:var(--mono);font-weight:700;color:#111827;word-break:break-all;font-size:12px">${escapeHtml(v.padstack)}</div>
+          <div style="font-size:11px;color:#6b7280;font-family:var(--mono)">[${v.x.toFixed(1)}, ${v.y.toFixed(1)}] mil · ${escapeHtml(v.role)}</div>
         </td>
       </tr>
     `).join('');
@@ -2416,13 +2419,13 @@ function renderBatchFanoutPreview() {
     return `
       <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px">
-          <input type="text" value="${s.name}" oninput="g_parsedBatchSchemes[${idx}].name=this.value" style="font-size:11.5px;font-weight:700;color:#0f172a;width:100%;border:1px solid #e2e8f0;padding:2px 4px;border-radius:4px" placeholder="方案名称">
-          <span style="font-size:10.5px;color:#7c3aed;background:#f3e8ff;padding:1px 5px;border-radius:3px;white-space:nowrap">${s.vias.length} 孔</span>
+          <input type="text" value="${s.name}" oninput="g_parsedBatchSchemes[${idx}].name=this.value" style="font-size:12px;font-weight:700;color:#111827;width:100%;border:1px solid #e3e8ef;padding:2px 4px;border-radius:4px" placeholder="方案名称">
+          <span style="font-size:11px;color:#7c3aed;background:#f3e8ff;padding:1px 5px;border-radius:3px;white-space:nowrap">${s.vias.length} 孔</span>
         </div>
-        <div style="font-size:11px;color:#475569;margin-bottom:3px">
-          <span style="color:#0284c7;font-weight:600">${sigCount} 信号孔</span> + <span style="color:#64748b">${gndCount} 伴随地孔</span>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:3px">
+          <span style="color:#2563eb;font-weight:600">${sigCount} 信号孔</span> + <span style="color:#6b7280">${gndCount} 伴随地孔</span>
         </div>
-        <div style="font-size:10px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${padstacks.join(', ')}">
+        <div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${padstacks.join(', ')}">
           Padstack: ${padstacks.slice(0, 2).join(', ')}${padstacks.length > 2 ? ' 等' : ''}
         </div>
       </div>
@@ -2454,14 +2457,14 @@ function openSchemeModal(schemeToEdit = null) {
   editingSchemeId = schemeToEdit ? schemeToEdit.id : null;
 
   if (schemeToEdit) {
-    title.textContent = `✏️ 编辑扇出方案: ${schemeToEdit.name}`;
+    title.textContent = `编辑扇出方案: ${schemeToEdit.name}`;
     document.getElementById('modalInpName').value = schemeToEdit.name;
     document.getElementById('modalSelCategory').value = schemeToEdit.category;
     document.getElementById('modalInpDesc').value = schemeToEdit.description;
     State.modalVias = schemeToEdit.vias.map(v => ({ ...v }));
     SchemeNameBuilder.seq.modal = schemeToEdit.name.includes('_') ? schemeToEdit.name.split('_').filter(Boolean) : [];
   } else {
-    title.textContent = '➕ 新建扇出方案模板';
+    title.textContent = '新建扇出方案模板';
     document.getElementById('modalInpName').value = '新扇出方案_' + (State.library.schemes.length + 1);
     document.getElementById('modalSelCategory').value = '通用扇出';
     document.getElementById('modalInpDesc').value = '';
@@ -2504,7 +2507,7 @@ function renderModalTable() {
       <td><input type="text" value="${escapeHtml(v.padstack)}" style="width:160px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'padstack', this.value)"></td>
       <td><input type="text" value="${escapeHtml(v.net || '')}" style="width:70px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'net', this.value)"></td>
       <td><input type="text" value="${escapeHtml(v.role || '')}" style="width:90px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'role', this.value)"></td>
-      <td><button class="btn bad small" onclick="removeModalVia(${idx})">✕</button></td>
+      <td><button class="btn bad small" onclick="removeModalVia(${idx})"></button></td>
     </tr>
   `).join('');
 
@@ -2570,7 +2573,7 @@ function updateModalPreview() {
     const pads = Object.keys(tempScheme.padstackCounts).join(', ');
     previewMetrics.innerHTML = `
       <div>孔中心距范围: <strong>${minD} ~ ${maxD} mil</strong> (${(minD*0.0254).toFixed(3)} ~ ${(maxD*0.0254).toFixed(3)} mm)</div>
-      <div>Padstack 种类: <span style="font-family:var(--mono);color:#0284c7">${escapeHtml(pads)}</span></div>
+      <div>Padstack 种类: <span style="font-family:var(--mono);color:#2563eb">${escapeHtml(pads)}</span></div>
     `;
   } else {
     previewMetrics.textContent = '暂无孔位数据';
@@ -2646,7 +2649,7 @@ function handleViaFileUpload(event) {
   if (!file) return;
 
   const btn = document.getElementById('btnRunCheck');
-  if (btn) btn.innerHTML = '⏳ 正在极速加载大型文件...';
+  if (btn) btn.innerHTML = ' 正在极速加载大型文件...';
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -2657,12 +2660,12 @@ function handleViaFileUpload(event) {
     if (raw.length > 100000) {
       // 大文件避免直接塞入 DOM textarea 导致浏览器布局卡死
       const previewLines = raw.split(/\r?\n/).slice(0, 15).join('\n');
-      ta.value = `[📁 已成功加载大型文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB，数据已在后台内存就绪)]\n\n数据预览（前 15 行）：\n${previewLines}\n\n...（全量数据在后台内存高效处理，点击下方按钮即可运行检查）`;
+      ta.value = `[ 已成功加载大型文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB，数据已在后台内存就绪)]\n\n数据预览（前 15 行）：\n${previewLines}\n\n...（全量数据在后台内存高效处理，点击下方按钮即可运行检查）`;
     } else {
       ta.value = raw;
     }
 
-    if (btn) btn.innerHTML = '<span style="font-size:14px">🚀</span> 立即运行扇出方案检查';
+    if (btn) btn.innerHTML = '<span style="font-size:14px"></span> 立即运行扇出方案检查';
     
     // 异步执行检查，保持 UI 线程流畅
     setTimeout(() => {
@@ -2730,7 +2733,7 @@ function scheduleImportPreviewUpdate() {
     const rawInMemory = State.rawText || '';
     const ta = document.getElementById('txtViaInput');
     const taVal = ta ? ta.value.trim() : '';
-    const txt = (rawInMemory && taVal.startsWith('[📁 已成功加载大型文件:')) ? rawInMemory : taVal;
+    const txt = (rawInMemory && taVal.startsWith('[ 已成功加载大型文件:')) ? rawInMemory : taVal;
     if (!txt) {
       const card = document.getElementById('cardImportedTraceOverview');
       if (card) card.style.display = 'none';
@@ -2805,24 +2808,24 @@ function renderImportedTraceOverview(vias, traces, traceSummary) {
   if (metricsEl && ts) {
     metricsEl.innerHTML = `
       <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
-        <div style="font-size:11px;color:#64748b">读取过孔 (Via)</div>
-        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${vList.length} <span style="font-size:11px;font-weight:500;color:#64748b">信号${sigViaCnt}/地${gndViaCnt}</span></div>
+        <div style="font-size:11px;color:#6b7280">读取过孔 (Via)</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#111827">${vList.length} <span style="font-size:11px;font-weight:500;color:#6b7280">信号${sigViaCnt}/地${gndViaCnt}</span></div>
       </div>
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px">
-        <div style="font-size:11px;color:#0369a1">走线对象 (Trace Item)</div>
-        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0284c7">${ts.totalTraces} <span style="font-size:11px;font-weight:500;color:#0369a1">条/块</span></div>
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#1d4ed8">走线对象 (Trace Item)</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#2563eb">${ts.totalTraces} <span style="font-size:11px;font-weight:500;color:#1d4ed8">条/块</span></div>
       </div>
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px">
-        <div style="font-size:11px;color:#0369a1">几何线段构成</div>
-        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0284c7">${ts.totalTraceSegments} <span style="font-size:11px;font-weight:500;color:#0369a1">直${ts.traceLineCount} / 弧${ts.traceArcCount}</span></div>
-      </div>
-      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
-        <div style="font-size:11px;color:#64748b">走线层 / 网络数</div>
-        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${ts.layers.length} 层 <span style="font-size:11px;font-weight:500;color:#64748b">/ ${ts.nets.length} 网络</span></div>
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#1d4ed8">几何线段构成</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#2563eb">${ts.totalTraceSegments} <span style="font-size:11px;font-weight:500;color:#1d4ed8">直${ts.traceLineCount} / 弧${ts.traceArcCount}</span></div>
       </div>
       <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
-        <div style="font-size:11px;color:#64748b">走线累计总长</div>
-        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#0f172a">${ts.totalTraceLength.toFixed(1)} <span style="font-size:11px;font-weight:500;color:#64748b">mil (${(ts.totalTraceLength * 0.0254).toFixed(2)}mm)</span></div>
+        <div style="font-size:11px;color:#6b7280">走线层 / 网络数</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#111827">${ts.layers.length} 层 <span style="font-size:11px;font-weight:500;color:#6b7280">/ ${ts.nets.length} 网络</span></div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 12px">
+        <div style="font-size:11px;color:#6b7280">走线累计总长</div>
+        <div style="font-size:16px;font-weight:800;font-family:var(--mono);color:#111827">${ts.totalTraceLength.toFixed(1)} <span style="font-size:11px;font-weight:500;color:#6b7280">mil (${(ts.totalTraceLength * 0.0254).toFixed(2)}mm)</span></div>
       </div>
     `;
   }
@@ -2882,25 +2885,25 @@ function renderImportedTraceTable() {
     return `
       <tr>
         <td style="font-family:var(--mono);font-weight:700">#${t.id}</td>
-        <td><span class="badge-tag" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">&lt;${escapeHtml(t.tag)}&gt;</span></td>
+        <td><span class="badge-tag" style="background:#f1f5f9;color:#374151;border:1px solid #cbd5e1">&lt;${escapeHtml(t.tag)}&gt;</span></td>
         <td>
           <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-weight:600">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
             ${escapeHtml(t.layer)}
           </span>
         </td>
-        <td style="font-family:var(--mono);font-weight:700;color:#0369a1">${escapeHtml(t.net)}</td>
-        <td style="font-size:11.5px">${segDesc}</td>
+        <td style="font-family:var(--mono);font-weight:700;color:#1d4ed8">${escapeHtml(t.net)}</td>
+        <td style="font-size:12px">${segDesc}</td>
         <td style="font-family:var(--mono)">${escapeHtml(widthsStr)}</td>
-        <td style="font-family:var(--mono)">${t.length.toFixed(2)} <span style="color:#94a3b8;font-size:10.5px">(${(t.length * 0.0254).toFixed(2)}mm)</span></td>
-        <td style="font-family:var(--mono);font-size:11px;color:#475569">${pStart} → ${pEnd}</td>
+        <td style="font-family:var(--mono)">${t.length.toFixed(2)} <span style="color:#94a3b8;font-size:11px">(${(t.length * 0.0254).toFixed(2)}mm)</span></td>
+        <td style="font-family:var(--mono);font-size:11px;color:#6b7280">${pStart} → ${pEnd}</td>
         <td>
           <button class="btn small sec" onclick="locateTraceInCanvas(${t.id})">定位</button>
         </td>
       </tr>
     `;
   }).join('') + (filtered.length > 300
-    ? `<tr><td colspan="9" style="text-align:center;color:#64748b;font-size:11px">仅展示前 300 条（共 ${filtered.length} 条走线记录，可通过上方层别或搜索框过滤）</td></tr>`
+    ? `<tr><td colspan="9" style="text-align:center;color:#6b7280;font-size:11px">仅展示前 300 条（共 ${filtered.length} 条走线记录，可通过上方层别或搜索框过滤）</td></tr>`
     : '');
 }
 
@@ -2910,7 +2913,7 @@ function renderImportedTraceTable() {
 function executeFanoutCheck() {
   const rawInMemory = State.rawText || '';
   const taVal = document.getElementById('txtViaInput').value.trim();
-  const txt = (rawInMemory && taVal.startsWith('[📁 已成功加载大型文件:')) ? rawInMemory : taVal;
+  const txt = (rawInMemory && taVal.startsWith('[ 已成功加载大型文件:')) ? rawInMemory : taVal;
 
   if (!txt) {
     alert('请先上传或粘贴 PCB 过孔 / 走线数据 TXT！');
@@ -2930,7 +2933,7 @@ function executeFanoutCheck() {
 
   const btn = document.getElementById('btnRunCheck');
   if (btn) {
-    btn.innerHTML = '⏳ 正在进行空间连通聚类与刚体拓扑比对...';
+    btn.innerHTML = ' 正在进行空间连通聚类与刚体拓扑比对...';
     btn.disabled = true;
   }
 
@@ -2951,7 +2954,7 @@ function executeFanoutCheck() {
     const elapsed = Math.round(performance.now() - t0);
 
     if (btn) {
-      btn.innerHTML = '<span style="font-size:14px">🚀</span> 立即运行扇出方案检查';
+      btn.innerHTML = '<span style="font-size:14px"></span> 立即运行扇出方案检查';
       btn.disabled = false;
     }
 
@@ -3117,7 +3120,7 @@ function renderResultsTable() {
       <tr>
         <td colspan="10" style="text-align:center;padding:30px;color:#94a3b8">
           ${hasTracesOnly
-            ? `已读取 ${State.traces.length} 条走线（无过孔块），可前往 <a href="javascript:void(0)" onclick="switchTab('tabImport')" style="color:#0284c7;font-weight:700">检查数据导入</a> 查看走线明细，或前往 <a href="javascript:void(0)" onclick="switchTab('tabCanvas')" style="color:#0284c7;font-weight:700">2D 空间可视化</a> 浏览走线轨迹`
+            ? `已读取 ${State.traces.length} 条走线（无过孔块），可前往 <a href="javascript:void(0)" onclick="switchTab('tabImport')" style="color:#2563eb;font-weight:700">检查数据导入</a> 查看走线明细，或前往 <a href="javascript:void(0)" onclick="switchTab('tabCanvas')" style="color:#2563eb;font-weight:700">2D 空间可视化</a> 浏览走线轨迹`
             : (State.clusters.length === 0 ? '请先导入并运行检查' : '无符合当前筛选条件的孔群')}
         </td>
       </tr>
@@ -3150,13 +3153,13 @@ function renderResultsTable() {
     // Status badge
     let badgeHtml = '';
     if (res.pass) {
-      badgeHtml = `<span class="badge-tag ok" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd">✅ 匹配通过 [${escapeHtml(res.schemeName)}]</span>`;
+      badgeHtml = `<span class="badge-tag ok" style="background:#f1f5f9;color:#1d4ed8;border-color:#e3e8ef"> 匹配通过 [${escapeHtml(res.schemeName)}]</span>`;
     } else if (res.status === 'PADSTACK_MISMATCH') {
-      badgeHtml = `<span class="badge-tag warn" style="background:#fef3c7;color:#b45309;border-color:#fde68a">⚡ Padstack 不符 [${escapeHtml(res.schemeName)}]</span>`;
+      badgeHtml = `<span class="badge-tag warn" style="background:#fef3c7;color:#b45309;border-color:#fde68a"> Padstack 不符 [${escapeHtml(res.schemeName)}]</span>`;
     } else if (res.status === 'DISTANCE_MISMATCH') {
-      badgeHtml = `<span class="badge-tag warn" style="background:#fff7ed;color:#c2410c;border-color:#fed7aa">📏 伴随地孔缺失/位置偏差 [${escapeHtml(res.schemeName)}]</span>`;
+      badgeHtml = `<span class="badge-tag warn" style="background:#fff7ed;color:#c2410c;border-color:#fed7aa"> 伴随地孔缺失/位置偏差 [${escapeHtml(res.schemeName)}]</span>`;
     } else {
-      badgeHtml = `<span class="badge-tag bad">❌ 未匹配预设方案</span>`;
+      badgeHtml = `<span class="badge-tag bad"> 未匹配预设方案</span>`;
     }
 
     // Signal vias and GND vias breakdown
@@ -3165,7 +3168,7 @@ function renderResultsTable() {
     const gndCount = c.vias.length - sigVias.length;
     const ts = c.traceSummary || null;
     const traceInfoHtml = (ts && (ts.segmentCount > 0 || (ts.layers && ts.layers.length > 0)))
-      ? `<div style="margin-top:3px;padding:2px 6px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;color:#0369a1;font-size:10px;line-height:1.4">
+      ? `<div style="margin-top:3px;padding:2px 6px;background:#f8fafc;border:1px solid #e3e8ef;border-radius:4px;color:#1d4ed8;font-size:11px;line-height:1.4">
            出线层: <strong style="font-family:var(--mono)">${escapeHtml(ts.layers.join(', ') || '-')}</strong>
            ${ts.segmentCount > 0 ? `<br>走线: ${ts.segmentCount}段${ts.arcCount > 0 ? `(含${ts.arcCount}弧)` : ''} | 宽 ${escapeHtml(ts.widths.join('/'))} mil` : ''}
          </div>`
@@ -3175,24 +3178,24 @@ function renderResultsTable() {
       <tr class="${rowClass}" id="row_${c.id}">
         <td><input type="checkbox" ${isReviewed ? 'checked' : ''} onchange="toggleReviewCluster('${c.id}', this.checked)"></td>
         <td>
-          <strong style="color:#0284c7;cursor:pointer" onclick="locateClusterInCanvas('${c.id}')">${c.id}</strong>
+          <strong style="color:#2563eb;cursor:pointer" onclick="locateClusterInCanvas('${c.id}')">${c.id}</strong>
         </td>
         <td><span class="badge-tag purple">${c.viaCount} 孔 (信号:${sigVias.length}/地:${gndCount})</span></td>
         <td>
           <div style="font-family:var(--mono);font-size:11px">[${c.centroid.x.toFixed(1)}, ${c.centroid.y.toFixed(1)}]</div>
-          <div style="font-size:11px;color:#64748b">跨度: ${(((c.bbox&&c.bbox.maxSpan!=null)?c.bbox.maxSpan:Math.hypot(c.bbox?.spanX||0,c.bbox?.spanY||0))*0.0254).toFixed(2)}mm</div>
+          <div style="font-size:11px;color:#6b7280">跨度: ${(((c.bbox&&c.bbox.maxSpan!=null)?c.bbox.maxSpan:Math.hypot(c.bbox?.spanX||0,c.bbox?.spanY||0))*0.0254).toFixed(2)}mm</div>
         </td>
         <td style="max-width:210px;font-size:11px" title="${escapeHtml(c.vias.map(v => `#${v.id} ${v.net} ${v.padstack}`).join('; '))}">
-          <div style="font-weight:700;color:#0369a1">${c.signalNet ? escapeHtml(c.signalNet) : sigStr}</div>
-          <div style="color:#64748b;font-size:10.5px">信号孔: ${sigStr}</div>
-          <div style="color:#94a3b8;font-size:10px">伴随地孔: ${gndCount} 个</div>
+          <div style="font-weight:700;color:#1d4ed8">${c.signalNet ? escapeHtml(c.signalNet) : sigStr}</div>
+          <div style="color:#6b7280;font-size:11px">信号孔: ${sigStr}</div>
+          <div style="color:#94a3b8;font-size:11px">伴随地孔: ${gndCount} 个</div>
           ${traceInfoHtml}
         </td>
         <td>${badgeHtml}</td>
         <td style="font-size:11px;line-height:1.5">
           <div style="font-weight:600;color:${res.pass ? '#059669' : '#0f172a'}">${escapeHtml(res.message || '-')}</div>
           ${res.advice ? `<div style="margin-top:4px;padding:4px 8px;background:${res.pass ? '#f0fdf4' : '#fffbeb'};border:1px solid ${res.pass ? '#bbf7d0' : '#fef3c7'};border-radius:4px;color:${res.pass ? '#166534' : '#92400e'}">${escapeHtml(res.advice)}</div>` : ''}
-          ${res.rotationAngle != null ? `<div style="font-size:10px;color:#64748b;margin-top:2px">旋转: ${res.rotationAngle}° | 镜像: ${res.isMirrored ? '是' : '否'}</div>` : ''}
+          ${res.rotationAngle != null ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">旋转: ${res.rotationAngle}° | 镜像: ${res.isMirrored ? '是' : '否'}</div>` : ''}
         </td>
         <td>
           <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
@@ -3202,8 +3205,8 @@ function renderResultsTable() {
         </td>
         <td>
           <div style="display:flex;gap:4px">
-            <button class="btn small sec" onclick="locateClusterInCanvas('${c.id}')" title="在 2D 画布中定位">🔍 定位</button>
-            <button class="btn small sec" onclick="saveClusterAsScheme('${c.id}')" title="将此孔群存为新扇出方案">➕ 存方案</button>
+            <button class="btn small sec" onclick="locateClusterInCanvas('${c.id}')" title="在 2D 画布中定位"> 定位</button>
+            <button class="btn small sec" onclick="saveClusterAsScheme('${c.id}')" title="将此孔群存为新扇出方案"> 存方案</button>
           </div>
         </td>
       </tr>
@@ -3300,7 +3303,7 @@ function saveClusterAsScheme(clusterId) {
 
   State.library.addScheme(scheme);
   renderSchemeCards();
-  alert(`已成功将 ${cluster.id} 保存为新扇出方案【${scheme.name}】！可在「📚 扇出方案库」中查看与编辑。`);
+  alert(`已成功将 ${cluster.id} 保存为新扇出方案【${scheme.name}】！可在「 扇出方案库」中查看与编辑。`);
 }
 
 function exportResultsCSV() {
@@ -3614,7 +3617,7 @@ function openTraceDeepDive(trace) {
   if (!box || !title || !content) return;
 
   const col = getTraceLayerColor(trace.layer);
-  title.innerHTML = `走线 Item #${trace.id} <span class="badge-tag" style="background:rgba(56,189,248,.2);color:#7dd3fc;border:1px solid rgba(56,189,248,.4)">${escapeHtml(trace.layer)}</span>`;
+  title.innerHTML = `走线 Item #${trace.id} <span class="badge-tag" style="background:rgba(56,189,248,.2);color:#cbd5e1;border:1px solid rgba(56,189,248,.4)">${escapeHtml(trace.layer)}</span>`;
 
   const segRows = (trace.segments || []).map((s, idx) => {
     const kind = s.type === 'arc' ? `圆弧 (${s.dir || 'CCW'}, R=${(s.radius || 0).toFixed(2)})` : '直线段';
@@ -3629,7 +3632,7 @@ function openTraceDeepDive(trace) {
   }).join('');
 
   content.innerHTML = `
-    <div style="font-size:11.5px;color:#e2e8f0;line-height:1.65;margin-bottom:8px">
+    <div style="font-size:12px;color:#e3e8ef;line-height:1.65;margin-bottom:8px">
       <div>网络 (Net): <strong style="color:#38bdf8;font-family:var(--mono)">${escapeHtml(trace.net)}</strong></div>
       <div>走线层 (Subset): <span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>${escapeHtml(trace.layer)}</span></div>
       <div>总长度: <strong style="font-family:var(--mono)">${trace.length.toFixed(3)} mil</strong> (${(trace.length * 0.0254).toFixed(3)} mm)</div>
@@ -3637,7 +3640,7 @@ function openTraceDeepDive(trace) {
     </div>
     <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">几何分段明细 (${trace.segmentCount} 段):</div>
     <div style="max-height:150px;overflow-y:auto;border:1px solid rgba(255,255,255,.15);border-radius:4px">
-      <table style="width:100%;font-size:10px;color:#f8fafc">
+      <table style="width:100%;font-size:11px;color:#f8fafc">
         <thead>
           <tr style="background:rgba(255,255,255,.1)">
             <th>段号</th>
@@ -3658,7 +3661,7 @@ function toggleMeasureMode() {
   State.canvas.measurePoints = [];
   const btn = document.getElementById('btnMeasureMode');
   btn.className = State.canvas.measureMode ? 'active' : '';
-  btn.textContent = State.canvas.measureMode ? '📐 测距中(点击两点)' : '📐 测距标尺';
+  btn.textContent = State.canvas.measureMode ? ' 测距中(点击两点)' : ' 测距标尺';
   requestCanvasRender();
 }
 
@@ -4027,7 +4030,7 @@ function renderTracesOnCanvas(ctx, viewMinX, viewMaxX, viewMinY, viewMaxY) {
             text: lblText,
             x: sm.x,
             y: sm.y - Math.max(6, physPx / 2 + 4),
-            color: isHighlight ? '#fef08a' : '#e2e8f0'
+            color: isHighlight ? '#fef08a' : '#e3e8ef'
           });
         }
       }
@@ -4115,7 +4118,7 @@ function renderBatchedVias(ctx, vias) {
           text: `#${v.id}`,
           x: sp.x,
           y: sp.y - padRad - 2,
-          color: isSig ? '#7dd3fc' : '#a7f3d0',
+          color: isSig ? '#cbd5e1' : '#a7f3d0',
           bold: false
         });
       }
@@ -4326,19 +4329,19 @@ function drawClusterBadge(ctx, cluster) {
   let fillStyle = 'rgba(239, 68, 68, 0.9)';
 
   if (isReviewed) {
-    text = `✓ 已复核: ${cluster.signalNet || cluster.id}`;
+    text = ` 已复核: ${cluster.signalNet || cluster.id}`;
     fillStyle = 'rgba(13, 148, 136, 0.95)';
   } else if (res.pass) {
-    text = `✅ ${cluster.signalNet || '信号'}: ${res.schemeName}`;
+    text = ` ${cluster.signalNet || '信号'}: ${res.schemeName}`;
     fillStyle = 'rgba(16, 185, 129, 0.95)';
   } else if (res.status === 'PADSTACK_MISMATCH') {
-    text = `⚡ Padstack不符 (${res.schemeName})`;
+    text = ` Padstack不符 (${res.schemeName})`;
     fillStyle = 'rgba(217, 119, 6, 0.92)';
   } else if (res.status === 'DISTANCE_MISMATCH') {
-    text = `📏 伴随孔缺失/偏差 (${res.schemeName})`;
+    text = ` 伴随孔缺失/偏差 (${res.schemeName})`;
     fillStyle = 'rgba(194, 65, 12, 0.92)';
   } else {
-    text = `❌ ${res.statusText || '未匹配拓扑'}`;
+    text = ` ${res.statusText || '未匹配拓扑'}`;
     fillStyle = 'rgba(239, 68, 68, 0.9)';
   }
 
@@ -4416,10 +4419,10 @@ function openClusterDeepDive(cluster) {
   title.innerHTML = `${cluster.id} 深度分析 <span class="badge-tag purple">${cluster.viaCount} 孔</span>`;
 
   let statusBadge = res.pass 
-    ? `<span class="badge-tag ok">✅ 完全匹配 [${escapeHtml(res.schemeName)}]</span>`
-    : `<span class="badge-tag bad">❌ ${escapeHtml(res.statusText || '不匹配')}</span>`;
+    ? `<span class="badge-tag ok"> 完全匹配 [${escapeHtml(res.schemeName)}]</span>`
+    : `<span class="badge-tag bad"> ${escapeHtml(res.statusText || '不匹配')}</span>`;
   if (isReviewed) {
-    statusBadge += ` <span class="badge-tag ok" style="background:#ccfbf1;color:#0f766e;border:1px solid #5eead4">✓ 已复核</span>`;
+    statusBadge += ` <span class="badge-tag ok" style="background:#ccfbf1;color:#0f766e;border:1px solid #5eead4"> 已复核</span>`;
   }
 
   let auditRows = '';
@@ -4428,9 +4431,9 @@ function openClusterDeepDive(cluster) {
       <tr style="${a.isMatch === false ? 'background:rgba(239,68,68,.18);color:#fca5a5' : ''}">
         <td>#${a.viaId}</td>
         <td>${escapeHtml(a.net || 'GND')}</td>
-        <td style="font-family:var(--mono);font-size:10px">${escapeHtml(a.actualPadstack)}</td>
-        <td style="font-family:var(--mono);font-size:10px">${escapeHtml(a.expectedPadstack)}</td>
-        <td>${a.isMatch !== false ? '✅' : '❌'}</td>
+        <td style="font-family:var(--mono);font-size:11px">${escapeHtml(a.actualPadstack)}</td>
+        <td style="font-family:var(--mono);font-size:11px">${escapeHtml(a.expectedPadstack)}</td>
+        <td>${a.isMatch !== false ? '' : ''}</td>
       </tr>
     `).join('');
   }
@@ -4439,8 +4442,8 @@ function openClusterDeepDive(cluster) {
   const traceBlockHtml = (ts && (ts.segmentCount > 0 || (ts.layers && ts.layers.length > 0)))
     ? `
       <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">关联扇出走线 (Trace):</div>
-      <div style="background:rgba(15,23,42,.55);border:1px solid rgba(56,189,248,.28);border-radius:4px;padding:6px 8px;margin-bottom:10px;font-size:10.5px;color:#e2e8f0;line-height:1.55">
-        <div>走线层 (Subset): <strong style="color:#7dd3fc;font-family:var(--mono)">${escapeHtml(ts.layers.join(', ') || '-')}</strong></div>
+      <div style="background:rgba(15,23,42,.55);border:1px solid rgba(56,189,248,.28);border-radius:4px;padding:6px 8px;margin-bottom:10px;font-size:11px;color:#e3e8ef;line-height:1.55">
+        <div>走线层 (Subset): <strong style="color:#cbd5e1;font-family:var(--mono)">${escapeHtml(ts.layers.join(', ') || '-')}</strong></div>
         ${ts.segmentCount > 0 ? `
           <div>关联走线段: <strong>${ts.segmentCount} 段</strong> (${ts.arcCount > 0 ? `含圆弧 ${ts.arcCount} 段` : '全直线段'})</div>
           <div>线宽规格: <strong style="font-family:var(--mono)">${escapeHtml(ts.widths.join(' / '))} mil</strong> | 总长: <strong style="font-family:var(--mono)">${ts.totalLength.toFixed(1)} mil</strong></div>
@@ -4455,10 +4458,10 @@ function openClusterDeepDive(cluster) {
 
   const navFailHtml = failClusters.length > 1
     ? `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;font-size:10.5px;color:#94a3b8">
-        <button class="btn small sec" style="padding:2px 7px;font-size:10.5px;background:rgba(30,41,59,.9);color:#e2e8f0;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(-1)">◀ 上一异常</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;font-size:11px;color:#94a3b8">
+        <button class="btn small sec" style="padding:2px 7px;font-size:11px;background:rgba(30,41,59,.9);color:#e3e8ef;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(-1)">◀ 上一异常</button>
         <span>${failIdx !== -1 ? `异常 ${failIdx + 1} / ${failClusters.length}` : `共 ${failClusters.length} 处异常`}</span>
-        <button class="btn small sec" style="padding:2px 7px;font-size:10.5px;background:rgba(30,41,59,.9);color:#e2e8f0;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(1)">下一异常 ▶</button>
+        <button class="btn small sec" style="padding:2px 7px;font-size:11px;background:rgba(30,41,59,.9);color:#e3e8ef;border-color:rgba(148,163,184,.3)" onclick="stepCanvasAbnormalCluster(1)">下一异常 ▶</button>
       </div>
     `
     : '';
@@ -4467,12 +4470,12 @@ function openClusterDeepDive(cluster) {
     ${navFailHtml}
     <!-- 空间几何视图同步复核操作栏 -->
     <div id="boxCanvasClusterReview" style="${reviewBarStyle}border-radius:6px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:11.5px;font-weight:700;color:${isReviewed ? '#6ee7b7' : '#fde68a'};margin:0">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:700;color:${isReviewed ? '#6ee7b7' : '#fde68a'};margin:0">
         <input type="checkbox" id="chkCanvasClusterReview" ${isReviewed ? 'checked' : ''} onchange="toggleReviewCluster('${cluster.id}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
         <span>${isReviewed ? '已复核 (明细表已同步勾选)' : '勾选复核此孔群'}</span>
       </label>
       <button class="btn small" id="btnCanvasToggleReview" onclick="toggleReviewCluster('${cluster.id}', ${!isReviewed})" style="padding:3px 9px;font-size:11px;border:none;background:${isReviewed ? 'rgba(51,65,85,.85)' : '#10b981'};color:#fff">
-        ${isReviewed ? '取消复核' : '✓ 确认复核'}
+        ${isReviewed ? '取消复核' : ' 确认复核'}
       </button>
     </div>
 
@@ -4483,7 +4486,7 @@ function openClusterDeepDive(cluster) {
     ${traceBlockHtml}
     <div style="font-weight:700;font-size:11px;color:#38bdf8;margin-bottom:4px">过孔 Padstack 对照表:</div>
     <div style="max-height:150px;overflow-y:auto;border:1px solid rgba(255,255,255,.15);border-radius:4px;margin-bottom:10px">
-      <table style="width:100%;font-size:10px;color:#f8fafc">
+      <table style="width:100%;font-size:11px;color:#f8fafc">
         <thead>
           <tr style="background:rgba(255,255,255,.1)">
             <th>孔号</th>
@@ -4500,8 +4503,8 @@ function openClusterDeepDive(cluster) {
     </div>
 
     <div style="display:flex;gap:6px;margin-top:10px">
-      <button class="btn small pri" onclick="saveClusterAsScheme('${cluster.id}')" style="flex:1">➕ 存为新方案</button>
-      <button class="btn small sec" onclick="switchTab('tabResults')" style="flex:1">📋 结果明细</button>
+      <button class="btn small pri" onclick="saveClusterAsScheme('${cluster.id}')" style="flex:1"> 存为新方案</button>
+      <button class="btn small sec" onclick="switchTab('tabResults')" style="flex:1"> 结果明细</button>
     </div>
   `;
 
@@ -4556,15 +4559,15 @@ function renderAnalysisTab() {
   if (pnlDefect) {
     pnlDefect.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9">
-        <div>⚡ Padstack 不符 (伴随地孔焊盘堆栈不符)</div>
+        <div> Padstack 不符 (伴随地孔焊盘堆栈不符)</div>
         <div><span class="badge-tag bad">${s.padstackFailCount || 0} 处</span></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9">
-        <div>📏 伴随地孔缺失/位置偏差</div>
+        <div> 伴随地孔缺失/位置偏差</div>
         <div><span class="badge-tag warn">${s.distFailCount || 0} 处</span></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-        <div>❌ 不匹配孔群 (信号孔未匹配方案库)</div>
+        <div> 不匹配孔群 (信号孔未匹配方案库)</div>
         <div><span class="badge-tag bad">${s.noMatchCount || 0} 处</span></div>
       </div>
     `;
@@ -4772,16 +4775,16 @@ function renderDiffAnalysisTable() {
   tbody.innerHTML = pageItems.map((d, pIdx) => {
     const rowNum = startIdx + pIdx + 1;
 
-    let statusBadge = '<span class="badge-tag ok">✅ 匹配通过</span>';
+    let statusBadge = '<span class="badge-tag ok"> 匹配通过</span>';
     if (d.isReviewed) {
-      statusBadge = '<span class="badge-tag ok" style="background:#ecfdf5;color:#059669;border:1px solid #10b981">✅ 已复核 (已修改)</span>';
+      statusBadge = '<span class="badge-tag ok" style="background:#ecfdf5;color:#059669;border:1px solid #10b981"> 已复核 (已修改)</span>';
     } else if (!d.isPass) {
       if (d.status === 'NO_MATCH_TOPOLOGY') {
-        statusBadge = '<span class="badge-tag bad">❌ 不匹配孔群</span>';
+        statusBadge = '<span class="badge-tag bad"> 不匹配孔群</span>';
       } else if (d.status === 'PADSTACK_MISMATCH') {
-        statusBadge = '<span class="badge-tag warn">⚡ Padstack不符</span>';
+        statusBadge = '<span class="badge-tag warn"> Padstack不符</span>';
       } else {
-        statusBadge = '<span class="badge-tag bad">📏 伴随孔缺失/偏差</span>';
+        statusBadge = '<span class="badge-tag bad"> 伴随孔缺失/偏差</span>';
       }
     }
 
@@ -4796,16 +4799,16 @@ function renderDiffAnalysisTable() {
           <input type="checkbox" ${isChk} onchange="toggleReviewCluster('${d.clusterId}', this.checked)" title="勾选复核即表示已修改，属于匹配通过">
         </td>
         <td>
-          <b style="color:#0284c7;cursor:pointer" onclick="locateClusterInCanvas('${d.clusterId}')" title="在 CAD 中定位">${escapeHtml(d.net)}</b>
+          <b style="color:#2563eb;cursor:pointer" onclick="locateClusterInCanvas('${d.clusterId}')" title="在 CAD 中定位">${escapeHtml(d.net)}</b>
         </td>
-        <td><span style="font-family:var(--mono);font-size:11.5px;color:#334155">${escapeHtml(d.sigIds)}</span></td>
+        <td><span style="font-family:var(--mono);font-size:12px;color:#374151">${escapeHtml(d.sigIds)}</span></td>
         <td><b>${escapeHtml(d.schemeName)}</b></td>
         <td>${statusBadge}</td>
         <td><span style="${padStyle}">${escapeHtml(d.padErrorText)}</span></td>
         <td><span style="${posStyle}">${escapeHtml(d.posErrorText)}</span></td>
-        <td style="font-size:12px;color:#475569;line-height:1.4">${escapeHtml(d.advice)}</td>
+        <td style="font-size:12px;color:#6b7280;line-height:1.4">${escapeHtml(d.advice)}</td>
         <td>
-          <button class="btn small sec" onclick="locateClusterInCanvas('${d.clusterId}')" title="在 2D CAD 中定位查看">🔍 定位</button>
+          <button class="btn small sec" onclick="locateClusterInCanvas('${d.clusterId}')" title="在 2D CAD 中定位查看"> 定位</button>
         </td>
       </tr>
     `;

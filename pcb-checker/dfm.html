@@ -8,34 +8,34 @@
 <script src="dfm-check.js?v=5"></script>
 <style>
 :root{
-  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--sub:#475569;--line:#e2e8f0;
-  --pri:#0284c7;--pri-bg:#e0f2fe;--pri-hover:#0369a1;
+  --bg:#f4f6f9;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--line:#e3e8ef;
+  --pri:#2563eb;--pri-bg:#f8fafc;--pri-hover:#1d4ed8;
   --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
   --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
   --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
 
 
-main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
+main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
 .tab{display:none}
 .tab.active{display:block}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
-.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#1e293b;display:flex;align-items:center;gap:8px}
-.card h3{font-size:13px;font-weight:700;margin:14px 0 8px 0;color:#334155}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#111827}
+.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#374151}
 .hint{font-size:12px;color:var(--sub);line-height:1.6}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
 .btn.pri{background:var(--pri);color:#fff}
 .btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;border-color:var(--line);color:#334155}
+.btn.sec{background:#fff;border-color:var(--line);color:#374151}
 .btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
-.btn.bad{background:var(--bad);color:#fff}
-.btn.bad:hover{background:#b91c1c}
+.btn.bad{background:#fee2e2;color:var(--bad);border-color:#fecaca}
+.btn.bad:hover{background:#fecaca}
 .btn.small{font-size:12px;padding:4px 8px}
 
 .dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all .15s}
@@ -43,28 +43,30 @@ main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
 .dropzone .t1{font-size:14px;font-weight:600;color:#1e293b}
 .dropzone .t2{font-size:12px;color:var(--sub);margin-top:4px}
 
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
-.form-item{display:flex;flex-direction:column;gap:4px}
-.form-item label{font-size:12px;font-weight:600;color:#334155}
-.form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text)}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;margin:10px 0}
+@media (max-width:760px){.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.form-item{display:flex;flex-direction:column;gap:2px}
+.form-item label{font-size:12px;font-weight:600;color:#374151}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.form-item input, .form-item select{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;background:#fff;color:var(--text)}
 .form-item input:focus, .form-item select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-bg)}
 
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
-.stat-box{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s}
-.stat-box:hover{border-color:#cbd5e1;transform:translateY(-1px)}
-.stat-box.active{border-color:var(--pri);background:var(--pri-bg)}
-.stat-box .num{font-size:20px;font-weight:800;font-family:var(--mono)}
-.stat-box .lbl{font-size:11px;color:var(--sub);margin-top:2px}
+.stat-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .15s}
+.stat-box:hover{border-color:#cbd5e1}
+.stat-box.active{border-color:var(--pri)}
+.stat-box .num{font-size:22px;font-weight:700;font-family:var(--mono)}
+.stat-box .lbl{font-size:12px;color:var(--sub);margin-top:2px}
 .stat-box.bad .num{color:var(--bad)}
 .stat-box.ok .num{color:var(--ok)}
 
 /* Interactive Canvas Viewer */
 .viewer-container{position:relative;background:#000000;border-radius:10px;border:1px solid #1e293b;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,.12)}
-.viewer-toolbar{background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid #334155;padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#e2e8f0;font-size:12px}
+.viewer-toolbar{background:rgba(15,23,42,.95);backdrop-filter:blur(8px);border-bottom:1px solid #334155;padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#e3e8ef;font-size:12px}
 .viewer-toolbar .tb-group{display:flex;align-items:center;gap:4px;border-right:1px solid #334155;padding-right:8px;margin-right:4px}
 .viewer-toolbar button{background:#1e293b;border:1px solid #334155;color:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
-.viewer-toolbar button:hover{background:#334155;border-color:#475569}
-.viewer-toolbar button.active{background:#0284c7;border-color:#38bdf8;color:#fff}
+.viewer-toolbar button:hover{background:#334155;border-color:#374151}
+.viewer-toolbar button.active{background:#2563eb;border-color:#38bdf8;color:#fff}
 .viewer-toolbar label{display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:11px}
 .viewer-toolbar input[type="checkbox"]{cursor:pointer}
 
@@ -84,14 +86,14 @@ main{flex:1;max-width:1440px;width:100%;margin:0 auto;padding:16px 24px}
 .measure-card .m-row b{color:#f8fafc}
 
 /* Tables */
-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-th{background:#f8fafc;color:#475569;font-weight:600;position:sticky;top:0;z-index:2}
+th{background:#f1f5f9;color:#334155;font-weight:600;position:sticky;top:0;z-index:2}
 tr:hover{background:#f8fafc}
 tr.fail-row{background:#fef2f2}
 tr.fail-row:hover{background:#fee2e2}
 tr.reviewed{opacity:.6;background:#f1f5f9}
-.tag-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.tag-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:12px;font-weight:600;font-family:var(--mono)}
 .tag-badge.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
 .tag-badge.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
 .tag-badge.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
@@ -99,17 +101,20 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 .search-bar{display:flex;gap:8px;margin-bottom:12px}
 .search-bar input{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px}
 
-.hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:5px}
-.hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#334155;cursor:pointer;transition:all .15s;line-height:1.3}
-.hist-chip:hover{background:#e2e8f0;border-color:#94a3b8}
-.hist-chip.active{background:#0284c7;color:#fff;border-color:#0369a1;font-weight:700}
+.hist-bar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:3px}
+#layerRuleBox{padding:8px 10px}
+#layerRuleTable th, #layerRuleTable td{padding:5px 8px}
+#layerRuleTable input[type="number"]{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;background:#fff;color:var(--text);box-sizing:border-box}
+.hist-chip{padding:2px 8px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;font-family:var(--mono);color:#374151;cursor:pointer;transition:all .15s;line-height:1.3}
+.hist-chip:hover{background:#e3e8ef;border-color:#94a3b8}
+.hist-chip.active{background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:700}
 
-.net-card{background:#ffffff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;transition:box-shadow .15s}
-.net-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.net-card{background:#ffffff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;transition:border-color .15s}
+.net-card:hover{border-color:#94a3b8}
 .net-card.bad{border-left:4px solid var(--bad);background:#fffbfc}
 .net-card.ok{border-left:4px solid var(--ok)}
 
-.net-defects-table{margin-top:8px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
+.net-defects-table{margin-top:8px;background:#fff;border:1px solid #e3e8ef;border-radius:6px;overflow:hidden}
 .net-defects-table th{background:#f1f5f9;font-size:11px;padding:6px 8px}
 .net-defects-table td{font-size:11px;padding:6px 8px}
 
@@ -117,46 +122,46 @@ tr.reviewed{opacity:.6;background:#f1f5f9}
 
 /* Global Display: 铺满宽屏（全站跨页面记忆） */
 .global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
+.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#f1f5f9 !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
 .global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#0284c7 !important;border-color:#38bdf8;color:#fff !important}
+.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#38bdf8;color:#fff !important}
 html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
 html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-height:580px !important}
 
   /* ===== 规律分析 (Pattern Analysis) ===== */
-  .pat-bar-row{display:grid;grid-template-columns:120px 1fr 78px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12.5px}
+  .pat-bar-row{display:grid;grid-template-columns:120px 1fr 78px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12px}
   .pat-bar-row:last-child{border-bottom:none}
-  .pat-bar-name{font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
-  .pat-bar-name:hover{color:#0284c7;text-decoration:underline}
+  .pat-bar-name{font-weight:600;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .pat-bar-name:hover{color:#2563eb;text-decoration:underline}
   .pat-bar-track{height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden}
-  .pat-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#38bdf8,#0284c7);transition:width .2s}
+  .pat-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#38bdf8,#2563eb);transition:width .2s}
   .pat-bar-fill.bad{background:linear-gradient(90deg,#fb7185,#e11d48)}
   .pat-bar-fill.warn{background:linear-gradient(90deg,#fbbf24,#d97706)}
-  .pat-bar-val{text-align:right;font-family:var(--mono);font-size:11.5px;color:#475569}
-  .pat-concl{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0284c7;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.75;color:#1e293b}
-  .pat-concl b{color:#0369a1}
+  .pat-bar-val{text-align:right;font-family:var(--mono);font-size:12px;color:#6b7280}
+  .pat-concl{background:#f8fafc;border:1px solid #e3e8ef;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.75;color:#1e293b}
+  .pat-concl b{color:#1d4ed8}
   .pat-concl .risk{color:#be123c;font-weight:700}
-  .pat-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;margin-left:4px}
-  .pat-chip.muted{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
-  .pat-obj-btn{font-size:12.5px !important;padding:5px 12px !important}
-  .pat-obj-btn.active{background:#0284c7 !important;color:#fff !important;border-color:#0284c7 !important}
+  .pat-chip{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef;margin-left:4px}
+  .pat-chip.muted{background:#f1f5f9;color:#6b7280;border-color:#e3e8ef}
+  .pat-obj-btn{font-size:12px !important;padding:5px 12px !important}
+  .pat-obj-btn.active{background:#2563eb !important;color:#fff !important;border-color:#2563eb !important}
   @media (max-width:1100px){ #patChartsRow{grid-template-columns:1fr !important} }
-  .pat-tab-note{font-size:11.5px;color:#94a3b8;margin-top:2px}
+  .pat-tab-note{font-size:12px;color:#94a3b8;margin-top:2px}
   /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
   header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
   header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#0284c7;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
+  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
   header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
   header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
   header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#0284c7;color:#fff;font-weight:600}
+  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
   nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
   nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
   nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
   nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#475569;border-radius:10px;padding:1px 7px}
+  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
   nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
 </style>
 </head>
@@ -196,12 +201,12 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <h2>1. 导入 PCB 坐标数据文件 (Via &amp; Trace TXT)</h2>
       <div class="hint" style="margin-bottom:12px">支持包含 <code>&lt; Via &gt;</code>（含 Circle Drill、Origin-xy）与 <code>&lt; Trace Seg &gt;</code>（含 Line 和 Arc 坐标信息）的标准 PCB 数据报告文件。</div>
       <div class="dropzone" id="dropArea">
-        <div class="t1">📁 点击选择文件 或 将 TXT 报告拖拽至此处</div>
+        <div class="t1"> 点击选择文件 或 将 TXT 报告拖拽至此处</div>
         <div class="t2">支持包含 Origin-xy、Seg xy、Arc seg 等坐标信息的文本文件</div>
         <input type="file" id="fileInput" accept=".txt,.log,.csv" style="display:none">
       </div>
       <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button type="button" class="btn pri small" id="btnLoadSample">⚡ 加载基础样本 (97项)</button>
+        <button type="button" class="btn pri small" id="btnLoadSample"> 加载基础样本 (97项)</button>
         <button type="button" class="btn sec small" id="btnClearData">清空数据</button>
         <span class="hint" id="fileStatus">未加载文件</span>
       </div>
@@ -211,30 +216,21 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
         <h2 style="margin:0">2. 加工能力规则与间距判定配置</h2>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:700;color:var(--text)">📁 常用配置方案预设：</span>
-          <button type="button" class="btn sec small" onclick="applyPresetScheme('eda_project')" title="载入当前 EDA 实测参数方案">📌 当前 EDA 工程配置</button>
-          <button type="button" class="btn sec small" onclick="applyPresetScheme('std_6mil')" title="载入 6.0 mil 标准规则">⚙️ 6.0 mil 标准规则</button>
-          <button type="button" class="btn sec small" onclick="applyPresetScheme('high_density_5mil')" title="载入 5.0 mil 高密规则">⚡ 5.0 mil 高密规则</button>
+          <span style="font-size:12px;font-weight:700;color:var(--text)"> 常用配置方案预设：</span>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('eda_project')" title="载入当前 EDA 实测参数方案"> 当前 EDA 工程配置</button>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('std_6mil')" title="载入 6.0 mil 标准规则"> 6.0 mil 标准规则</button>
+          <button type="button" class="btn sec small" onclick="applyPresetScheme('high_density_5mil')" title="载入 5.0 mil 高密规则"> 5.0 mil 高密规则</button>
+          <button type="button" class="btn sec small" id="btnSaveDfmRules" title="将当前完整加工能力规则下载为 JSON 文件">保存规则到本地</button>
+          <button type="button" class="btn sec small" id="btnLoadDfmRules" title="从本地 JSON 文件读取加工能力规则">从本地文件读取规则</button>
+          <input type="file" id="fileDfmRules" accept=".json,application/json" style="display:none">
         </div>
       </div>
 
       <div class="form-grid">
         <div class="form-item">
-          <label for="inpThresholdGnd">⚡ 线到 GND 孔最小间距规则阈值 (mil)</label>
-          <input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%">
-          <div class="hist-bar" id="hist_thresh_gnd"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="inpThresholdSignal">📡 线到信号孔最小间距规则阈值 (mil)</label>
-          <input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%">
-          <div class="hist-bar" id="hist_thresh_sig"></div>
-        </div>
-
-        <div class="form-item">
           <label for="selMode">间距计算判定口径</label>
           <select id="selMode">
-            <option value="pad_to_trace" selected>⭐ 焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
+            <option value="pad_to_trace" selected> 焊盘到走线边缘 (Pad Edge to Trace Edge，即 EDA 测量 Air Gap)</option>
             <option value="drill_to_trace">钻孔孔壁到走线边缘 (一钻孔径孔壁到走线，机械孔壁间距)</option>
             <option value="center_to_trace">过孔中心到走线边缘 (Center to Trace Edge)</option>
             <option value="center_to_center">过孔中心到走线中心 (Center to Center)</option>
@@ -253,8 +249,32 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           <div class="hist-bar" id="hist_pad_sig"></div>
         </div>
 
+        <div class="form-item">
+          <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
+          <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="GND 过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_gnd"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="inpSignalFirstDrill">非 GND / 信号一钻直径 (mil)</label>
+          <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="非 GND 信号过孔一钻直径，如 6.0 mil / 5.54 mil">
+          <div class="hist-bar" id="hist_drill_sig"></div>
+        </div>
+
+        <div class="form-item">
+          <label for="selNetFilter">网络检查范围</label>
+          <select id="selNetFilter">
+            <option value="diff_only" selected>仅检查异网络 (Different Nets，排查短路与安全间距风险)</option>
+            <option value="all_nets">包含同网络 (All Nets，检查扇出过渡区)</option>
+          </select>
+        </div>
+
+        <select id="selLayerFilter" data-no-persist hidden aria-hidden="true">
+          <option value="" selected>全部层 (All Layers)</option>
+        </select>
+
         <details class="pad-shape-box" style="grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin:2px 0 6px">
-          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#334155">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:#374151">焊盘形状（可选 · 非圆形焊盘按真实几何计算间距）</summary>
           <div class="grid" style="margin-top:10px">
             <div class="form-item">
               <label for="selPadShape">焊盘形状</label>
@@ -292,41 +312,51 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           </div>
           <div class="hint" style="margin-top:8px">圆形焊盘走解析式（与旧版完全一致）；长圆/矩形焊盘按「凸多边形 ⊕ 圆角」模型精确求间距，圆弧走线也按弧段精确投影，不再采样近似。</div>
         </details>
-
-        <div class="form-item">
-          <label for="inpGndFirstDrill">GND 一钻直径 (mil)</label>
-          <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="GND 过孔一钻直径，如 6.0 mil / 5.54 mil">
-          <div class="hist-bar" id="hist_drill_gnd"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="inpSignalFirstDrill">非 GND / 信号一钻直径 (mil)</label>
-          <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" style="width:100%" title="非 GND 信号过孔一钻直径，如 6.0 mil / 5.54 mil">
-          <div class="hist-bar" id="hist_drill_sig"></div>
-        </div>
-
-        <div class="form-item">
-          <label for="selNetFilter">网络检查范围</label>
-          <select id="selNetFilter">
-            <option value="diff_only" selected>仅检查异网络 (Different Nets，排查短路与安全间距风险)</option>
-            <option value="all_nets">包含同网络 (All Nets，检查扇出过渡区)</option>
-          </select>
-        </div>
-
-        <div class="form-item">
-          <label for="selLayerFilter">层筛选 (Layer Filter)</label>
-          <select id="selLayerFilter" data-no-persist>
-            <option value="" selected>全部层 (All Layers)</option>
-          </select>
-        </div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
-        💡 <b>历史配置记录说明：</b> 每个指标下方会自动记录最近使用的数值历史标签，点击即可快速填充；TXT 中的 <code>Circle Drill</code> 仅作为<b>完成孔径</b>展示，空间间距完全由上方配置的焊盘直径与一钻直径进行精准运算。
+      <div id="layerRuleBox" style="margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">间距规则（按层生效，靠上优先，最后一行是默认）</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px">适用层支持 <code>Top</code>、<code>Bot</code>、<code>内层</code>、<code>L2-L5</code>，多个用顿号隔开，如 <code>Top、Bot</code>；没被命中的层用最后一行「默认」</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn sec small" id="btnLayerRuleTemplate">套用 Top/Bot + 内层</button>
+            <button type="button" class="btn sec small" id="btnAddLayerRule">+ 加一条分层规则</button>
+          </div>
+        </div>
+        <table id="layerRuleTable" style="margin:0">
+          <thead>
+            <tr>
+              <th style="width:180px">适用层</th>
+              <th>线到 GND 孔 (mil)</th>
+              <th>线到信号孔 (mil)</th>
+              <th>GND 孔盘到信号孔盘 (mil)</th>
+              <th style="width:110px">本次命中</th>
+              <th style="width:62px"></th>
+            </tr>
+          </thead>
+          <tbody id="layerRuleBody"></tbody>
+          <tbody id="layerRuleDefaultBody">
+            <tr data-default style="background:#f8fafc">
+              <td><b>默认</b><div class="hint" style="font-size:12px;margin-top:1px">没被上面规则命中的层</div></td>
+              <td><label class="sr-only" for="inpThresholdGnd">默认线到 GND 孔阈值</label><input type="number" id="inpThresholdGnd" value="4.01575" step="0.00001" min="0.1" style="width:100%"><div class="hist-bar" id="hist_thresh_gnd"></div></td>
+              <td><label class="sr-only" for="inpThresholdSignal">默认线到信号孔阈值</label><input type="number" id="inpThresholdSignal" value="5.04725" step="0.00001" min="0.1" style="width:100%"><div class="hist-bar" id="hist_thresh_sig"></div></td>
+              <td><label class="sr-only" for="inpThresholdPadPair">默认 GND 孔盘到信号孔盘阈值</label><input type="number" id="inpThresholdPadPair" value="6.0" step="0.00001" min="0" style="width:100%" title="GND 过孔焊盘到信号过孔焊盘的空气间隙 (Pad to Pad Airgap) 判定阈值；填 0 关闭这一项"><div class="hist-bar" id="hist_thresh_padpair"></div></td>
+              <td class="lrHit" style="font-size:12px;color:var(--sub)">—</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="hint" id="layerRuleHint" style="margin-top:6px"></div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--sub);margin:10px 0">
+         <b>历史配置记录说明：</b> 每个指标下方会自动记录最近使用的数值历史标签，点击即可快速填充；TXT 中的 <code>Circle Drill</code> 仅作为<b>完成孔径</b>展示，空间间距完全由上方配置的焊盘直径与一钻直径进行精准运算。
       </div>
 
       <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
-        <button type="button" class="btn pri" id="btnRunCheck" style="padding:9px 24px;font-size:14px">🚀 运行空间几何间距检查</button>
+        <button type="button" class="btn pri" id="btnRunCheck" style="padding:9px 24px;font-size:14px"> 运行空间几何间距检查</button>
         <span class="hint" id="runHint">请导入数据后点击运行</span>
       </div>
     </div>
@@ -343,16 +373,16 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <div class="viewer-container">
         <div class="viewer-toolbar">
           <div class="tb-group">
-            <button type="button" id="btnFitView" title="缩放到适合视窗">🔍 适应全屏</button>
-            <button type="button" id="btnZoomDefects" class="active" title="一键聚焦超标区域">🎯 聚焦超标区域</button>
-            <button type="button" id="btnZoomIn" title="放大">➕</button>
-            <button type="button" id="btnZoomOut" title="缩小">➖</button>
-            <button type="button" id="btnResetView" title="重置视角">🔄 复位</button>
+            <button type="button" id="btnFitView" title="缩放到适合视窗"> 适应全屏</button>
+            <button type="button" id="btnZoomDefects" class="active" title="一键聚焦超标区域"> 聚焦超标区域</button>
+            <button type="button" id="btnZoomIn" title="放大"></button>
+            <button type="button" id="btnZoomOut" title="缩小"></button>
+            <button type="button" id="btnResetView" title="重置视角"> 复位</button>
           </div>
           
           <div class="tb-group">
-            <button type="button" id="btnMeasureMode" title="开启交互式测量标尺模式">📏 测量标尺</button>
-            <button type="button" id="btnClearMeasure" title="清除测量标注" style="display:none">✖ 清除测量</button>
+            <button type="button" id="btnMeasureMode" title="开启交互式测量标尺模式"> 测量标尺</button>
+            <button type="button" id="btnClearMeasure" title="清除测量标注" style="display:none"> 清除测量</button>
           </div>
 
           <div class="tb-group">
@@ -364,8 +394,8 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           </div>
           
           <div style="margin-left:auto;display:flex;gap:6px">
-            <button type="button" id="btnExportPng" class="pri">🖼️ 导出高清图片 (PNG)</button>
-            <button type="button" id="btnExportSvg">📐 导出矢量图 (SVG)</button>
+            <button type="button" id="btnExportPng" class="pri"> 导出高清图片 (PNG)</button>
+            <button type="button" id="btnExportSvg"> 导出矢量图 (SVG)</button>
           </div>
         </div>
 
@@ -374,7 +404,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         
         <div class="canvas-legend" id="canvasLegend">
           <div style="font-weight:700;margin-bottom:2px;color:#fff">图例与网络配色</div>
-          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#ef4444"></div> <span>信号孔 / ⚠️ 超标危险点</span></div>
+          <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#ef4444"></div> <span>信号孔 /  超标危险点</span></div>
           <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#a855f7"></div> <span>25_N 走线 (紫色)</span></div>
           <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#84cc16"></div> <span>25_P 走线 (棕绿)</span></div>
           <div class="canvas-legend-item"><div class="canvas-legend-color" style="background:#22c55e"></div> <span>26_N 走线 (翠绿)</span></div>
@@ -385,7 +415,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <!-- Dynamic Measurement Floating Card -->
         <div class="measure-card" id="measureCard">
           <h4>
-            <span>📐 空间几何测量结果</span>
+            <span> 空间几何测量结果</span>
             <button type="button" onclick="$('measureCard').style.display='none'" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:14px">×</button>
           </h4>
           <div id="measureCardBody"></div>
@@ -394,7 +424,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <!-- 空间几何视图定位异常同步复核浮窗 -->
         <div id="dfmSpatialReviewCard" style="display:none;position:absolute;top:54px;right:14px;width:305px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.42);border-radius:8px;padding:10px 12px;color:#f1f5f9;z-index:25;box-shadow:0 10px 24px rgba(0,0,0,0.45)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(148,163,184,0.2)">
-            <strong id="dfmSpatialRevTitle" style="font-size:12.5px;color:#38bdf8">定位异常复核</strong>
+            <strong id="dfmSpatialRevTitle" style="font-size:12px;color:#38bdf8">定位异常复核</strong>
             <button type="button" onclick="$('dfmSpatialReviewCard').style.display='none'" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:14px">×</button>
           </div>
           <div id="dfmSpatialRevBody"></div>
@@ -408,27 +438,55 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     <div class="stats-grid" id="resStatsGrid">
       <div class="stat-box bad" data-filter="bad">
         <div class="num" id="statBadCount">0</div>
-        <div class="lbl">❌ 总不满足项 (超标)</div>
+        <div class="lbl"> 总不满足项 (超标)</div>
       </div>
       <div class="stat-box" data-filter="gnd" style="border-left:3px solid #64748b">
-        <div class="num" id="statGndBadCount" style="font-size:16px">0 / 0</div>
-        <div class="lbl">⚡ 线到 GND 孔 (超标 / 检查数)</div>
+        <div class="num" id="statGndBadCount">0 / 0</div>
+        <div class="lbl"> 线到 GND 孔 (超标 / 检查数)</div>
       </div>
-      <div class="stat-box" data-filter="signal" style="border-left:3px solid #0284c7">
-        <div class="num" id="statSigBadCount" style="font-size:16px">0 / 0</div>
-        <div class="lbl">📡 线到 信号孔 (超标 / 检查数)</div>
+      <div class="stat-box" data-filter="signal" style="border-left:3px solid #2563eb">
+        <div class="num" id="statSigBadCount">0 / 0</div>
+        <div class="lbl"> 线到 信号孔 (超标 / 检查数)</div>
       </div>
       <div class="stat-box ok" data-filter="ok">
         <div class="num" id="statPassCount">0</div>
-        <div class="lbl">✅ 满足项 (合格)</div>
+        <div class="lbl"> 满足项 (合格)</div>
       </div>
       <div class="stat-box" data-filter="all">
         <div class="num" id="statTotalCount">0</div>
-        <div class="lbl">🔍 检查对数 (全部)</div>
+        <div class="lbl"> 检查对数 (全部)</div>
       </div>
       <div class="stat-box">
         <div class="num" id="statMinDist">0.00</div>
-        <div class="lbl">📏 最小实测间距 (mil)</div>
+        <div class="lbl"> 最小实测间距 (mil)</div>
+      </div>
+      <div class="stat-box" style="border-left:3px solid #d97706">
+        <div class="num" id="statPadPairBadCount">未启用</div>
+        <div class="lbl"> GND 孔盘 ↔ 信号孔盘 (超标 / 检查数)</div>
+      </div>
+    </div>
+
+    <div class="card" id="padPairCard" style="display:none">
+      <h2>GND 孔盘到信号孔盘 间距不满足明细</h2>
+      <div class="hint" id="padPairHint" style="margin-bottom:8px"></div>
+      <div style="overflow-x:auto">
+        <table id="padPairTable">
+          <thead>
+            <tr>
+              <th style="width:52px">序号</th>
+              <th>GND 孔（孔号 / 网络 / 跨层）</th>
+              <th>信号孔（孔号 / 网络 / 跨层）</th>
+              <th style="width:110px">中心距 (mil)</th>
+              <th style="width:130px">孔盘间距实测 (mil)</th>
+              <th style="width:110px">规则阈值 (mil)</th>
+              <th style="width:110px">亏欠 (mil)</th>
+              <th style="width:150px">焊盘直径 GND / 信号</th>
+            </tr>
+          </thead>
+          <tbody id="padPairBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--sub);padding:20px">暂无孔盘到孔盘检查结果</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -436,8 +494,8 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <!-- View Mode Switch -->
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn pri" id="btnViewNetGroup" style="font-weight:700">🎯 视图一：按出线层 × 走线网络目标分析 (走线超标汇总)</button>
-          <button type="button" class="btn sec" id="btnViewPairList">📋 视图二：过孔 × 走线对偶明细记录表</button>
+          <button type="button" class="btn pri" id="btnViewNetGroup" style="font-weight:700"> 视图一：按出线层 × 走线网络目标分析 (走线超标汇总)</button>
+          <button type="button" class="btn sec" id="btnViewPairList"> 视图二：过孔 × 走线对偶明细记录表</button>
         </div>
         <div style="font-size:12px;color:var(--sub)" id="viewModeHint">
           以各出线层的走线为目标，汇总每条走线上存在多少处间距不满足
@@ -446,15 +504,15 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
 
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <div class="search-bar" style="margin-bottom:0;flex:1;min-width:240px">
-          <input type="text" id="inpSearch" placeholder="🔍 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)..." data-no-persist>
+          <input type="text" id="inpSearch" placeholder=" 搜索网络名 (如 63_P、75_N、25_P)、出线层名 (如 19IS08、02G01P)、孔号 (如 Via 275)..." data-no-persist>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button type="button" class="btn sec small" id="btnFilterAll">全部</button>
           <button type="button" class="btn bad small" id="btnFilterBad">只看不满足 (超标)</button>
-          <button type="button" class="btn sec small" id="btnFilterGnd">⚡ 只看含 GND孔超标</button>
-          <button type="button" class="btn sec small" id="btnFilterSig">📡 只看含 信号孔超标</button>
+          <button type="button" class="btn sec small" id="btnFilterGnd"> 只看含 GND孔超标</button>
+          <button type="button" class="btn sec small" id="btnFilterSig"> 只看含 信号孔超标</button>
           <button type="button" class="btn sec small" id="btnFilterOk">只看满足</button>
-          <button type="button" class="btn sec small" id="btnExportCsv">📥 导出 CSV 报告</button>
+          <button type="button" class="btn sec small" id="btnExportCsv"> 导出 CSV 报告</button>
         </div>
       </div>
 
@@ -539,14 +597,14 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px">
         <div>
-          <h2 style="margin:0 0 4px">📊 规律分析：全板间距问题分布归纳</h2>
-          <div style="font-size:12.5px;color:var(--sub)" id="patHint">
+          <h2 style="margin:0 0 4px">规律分析：全板间距问题分布归纳</h2>
+          <div style="font-size:12px;color:var(--sub)" id="patHint">
             以<b>问题对象</b>为单位归纳：同一个信号孔（或同一条走线）上累计了多少处间距不足、集中在哪些层 / 网络，以及亏欠量分布。
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button type="button" class="btn sec small" id="btnPatExport">📥 导出规律分析 (CSV)</button>
-          <button type="button" class="btn sec small" id="btnPatRefresh">🔄 重新归纳</button>
+          <button type="button" class="btn sec small" id="btnPatExport"> 导出规律分析 (CSV)</button>
+          <button type="button" class="btn sec small" id="btnPatRefresh"> 重新归纳</button>
         </div>
       </div>
 
@@ -554,13 +612,13 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         <div>
           <div style="font-size:12px;color:var(--sub);margin-bottom:4px">分析对象</div>
           <div style="display:flex;gap:6px">
-            <button type="button" class="btn sec small pat-obj-btn active" id="btnPatObjVia" data-obj="via">📡 按信号孔</button>
-            <button type="button" class="btn sec small pat-obj-btn" id="btnPatObjTrace" data-obj="trace">🛣 按走线</button>
+            <button type="button" class="btn sec small pat-obj-btn active" id="btnPatObjVia" data-obj="via"> 按信号孔</button>
+            <button type="button" class="btn sec small pat-obj-btn" id="btnPatObjTrace" data-obj="trace"> 按走线</button>
           </div>
         </div>
         <div>
           <label for="selPatViaKind" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">过孔范围</label>
-          <select id="selPatViaKind" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+          <select id="selPatViaKind" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12px">
             <option value="all">全部过孔（信号孔 + GND 孔）</option>
             <option value="signal">仅信号孔</option>
             <option value="gnd">仅 GND 孔</option>
@@ -568,7 +626,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
         <div>
           <label for="selPatDim" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">归纳维度</label>
-          <select id="selPatDim" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+          <select id="selPatDim" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12px">
             <option value="layer">出线层 (Subset)</option>
             <option value="net">网络 (Net)</option>
             <option value="kind">孔型（通孔 / 盲埋孔）</option>
@@ -578,7 +636,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
         <div>
           <label for="selPatSort" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">排序</label>
-          <select id="selPatSort" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+          <select id="selPatSort" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12px">
             <option value="failCount">缺陷处数（多 → 少）</option>
             <option value="maxDeficit">最大亏欠量（大 → 小）</option>
             <option value="minDist">最小间距（小 → 大）</option>
@@ -586,7 +644,7 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
         </div>
         <div>
           <label for="selPatTopN" style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">显示数量</label>
-          <select id="selPatTopN" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12.5px">
+          <select id="selPatTopN" style="padding:6px 8px;border-radius:6px;border:1px solid var(--line);font-size:12px">
             <option value="5">Top 5</option>
             <option value="10" selected>Top 10</option>
             <option value="20">Top 20</option>
@@ -598,49 +656,49 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
     </div>
 
     <div class="stats-grid" id="patStatsGrid">
-      <div class="stat-box" style="border-left:3px solid #0284c7">
+      <div class="stat-box" style="border-left:3px solid #2563eb">
         <div class="num" id="patKpiObjects">0</div>
-        <div class="lbl" id="patKpiObjectsLbl">🏷 问题对象数（信号孔）</div>
+        <div class="lbl" id="patKpiObjectsLbl"> 问题对象数（信号孔）</div>
       </div>
       <div class="stat-box bad">
         <div class="num" id="patKpiDefects">0</div>
-        <div class="lbl">❌ 累计缺陷处数</div>
+        <div class="lbl"> 累计缺陷处数</div>
       </div>
       <div class="stat-box">
-        <div class="num" id="patKpiPairs" style="font-size:16px">0</div>
-        <div class="lbl">🔗 涉及对偶数（去重）</div>
+        <div class="num" id="patKpiPairs">0</div>
+        <div class="lbl"> 涉及对偶数（去重）</div>
       </div>
       <div class="stat-box">
-        <div class="num" id="patKpiMinDist" style="font-size:16px">-</div>
-        <div class="lbl">📏 全板最小实测间距 (mil)</div>
+        <div class="num" id="patKpiMinDist">-</div>
+        <div class="lbl"> 全板最小实测间距 (mil)</div>
       </div>
       <div class="stat-box warn">
-        <div class="num" id="patKpiMaxDeficit" style="font-size:16px">-</div>
-        <div class="lbl">⚠ 最大亏欠量 (mil)</div>
+        <div class="num" id="patKpiMaxDeficit">-</div>
+        <div class="lbl"> 最大亏欠量 (mil)</div>
       </div>
       <div class="stat-box">
-        <div class="num" id="patKpiConcentration" style="font-size:16px">-</div>
-        <div class="lbl" id="patKpiConcentrationLbl">🎯 前 3 名维度集中度</div>
+        <div class="num" id="patKpiConcentration">-</div>
+        <div class="lbl" id="patKpiConcentrationLbl"> 前 3 名维度集中度</div>
       </div>
     </div>
 
     <div class="card" id="cardPatConcl" style="display:none">
-      <h3 style="margin:0 0 8px;font-size:15px">🧭 规律结论</h3>
+      <h3 style="margin:0 0 8px">规律结论</h3>
       <div class="pat-concl" id="patConclusion"></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px" id="patChartsRow">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="margin:0;font-size:15px" id="patDimTitle">📈 按出线层分布</h3>
-          <span style="font-size:11.5px;color:var(--sub)" id="patDimSub"></span>
+          <h3 style="margin:0" id="patDimTitle">按出线层分布</h3>
+          <span style="font-size:12px;color:var(--sub)" id="patDimSub"></span>
         </div>
         <div id="patDimChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据，请先在①导入数据并运行检查。</div></div>
       </div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h3 style="margin:0;font-size:15px">📉 亏欠量分布（阈值 − 实测间距）</h3>
-          <span style="font-size:11.5px;color:var(--sub)" id="patDeficitSub"></span>
+          <h3 style="margin:0">亏欠量分布（阈值 − 实测间距）</h3>
+          <span style="font-size:12px;color:var(--sub)" id="patDeficitSub"></span>
         </div>
         <div id="patDeficitChart"><div style="color:#94a3b8;font-size:13px;padding:12px 0">尚无数据。</div></div>
       </div>
@@ -648,8 +706,8 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-        <h3 style="margin:0;font-size:15px" id="patTableTitle">🏷 问题对象排行（按信号孔）</h3>
-        <span style="font-size:11.5px;color:var(--sub)" id="patTableSub"></span>
+        <h3 style="margin:0" id="patTableTitle">问题对象排行（按信号孔）</h3>
+        <span style="font-size:12px;color:var(--sub)" id="patTableSub"></span>
       </div>
       <div style="overflow:auto;max-height:560px">
         <table id="tblPatObjects">
@@ -671,6 +729,8 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
       <ul class="hint" style="margin-left:20px;margin-top:6px">
         <li><b>线到 GND 孔判定口径</b>：针对走线与地网络（GND）过孔之间的空间安全间距，应用「线到 GND 孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$）。</li>
         <li><b>线到信号孔判定口径</b>：针对走线与其他非 GND / 信号网络过孔之间的空间安全间距，应用「线到信号孔最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$ 或更高隔离要求）。</li>
+        <li><b>GND 孔盘到信号孔盘判定口径</b>：针对 GND 过孔焊盘与信号过孔焊盘之间的空气间隙（Pad to Pad Airgap），应用「GND 孔盘到信号孔盘最小间距规则阈值」（默认 $\ge 6.0\text{ mil}$，填 0 关闭）。只比对 GND 孔 × 信号孔这一种组合（GND×GND、信号×信号不在本项内），并按两个过孔实际连接的层范围判断是否有层重叠，重叠才算一对。</li>
+        <li><b>分层规则（按层覆盖）</b>：在上面的默认阈值之外，可以按层再加规则，适用层写 <code>Top、Bot</code> / <code>内层</code> / <code>L2-L5</code> 这类，每个层组各配一套「线到 GND 孔 / 线到信号孔 / GND 孔盘到信号孔盘」阈值。走线按它自己所在的层取规则，同一层命中多条时用表中靠上的那条；孔盘到孔盘按两个过孔重叠层里命中的最严一条判定。没命中任何分层规则的层，继续用默认阈值。</li>
         <li><b>区分意义</b>：GND 孔与信号孔在 PCB 布局中具有不同的阻抗连续性、防串扰隔离和工艺容差要求，分别配置判定阈值可精准识别不同网络属性的间距风险。</li>
       </ul>
 
@@ -774,7 +834,8 @@ const HistoryManager = {
     pad_gnd: [7.906, 5.94, 8.0],
     pad_sig: [12.0, 9.94, 7.906, 10.0],
     drill_gnd: [6.0, 5.54],
-    drill_sig: [6.0, 5.54]
+    drill_sig: [6.0, 5.54],
+    thresh_padpair: [6.0, 5.0, 8.0, 10.0]
   },
   get(metric) {
     try {
@@ -837,6 +898,7 @@ const HistoryManager = {
       case 'pad_sig': return $('inpSignalPadDiam');
       case 'drill_gnd': return $('inpGndFirstDrill');
       case 'drill_sig': return $('inpSignalFirstDrill');
+      case 'thresh_padpair': return $('inpThresholdPadPair');
       default: return null;
     }
   }
@@ -857,6 +919,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '12.0';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '6.0';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '6.0';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '6.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   } else if (schemeName === 'std_6mil') {
     if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '6.0';
@@ -865,6 +928,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.94';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.54';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.54';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '6.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   } else if (schemeName === 'high_density_5mil') {
     if ($('inpThresholdGnd')) $('inpThresholdGnd').value = '5.0';
@@ -873,6 +937,7 @@ function applyPresetScheme(schemeName) {
     if ($('inpSignalPadDiam')) $('inpSignalPadDiam').value = '9.0';
     if ($('inpGndFirstDrill')) $('inpGndFirstDrill').value = '5.0';
     if ($('inpSignalFirstDrill')) $('inpSignalFirstDrill').value = '5.0';
+    if ($('inpThresholdPadPair')) $('inpThresholdPadPair').value = '5.0';
     if ($('selMode')) $('selMode').value = 'pad_to_trace';
   }
   HistoryManager.renderAll();
@@ -883,13 +948,214 @@ function applyPresetScheme(schemeName) {
 window.applyPresetScheme = applyPresetScheme;
 
 // Attach input change listeners to refresh chip highlights
-['inpThresholdGnd', 'inpThresholdSignal', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
+['inpThresholdGnd', 'inpThresholdSignal', 'inpThresholdPadPair', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
   const el = $(id);
   if (el) {
     el.addEventListener('input', () => {
       HistoryManager.renderAll();
     });
   }
+});
+
+// --- 分层规则（按层覆盖默认阈值）---
+const LayerRules = {
+  key: 'pcb.dfm.layerRules.v1',
+  rows: [],
+  defaults() {
+    return [
+      { layers: 'Top、Bot', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') },
+      { layers: '内层', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') }
+    ];
+  },
+  defOf(id) {
+    const v = parseFloat($(id) ? $(id).value : '');
+    return isFinite(v) ? v : 0;
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return null;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return null;
+      return arr.filter(r => r && typeof r.layers === 'string').map(r => ({
+        layers: r.layers,
+        gnd: parseFloat(r.gnd) || 0,
+        sig: parseFloat(r.sig) || 0,
+        pad: parseFloat(r.pad) || 0
+      }));
+    } catch (e) { return null; }
+  },
+  save() {
+    try { localStorage.setItem(this.key, JSON.stringify(this.read())); } catch (e) {}
+  },
+  read() {
+    const body = $('layerRuleBody');
+    if (!body) return [];
+    return [...body.querySelectorAll('tr[data-row]')].map(tr => ({
+      layers: (tr.querySelector('.lrLayers').value || '').trim(),
+      gnd: parseFloat(tr.querySelector('.lrGnd').value),
+      sig: parseFloat(tr.querySelector('.lrSig').value),
+      pad: parseFloat(tr.querySelector('.lrPad').value)
+    })).filter(r => r.layers);
+  },
+  previewOf(layers) {
+    const parse = (window.DfmCheck && DfmCheck.parseLayerSpec) ? DfmCheck.parseLayerSpec(layers) : [];
+    if (!parse.length) return layers && layers.trim() ? '未识别，按默认阈值' : '';
+    const label = (DfmCheck.layerSpecLabel ? DfmCheck.layerSpecLabel(parse) : '') || '';
+    return label ? '= ' + label : '';
+  },
+  rowHtml(r) {
+    const v = x => (isFinite(x) && x !== null && x !== undefined) ? String(x) : '';
+    return '<tr data-row>'
+      + `<td><input class="lrLayers" value="${escHtml(String(r.layers || ''))}" placeholder="Top、Bot 或 内层 或 L2-L5" style="width:100%">`
+      + `<div class="hint lrPreview" style="font-size:12px;margin-top:2px">${escHtml(this.previewOf(r.layers))}</div></td>`
+      + `<td><input type="number" class="lrGnd" value="${v(r.gnd)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td><input type="number" class="lrSig" value="${v(r.sig)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td><input type="number" class="lrPad" value="${v(r.pad)}" step="0.00001" min="0" style="width:100%"></td>`
+      + `<td class="lrHit" style="font-size:12px;color:var(--sub)">—</td>`
+      + '<td><button type="button" class="btn bad small lrDel">删除</button></td>'
+      + '</tr>';
+  },
+  render(list) {
+    this.rows = list || [];
+    const body = $('layerRuleBody');
+    if (!body) return;
+    if (!this.rows.length) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:14px">还没有分层规则：所有层都用上面的默认阈值。点右上角「套用 Top/Bot + 内层」快速建两条。</td></tr>';
+    } else {
+      body.innerHTML = this.rows.map(r => this.rowHtml(r)).join('');
+    }
+    this.syncHint();
+    this.renderStats(State.checkResult);
+  },
+  add(rule) {
+    const list = this.read();
+    list.push(rule || { layers: '', gnd: this.defOf('inpThresholdGnd'), sig: this.defOf('inpThresholdSignal'), pad: this.defOf('inpThresholdPadPair') });
+    this.render(list);
+    this.save();
+    const inputs = $('layerRuleBody').querySelectorAll('tr[data-row] .lrLayers');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  },
+  syncHint() {
+    const n = this.read().length;
+    if (!n) {
+      $('layerRuleHint').textContent = '不设分层规则时，所有层统一用上面的默认阈值（当前就是这样）。';
+      return;
+    }
+    $('layerRuleHint').textContent = `已设 ${n} 条分层规则（列顺序：线到 GND 孔 / 线到信号孔 / GND 孔盘到信号孔盘）· 同一层命中多条时用靠上的一条；孔盘到孔盘取重叠层里最严的一条；没命中的层继续用默认阈值。`;
+  },
+  renderStats(result) {
+    const body = $('layerRuleBody');
+    if (!body) return;
+    const stats = (result && result.layerRuleStats) || [];
+    const list = this.read();
+    const trs = [...body.querySelectorAll('tr[data-row]')];
+    trs.forEach((tr, i) => {
+      const s = stats[i];
+      const cell = tr.querySelector('.lrHit');
+      if (!cell) return;
+      if (!result) { cell.textContent = '—'; return; }
+      if (!s) { cell.textContent = '—'; return; }
+      cell.innerHTML = `<b>${s.checked + s.padPairChecked}</b> 处`
+        + (s.fail + s.padPairFail > 0 ? `<br><span class="bad">超标 ${s.fail + s.padPairFail}</span>` : '');
+    });
+    if (body.querySelector('tr td[colspan]') && list.length === 0) return;
+  }
+};
+window.LayerRules = LayerRules;
+
+(function initLayerRules() {
+  const saved = LayerRules.load();
+  LayerRules.render(saved || []);
+  const body = $('layerRuleBody');
+  if (!body) return;
+  body.addEventListener('input', e => {
+    const tr = e.target.closest('tr[data-row]');
+    if (tr && e.target.classList.contains('lrLayers')) {
+      const p = tr.querySelector('.lrPreview');
+      if (p) p.textContent = LayerRules.previewOf(e.target.value);
+    }
+    LayerRules.syncHint();
+    LayerRules.save();
+  });
+  body.addEventListener('click', e => {
+    if (!e.target.classList.contains('lrDel')) return;
+    const tr = e.target.closest('tr[data-row]');
+    const list = LayerRules.read();
+    const idx = [...body.querySelectorAll('tr[data-row]')].indexOf(tr);
+    if (idx >= 0) list.splice(idx, 1);
+    LayerRules.render(list);
+    LayerRules.save();
+    if (State.checkResult) runCheck(true);
+  });
+  $('btnAddLayerRule').addEventListener('click', () => LayerRules.add());
+  $('btnLayerRuleTemplate').addEventListener('click', () => {
+    LayerRules.render(LayerRules.defaults());
+    LayerRules.save();
+    if (State.checkResult) runCheck(true);
+  });
+})();
+
+// 加工能力规则完整备份：文件包含判定方式、孔盘/钻孔/焊盘形状、默认阈值及分层规则。
+const DfmRuleConfig = {
+  kind: 'pcb-dfm-rule-config',
+  version: 1,
+  fieldIds: ['selMode', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill', 'selNetFilter', 'selPadShape', 'inpGndPadW', 'inpGndPadH', 'inpSigPadW', 'inpSigPadH', 'inpPadCorner', 'inpPadRot', 'inpThresholdGnd', 'inpThresholdSignal', 'inpThresholdPadPair'],
+  snapshot() {
+    const fields = {};
+    this.fieldIds.forEach(id => { const el = $(id); if (el) fields[id] = el.value; });
+    return { kind: this.kind, version: this.version, savedAt: new Date().toISOString(), fields, layerRules: LayerRules.read() };
+  },
+  saveToFile() {
+    const blob = new Blob([JSON.stringify(this.snapshot(), null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PCB_加工能力规则_' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (typeof showToast === 'function') showToast('加工能力规则已保存为 JSON 文件。');
+  },
+  loadFromObject(data) {
+    if (!data || data.kind !== this.kind || data.version !== this.version || !data.fields || typeof data.fields !== 'object') {
+      throw new Error('文件格式不正确，或不是受支持的加工能力规则文件。');
+    }
+    this.fieldIds.forEach(id => {
+      if (!Object.prototype.hasOwnProperty.call(data.fields, id)) return;
+      const el = $(id); if (!el) return;
+      const value = String(data.fields[id]);
+      if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === value)) return;
+      if (el.type === 'number' && (value.trim() === '' || !Number.isFinite(Number(value)))) return;
+      el.value = value;
+    });
+    const rows = Array.isArray(data.layerRules) ? data.layerRules.filter(r => r && typeof r.layers === 'string').map(r => ({
+      layers: r.layers,
+      gnd: Number.isFinite(Number(r.gnd)) ? Number(r.gnd) : 0,
+      sig: Number.isFinite(Number(r.sig)) ? Number(r.sig) : 0,
+      pad: Number.isFinite(Number(r.pad)) ? Number(r.pad) : 0
+    })) : [];
+    LayerRules.render(rows);
+    LayerRules.save();
+    HistoryManager.renderAll();
+    if (State.checkResult && State.vias.length && State.traces.length) runCheck(true);
+  }
+};
+window.DfmRuleConfig = DfmRuleConfig;
+$('btnSaveDfmRules').addEventListener('click', () => DfmRuleConfig.saveToFile());
+$('btnLoadDfmRules').addEventListener('click', () => $('fileDfmRules').click());
+$('fileDfmRules').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      DfmRuleConfig.loadFromObject(JSON.parse(String(reader.result || '')));
+      if (typeof showToast === 'function') showToast('已从本地文件读取并应用加工能力规则。');
+    } catch (err) { alert('读取加工能力规则失败：' + err.message); }
+    e.target.value = '';
+  };
+  reader.onerror = () => { alert('读取规则文件失败。'); e.target.value = ''; };
+  reader.readAsText(file, 'utf-8');
 });
 
 // Initial history chip render
@@ -1107,15 +1373,15 @@ function patDimLabel(dim) {
 }
 
 function patDimTitleFor(dim, object) {
-  if (dim === 'kind') return object === 'via' ? '📈 按孔型（通孔 / 盲埋孔）分布' : '📈 按走线分布';
-  if (dim === 'width') return object === 'via' ? '📈 按 Padstack 分布（按信号孔模式无独立线宽维度）' : '📈 按走线线宽分布';
-  return `📈 按${patDimLabel(dim)}分布`;
+  if (dim === 'kind') return object === 'via' ? ' 按孔型（通孔 / 盲埋孔）分布' : ' 按走线分布';
+  if (dim === 'width') return object === 'via' ? ' 按 Padstack 分布（按信号孔模式无独立线宽维度）' : ' 按走线线宽分布';
+  return ` 按${patDimLabel(dim)}分布`;
 }
 
 function patObjectTitle(object, viaKind) {
-  if (object !== 'via') return '🏷 问题对象排行（按走线）';
+  if (object !== 'via') return ' 问题对象排行（按走线）';
   const kind = viaKind === 'signal' ? '信号孔' : (viaKind === 'gnd' ? 'GND 孔' : '过孔');
-  return `🏷 问题对象排行（按${kind}）`;
+  return ` 问题对象排行（按${kind}）`;
 }
 
 function patTableHead(object) {
@@ -1151,13 +1417,13 @@ function renderPatternAnalysis() {
   const objLbl = PatternState.object === 'via'
 	? (PatternState.viaKind === 'signal' ? '信号孔' : (PatternState.viaKind === 'gnd' ? 'GND 孔' : '过孔'))
 	: '走线';
-  if ($('patKpiObjectsLbl')) $('patKpiObjectsLbl').textContent = '🏷 问题对象数（' + objLbl + '）';
+  if ($('patKpiObjectsLbl')) $('patKpiObjectsLbl').textContent = ' 问题对象数（' + objLbl + '）';
   if ($('patKpiDefects')) $('patKpiDefects').textContent = k.defectCount;
   if ($('patKpiPairs')) $('patKpiPairs').textContent = hasResult ? (res.failCount || k.defectCount) : 0;
   if ($('patKpiMinDist')) $('patKpiMinDist').textContent = k.minDist == null ? '-' : k.minDist.toFixed(3);
   if ($('patKpiMaxDeficit')) $('patKpiMaxDeficit').textContent = k.maxDeficit ? k.maxDeficit.toFixed(3) : '-';
   if ($('patKpiConcentration')) $('patKpiConcentration').textContent = k.defectCount ? (k.concentration * 100).toFixed(1) + '%' : '-';
-  if ($('patKpiConcentrationLbl')) $('patKpiConcentrationLbl').textContent = '🎯 前 3 名「' + patDimLabel(PatternState.dimension) + '」集中度';
+  if ($('patKpiConcentrationLbl')) $('patKpiConcentrationLbl').textContent = ' 前 3 名「' + patDimLabel(PatternState.dimension) + '」集中度';
 
   // 结论
   if ($('cardPatConcl')) $('cardPatConcl').style.display = analysis.hasData ? '' : 'none';
@@ -1166,7 +1432,7 @@ function renderPatternAnalysis() {
 	  ? `<div>${analysis.summary.headline}</div>` + (analysis.summary.bullets.length
 		? '<ul style="margin:8px 0 0;padding-left:20px">' + analysis.summary.bullets.map(b => `<li>${b}</li>`).join('') + '</ul>'
 		: '')
-	  : `<div style="color:#64748b">${escHtml(analysis.summary.headline || '尚无缺陷数据，先在①导入数据并运行检查。')}</div>`;
+	  : `<div style="color:#6b7280">${escHtml(analysis.summary.headline || '尚无缺陷数据，先在①导入数据并运行检查。')}</div>`;
   }
 
   // 维度条形图
@@ -1216,8 +1482,8 @@ function renderPatternAnalysis() {
 	  tbody.innerHTML = analysis.objects.map((it, i) => {
 		const pct = (it.failCount / total * 100).toFixed(1);
 		const objCell = PatternState.object === 'via'
-		  ? `<b>Via #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">[${it.origin ? it.origin[0].toFixed(1) + ', ' + it.origin[1].toFixed(1) : '-'}]</div>`
-		  : `<b>Trace #${escHtml(it.id)}</b><div style="font-size:11px;color:#64748b">${escHtml(it.peerList.slice(0, 2).join(', '))}${it.peerList.length > 2 ? ' 等' + it.peerList.length + ' 个孔' : ''}</div>`;
+		  ? `<b>Via #${escHtml(it.id)}</b><div style="font-size:11px;color:#6b7280">[${it.origin ? it.origin[0].toFixed(1) + ', ' + it.origin[1].toFixed(1) : '-'}]</div>`
+		  : `<b>Trace #${escHtml(it.id)}</b><div style="font-size:11px;color:#6b7280">${escHtml(it.peerList.slice(0, 2).join(', '))}${it.peerList.length > 2 ? ' 等' + it.peerList.length + ' 个孔' : ''}</div>`;
 		const col3 = PatternState.object === 'via'
 		  ? `<span class="pat-chip ${it.isGnd ? 'muted' : ''}">${escHtml(it.spanType || '通孔')}</span>`
 		  : `<span class="pat-chip">${escHtml(it.layer || '-')}</span>`;
@@ -1225,7 +1491,7 @@ function renderPatternAnalysis() {
 		  ? escHtml(it.padstack || '-')
 		  : escHtml(it.net || '-');
 		const col5 = PatternState.object === 'via'
-		  ? `<span style="font-size:11.5px">${escHtml(it.net || '-')}</span>`
+		  ? `<span style="font-size:12px">${escHtml(it.net || '-')}</span>`
 		  : (it.width == null ? '-' : it.width.toFixed(2));
 		return `<tr>
 		  <td style="color:#94a3b8">${i + 1}</td>
@@ -1453,7 +1719,7 @@ function padShapeNote(p) {
   const w = Number(sh.w || 0).toFixed(2), h = Number(sh.h || 0).toFixed(2);
   const corner = sh.corner ? ` R${Number(sh.corner).toFixed(2)}` : '';
   const rot = sh.rot ? ` ${Number(sh.rot).toFixed(1)}°` : '';
-  return `<br><span style="color:#0284c7">${PAD_SHAPE_LABEL[sh.kind] || sh.kind} ${w}×${h}${corner}${rot}</span>`;
+  return `<br><span style="color:#2563eb">${PAD_SHAPE_LABEL[sh.kind] || sh.kind} ${w}×${h}${corner}${rot}</span>`;
 }
 
 function readPadShapes() {
@@ -1519,9 +1785,9 @@ function loadTextData(text, sourceName) {
       <div><b>涉及层数：</b><span class="tag-badge ok">${State.layers.length} 层 (${State.layers.join('、')})</span></div>
       <div><b>涉及网络：</b><span class="tag-badge ok">${escHtml(Array.from(new Set(State.vias.map(v => v.net).concat(State.traces.map(t => t.net)))).join('、'))}</span></div>
     </div>
-    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#475569;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
-      <span style="color:#0284c7;font-weight:600">✓ 已启用盲埋孔穿层匹配（仅分析过孔实际穿过走线层的对偶）</span>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:#6b7280;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <span><b>识别到的过孔跨层定义 (Padstack Defined)：</b>${uniqueSpans.map(s => `<span class="tag-badge" style="background:#f8fafc;color:#111827;border:1px solid #cbd5e1;margin-right:4px">${s}</span>`).join('')}</span>
+      <span style="color:#2563eb;font-weight:600"> 已启用盲埋孔穿层匹配（仅分析过孔实际穿过走线层的对偶）</span>
     </div>
   `;
 
@@ -1570,7 +1836,7 @@ function runCheck(sync) {
   const btn = $('btnRunCheck');
   const origBtnText = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '⏳ 正在进行空间网格索引与高精度间距检查...';
+  btn.innerHTML = ' 正在进行空间网格索引与高精度间距检查...';
   $('runHint').textContent = '正在计算空间几何间距...';
 
   const doCheck = () => {
@@ -1581,6 +1847,7 @@ function runCheck(sync) {
     const sigPadDiam = parseFloat($('inpSignalPadDiam') ? $('inpSignalPadDiam').value : 9.94) || 9.94;
     const gndFirstDrill = parseFloat($('inpGndFirstDrill') ? $('inpGndFirstDrill').value : 5.54) || 5.54;
     const sigFirstDrill = parseFloat($('inpSignalFirstDrill') ? $('inpSignalFirstDrill').value : 5.54) || 5.54;
+    const threshPadPair = parseFloat($('inpThresholdPadPair') ? $('inpThresholdPadPair').value : 0);
     const diffNetOnly = $('selNetFilter').value === 'diff_only';
     const layerFilter = $('selLayerFilter').value;
 
@@ -1603,6 +1870,7 @@ function runCheck(sync) {
     HistoryManager.add('pad_sig', sigPadDiam);
     HistoryManager.add('drill_gnd', gndFirstDrill);
     HistoryManager.add('drill_sig', sigFirstDrill);
+    if (!isNaN(threshPadPair)) HistoryManager.add('thresh_padpair', threshPadPair);
     HistoryManager.renderAll();
 
     const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -1616,7 +1884,14 @@ function runCheck(sync) {
       gndPadDiameter: gndPadDiam,
       signalPadDiameter: sigPadDiam,
       gndFirstDrill: gndFirstDrill,
-      signalFirstDrill: sigFirstDrill
+      signalFirstDrill: sigFirstDrill,
+      minClearancePadPair: isNaN(threshPadPair) ? 0 : threshPadPair,
+      layerRules: (window.LayerRules ? LayerRules.read().map(r => ({
+        layers: r.layers,
+        minClearanceGnd: isFinite(r.gnd) ? r.gnd : undefined,
+        minClearanceSignal: isFinite(r.sig) ? r.sig : undefined,
+        minClearancePadPair: isFinite(r.pad) ? r.pad : undefined
+      })) : [])
     });
     const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     const duration = (t1 - t0).toFixed(0);
@@ -1628,9 +1903,17 @@ function runCheck(sync) {
       : '';
     // 层信息无法解析的对偶一律照常检查，这里必须显式提示，避免被误读成「全查过了/全是干净的」
     const unknownNote = result.undeterminedSpanPairs > 0
-      ? ` ⚠ 另有 ${result.undeterminedSpanPairs.toLocaleString()} 处对偶的过孔/走线层名无法解析为层号，已按「全部检查」处理（宁可多检不可漏检）`
+      ? `  另有 ${result.undeterminedSpanPairs.toLocaleString()} 处对偶的过孔/走线层名无法解析为层号，已按「全部检查」处理（宁可多检不可漏检）`
       : '';
-    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${unknownNote}`;
+    if (window.LayerRules) LayerRules.renderStats(result);
+    const lrNote = (result.layerRuleStats && result.layerRuleStats.length)
+      ? ` 分层规则 ${result.layerRuleStats.length} 条（${result.layerRuleStats.map(r => r.layers + ' 命中 ' + (r.checked + r.padPairChecked) + ' 处/超标 ' + (r.fail + r.padPairFail)).join('，')}）。`
+      : ' 未设分层规则，所有层用默认阈值。';
+    const pp = result.padPairStats || { enabled: false, total: 0, fail: 0 };
+    const ppNote = pp.enabled
+      ? ` 孔盘到孔盘（GND孔盘↔信号孔盘）另查 ${pp.total.toLocaleString()} 对，超标 ${pp.fail} 对，阈值 ${pp.threshold} mil。`
+      : ' 孔盘到孔盘检查：已在配置里填 0，本次未检查。';
+    $('runHint').textContent = `检查完成 (${duration} ms)：共核对 ${result.totalChecked.toLocaleString()} 处同穿层对偶（GND孔 ${result.gndStats.total.toLocaleString()} 处 / 信号孔 ${result.signalStats.total.toLocaleString()} 处）${skipNote}，发现 ${result.failCount} 处超标，${result.passCount.toLocaleString()} 处合格。${ppNote}${lrNote}${unknownNote}`;
 
     btn.disabled = false;
     btn.innerHTML = origBtnText;
@@ -1671,6 +1954,44 @@ if ($('btnViewPairList')) {
   });
 }
 
+// --- 孔盘到孔盘（GND 孔盘 ↔ 信号孔盘）明细 ---
+function renderPadPairResults() {
+  const card = $('padPairCard');
+  if (!card) return;
+  const r = State.checkResult;
+  const pp = (r && r.padPairStats) || { enabled: false, total: 0, fail: 0, pass: 0, minDist: 0, threshold: 0 };
+  if ($('statPadPairBadCount')) {
+    $('statPadPairBadCount').textContent = pp.enabled
+      ? `${pp.fail.toLocaleString()} / ${pp.total.toLocaleString()}`
+      : '未启用';
+  }
+  if (!pp.enabled) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const defects = (r && r.padPairDefects) || [];
+  const shown = defects.slice(0, 200);
+  $('padPairHint').textContent = `阈值 ${pp.threshold} mil｜共核对 ${pp.total.toLocaleString()} 对 GND 孔盘 × 信号孔盘，不满足 ${pp.fail} 对、满足 ${pp.pass.toLocaleString()} 对，最小实测 ${pp.minDist.toFixed(3)} mil`
+    + (defects.length > shown.length ? `｜下表只列间距最小的 ${shown.length} 对（共 ${defects.length} 对）` : '');
+  const body = $('padPairBody');
+  if (!body) return;
+  if (!shown.length) {
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ok,#16a34a);padding:20px">全部满足，没有孔盘到孔盘间距不满足的对偶</td></tr>';
+    return;
+  }
+  body.innerHTML = shown.map((d, i) => {
+    const g = d.gndVia, sg = d.sigVia;
+    return '<tr>'
+      + `<td>${i + 1}</td>`
+      + `<td>#${escHtml(String(g.id))} · ${escHtml(g.net || '未命名网络')} · ${escHtml(d.spanGnd || g.viaTypeLabel || '通孔')}</td>`
+      + `<td>#${escHtml(String(sg.id))} · ${escHtml(sg.net || '未命名网络')} · ${escHtml(d.spanSig || sg.viaTypeLabel || '通孔')}</td>`
+      + `<td>${d.centerDist.toFixed(3)}</td>`
+      + `<td class="bad">${d.padAirgap.toFixed(3)}</td>`
+      + `<td>${d.threshold}</td>`
+      + `<td class="bad">${d.diff.toFixed(3)}</td>`
+      + `<td>${d.gndPadDiameter.toFixed(3)} / ${d.sigPadDiameter.toFixed(3)}</td>`
+      + '</tr>';
+  }).join('');
+}
+
 // --- Render Result Table & Stats with Pagination ---
 function renderResults() {
   const r = State.checkResult;
@@ -1685,6 +2006,8 @@ function renderResults() {
     $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果</td></tr>';
     if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
     if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
+    if ($('statPadPairBadCount')) $('statPadPairBadCount').textContent = '未启用';
+    if ($('padPairCard')) $('padPairCard').style.display = 'none';
     return;
   }
 
@@ -1697,6 +2020,7 @@ function renderResults() {
 
   renderNetGroupView();
   renderPairListView();
+  renderPadPairResults();
 }
 
 // 1. Render Net & Layer Grouping View (出线层x走线网络 缺陷汇总)
@@ -1741,14 +2065,14 @@ function renderNetGroupView() {
     let failSummaryBadge = '';
     if (isBad) {
       failSummaryBadge = `
-        <span class="tag-badge bad" style="font-size:12.5px;padding:3px 8px">❌ 存在 <b>${item.failCount}</b> 处间距不满足</span>
-        <div style="font-size:11px;color:#64748b;margin-top:4px">
-          ⚡ 到GND孔: <b>${item.gndFailCount}</b> 处 | 📡 到信号孔: <b>${item.signalFailCount}</b> 处 (涉及 <b>${item.uniqueViaCount}</b> 个过孔)
+        <span class="tag-badge bad" style="font-size:12px;padding:3px 8px"> 存在 <b>${item.failCount}</b> 处间距不满足</span>
+        <div style="font-size:11px;color:#6b7280;margin-top:4px">
+           到GND孔: <b>${item.gndFailCount}</b> 处 |  到信号孔: <b>${item.signalFailCount}</b> 处 (涉及 <b>${item.uniqueViaCount}</b> 个过孔)
         </div>
       `;
     } else {
       failSummaryBadge = `
-        <span class="tag-badge ok" style="font-size:12.5px;padding:3px 8px">✅ 全部满足 (0 处超标)</span>
+        <span class="tag-badge ok" style="font-size:12px;padding:3px 8px"> 全部满足 (0 处超标)</span>
         <div style="font-size:11px;color:#10b981;margin-top:4px">此网络走线无安全间距隐患</div>
       `;
     }
@@ -1756,7 +2080,7 @@ function renderNetGroupView() {
     // Conflicting vias snippet
     let viasSnippet = '<span style="color:var(--sub)">无冲突过孔</span>';
     if (item.uniqueViaIds && item.uniqueViaIds.length > 0) {
-      const visibleIds = item.uniqueViaIds.slice(0, 6).map(id => `<span class="tag-badge" style="background:#f1f5f9;color:#334155;margin:1px 2px">Via ${id}</span>`).join('');
+      const visibleIds = item.uniqueViaIds.slice(0, 6).map(id => `<span class="tag-badge" style="background:#f1f5f9;color:#374151;margin:1px 2px">Via ${id}</span>`).join('');
       const moreCount = item.uniqueViaIds.length - 6;
       viasSnippet = visibleIds + (moreCount > 0 ? `<span style="font-size:11px;color:var(--sub)"> 等共${item.uniqueViaIds.length}个</span>` : '');
     }
@@ -1772,7 +2096,7 @@ function renderNetGroupView() {
     html += `
       <tr class="${isBad ? 'fail-row' : ''}" style="border-top:1px solid #cbd5e1">
         <td style="font-weight:700">${idx + 1}</td>
-        <td><span class="tag-badge" style="background:#e2e8f0;color:#1e293b;border:1px solid #94a3b8">${escHtml(item.layer)}</span></td>
+        <td><span class="tag-badge" style="background:#e3e8ef;color:#1e293b;border:1px solid #94a3b8">${escHtml(item.layer)}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${netColor}"></span>
@@ -1790,11 +2114,11 @@ function renderNetGroupView() {
           <div style="display:flex;gap:4px;flex-direction:column">
             ${isBad ? `
               <button type="button" class="btn sec small btn-toggle-net-defects" data-key="${rowKey}">
-                ${isExpanded ? '▲ 收起明细' : `🔍 展开明细 (${item.failCount})`}
+                ${isExpanded ? '▲ 收起明细' : ` 展开明细 (${item.failCount})`}
               </button>
             ` : ''}
             <button type="button" class="btn pri small btn-locate-net-route" data-layer="${escHtml(item.layer)}" data-net="${escHtml(item.net)}">
-              📍 画布高亮走线
+               画布高亮走线
             </button>
           </div>
         </td>
@@ -1807,18 +2131,18 @@ function renderNetGroupView() {
         const pKey = `${p.via.id}_${p.trace.id}`;
         const isRev = !!State.reviewedKeys[pKey];
         const vSpanBadge = p.via.viaSpanType === 'buried'
-          ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
+          ? `<span class="tag-badge" style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;font-size:11px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
           : (p.via.viaSpanType === 'blind'
-            ? `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
-            : `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;font-size:10px;padding:1px 5px">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`);
+            ? `<span class="tag-badge" style="background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef;font-size:11px;padding:1px 5px">${escHtml(p.via.spanLabel)}</span>`
+            : `<span class="tag-badge" style="background:#f1f5f9;color:#6b7280;border:1px solid #cbd5e1;font-size:11px;padding:1px 5px">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`);
         return `
           <tr class="${isRev ? 'reviewed' : ''}" style="background:#fff">
             <td>${dIdx + 1}</td>
-            <td><b>Via ${p.via.id}</b> (${escHtml(p.via.net)}) ${vSpanBadge} <span style="color:var(--sub);font-size:10px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
+            <td><b>Via ${p.via.id}</b> (${escHtml(p.via.net)}) ${vSpanBadge} <span style="color:var(--sub);font-size:11px">[${p.via.origin[0].toFixed(1)}, ${p.via.origin[1].toFixed(1)}]</span></td>
             <td>${p.targetType}</td>
             <td>Trace ${p.trace.id} (${p.trace.width}mil)</td>
             <td style="font-family:var(--mono)">[${p.proj[0].toFixed(1)}, ${p.proj[1].toFixed(1)}]</td>
-            <td><b class="tag-badge bad">${p.evalDist.toFixed(2)} mil</b> <span style="font-size:10px;color:var(--sub)">(${p.mode==='pad_to_trace'?'焊盘Airgap':'一钻孔壁'})</span></td>
+            <td><b class="tag-badge bad">${p.evalDist.toFixed(2)} mil</b> <span style="font-size:11px;color:var(--sub)">(${p.mode==='pad_to_trace'?'焊盘Airgap':'一钻孔壁'})</span></td>
             <td>≥ ${p.threshold.toFixed(2)} mil</td>
             <td style="color:var(--bad);font-weight:700">${p.diff.toFixed(2)} mil</td>
             <td><button type="button" class="btn sec small btn-locate" data-via="${p.via.id}" data-trace="${p.trace.id}">定位图</button></td>
@@ -1830,7 +2154,7 @@ function renderNetGroupView() {
         <tr style="background:#f8fafc">
           <td colspan="9" style="padding:10px 16px">
             <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 12px">
-              <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#0f172a;display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#111827;display:flex;justify-content:space-between;align-items:center">
                 <span>走线【${escHtml(item.net)} @ ${escHtml(item.layer)}】上全部 ${item.defects.length} 处不满足间距对偶明细：</span>
                 <span style="font-weight:400;font-size:11px;color:var(--sub)">点击单项「定位图」可在画布中聚焦</span>
               </div>
@@ -1951,15 +2275,15 @@ function renderPairListView() {
     }
 
     const typeBadge = isGnd 
-      ? `<span class="tag-badge" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1">⚡ 线到GND孔</span>`
-      : `<span class="tag-badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">📡 线到信号孔</span>`;
+      ? `<span class="tag-badge" style="background:#f1f5f9;color:#6b7280;border:1px solid #cbd5e1"> 线到GND孔</span>`
+      : `<span class="tag-badge" style="background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef"> 线到信号孔</span>`;
 
     const spanBadgeStyle = p.via.viaSpanType === 'buried'
       ? 'background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe'
       : (p.via.viaSpanType === 'blind'
-        ? 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd'
-        : 'background:#f8fafc;color:#475569;border:1px solid #cbd5e1');
-    const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:10px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${escHtml(p.via.definedRaw || 'Top to Bottom')}">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`;
+        ? 'background:#f1f5f9;color:#1d4ed8;border:1px solid #e3e8ef'
+        : 'background:#f8fafc;color:#6b7280;border:1px solid #cbd5e1');
+    const spanBadge = `<span class="tag-badge" style="${spanBadgeStyle};font-size:11px;padding:1px 5px;margin-top:2px" title="Padstack Defined: ${escHtml(p.via.definedRaw || 'Top to Bottom')}">${escHtml(p.via.spanLabel || '通孔 (Top~Bottom)')}</span>`;
 
     return `
       <tr class="${isBad ? 'fail-row' : ''} ${isRev ? 'reviewed' : ''}" id="row-${idx}" data-via="${p.via.id}" data-trace="${p.trace.id}">
@@ -1982,18 +2306,18 @@ function renderPairListView() {
         <td>
           <b class="${isBad ? 'tag-badge bad' : 'tag-badge ok'}" style="font-size:13px">${p.evalDist.toFixed(2)} mil</b>
           <div style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.35;font-family:var(--mono)">
-            ${p.mode === 'pad_to_trace' ? '<span style="color:#0284c7;font-weight:700">★ 焊盘Airgap</span>' : (p.mode === 'drill_to_trace' ? '<span style="color:#d97706;font-weight:700">★ 一钻孔壁</span>' : p.mode)}<br>
-            <span style="color:#334155" title="焊盘边缘到走线边缘 (EDA Airgap)">焊盘: <b>${p.padEdgeDist.toFixed(2)}</b> mil</span><br>
-            <span style="color:#64748b" title="一钻孔壁到走线边缘">一钻: <b>${p.drillEdgeDist.toFixed(2)}</b> mil</span>
+            ${p.mode === 'pad_to_trace' ? '<span style="color:#2563eb;font-weight:700">焊盘Airgap</span>' : (p.mode === 'drill_to_trace' ? '<span style="color:#d97706;font-weight:700">一钻孔壁</span>' : p.mode)}<br>
+            <span style="color:#374151" title="焊盘边缘到走线边缘 (EDA Airgap)">焊盘: <b>${p.padEdgeDist.toFixed(2)}</b> mil</span><br>
+            <span style="color:#6b7280" title="一钻孔壁到走线边缘">一钻: <b>${p.drillEdgeDist.toFixed(2)}</b> mil</span>
           </div>
         </td>
         <td><b>≥ ${p.threshold.toFixed(2)} mil</b></td>
         <td style="font-family:var(--mono);font-weight:700;color:${isBad ? 'var(--bad)' : 'var(--ok)'}">${diffStr}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:#475569">
+        <td style="font-family:var(--mono);font-size:11px;color:#6b7280">
           一钻: ${p.via.firstDrill.toFixed(2)} mil<br>
           焊盘: ${(p.via.padDiameter || p.via.padRadius * 2).toFixed(2)} mil${padShapeNote(p)}
         </td>
-        <td style="font-size:11px;color:#334155">${advice}</td>
+        <td style="font-size:11px;color:#374151">${advice}</td>
         <td>
           <button type="button" class="btn sec small btn-locate" data-via="${p.via.id}" data-trace="${p.trace.id}">定位图</button>
         </td>
@@ -2100,6 +2424,31 @@ $('btnExportCsv').addEventListener('click', () => {
     p.via.firstDrill.toFixed(2),
     (p.via.padDiameter || p.via.padRadius * 2).toFixed(2)
   ].join(','));
+  // 孔盘到孔盘（GND 孔盘 ↔ 信号孔盘）另起一段
+  const ppDefects = State.checkResult.padPairDefects || [];
+  const ppStats = State.checkResult.padPairStats || { enabled: false };
+  if (ppStats.enabled && ppDefects.length) {
+    rows.push('');
+    rows.push(`"GND 孔盘到信号孔盘间距（阈值 ${ppStats.threshold} mil，共 ${ppDefects.length} 对不满足）"`);
+    rows.push(['序号,GND孔号,GND网络,GND跨层,信号孔号,信号网络,信号跨层,中心距(mil),孔盘间距实测(mil),规则阈值(mil),亏欠(mil),GND焊盘直径(mil),信号焊盘直径(mil)'].join(','));
+    ppDefects.forEach((d, i) => {
+      rows.push([
+        i + 1,
+        d.gndVia.id,
+        `"${d.gndVia.net}"`,
+        `"${d.spanGnd || d.gndVia.viaTypeLabel || '通孔'}"`,
+        d.sigVia.id,
+        `"${d.sigVia.net}"`,
+        `"${d.spanSig || d.sigVia.viaTypeLabel || '通孔'}"`,
+        d.centerDist.toFixed(4),
+        d.padAirgap.toFixed(4),
+        d.threshold.toFixed(2),
+        d.diff.toFixed(4),
+        d.gndPadDiameter.toFixed(2),
+        d.sigPadDiameter.toFixed(2)
+      ].join(','));
+    });
+  }
   const blob = new Blob(['\uFEFF' + headers.concat(rows).join('\n')], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2395,7 +2744,7 @@ function renderCanvas() {
       if (showLabels && vp.zoom > 0.8) {
         const midX = (vPt[0] + tPt[0]) / 2;
         const midY = (vPt[1] + tPt[1]) / 2;
-        const txt = `⚠️ ${p.evalDist.toFixed(2)} mil`;
+        const txt = ` ${p.evalDist.toFixed(2)} mil`;
 
         ctx.font = 'bold 10px ui-monospace, sans-serif';
         const txtW = ctx.measureText(txt).width;
@@ -2501,11 +2850,11 @@ function showMeasureCardTraceToVia(m) {
   const card = $('measureCard');
   card.style.display = 'block';
   const spanNotice = m.spansTraceLayer === false
-    ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#bae6fd;line-height:1.4">
-         ℹ️ <b>非同穿层提示：</b>Via ${m.via.id} (${escHtml(m.via.spanLabel || '盲埋孔')}) <b>未穿过</b>走线层 <b>${escHtml(m.trace.subset)}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
+    ? `<div style="background:rgba(14,165,233,0.18);border:1px solid rgba(56,189,248,0.45);border-radius:5px;padding:5px 7px;margin-bottom:6px;font-size:11px;color:#e3e8ef;line-height:1.4">
+         ℹ <b>非同穿层提示：</b>Via ${m.via.id} (${escHtml(m.via.spanLabel || '盲埋孔')}) <b>未穿过</b>走线层 <b>${escHtml(m.trace.subset)}</b>，自动检查已跳过该对偶（以下仅作 2D 投影参考）。
        </div>`
     : `<div style="background:rgba(16,185,129,0.14);border:1px solid rgba(52,211,153,0.4);border-radius:5px;padding:4px 7px;margin-bottom:6px;font-size:11px;color:#6ee7b7">
-         ✓ 穿层有效：${escHtml(m.via.spanLabel || '通孔 (Top~Bottom)')} 穿过走线层 <b>${escHtml(m.trace.subset)}</b>
+          穿层有效：${escHtml(m.via.spanLabel || '通孔 (Top~Bottom)')} 穿过走线层 <b>${escHtml(m.trace.subset)}</b>
        </div>`;
   $('measureCardBody').innerHTML = `
     <div style="font-size:12px;margin-bottom:6px"><b>测量对象：</b>Via ${m.via.id} (${escHtml(m.via.net)}) ↔ Trace ${m.trace.id} (${escHtml(m.trace.subset)})</div>
@@ -2647,7 +2996,7 @@ canvas.addEventListener('mousemove', e => {
     tip.style.top = (e.clientY + 14) + 'px';
     tip.innerHTML = `
       <b>Via ${nearestVia.id}</b> (${escHtml(nearestVia.net)})<br>
-      孔型与跨层: <b style="color:#7dd3fc">${escHtml(nearestVia.spanLabel || '通孔 (Top~Bottom)')}</b><br>
+      孔型与跨层: <b style="color:#cbd5e1">${escHtml(nearestVia.spanLabel || '通孔 (Top~Bottom)')}</b><br>
       Padstack Defined: ${escHtml(nearestVia.definedRaw || 'Top to Bottom')}<br>
       坐标: [${nearestVia.origin[0].toFixed(2)}, ${nearestVia.origin[1].toFixed(2)}]<br>
       完成孔径: ${nearestVia.drill.toFixed(2)} mil | 一钻孔径: ${nearestVia.firstDrill.toFixed(2)} mil<br>
@@ -2767,17 +3116,17 @@ function renderDfmSpatialReviewCard(viaId, traceId) {
 
   bodyEl.innerHTML = `
     <div style="${barStyle}border-radius:6px;padding:7px 9px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11.5px;font-weight:700;color:${isRev ? '#6ee7b7' : '#fde68a'};margin:0">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:${isRev ? '#6ee7b7' : '#fde68a'};margin:0">
         <input type="checkbox" id="chkDfmSpatialReview" ${isRev ? 'checked' : ''} onchange="toggleDfmPairReview('${pKey}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
         <span>${isRev ? '已复核 (明细已同步勾选)' : '勾选复核此项'}</span>
       </label>
       <button type="button" class="btn small" onclick="toggleDfmPairReview('${pKey}', ${!isRev})" style="padding:3px 8px;font-size:11px;border:none;background:${isRev ? 'rgba(51,65,85,.9)' : '#10b981'};color:#fff">
-        ${isRev ? '取消复核' : '✓ 确认复核'}
+        ${isRev ? '取消复核' : ' 确认复核'}
       </button>
     </div>
     ${p ? `
       <div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">
-        <div>走线: <strong style="color:#7dd3fc">${escHtml(p.trace.net)}</strong> (${escHtml(p.trace.subset)}) | 过孔: <strong>Via ${p.via.id}</strong> (${escHtml(p.via.net)}, ${escHtml(p.via.spanLabel || '通孔')})</div>
+        <div>走线: <strong style="color:#cbd5e1">${escHtml(p.trace.net)}</strong> (${escHtml(p.trace.subset)}) | 过孔: <strong>Via ${p.via.id}</strong> (${escHtml(p.via.net)}, ${escHtml(p.via.spanLabel || '通孔')})</div>
         <div>实测间距: <strong style="color:${p.status === '不满足' ? '#f87171' : '#4ade80'};font-family:var(--mono)">${p.evalDist.toFixed(2)} mil</strong> (要求 ≥ ${p.threshold.toFixed(2)} mil)</div>
       </div>
     ` : ''}

@@ -564,14 +564,13 @@ test('整个方案库跨方案统一配色：同一种 Padstack 在所有方案�
   window.renderSchemeCards();
 });
 
-// 17. 顶栏全局显示控制：只保留「铺满宽屏」（全屏工作台 / 独立大屏已按需求删除）
+// 17. 顶栏全局显示控制：只保留「铺满宽屏」
 test('顶栏全局显示控制：铺满宽屏可用，全屏工作台与独立大屏已移除', () => {
   const btnWide = document.getElementById('btnGlobalWide');
   assert.ok(btnWide, '顶栏必须保留「铺满宽屏」按钮');
-  assert.strictEqual(document.getElementById('btnGlobalFullscreen'), null, '「全屏工作台」按钮应已删除');
-  assert.strictEqual(document.getElementById('btnGlobalPopout'), null, '「独立大屏」入口应已删除');
+  assert.strictEqual(document.getElementById('btnGlobalFullscreen'), null, '全屏工作台按钮应已删除');
   assert.strictEqual(typeof window.toggleGlobalFullscreen, 'undefined', 'toggleGlobalFullscreen 应已删除');
-  assert.strictEqual(document.getElementById('lblGlobalFs'), null, '全屏按钮文字节点应已删除');
+  assert.strictEqual(document.getElementById('btnGlobalPopout'), null, '「独立大屏」入口应已移除');
 
   window.setGlobalWideMode(false, true);
   assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '初始关闭铺满宽屏');
@@ -585,6 +584,22 @@ test('顶栏全局显示控制：铺满宽屏可用，全屏工作台与独立�
 
   window.setGlobalWideMode(false, true);
   assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '再次点击应关闭全宽模式');
+});
+
+test('方案库 Padstack 色卡已移到本页尾部（main 末尾，不在方案库卡片内）', () => {
+  const legend = document.getElementById('libraryPadstackLegendBar');
+  const main = document.querySelector('main');
+  assert.ok(legend, '色卡容器应存在');
+  assert.strictEqual(legend.parentElement, main, '色卡应直接挂在 main 下（页面尾部）');
+  assert.strictEqual(main.lastElementChild, legend, '色卡应是页面最后一个区块');
+  assert.ok(!legend.closest('#tabLibrary'), '色卡不应再出现在方案库卡片里');
+  const tabSections = Array.from(main.querySelectorAll('section.tab'));
+  assert.ok(tabSections.length >= 5, '五个页签区块仍完整');
+  assert.ok(tabSections[0].compareDocumentPosition(legend) & window.Node.DOCUMENT_POSITION_FOLLOWING,
+    '色卡应排在所有页签区块之后');
+  assert.ok(legend.innerHTML.trim().length > 0, '色卡内容仍应正常渲染（移动位置不能把渲染打断）');
+  assert.ok(legend.textContent.includes('Padstack') || legend.querySelector('span,div'),
+    legend.textContent.slice(0, 60));
 });
 
 console.log(`\n结果: ${pass} 通过, ${fail} 失败`);

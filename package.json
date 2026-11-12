@@ -5,9 +5,9 @@
   "description": "PCB / SI 检查工作台：走线、约束、加工能力、扇出、铜皮与综合一体化检查（纯前端）",
   "scripts": {
     "serve": "node serve.js",
-    "test": "node pcb-checker/geometry-oracle-test.js && node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js && node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js",
+    "test": "node pcb-checker/geometry-oracle-test.js && node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js && node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/copper-rule-import-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js && node pcb-checker/theme-unify-test.js",
     "test:engine": "node pcb-checker/geometry-oracle-test.js && node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js",
-    "test:ui": "node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js",
+    "test:ui": "node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/copper-rule-import-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js && node pcb-checker/theme-unify-test.js",
     "bench": "node pcb-checker/bench-perf.js",
     "test:geometry": "node pcb-checker/geometry-oracle-test.js"
   },

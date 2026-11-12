@@ -2434,6 +2434,62 @@
     return { success: false, error: '未能从文件中识别出有效的扇出方案 JSON 数据' };
   }
 
+  function classifyGroundSymmetry(vias = [], toleranceMil = 0.25) {
+    const isGnd = v => v && (v.type === 'gnd' || v.role === '伴随地孔' || /GND/i.test(String(v.net || '') + ' ' + String(v.padstack || '')));
+    const gnd = (vias || []).filter(isGnd).map(v => ({
+      x: Number(v.rawX ?? v.x), y: Number(v.rawY ?? v.y),
+      pad: String(v.padstack || v.padstackName || 'GND')
+    })).filter(v => Number.isFinite(v.x) && Number.isFinite(v.y));
+    if (gnd.length < 3) return '未判定';
+
+    const signals = (vias || []).filter(v => v && !isGnd(v)).map(v => ({ x: Number(v.rawX ?? v.x), y: Number(v.rawY ?? v.y) })).filter(v => Number.isFinite(v.x) && Number.isFinite(v.y));
+    const center = signals.length
+      ? { x: signals.reduce((sum, p) => sum + p.x, 0) / signals.length, y: signals.reduce((sum, p) => sum + p.y, 0) / signals.length }
+      : { x: gnd.reduce((sum, p) => sum + p.x, 0) / gnd.length, y: gnd.reduce((sum, p) => sum + p.y, 0) / gnd.length };
+    const points = gnd.map(p => ({ ...p, x: p.x - center.x, y: p.y - center.y }));
+
+    const preservesLabels = transform => {
+      const unused = new Set(points.map((_, i) => i));
+      for (const p of points) {
+        const q = transform(p);
+        let bestIndex = -1, bestDistance = Infinity;
+        for (const j of unused) {
+          if (points[j].pad !== p.pad) continue;
+          const d = Math.hypot(q.x - points[j].x, q.y - points[j].y);
+          if (d < bestDistance) { bestDistance = d; bestIndex = j; }
+        }
+        if (bestIndex < 0 || bestDistance > toleranceMil) return false;
+        unused.delete(bestIndex);
+      }
+      return unused.size === 0;
+    };
+
+    // 中心对称：绕信号孔群中心旋转 180° 后，各种 GND Padstack 均须回到同类孔位。
+    const central = preservesLabels(p => ({ x: -p.x, y: -p.y }));
+    // 轴对称：从同 Padstack 孔对的中点生成候选轴，并验证整组带 Padstack 标签的孔位。
+    const angles = new Set([0, Math.PI / 2]);
+    for (let i = 0; i < points.length; i++) for (let j = i; j < points.length; j++) {
+      if (points[i].pad !== points[j].pad) continue;
+      const sx = points[i].x + points[j].x, sy = points[i].y + points[j].y;
+      if (Math.hypot(sx, sy) < 1e-6) continue;
+      let angle = Math.atan2(sy, sx) % Math.PI;
+      if (angle < 0) angle += Math.PI;
+      angles.add(Math.round(angle * 10000) / 10000);
+    }
+    let axial = false;
+    for (const angle of angles) {
+      const ux = Math.cos(angle), uy = Math.sin(angle);
+      if (preservesLabels(p => {
+        const dot = p.x * ux + p.y * uy;
+        return { x: 2 * dot * ux - p.x, y: 2 * dot * uy - p.y };
+      })) { axial = true; break; }
+    }
+    if (axial && central) return '轴+中心对称';
+    if (axial) return '轴对称';
+    if (central) return '中心对称';
+    return '非对称';
+  }
+
   /**
    * 解析包含多个扇出方案的多块 TXT 文本（每个方案之间使用 ~~~end~~~ 或 ~End~ 分界）
    * @param {string} text 
@@ -2495,6 +2551,7 @@
           const mPad = ib.match(/Padstack\s+Name:\s*([^\r\n]+)/i);
           const mNet = ib.match(/Net:\s*([^\r\n]+)/i);
           const mDrill = ib.match(/Circle\s+Drill:\s*([\d\.\-]+)/i);
+          const mDefined = ib.match(/Padstack\s+Defined\s+from\s+([^\r\n]+)/i);
 
           if (mOrigin) {
             const rawX = parseFloat(mOrigin[1]) || 0;
@@ -2514,6 +2571,7 @@
               x: rawX,
               y: rawY,
               padstack,
+              definedFrom: mDefined ? mDefined[1].trim() : '',
               net: net || (isGnd ? 'GND' : 'SIGNAL'),
               role,
               type,
@@ -2561,6 +2619,66 @@
             v.x = Math.round((v.rawX - bx) * 1000) / 1000;
             v.y = Math.round((v.rawY - by) * 1000) / 1000;
           });
+        }
+
+        // 标题缺失时按孔群的电气/几何特征命名：类型、P/N 对数、差分孔距、信号连接层。
+        // 「Total N Items」是 EDA 的计数，不是方案名。
+        if (/^扇出方案_\d+$/.test(schemeName) || /^Total\s+\d+\s+Items?$/i.test(schemeName)) {
+          const signals = vias.filter(v => v.type === 'signal');
+          const familyCounts = new Map();
+          vias.forEach(v => {
+            const family = (String(v.padstack || '').match(/^(BGA|SMA|PTH)/i)?.[1] || '通用').toUpperCase();
+            familyCounts.set(family, (familyCounts.get(family) || 0) + 1);
+          });
+          const family = [...familyCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || '通用';
+          const pairDistances = [];
+          const nets = [...new Set(signals.map(v => String(v.net || '').trim()))];
+          nets.filter(net => /_P$/i.test(net)).forEach(netP => {
+            const netN = netP.replace(/_P$/i, '_N');
+            const pVias = signals.filter(v => v.net === netP);
+            const nVias = signals.filter(v => v.net === netN);
+            if (!nVias.length) return;
+            pVias.forEach(pv => {
+              const nearest = nVias.reduce((best, nv) => {
+                const d = Math.hypot(pv.rawX - nv.rawX, pv.rawY - nv.rawY);
+                return d < best ? d : best;
+              }, Infinity);
+              if (Number.isFinite(nearest) && nearest > 0.01) pairDistances.push(nearest);
+            });
+          });
+          const pitchCounts = new Map();
+          pairDistances.forEach(d => {
+            // EDA 坐标按 mil 解析；名称统一将 P/N 中心距转换为 mm，保留两位小数。
+            const rounded = Math.round((d / 39.37007874) * 100) / 100;
+            pitchCounts.set(rounded, (pitchCounts.get(rounded) || 0) + 1);
+          });
+          const pitchValues = [...pitchCounts.entries()]
+            .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+            .slice(0, 2).map(x => x[0]).sort((a, b) => a - b);
+          const pitchLabel = pitchValues.length
+            ? `P${pitchValues.map(d => d.toFixed(2).replace(/0+$/, '').replace(/\\.$/, '')).join('/')}mm`
+            : '';
+          const hasPN = nets.some(net => /_P$/i.test(net)) && nets.some(net => /_N$/i.test(net));
+          const pairCount = hasPN ? Math.floor(signals.length / 2) : 0;
+          const pairLabel = pairCount ? `${pairCount}对` : `${signals.length}信号`;
+          const layerEnds = [];
+          signals.forEach(v => {
+            const m = String(v.definedFrom || '').match(/^\s*(.*?)\s+to\s+(.*?)\s*$/i);
+            if (m) layerEnds.push(m[1].trim(), m[2].trim());
+          });
+          const layerTokens = [...new Set(layerEnds.map(name => {
+            if (/^(?:top|上层)$/i.test(name)) return { label: 'Top', rank: 0 };
+            if (/^(?:bottom|bot|底层)$/i.test(name)) return { label: 'Bot', rank: 9999 };
+            const m = name.match(/(\d+)/);
+            return m ? { label: `L${Number(m[1])}`, rank: Number(m[1]) } : null;
+          }).filter(Boolean).map(x => JSON.stringify(x)))].map(x => JSON.parse(x)).sort((a, b) => a.rank - b.rank);
+          const layerLabel = layerTokens.length > 1
+            ? `${layerTokens[0].label}-${layerTokens[layerTokens.length - 1].label}`
+            : layerTokens[0]?.label || '';
+          const groundSymmetry = classifyGroundSymmetry(vias);
+          const baseName = [family, pairLabel, pitchLabel, layerLabel, groundSymmetry !== '未判定' ? `GND${groundSymmetry}` : ''].filter(Boolean).join('_');
+          const sameBase = results.filter(r => r.name === baseName || r.name.startsWith(baseName + '_')).length;
+          schemeName = sameBase ? `${baseName}_${String(sameBase + 1).padStart(2, '0')}` : baseName;
         }
 
         results.push({
@@ -3407,6 +3525,11 @@
   /**
    * 在高清 Canvas 上渲染放大版扇出方案效果图与逐孔 Padstack 标注 (风格对齐缩略星座图)
    */
+  function buildConnectorDistanceColorMap(connectors = []) {
+    const distances = [...new Set((connectors || []).map(c => Math.round(Number(c.dist) * 10) / 10).filter(Number.isFinite))].sort((a, b) => a - b);
+    return new Map(distances.map((d, i) => [d, `hsl(${Math.round((i * 137.508) % 360)}, 88%, 64%)`]));
+  }
+
   function renderSchemeEnlargedCanvas(canvas, scheme, options = {}) {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
@@ -3464,17 +3587,21 @@
       return layout;
     }
 
-    // 2. 虚线拓扑连接网格 (精确复刻缩略效果图青蓝色虚线)
+    // 2. 拓扑虚线按孔心距分色：距离按 0.1 mil 归类，同距同色、不同距尽量使用不同色相。
+    const distanceColors = buildConnectorDistanceColorMap(layout.connectors);
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.30)';
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.8;
     ctx.setLineDash([4, 4]);
     layout.connectors.forEach(c => {
+      const key = Math.round(c.dist * 10) / 10;
+      ctx.strokeStyle = distanceColors.get(key) || '#38bdf8';
+      ctx.globalAlpha = 0.68;
       ctx.beginPath();
       ctx.moveTo(c.x1, c.y1);
       ctx.lineTo(c.x2, c.y2);
       ctx.stroke();
     });
+    ctx.globalAlpha = 1;
     ctx.restore();
 
     // 可选：孔心距标注 (mil)
@@ -3767,9 +3894,11 @@
     buildPadstackColorMap,
     calcSchemeViaPairDistance,
     parseMultiSchemeTxt,
+    classifyGroundSymmetry,
     parseAndRepairFanoutJson,
     isSignalVia,
     computeSchemeViewLayout,
+    buildConnectorDistanceColorMap,
     renderSchemeEnlargedCanvas,
     MM_PER_MIL,
     MIL_PER_MM,
