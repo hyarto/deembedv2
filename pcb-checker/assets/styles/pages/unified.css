@@ -1,15 +1,6 @@
 /* ============================================================================
  * unified.css —— 综合一体化检查页面专属样式（壳层、令牌与通用组件见 tokens / eda-shell / components）
  * ========================================================================== */
-/* Cards & Layout */
-.card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
 .card-header {
   display: flex;
   align-items: center;
@@ -138,7 +129,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 textarea {
@@ -284,14 +275,12 @@ tr.reviewed { opacity: 0.6; background: #f8fafc; }
   padding: 14px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .dash-card:hover {
   transform: translateY(-2px);
   border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
 }
 
 .dash-card .cat-header {

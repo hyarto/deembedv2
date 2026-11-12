@@ -1,5 +1,5 @@
 /* ============================================================================
- * ui-prefs-test.js —— 全站「界面参数记忆」测试
+ * ui-prefs.test.js —— 全站「界面参数记忆」测试
  *
  * 目标（对应需求）：所有「填写数值 / 选择的地方」除了记录历史候选值以外，
  * 还必须把**上次用过的值**当成默认值保存下来，刷新后依然生效。
@@ -17,32 +17,11 @@
 const fs = require('fs');
 const path = require('path');
 
-function loadJsdom() {
-  try { return require('jsdom'); }
-  catch (e) { throw new Error('找不到 jsdom，请先执行 npm install'); }
-}
-const { JSDOM, VirtualConsole } = loadJsdom();
+const { openPage: openPageHelper } = require('../helpers/open-page');
 
-const DIR = __dirname;
-const PREFS_CODE = fs.readFileSync(path.join(DIR, 'ui-prefs.js'), 'utf8');
+const DIR = path.resolve(__dirname, '../..');
 const STORE_KEY = 'pcbchecker.uiprefs.v1';
 const PAGES = ['index.html', 'unified.html', 'dfm.html', 'fanout.html', 'copper.html', 'pour.html'];
-
-/* 页面里 <script src="dfm-check.js"> 一类引擎脚本在没有服务器时不会被 jsdom 拉取，
-   测试里按页面依赖关系提前注入，保证页面初始化逻辑与浏览器一致 */
-const ENGINE_FILES = {
-  'index.html': [],
-  'unified.html': ['pad-geom.js', 'copper-check.js', 'dfm-check.js', 'fanout-check.js', 'pour-check.js'],
-  'dfm.html': ['pad-geom.js', 'dfm-check.js'],
-  'fanout.html': ['fanout-check.js'],
-  'copper.html': ['copper-check.js'],
-  'pour.html': ['pour-check.js']
-};
-function engineCode(page) {
-  return (ENGINE_FILES[page] || [])
-    .map(f => fs.readFileSync(path.join(DIR, f), 'utf8'))
-    .join('\n;\n');
-}
 
 let pass = 0, fail = 0;
 async function test(name, fn) {
@@ -51,36 +30,10 @@ async function test(name, fn) {
 }
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
-/* 打开一个页面：跑页面自身脚本 + 注入 ui-prefs.js，返回操作句柄 */
+/* 打开一个页面：helper 已内联页面全部 CSS / 脚本包（含 ui-prefs.js），返回操作句柄 */
 function openPage(page, seed) {
-  const html = fs.readFileSync(path.join(DIR, page), 'utf8');
-  const vc = new VirtualConsole();
-  const errors = [];
-  vc.on('jsdomError', e => {
-    const m = String(e && e.message || e);
-    if (/Not implemented/.test(m)) return;      // canvas / alert / confirm / navigation，jsdom 自身限制
-    errors.push(m);
-  });
-  vc.on('error', (...a) => errors.push(a.map(String).join(' ')));
-
-  const dom = new JSDOM(html, {
-    runScripts: 'dangerously',
-    pretendToBeVisual: true,
-    virtualConsole: vc,
-    url: 'http://localhost/' + page,
-    beforeParse(w) {
-      if (seed) {
-        try { w.localStorage.setItem(STORE_KEY, JSON.stringify(seed)); } catch (e) {}
-      }
-      const code = engineCode(page);
-      if (code) {
-        try { w.eval(code); } catch (e) { errors.push('引擎注入失败: ' + e.message); }
-      }
-    }
-  });
-  const w = dom.window;
-  w.eval(PREFS_CODE);
-  return { w, d: w.document, errors, prefs: w.UiPrefs, page, close: () => w.close() };
+  const c = openPageHelper(page, { seedStorage: seed ? { [STORE_KEY]: seed } : undefined });
+  return { w: c.w, d: c.d, errors: c.errors, prefs: c.w.UiPrefs, page, close: c.close };
 }
 const ready = (w, ms = 60) => new Promise(r => setTimeout(r, ms));
 
@@ -104,7 +57,7 @@ function stored(w) {
   for (const page of PAGES) {
     await test(`${page}：挂载 ui-prefs.js、扫到可记忆控件、注入「恢复默认值」按钮`, async () => {
       const raw = fs.readFileSync(path.join(DIR, page), 'utf8');
-      assert(/<script src="ui-prefs\.js\?v=\d+"><\/script>/.test(raw), '缺少 ui-prefs.js script 标签');
+      assert(/<script src="packages\/shared\/ui-prefs\.js\?v=\d+"><\/script>/.test(raw), '缺少 packages/shared/ui-prefs.js script 标签');
       const ctx = openPage(page);
       await ready(ctx.w);
       const rows = ctx.prefs._scan().filter(r => ctx.prefs._accept(r.el, r.dup));

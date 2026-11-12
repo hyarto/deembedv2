@@ -53,11 +53,12 @@
   - [x] 重构 `unified.html` 为左导轨（模块导航 + 六工序）+ 中视口 + 右工具与遥测栏，规则配置独立成工序，括号说明迁移至 `data-tip`，删除冗余文案
   - [x] 新增 `tests/ui/unified-ui.test.js`；联检结果与重构前基线逐项一致（88 项 / 69 不符合）
 
-- [ ] **Stage 9：测试体系与性能基准包化整理及旧巨型文件清理**
-  - [ ] 迁移并升级 UI 回归测试至 `pcb-checker/tests/ui/{trace-ui,copper-ui,dfm-ui,fanout-ui,pour-ui,ui-prefs,eda-shell-unify,theme-unify,portal-and-controls}.test.js`
-  - [ ] 迁移走线性能基准至 `pcb-checker/tests/bench/trace-engine.bench.js`
-  - [ ] 移除根目录旧单体文件（`pad-geom.js`、`*-check.js`、`ui-prefs.js`、`*-test.js`、`bench-perf.js`），更新 `package.json` 脚本入口
-  - [ ] 运行全量 `npm test` 与 `npm run bench` 性能校验
+- [x] **Stage 9：测试体系与性能基准包化整理及旧巨型文件清理**
+  - [x] UI 回归测试统一迁至 `pcb-checker/tests/ui/*.test.js`：新增 `unified-ui`、`ui-prefs`、`eda-shell-unify`（替代 nav-unify）、`theme-unify`、`portal-and-controls`
+  - [x] 约束网格性能基准保留于 `pcb-checker/tests/bench/copper-grid.bench.js`
+  - [x] 删除根目录旧单体文件：`pad-geom.js`、`*-check.js`、`ui-prefs.js`、`*-test.js`、`test.js`、`bench-perf.js`
+  - [x] 新增 `tools/run-tests.js` 分组运行器，`package.json` 脚本改为 `engine / ui / bench` 分组入口
+  - [x] 全量 `npm test`（16 个脚本）与 `npm run bench` 通过
 
 - [ ] **Stage 10：文档工程化规范更新、最终 Cleanup 与提交 PR**
   - [ ] 更新 `AGENTS.md`：工程化分包架构规范、禁止括号解释统一改用悬浮 `data-tip`、左导轨+中视口+右工具栏渐进式 EDA 规范、禁止废话文学

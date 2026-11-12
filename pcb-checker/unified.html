@@ -198,7 +198,7 @@
       <div class="card-header">
         <div>
           <div class="card-title">五大检查引擎核心约束配置 <span class="eda-tip" tabindex="0" data-tip="完整保留独立页全部规则">?</span></div>
-          <div class="card-subtitle">支持分项导入 JSON/TXT 规则，亦支持一键导出/导入全套工程规则文件</div>
+          <div class="card-subtitle">规则可分项导入 JSON/TXT，也可整套导出与导入</div>
         </div>
         <div style="display:flex;gap:6px">
           <button class="btn sec small" onclick="exportMasterRules()">导出全套规则</button>
@@ -616,10 +616,10 @@
       <div class="card-header">
         <div>
           <div class="card-title">统一全项综合缺陷检查矩阵</div>
-          <div class="card-subtitle">聚合五大检查引擎全部判定结果，支持按大类筛选、仅看不符合项与一键复核</div>
+          <div class="card-subtitle">五个引擎的全部判定，可按大类筛选并逐条复核</div>
         </div>
         <div style="display:flex;gap:6px">
-          <button class="btn success small" onclick="batchReviewAll()">一键全部复核</button>
+          <button class="btn success small" onclick="batchReviewAll()">全部标为已复核</button>
           <button class="btn sec small" onclick="clearAllReviews()">重置复核</button>
         </div>
       </div>
@@ -734,7 +734,7 @@
         <div style="display:flex;gap:6px">
           <button class="btn success small" onclick="exportUnifiedExcel()">导出全套综合报告</button>
           <button class="btn sec small" onclick="exportUnifiedCSV()">导出 CSV 清单</button>
-          <button class="btn sec small" onclick="copyUnifiedReportText()">一键复制报告内容</button>
+          <button class="btn sec small" onclick="copyUnifiedReportText()">复制报告内容</button>
         </div>
       </div>
 
@@ -946,7 +946,7 @@
       <textarea id="txtModalExportContent" rows="16"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn primary small" onclick="copyModalContent()">一键复制全部内容</button>
+      <button class="btn primary small" onclick="copyModalContent()">复制全部内容</button>
       <button class="btn success small" id="btnModalDownload" onclick="downloadModalContent()">保存为文件</button>
       <button class="btn sec small" onclick="closeModal()">关闭</button>
     </div>
@@ -1173,7 +1173,7 @@
         <span id="lblUQuickRenameIdx" style="font-family:var(--mono);color:#2563eb"></span>
       </div>
       <div style="margin-bottom:10px">
-        <label style="font-weight:700;color:#111827;display:block;margin-bottom:4px">新方案名称（按点选顺序自动用 <code>_</code> 连接，也可手动编辑）*</label>
+        <label style="font-weight:700;color:#111827;display:block;margin-bottom:4px">新方案名称 <span class="eda-tip" tabindex="0" data-tip="按点选顺序自动用下划线连接，也可手动编辑">?</span> *</label>
         <input type="text" id="inpUQuickRenameName" style="width:100%;font-family:var(--mono);font-weight:700;font-size:14px;color:#1d4ed8;border:1.5px solid #38bdf8;background:#f8fafc;padding:6px 10px;border-radius:6px" data-no-persist>
       </div>
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px">

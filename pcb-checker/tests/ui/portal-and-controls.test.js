@@ -1,5 +1,5 @@
 /* ============================================================================
- * portal-and-controls-test.js —— 统一入口、启动模式与合并后交互控件完整性回归测试
+ * portal-and-controls.test.js —— 统一入口、启动模式与合并后交互控件完整性回归测试
  *
  * 覆盖：
  *   1. 仓库根目录不再残留重复上传的 workspace/ 副本目录
@@ -14,10 +14,10 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
-const { JSDOM, VirtualConsole } = require('jsdom');
-const { createAppServer, parseCliArgs } = require('../serve');
+const { createAppServer, parseCliArgs } = require('../../../serve');
+const { openPage, CHECKER_DIR } = require('../helpers/open-page');
 
-const DIR = __dirname;
+const DIR = CHECKER_DIR;
 const REPO_ROOT = path.resolve(DIR, '..');
 const CHECKER_PAGES = ['index.html', 'copper.html', 'dfm.html', 'fanout.html', 'pour.html', 'unified.html'];
 const ALL_PAGES = ['portal.html', ...CHECKER_PAGES];
@@ -40,28 +40,7 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-function openFullPage(page) {
-  const html = fs.readFileSync(path.join(DIR, page), 'utf8');
-  const inlined = html.replace(/<script([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/g, (_, _a, src) => {
-    const clean = src.split('?')[0];
-    return `<script>${fs.readFileSync(path.join(DIR, clean), 'utf8')}</script>`;
-  });
-  const vc = new VirtualConsole();
-  const errors = [];
-  vc.on('jsdomError', e => {
-    const m = String((e && e.message) || e);
-    if (/Not implemented/.test(m)) return;
-    errors.push(m);
-  });
-  vc.on('error', (...a) => errors.push(a.map(String).join(' ')));
-  const dom = new JSDOM(inlined, {
-    url: 'http://localhost:8000/' + page,
-    runScripts: 'dangerously',
-    pretendToBeVisual: true,
-    virtualConsole: vc
-  });
-  return { w: dom.window, d: dom.window.document, errors, close: () => dom.window.close() };
-}
+const openFullPage = page => openPage(page);
 
 function httpGet(port, urlPath) {
   return new Promise((resolve, reject) => {
@@ -136,23 +115,28 @@ function httpGet(port, urlPath) {
     assert(broken.length === 0, '未定义的内联事件函数：' + broken.join(' | '));
   });
 
-  await test('外部引擎脚本缓存版本号（?v=N）跨页面完全一致', () => {
-    const versions = new Map();
-    for (const page of CHECKER_PAGES) {
+  await test('样式与脚本包的缓存版本号（?v=N）全站统一，且引用文件均存在', () => {
+    const seen = new Set();
+    for (const page of ALL_PAGES) {
       const raw = fs.readFileSync(path.join(DIR, page), 'utf8');
-      for (const m of raw.matchAll(/<script[^>]+src=["']([^"']+)["']/g)) {
+      const refs = [...raw.matchAll(/<script[^>]+src=["']([^"']+)["']/g), ...raw.matchAll(/<link[^>]+href=["']([^"']+\.css[^"']*)["']/g)];
+      assert(refs.length > 0, `${page} 未引用任何外部资源`);
+      for (const m of refs) {
         const [file, q] = m[1].split('?');
         assert(q && /^v=\d+$/.test(q), `${page} 引用 ${m[1]} 缺少 ?v=N 版本号`);
-        if (!versions.has(file)) {
-          versions.set(file, { v: q, page });
-        } else {
-          const prev = versions.get(file);
-          assert(prev.v === q, `${file} 版本号不一致：${prev.page}(${prev.v}) vs ${page}(${q})`);
-        }
+        assert(fs.existsSync(path.join(DIR, file)), `${page} 引用的 ${file} 不存在`);
+        seen.add(q);
       }
     }
-    assert(versions.get('dfm-check.js').v === 'v=6', 'dfm-check.js 版本号应已升级为 v=6');
-    assert(versions.get('fanout-check.js').v === 'v=6', 'fanout-check.js 版本号应已升级为 v=6');
+    assert(seen.size === 1, '全站 ?v= 版本号不一致：' + [...seen].join(', '));
+  });
+
+  await test('仓库根目录与 pcb-checker 根目录不残留旧单体脚本', () => {
+    const legacy = ['pad-geom.js', 'copper-check.js', 'dfm-check.js', 'fanout-check.js', 'pour-check.js', 'ui-prefs.js', 'bench-perf.js'];
+    const left = legacy.filter(f => fs.existsSync(path.join(DIR, f)));
+    assert(left.length === 0, '残留旧单体文件：' + left.join(', '));
+    const rootJs = fs.readdirSync(DIR).filter(f => f.endsWith('.js'));
+    assert(rootJs.length === 0, 'pcb-checker 根目录不应放 js：' + rootJs.join(', '));
   });
 
   await test('portal.html 统一入口主页包含两大入口与全套导航且符合视觉规范', async () => {
@@ -175,7 +159,7 @@ function httpGet(port, urlPath) {
     const modes = [
       ['portal', 'PCB 检查与 SI 工作台 | 统一入口主页'],
       ['pcb', 'PCB 走线检查工具'],
-      ['si', 'PCB 综合检查一体化工作台']
+      ['si', 'PCB 综合一体化检查']
     ];
     for (const [entry, expectedTitle] of modes) {
       const srv = createAppServer({ entry });
