@@ -28,11 +28,11 @@
   - [x] 重构 `copper.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
   - [x] 通过约束规则导入与约束 UI 全流程测试
 
-- [ ] **Stage 5：加工能力检查模块 `dfm.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/dfm.css`
-  - [ ] 将 2456 行内联脚本拆分为 `pcb-checker/packages/pages/dfm/{dfm-config,dfm-results-ui,dfm-canvas-viewer}.js`，复用 `PadGeom` 与 `DfmCheck`
-  - [ ] 重构 `dfm.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
-  - [ ] 通过 DFM 引擎与 DFM UI 全流程测试
+- [x] **Stage 5：加工能力检查模块 `dfm.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离页面样式 `pcb-checker/assets/styles/pages/dfm.css`
+  - [x] 将 2456 行内联脚本拆分为 `pcb-checker/packages/pages/dfm/{dfm-config,dfm-results-ui,dfm-canvas-viewer}.js`，复用 `PadGeom` 与 `DfmCheck`
+  - [x] 重构 `dfm.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
+  - [x] 通过 DFM 引擎与 DFM UI 全流程测试
 
 - [ ] **Stage 6：扇出方案检查模块 `fanout.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/fanout.css`

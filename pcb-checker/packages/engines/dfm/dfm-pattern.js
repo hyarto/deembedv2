@@ -11,6 +11,11 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
+function escHtml(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function patDeficitOf(p) {
   const d = Number(p.threshold) - Number(p.evalDist);
   return isFinite(d) && d > 0 ? d : 0;
