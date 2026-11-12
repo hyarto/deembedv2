@@ -107,6 +107,9 @@ function canonicalBlock(page) {
       const ctrl = header.querySelector('.global-display-ctrl');
       assert(ctrl, '顶栏缺少 .global-display-ctrl');
       assert(ctrl.querySelector('#btnGlobalWide'), '缺少「铺满宽屏」按钮');
+      const fullscreen = ctrl.querySelector('#btnGlobalFullscreen');
+      assert(fullscreen && fullscreen.querySelector('svg'), '缺少全屏工作台图标按钮');
+      assert(typeof ctx.w.toggleGlobalFullscreen === 'function', '全屏切换函数未注册');
       assert(ctx.errors.length === 0, '页面脚本报错：' + ctx.errors[0]);
       ctx.close();
     });

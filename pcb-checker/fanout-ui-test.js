@@ -564,14 +564,13 @@ test('整个方案库跨方案统一配色：同一种 Padstack 在所有方案�
   window.renderSchemeCards();
 });
 
-// 17. 顶栏全局显示控制：只保留「铺满宽屏」
-test('顶栏全局显示控制：铺满宽屏可用，放大工作台与独立大屏入口已移除', () => {
+// 17. 顶栏全局显示控制：铺满宽屏与工作台全屏
+ test('顶栏显示控制：铺满宽屏与全屏工作台可用，独立大屏入口已移除', () => {
   const btnWide = document.getElementById('btnGlobalWide');
   assert.ok(btnWide, '顶栏必须保留「铺满宽屏」按钮');
-  assert.strictEqual(document.getElementById('btnGlobalFullscreen'), null, '「放大工作台」按钮应已删除');
-  assert.strictEqual(typeof window.toggleGlobalFullscreen, 'undefined', 'toggleGlobalFullscreen 应已删除');
-  assert.strictEqual(document.getElementById('btnGlobalPopout'), null, '「独立大屏」入口应已删除');
-  assert.strictEqual(document.getElementById('lblGlobalFs'), null, '放大工作台文字节点应已删除');
+  assert.ok(document.getElementById('btnGlobalFullscreen'), '顶栏应有全屏工作台按钮');
+  assert.strictEqual(typeof window.toggleGlobalFullscreen, 'function', '全屏切换函数应可用');
+  assert.strictEqual(document.getElementById('btnGlobalPopout'), null, '「独立大屏」入口应已移除');
 
   window.setGlobalWideMode(false, true);
   assert.strictEqual(document.documentElement.classList.contains('pcb-global-wide'), false, '初始关闭铺满宽屏');
