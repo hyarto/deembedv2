@@ -181,10 +181,6 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
         <span id="lblGlobalWide">铺满宽屏</span>
       </button>
-      <button type="button" class="gdisp-btn" id="btnGlobalFullscreen" onclick="toggleGlobalFullscreen()" title="放大工作台到浏览器全屏；按 Esc 或再次点击退出">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
-        <span id="lblGlobalFs">放大工作台</span>
-      </button>
     </div>
   </div>
 </header>
@@ -4857,32 +4853,16 @@ function escapeHtml(str) {
 // Expose State globally for tests & debug
 window.State = State;
 
-// Global Display Controller: 宽屏与浏览器全屏（全站跨页面记忆）
+// Global Display Controller: 100% 铺满宽屏（全站跨页面记忆）
 (function() {
   if (typeof document === 'undefined' || !document.documentElement) return;
   const KEY = 'pcb_workbench_wide_v1';
   function syncUI() {
     const wide = document.documentElement.classList.contains('pcb-global-wide');
-    const fullscreen = !!document.fullscreenElement;
     const bW = document.getElementById('btnGlobalWide'), lW = document.getElementById('lblGlobalWide');
-    const bF = document.getElementById('btnGlobalFullscreen'), lF = document.getElementById('lblGlobalFs');
     if (bW) bW.classList.toggle('active', wide);
     if (lW) lW.textContent = wide ? '已铺满宽屏' : '铺满宽屏';
-    if (bF) bF.classList.toggle('active', fullscreen);
-    if (lF) lF.textContent = fullscreen ? '退出放大' : '放大工作台';
   }
-  window.toggleGlobalFullscreen = async function() {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-      else throw new Error('浏览器不支持全屏');
-    } catch (err) {
-      const message = '无法进入全屏。若工作台嵌在预览框中，请检查预览是否允许全屏；也可尝试在新标签页打开后使用此功能。';
-      if (typeof window.showToast === 'function') window.showToast(message);
-      else console.warn(message, err);
-    }
-  };
-  document.addEventListener('fullscreenchange', syncUI);
   function triggerResize() {
     try {
       window.dispatchEvent(new Event('resize'));
