@@ -3,12 +3,14 @@
  * ========================================================================== */
 (function (root, factory) {
   var layoutMod = (typeof module === "object" && module.exports) ? require("./fanout-layout.js") : root.FanoutChecker;
-  var api = factory(layoutMod);
+  var paletteMod = (typeof module === "object" && module.exports) ? require("./fanout-palette.js") : root.FanoutChecker;
+  var api = factory(layoutMod, paletteMod);
   if (typeof module === "object" && module.exports) module.exports = api;
   root.FanoutChecker = Object.assign(root.FanoutChecker || {}, api);
-})(typeof globalThis !== "undefined" ? globalThis : this, function (layoutMod) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (layoutMod, paletteMod) {
   "use strict";
   var computeSchemeViewLayout = layoutMod.computeSchemeViewLayout;
+  var calcSchemeViaPairDistance = paletteMod.calcSchemeViaPairDistance;
   function drawRoundedRectPath(ctx, x, y, w, h, r) {
     const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();

@@ -14,7 +14,9 @@
   var dist2D = parser.dist2D;
   var roundN = parser.roundN;
   var parseViaData = parser.parseViaData;
+  var isSignalVia = parser.isSignalVia;
   var syncLibraryPadstackColors = palette.syncLibraryPadstackColors;
+  var resetPadstackColorRegistry = palette.resetPadstackColorRegistry;
   class FanoutScheme {
     /**
      * @param {Object} options

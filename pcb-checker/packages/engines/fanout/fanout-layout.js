@@ -12,7 +12,7 @@
   "use strict";
   var MM_PER_MIL = parser.MM_PER_MIL;
   var dist2D = parser.dist2D;
-  var isSignalVia = schemeMod.isSignalVia;
+  var isSignalVia = parser.isSignalVia || schemeMod.isSignalVia;
   var buildPadstackColorMap = paletteMod.buildPadstackColorMap;
   function estimateTextPx(str, fontPx, isMono) {
     const s = String(str || '');

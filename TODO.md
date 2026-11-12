@@ -34,11 +34,11 @@
   - [x] 重构 `dfm.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
   - [x] 通过 DFM 引擎与 DFM UI 全流程测试
 
-- [ ] **Stage 6：扇出方案检查模块 `fanout.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/fanout.css`
-  - [ ] 将 3942 行内联脚本拆分为 `pcb-checker/packages/pages/fanout/{fanout-state,fanout-library-ui,fanout-results-ui,fanout-canvas-viewer}.js`，复用 `FanoutChecker`
-  - [ ] 重构 `fanout.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
-  - [ ] 通过扇出引擎与扇出 UI 全流程测试
+- [x] **Stage 6：扇出方案检查模块 `fanout.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离页面样式 `pcb-checker/assets/styles/pages/fanout.css`
+  - [x] 将 3942 行内联脚本拆分为 `pcb-checker/packages/pages/fanout/{fanout-state,fanout-library-ui,fanout-results-ui,fanout-canvas-viewer}.js`，复用 `FanoutChecker`
+  - [x] 重构 `fanout.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
+  - [x] 通过扇出引擎与扇出 UI 全流程测试
 
 - [ ] **Stage 7：铜皮检查模块 `pour.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/pour.css`
