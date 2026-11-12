@@ -22,11 +22,11 @@
   - [x] 重构 `index.html` 为左导轨 + 中视口渐进工序 + 右遥测/工具栏三栏结构，括号说明全量迁移至 `data-tip`
   - [x] 通过走线引擎与走线 UI 全流程测试
 
-- [ ] **Stage 4：约束检查模块 `copper.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/copper.css`
-  - [ ] 将 1841 行内联脚本拆分为 `pcb-checker/packages/pages/copper/{copper-state,copper-sets-ui,copper-results-ui}.js`，复用 `CopperCheck` 与 `ConstraintParser`
-  - [ ] 重构 `copper.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
-  - [ ] 通过约束规则导入与约束 UI 全流程测试
+- [x] **Stage 4：约束检查模块 `copper.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离页面样式 `pcb-checker/assets/styles/pages/copper.css`
+  - [x] 将 1841 行内联脚本拆分为 `pcb-checker/packages/pages/copper/{copper-state,copper-sets-ui,copper-results-ui}.js`，复用 `CopperCheck` 与 `ConstraintParser`
+  - [x] 重构 `copper.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
+  - [x] 通过约束规则导入与约束 UI 全流程测试
 
 - [ ] **Stage 5：加工能力检查模块 `dfm.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/dfm.css`
