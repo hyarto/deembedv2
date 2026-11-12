@@ -20,7 +20,7 @@
 | `pcb-checker/pour.html` | 铜皮检查：铺铜覆盖、异型铜皮、参考层覆盖 / 超宽、孤立碎铜、最小圆弧半径五大项 |
 | `pcb-checker/unified.html` | 综合一体化检查：一套数据同时跑五大引擎，输出统一缺陷清单、风险雷达与综合报告 |
 
-页面之间通过顶部导航互相跳转，`unified.html` 复用四个独立引擎文件（`*-check.js`），逻辑只有一份。
+页面布局统一为三栏：左列模块导航与工序流程，中列主视口，右列功能与检视工具栏。`unified.html` 复用 `packages/engines` 下的引擎分包（走线判定除外），不另写一份。
 
 ## 快速开始（统一入口与分模式启动）
 
@@ -45,7 +45,7 @@ cd pcb-checker && python3 -m http.server 8000
 刷新后输入框本身仍回到 HTML 里写死的出厂值，每次重开工作台都要把阈值、焊盘直径、单位、模式、
 勾选项重新填一遍。
 
-现在由 `pcb-checker/ui-prefs.js` 统一接管（六页共用，无依赖、无 CDN）：
+现在由 `pcb-checker/packages/shared/ui-prefs.js` 统一接管（六页共用，无依赖、无 CDN）：
 
 - 任何**填写数值 / 选择项**（`input[type=number|text|checkbox|radio]`、`select`）改动后，
   按「页面 + 元素 id」记进 `localStorage`（键 `pcbchecker.uiprefs.v1`）；
@@ -59,23 +59,22 @@ cd pcb-checker && python3 -m http.server 8000
   的搜索框、筛选下拉、弹窗里的一次性录入框；
 - 记忆里的值若已失效（下拉选项被删、数值非法、字段改版消失），一律保持出厂值，
   不会把控件写成空值；
-- 想回退：页面右上角显示区工具条会多一个「恢复默认值」按钮（仅当本页确实存了记忆值时出现，
+- 想回退：右侧工具栏的视口区会多一个「恢复默认值」按钮（仅当本页确实存了记忆值时出现，
   按钮上带条数），点击即清空本页记忆并刷新；控制台也可用 `UiPrefs.clear()`（本页）/
   `UiPrefs.clearAll()`（全站）。
 
 新增控件默认就会被记忆；不希望被记住的控件加 `data-no-persist` 属性即可。
 
-## 界面风格（六页统一）
+## 界面布局与风格
 
-六个检查页共用一套视觉语言，**基准页是走线检查（`index.html`）**，其余五页（约束 / 加工能力 /
-扇出方案 / 铜皮 / 综合一体化）都按它对齐，`theme-unify-test.js` 会跨页比对：
+- **三栏**：左导轨（模块导航 + 工序流程）/ 中视口（阶段条 + 当前工序）/ 右工具栏（快捷执行、实时遥测、视口与参数记忆）。左右栏可折叠，状态记忆；`Alt+1..9` 切换工序。
+- **渐进工序**：数据导入 → 规则 → 结果 → 视口 / 分析，阶段条显示当前位置并提供「下一工序」。综合一体化检查共 6 个工序，规则配置独立成第 2 工序。
+- **配色**：底 `#f4f6f9`、白卡片、分隔线 `#e3e8ef`、正文 `#1f2937`、次要 `#6b7280`、强调 `#2563eb`；状态只用语义色。
+- **字号阶梯**：11 / 12 / 13 / 14 / 15 / 16 / 18 / 22 px。卡片白底、1px 边框、10px 圆角、无投影。
+- **说明文字**：标题、标签、表头、按钮后不加括号解释，补充信息放在悬浮提示（`data-tip` 或标题旁的 `?`）。
 
-- **配色**：浅灰底 `#f4f6f9`、白卡片、分隔线 `#e3e8ef`、正文 `#1f2937`、次要文字 `#6b7280`、
-  强调色 `#2563eb`（悬停 `#1d4ed8`）；状态色只用语义色（红 `#dc2626` / 绿 `#16a34a` / 琥珀 `#d97706`）。
-- **字号阶梯**：正文 14px、卡片标题 15px、小节标题 13px、表格 13px、辅助说明 12px。
-- **卡片**：白底 + 1px 边框 + 10px 圆角，不加投影；统计卡一律白底，只靠数字颜色和边框表达状态。
-- **不加多余填充**：分组标题不再用深绿/深蓝实心条，浅蓝底纹只保留在悬停、拖放、状态徽标这类有含义的地方。
-- **标题前不加图标**：`h1`~`h4` 与卡片标题直接以文字/序号开头，不再用 emoji 或 SVG 图标打头。
+样式分层：`assets/styles/tokens.css`（令牌）→ `eda-shell.css`（壳层）→ `components.css`（通用组件）→ `pages/<页面>.css`。
+`tests/ui/theme-unify.test.js` 与 `eda-shell-unify.test.js` 跨页断言以上规则。
 
 ## 输入数据格式
 
@@ -120,20 +119,20 @@ EDA 导出的文本报告，主体是 `Item N < Via / Trace / Shape >` 段落，
 
 ```bash
 npm install
-npm test               # 几何对拍 + 引擎单元测试 + jsdom 全流程 UI 测试
+npm test               # 引擎测试 + jsdom 全流程 UI 测试（tools/run-tests.js 分组运行）
 npm run test:engine    # 只跑引擎逻辑（含几何对拍）
 npm run test:geometry  # 只跑几何内核 vs shapely 基准对拍
 npm run test:ui        # 只跑 UI 交互
-npm run bench          # 走线检查引擎性能对照（合成 15000 项数据）
+npm run bench          # 约束检查网格索引性能对照（合成 15000 项数据）
 ```
 
 测试通过 jsdom 载入真实页面并模拟点击，覆盖导入 → 规则 → 检查 → 导出 → 复验的完整链路；
-`ui-prefs-test.js` 单独覆盖六个页面的参数记忆（落盘、跨刷新回填、`data-no-persist` 边界、
+`tests/ui/ui-prefs.test.js` 单独覆盖六个页面的参数记忆（落盘、跨刷新回填、`data-no-persist` 边界、
 脏数据防护、跨页隔离、恢复按钮）。
 
 **几何内核的独立验证**：`tools/oracle/gen-fixtures.py` 用 shapely(GEOS) 生成 180+ 组随机
 焊盘/走线组合（圆形、长圆、圆角矩形、矩形 × 直线/圆弧，含重叠样本）作为基准值，写入
-`pcb-checker/sample/geometry-oracle-fixtures.json`；`geometry-oracle-test.js` 逐条对拍，
+`pcb-checker/sample/geometry-oracle-fixtures.json`；`tests/engine/geometry-oracle.test.js` 逐条对拍，
 要求偏差 < 0.01 mil、重叠必须判负、且不允许出现系统性乐观偏差（DRC 最怕把危险值算大）。
 夹具已入库，CI 不需要 Python：
 
@@ -145,38 +144,22 @@ python3 -m venv .venv && .venv/bin/pip install shapely   # 仅在需要重新生
 ## 目录结构
 
 ```
-serve.js                零依赖静态服务器（站点根 = pcb-checker/）
+serve.js                          零依赖静态服务器（站点根 = pcb-checker/）
+tools/
+  run-tests.js                    分组运行 tests/{engine,ui,bench}
+  oracle/gen-fixtures.py          用 shapely 生成几何基准夹具（开发期工具）
 pcb-checker/
-  index.html            走线检查
-  copper.html           约束检查
-  dfm.html              加工能力检查
-  fanout.html           扇出方案检查
-  pour.html             铜皮检查
-  unified.html          综合一体化检查
-  copper-check.js       约束检查引擎
-  dfm-check.js          DFM 空间间距引擎
-  fanout-check.js       扇出聚类 / 匹配引擎
-  pour-check.js         铜皮检查引擎
-  pad-geom.js           精确几何内核（凸多边形 ⊕ 圆角，焊盘/走线求距）
-  ui-prefs.js           全站界面参数记忆（上次填写的值即默认值，刷新后依然有效）
-  sample/               示例数据（含 shapely 几何基准夹具）
-  *-test.js             引擎、几何对拍与 UI 测试
-  bench-perf.js         性能对照脚本
-tools/oracle/
-  gen-fixtures.py       用 shapely 生成几何基准夹具（开发期工具）
+  portal.html                     启动台
+  index.html copper.html dfm.html fanout.html pour.html unified.html     六个检查页
+  assets/styles/                  tokens / eda-shell / components 与 pages/<页面>.css
+  packages/
+    geometry/                     精确几何内核（凸多边形 ⊕ 圆角，焊盘 / 走线求距）
+    shared/                       dom-utils、xlsx-export、ui-prefs、eda-tooltip、eda-shell
+    engines/                      trace / copper / dfm / fanout / pour 五个检查引擎
+    pages/                        各页面的交互脚本，按功能拆分（unified 含 20 个文件）
+  sample/                         示例数据（含 shapely 几何基准夹具）
+  tests/                          engine / ui / bench 与 helpers/open-page.js
 ```
-
-## 整理说明
-
-本仓库最初的工作目录是开发过程中的现场快照，本次归档只保留可运行的成品、示例数据与测试：
-
-- **移除** `dev/`：111 个一次性 `patch-*.py` / `fix-*.py` / 临时 `test-*.js` 脚手架脚本，都是改造 HTML 时的一次性补丁，改完即失效。
-- **移除** `.config/`（Chromium 无头配置与缓存）和 `.sudo_as_admin_successful`：运行环境残留，与项目无关。
-- **移除** `uploads/`：需求截图与重复的原始输入数据，其中真正需要的样本已归并进 `pcb-checker/sample/`。
-- **移除** OCR 相关未接线代码（`vendor/tesseract*` 约 6.4 MB、`ocr_client.js`、`ocr_server.py`）：页面从未加载过这套 OCR，属于废弃试验；如需恢复可从提交历史取回。
-- **移除** 未随包提供的大样本数据集入口（原先三个页面各有一个「加载 2.5MB 全板样本」按钮，指向不存在的 `sample/via_trce_airgap_data-2.txt`，点了必然报错）；对应测试用例保留，文件缺失时自动跳过。
-- **修正** 测试脚本里指向开发机绝对路径（`/home/user/...`、`/tmp/npmtest/...`）的 jsdom 加载方式，改为常规 `require('jsdom')`。
-- **修正** 走线检查结果页线宽组合的显示分隔符，与不符合原因说明、CSV 导出统一为 `→`（此前显示 `-`，与自身提示文案不一致）。
 
 ## 输入与显示安全
 
@@ -184,9 +167,8 @@ tools/oracle/
 动态文本（网表、层别、Padstack、缺陷原因）都经过 `escHtml()` 转义，`Net: <img src=x onerror=...>`
 这类内容只会以字面量显示，不会执行；CSV/Excel 导出仍输出原始值，不受转义影响。
 
-引擎脚本统一带缓存版本号（`*-check.js?v=5`、`pad-geom.js?v=5`、`ui-prefs.js?v=1`），同一个引擎在所有页面上的版本号
-必须一致——否则引擎更新后会出现「某页跑旧缓存、某页跑新代码」的隐蔽不一致。**改动任一引擎文件后，
-把所有页面里的同名 `?v=` 一起 +1。**
+样式与脚本包统一带缓存版本号（如 `packages/engines/dfm/dfm-engine.js?v=7`），全站所有 `?v=` 必须是同一个值，
+否则会出现「某页跑旧缓存、某页跑新代码」的不一致。**改动任一样式或脚本包后，把所有页面的 `?v=` 一起 +1。**
 
 ## 已知限制
 

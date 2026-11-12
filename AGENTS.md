@@ -1,146 +1,188 @@
-# AGENTS.md —— 给 AI / 新同事的项目说明书
+# AGENTS.md —— 改代码前必读
 
-本文件描述这个仓库的**硬约束**与**踩过的坑**。动手前请通读一遍；与 `README.md` 冲突时以本文件为准
+本文件是这个仓库的**硬约束**与**踩过的坑**，与 `README.md` 冲突时以本文件为准
 （README 面向使用者，本文件面向改代码的人）。
 
 ---
 
 ## 1. 这是什么
 
-纯前端 PCB / SI 检查工作台：导入 EDA 导出的 TXT → 按规则做间距、约束、加工能力、扇出、铜皮检查 →
+纯前端 PCB / SI 检查工作台：导入 EDA 导出的 TXT → 按规则做走线、约束、加工能力、扇出、铜皮检查 →
 可视化 + 导出报告。**没有后端、没有构建步骤、没有 CDN 依赖**，浏览器直接跑。
 
-技术栈只有两样：原生 HTML/CSS/JS + Node（仅用于静态服务与测试）。唯一 devDependency 是 `jsdom`。
+技术栈：原生 HTML / CSS / JS + Node（仅用于静态服务与测试）。唯一 devDependency 是 `jsdom`。
 
 ## 2. 常用命令
 
 ```bash
 npm install                 # 只装 jsdom
-npm run serve               # 静态服务，默认打开统一入口主页 portal.html → http://localhost:8000/
-npm run serve:pcb           # 静态服务，默认打开 PCB 专项检查页 index.html
-npm run serve:si            # 静态服务，默认打开 SI 综合一体化工作台 unified.html
-npm test                    # 全部：引擎单测 + 几何对拍 + 全站 UI 与控件完整性测试
-npm run test:engine         # 只跑引擎（含 shapely 对拍）
-npm run test:ui             # 只跑 UI（含导航统一、风格统一、统一入口与控件完整性）
-npm run bench               # 走线检查引擎性能对照（合成 15000 项）
+npm run serve               # 静态服务，默认打开启动台 portal.html → http://localhost:8000/
+npm run serve:pcb           # 默认打开走线检查 index.html
+npm run serve:si            # 默认打开综合一体化检查 unified.html
+npm test                    # engine + ui 全部测试，由 tools/run-tests.js 分组运行
+npm run test:engine         # 只跑引擎（含 shapely 几何对拍）
+npm run test:geometry       # 只跑几何对拍
+npm run test:ui             # 只跑 UI
+npm run bench               # 性能基准
+node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
 ```
 
 **必须用 HTTP 打开页面**：示例数据走 `fetch('sample/...')`，`file://` 会被同源策略拦掉。
 
-## 3. 目录与模块职责
+## 3. 工程化原则（以后都按这个做）
+
+目标是**可读、可测、可替换**。任何新增或修改都先问：这段代码该放在哪个包？能不能单独测？
+
+1. **一个文件一个职责**。文件名说明职责（`trace-rules.js`、`unified-fanout-viewer.js`），不用 `utils2.js`、`common.js`。
+2. **体量上限**：单个 JS 文件 **≤ 600 行**（超过 800 行视为必须拆分），单个函数 **≤ 80 行**。
+   新增功能时顺手把碰到的超标文件或函数拆开，不要继续往上堆。
+   当前已知超标、待拆：`pour-state.js`、`copper-results-ui.js`、`fanout-library-ui.js`（均 > 900 行）。
+3. **页面 = 薄 HTML + 一份 CSS + 若干页面包**。HTML 里不写内联 `<style>` / 大段 `<script>`；
+   内联 `style=""` 只用于一次性的动态尺寸，布局与配色一律进样式表。
+4. **逻辑分三层，依赖只能向下**：
+   `packages/pages/<页面>`（DOM 与交互）→ `packages/engines/<引擎>`（纯计算，无 DOM）→ `packages/geometry`、`packages/shared`。
+   引擎不得访问 `document` / `window`；页面包不得重新实现引擎已有的计算。
+5. **长流程拆成阶段函数**。例如综合检查的 `buildInspectionContext` + `runTraceEngine` / `runCopperEngine` /
+   `runDfmEngine` / `runFanoutEngine` / `runPourEngine`，调度函数只负责按序调用与刷新界面。
+6. **每次改动都要有测试**：引擎改动补 `tests/engine`，交互改动补 `tests/ui`。重构类改动要给出**重构前后输出一致**的证据
+   （例如固定样例的检查项数量与逐项判定）。
+7. **小步提交**：每完成一个可验证的单元就测试并提交，不攒大提交。
+8. **重复代码合并**：发现两处几乎相同的实现，抽到 `packages/shared` 或对应引擎，不要复制第三份。
+
+## 4. 目录与模块职责
 
 ```
-serve.js                  零依赖静态服务器（根 = pcb-checker/，默认 0.0.0.0:8000）
+serve.js                          零依赖静态服务器（站点根 = pcb-checker/）
+tools/
+  run-tests.js                    分组运行 tests/{engine,ui,bench}
+  oracle/gen-fixtures.py          用 shapely 重新生成几何基准（仅开发期需要 Python）
 pcb-checker/
-  index.html              走线检查（**引擎内联在这个页面里**，没有独立 js 文件）
-  copper.html             约束检查
-  dfm.html                加工能力检查（含「规律分析」页签）
-  fanout.html             扇出方案检查
-  pour.html               铜皮检查
-  unified.html            综合一体化检查（同一套引擎的合并视图，**不是** index 的替代品）
-  pad-geom.js             精确几何内核：凸多边形 ⊕ 圆角焊盘 / 走线求距、包含判定、旋转
-  dfm-check.js            DFM 间距引擎（孔-孔、走线-孔、盲埋孔层穿越）
-  copper-check.js         约束检查引擎
-  fanout-check.js         扇出聚类 / 模板匹配引擎
-  pour-check.js           铜皮检查引擎（小面积、圆弧、异形泪滴等）
-  ui-prefs.js             全站界面参数记忆（上次填写/选择的值即默认值）
-  sample/                 示例数据 + shapely 几何基准夹具
-  *-test.js               引擎单测、几何对拍、各页面 jsdom UI 测试
-tools/oracle/gen-fixtures.py   用 shapely 重新生成几何基准（仅开发期需要 Python）
+  portal.html                     启动台
+  index.html copper.html dfm.html fanout.html pour.html unified.html     六个检查页（薄壳）
+  assets/styles/
+    tokens.css                    设计令牌：色板、字号、导轨与工具栏尺寸
+    eda-shell.css                 三栏壳层：左导轨 / 阶段条 / 右工具栏 / 悬浮提示
+    components.css                通用组件：卡片、按钮、表格、徽标、表单
+    pages/<页面>.css              页面专属样式
+  packages/
+    geometry/                     精确几何内核（pad-primitives、pad-region）
+    shared/                       dom-utils、xlsx-export、ui-prefs、eda-tooltip、eda-shell
+    engines/<trace|copper|dfm|fanout|pour>/   五个检查引擎，UMD，Node 与浏览器通用
+    pages/<页面>/                 页面包，经典脚本，按功能拆分
+  sample/                         示例数据 + shapely 基准夹具
+  tests/
+    engine/*.test.js              引擎单测、几何对拍
+    ui/*.test.js                  jsdom 页面测试
+    bench/*.bench.js              性能基准
+    helpers/open-page.js          jsdom 页面加载器：自动内联 <link> 与 <script src>
 ```
 
-页面 ↔ 引擎依赖（改引擎时必须同时考虑这些页面）：
+页面 ↔ 依赖（改引擎时必须同时考虑这些页面）：
 
-| 页面 | 依赖引擎 |
+| 页面 | 引擎与几何 |
 | --- | --- |
-| index.html | 内联（不引用外部引擎文件） |
-| copper.html | copper-check.js |
-| dfm.html | pad-geom.js + dfm-check.js |
-| fanout.html | fanout-check.js |
-| pour.html | pour-check.js |
-| unified.html | pad-geom + copper-check + dfm-check + fanout-check + pour-check |
+| index.html | engines/trace |
+| copper.html | engines/copper |
+| dfm.html | geometry + engines/dfm |
+| fanout.html | engines/fanout |
+| pour.html | engines/pour |
+| unified.html | geometry + copper + dfm + fanout + pour，走线判定在 `unified-runner.js` 与 `unified-trace-analysis.js` |
 
-## 4. 硬性约定（改代码前必读）
+`index.html` 与 `unified.html` 的走线判定实现差异是**刻意保留**的，不要提合并方案。
 
-1. **中文 UI**，文案风格与现有页面保持一致（简洁、带单位、带括号解释）。
+## 5. 界面规范
+
+### 5.1 三栏 EDA 布局（六个检查页一致）
+
+- **左列导轨** `aside.eda-left-rail`：模块导航 `.navlinks` + 工序流程 `nav#tabs`。导航与功能入口只放左列，不放顶部。
+- **中列视口** `.eda-center-col`：阶段条（面包屑 + 下一工序按钮）+ `main`。主视口只放当前工序的内容。
+- **右列工具栏** `aside.eda-right-dock`：快捷执行、实时遥测、视口与参数记忆等**功能与工具**。工具按钮不要塞进卡片标题行。
+- 工序要**渐进**：数据导入 → 规则 → 结果 → 视口 / 分析，前一步没完成时后一步给出明确的空状态，不报错。
+- 工序用 `nav#tabs button[data-tab]`，按钮文案以 ①②③ 开头，按钮必须带 `data-tip`。
+  面板 id 为 `data-tab` 的值或 `tab-` + 值。`eda-shell.js` 负责面包屑、`step-done` 标记、折叠记忆与 `Alt+1..9`。
+- 新增工序时同步改对应 `tests/ui/*` 的工序数量断言和 `eda-shell-unify.test.js`。
+
+### 5.2 视觉
+
+- 色板（`tokens.css`）：底 `#f4f6f9`、卡片白、分隔线 `#e3e8ef`、正文 `#1f2937`、次要 `#6b7280`、强调 `#2563eb`（hover `#1d4ed8`）。
+  不要再引入旧天蓝 `#0284c7`。
+- 字号阶梯只用 11 / 12 / 13 / 14 / 15 / 16 / 18 / 22 px；卡片标题 15、小节标题 13、表格 13、辅助说明 12。
+- 卡片：白底 + 1px `var(--line)` + 10px 圆角 + **无投影**；统计卡不填色，状态只用数字颜色与边框。
+- `h1`~`h4`、`th` 里不放 emoji / 图标字符。
+- 以上由 `tests/ui/theme-unify.test.js` 断言。
+
+### 5.3 文案：不加括号解释，改用悬浮提示
+
+- **界面上的标题、标签、表头、按钮、工序名后面不写括号解释**。需要补充说明时：
+  - 静态元素：写在 `data-tip="..."`；
+  - 标题旁需要独立提示点：`<span class="eda-tip" tabindex="0" data-tip="...">?</span>`。
+- 悬浮气泡由 `packages/shared/eda-tooltip.js` 统一提供，不要再用原生 `title` 或自己写 CSS tooltip。
+- 计量单位直接写 `mil`、`mm`，不加括号。选项 `<option>` 里不放括号说明。
+- 脚本拼出的提示、标签、表头同样遵守，不要在 JS 里绕开。
+- 括号可以出现在**数据本身**里（网络名、示例文本、公式、示例路径），这不算解释。
+
+### 5.4 文案：禁止废话文学
+
+界面文案、`data-tip`、提示信息、报错信息都只写**工程师能直接用的信息**：对象、条件、单位、阈值、动作、结果。
+
+- 禁止：夸赞与自夸（「设计质量极佳」「强大的」「一站式」）、欢迎语、重复标题的副标题、
+  「系统将自动……」这类不含判据的描述、提示语里的「成功」「！」、「一键」。
+- 提示要给判据。例如写「间距 < 阈值判不符合，重叠判 ≤ 0」，不写「系统智能判定」。
+- 空状态写下一步动作，例如「导入走线 TXT 后生成」，不写「暂无数据，敬请期待」。
+- `README.md`、提交信息、PR 描述同样不写套话，写事实与数字。
+- 由 `theme-unify.test.js` 断言黑名单词与 JS 提示里的「成功」「！」。
+
+## 6. 硬性约定
+
+1. **中文 UI**，简洁、带单位。
 2. **不可信文本一律 `escHtml()`**：网表名、层名、Padstack、缺陷原因都来自外部 TXT。
-   插入 `innerHTML` 前必须转义；导出 CSV/Excel 用原始值（不转义）。
-   典型风险样例：`Net: <img src=x onerror=...>`。
-3. **图表只用 CSS 或内联 SVG**，不引 ECharts / Chart.js / 任何 CDN，也不依赖 canvas 才能看懂的实现
-   （jsdom 里 canvas 拿不到 2D 上下文，纯 CSS 才能被测试断言）。
-4. **页面保持单文件**（HTML + 内联 CSS/JS）。共享逻辑才抽成 `*.js`，并带缓存版本号。
-5. **引擎脚本的缓存版本号必须全站一致**：`*-check.js?v=N`、`pad-geom.js?v=N`。
-   改动任一引擎文件后，把**所有页面**里的同名 `?v=` 一起 +1；新增外部脚本（如 `ui-prefs.js?v=1`）自带版本号。
-   漏掉会出现「某页跑旧缓存、某页跑新代码」的隐蔽不一致。
-6. **页签**用 `nav#tabs button[data-tab]` + 现有的那个 click 监听器里分支，
-   不要新写 `switchTab()`；新页签记得同步改 `dfm-ui-test.js` 之类的页签数量断言。
-7. **给测试用的函数挂到 `window.*`**（页面里已有 `window.XXX = ...` 的导出块，跟着加）。
-8. **界面参数记忆**：新增的 `input[type=number|text|checkbox|radio]` / `select` 默认就会被
-   `ui-prefs.js` 记住（按「页面 + 元素 id」，id 必须唯一）。
-   - 不希望被记住的（搜索框、筛选下拉、弹窗一次录入、行内模板控件）加 `data-no-persist`；
-   - `textarea`（数据粘贴区 / 导出框）自动排除，不要为它加记忆；
-   - 动态填充选项的下拉（层名/网络名）无需特殊处理，`ui-prefs.js` 会等选项就绪再回填。
+   插入 `innerHTML` 前必须转义；导出 CSV / Excel 用原始值。典型风险样例：`Net: <img src=x onerror=...>`。
+3. **图表只用 CSS 或内联 SVG**，不引 ECharts / Chart.js / 任何 CDN。2D 视口用 canvas 的页面，
+   关键数据必须同时有 DOM 可断言的形式（jsdom 拿不到 2D 上下文）。
+4. **缓存版本号全站一致**：`<link>` 与 `<script src>` 的 `?v=N` 所有页面必须是同一个 N。
+   改动任一样式或脚本包后，把**所有页面**的 `?v=` 一起 +1（`portal-and-controls.test.js` 会断言）。
+5. **页面包是经典脚本**（共享全局作用域），脚本顺序在 HTML 里固定为：
+   shared 基础 → geometry → engines → pages → `eda-tooltip` → `eda-shell` → `ui-prefs`。
+   新增页面包文件要同步 HTML 的 `<script>` 列表；引擎是 UMD，可 `require` 进 Node 测试。
+6. **给测试用的函数挂到 `window.*`**，页面包末尾已有导出块，跟着加。
+7. **界面参数记忆**：新增的 `input[type=number|text|checkbox|radio]` / `select` 默认被
+   `packages/shared/ui-prefs.js` 记住（按「页面 + 元素 id」，id 必须唯一）。
+   搜索框、筛选下拉、弹窗一次录入、行内模板控件加 `data-no-persist`；`textarea` 自动排除。
 
-9. **顶栏与页签条全站统一**：六个页面 `<style>` 末尾各有一块
-   `/* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份） ===== */`，**内容必须逐字一致**
-   （`nav-unify-test.js` 会做跨页比对）。页面只保留各自不同的「标题 / 副标题 / 页签文案」，
-   样式一律回到这块统一规则里改；不要再往页面局部写 `header{}` / `nav#tabs{}` 之类的规则。
-
-10. **界面风格全站统一，基准页 = `index.html`（走线检查）**：改任何一个页面的视觉，
-    都要先看走线检查页长什么样，六页保持一致（`theme-unify-test.js` 跨页断言）。
-    - **主色板**：底色 `--bg:#f4f6f9`、卡片 `#fff`、分隔线 `--line:#e3e8ef`、
-      正文 `--text/--txt:#1f2937`、次要文字 `--sub:#6b7280`、强调 `--pri/--accent:#2563eb`
-      （hover `#1d4ed8`）。旧的 `#0284c7`（天蓝）、`#f8fafc`（页面底）、`#0f172a`（正文）、
-      `#64748b` / `#475569`（次要文字）不要再往回写。
-    - **字号阶梯**：正文 14px、卡片标题（`h2` / `.card-title`）15px、小节标题（`h3`）13px、
-      表格与表格正文 13px、辅助说明 `.hint` 12px。标题字号只能写在样式表里，
-      不要用行内 `style="font-size:..."` 打特例。
-    - **卡片**：白底 + `1px solid var(--line)` + `10px` 圆角 + `16px` 内边距，**不加投影**。
-    - **不要多余的填充色**：统计卡 / 指标卡一律白底，状态只用数字颜色和边框区分；
-      分组的彩色实心标题条（如旧的 `.set.SMA .hd` 深绿 / 深蓝条）一律换成浅灰 `#f8fafc` + 下边框；
-      浅蓝底纹（`#f0f9ff` / `#e0f2fe` / `#eff6ff`）只在悬停、拖放、状态徽标这类「有含义」的地方保留。
-    - **标题前不加图标**：`h1`~`h4` 及 `.card-title` 里不要放 emoji 或 SVG 图标，
-      文案直接以中文/序号开头（页签里的 ①②③ 是文案不是图标，保留）。
-
-## 5. 数值与几何：安全方向不可反
+## 7. 数值与几何：安全方向不可反
 
 DRC 类工具的底线是**宁可判危险，不可乐观**：
 
-- 几何求距容差 **0.01 mil**；与 shapely 基准的偏差超过它就算不通过；
-- **重叠样本必须判为 ≤ 0**，不允许出现「系统性乐观偏差」（`geometry-oracle-test.js` 专门断言这点）；
+- 几何求距容差 **0.01 mil**；与 shapely 基准偏差超过它就算不通过；
+- **重叠样本必须判为 ≤ 0**，不允许系统性乐观偏差；
 - 圆弧按**扫掠角**判定，不能把弧背面的距离算成弧面距离；
-- 盲埋孔按 `Padstack Defined` 起止层判定是否穿越当前走线层，**不穿越的直接跳过**
-  （这里曾经 fail-open 漏检，务必保持 fail-closed）；
-- 形状退化等价性要对：长圆 `w=h` ≡ 圆；圆角矩形 `corner = 短边/2` ≡ 长圆；旋转 90° 后距离不变。
+- 盲埋孔按 `Padstack Defined` 起止层判定是否穿越当前走线层，**不穿越的直接跳过**，保持 fail-closed；
+- 形状退化等价性：长圆 `w=h` ≡ 圆；圆角矩形 `corner = 短边/2` ≡ 长圆；旋转 90° 后距离不变。
 
 改几何 / 判定逻辑后，**先跑 `npm run test:geometry`**，再看 UI 测试。
 
-## 6. 测试怎么写（jsdom 的坑都在这）
+## 8. 测试怎么写
 
-测试用 `fs.readFileSync` 读页面 HTML，再 `new JSDOM(html, {runScripts:'dangerously'})` —— 这意味着
-**页面里的 `<script src="xxx.js">` 不会自动加载**，必须在测试里手动注入：
+页面测试统一用 `tests/helpers/open-page.js`，它会把 `<link rel=stylesheet>` 与 `<script src>` 内联进 jsdom：
 
 ```js
-const html = fs.readFileSync(path.join(__dirname, 'dfm.html'), 'utf8');
-const dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true,
-                              url: 'http://localhost/dfm.html' });   // 需要 localStorage 时别用 file://
-const w = dom.window;
-w.eval(fs.readFileSync(path.join(__dirname, 'pad-geom.js'), 'utf8'));   // 顺序与页面一致
-w.eval(fs.readFileSync(path.join(__dirname, 'dfm-check.js'), 'utf8'));
-w.__SYNC_CHECK__ = true;                                                 // 关掉异步，测试才能同步断言
+const { openPage, tick } = require('../helpers/open-page');
+const ctx = openPage('unified.html', { syncCheck: true });   // syncCheck 关掉异步，便于同步断言
+const { w, d } = ctx;
+await tick(150);                                              // 等 DOMContentLoaded 与 ui-prefs 回填
+w.loadUnifiedSampleData(); w.runMasterInspection();
+// ctx.errors 收集页面运行期脚本错误；seedStorage / beforeParse 可预置 localStorage
 ```
 
 要点：
 
-- `new JSDOM(...)` 返回时 `document.readyState` 仍是 `loading`，页面自己的 `DOMContentLoaded`
-  逻辑（含 `ui-prefs.js` 的回填）**要等一个 tick**：`await new Promise(r => setTimeout(r, 50))`。
-- 不要用 `JSDOM.fromFile` / `url: 'file://...'` 跑页面脚本：页面函数会取不到；
-  需要 `localStorage` 时必须给 `http://` 源。
-- `jsdom` 不会触发 `<img onerror>`，XSS 类断言请数节点，别等回调。
-- 页面默认阈值是 **0**，直接 `runCheck()` 得到 0 缺陷。要造缺陷必须同时设置
-  阈值与焊盘直径，例如 `dfm-ui-test.js` 里的 6/6 + GND 7.906 / 信号 9.94。
-- 断言失败先确认**口径**（阈值、焊盘、是否过滤 GND），再怀疑实现；
-  不要为了让测试变绿去改数字——先算清楚期望值是怎么来的。
+- 页面脚本里的顶层 `const` / `let` 不在 `window` 上，要读用 `w.eval('名字')`。
+- `jsdom` 不触发 `<img onerror>`，XSS 断言请数节点，不要等回调。
+- 页面默认阈值是 0，要造缺陷必须同时设阈值与焊盘直径。
+- 断言失败先确认**口径**（阈值、焊盘、是否过滤 GND），再怀疑实现；不要为变绿去改期望数字。
+- 重构要保证行为不变：用固定样例（`loadUnifiedSampleData()` + `runMasterInspection()`）
+  记录检查项 id 与判定，重构前后逐项比对。当前基线：88 项、69 项不符合
+  （走线 16 / 约束 45 / DFM 11 / 扇出 1 / 铜皮 15）。
 
 已知夹具事实（`sample/via_trace_airgap_sample.txt`：97 Item / 71 Trace / 26 Via）：
 
@@ -150,34 +192,31 @@ w.__SYNC_CHECK__ = true;                                                 // 关�
 | 阈值 GND 6 / 信号 6，焊盘 GND 7.906 / 信号 12.0 | 44 处缺陷，12 个过孔对象 |
 | 默认规则（阈值 0） | 0 处缺陷 |
 
-## 7. 已知坑（都真踩过）
+## 9. 已知坑
 
-- `dfm.html` 的页签是 `data-tab` + 内联监听器，**没有** `switchTab()` 函数。
-- `dfm.html` 的 Trace 对象字段是 `len`（不是 `length`），也没有 `segments` 数组。
-- `rule.widths` 必须是数组；`recViol` 是 `Map`；`CopperCheck.parseBoardItems` 返回 `{}` 不是数组。
 - 模板循环渲染的行内控件 id 会重复（例如逐对偶的复核勾选框），任何「按 id」的逻辑都要防重。
-- `test.js` 用正则从 `index.html` 提取内联脚本：**必须用非贪婪**，否则会把页面末尾的
-  `<script src="...">` 一起吞进来，报 `SyntaxError: Unexpected token '<'`。
-- 大样本数据集（数个 MB）不入库；引用前先 `fs.existsSync`，缺失就跳过（已有用例这么做）。
-- 页面之间不要「统一」成一套引擎：`index.html` 与 `unified.html` 的实现差异是**刻意保留**的，
-  不要提合并方案。
+- `rule.widths` 必须是数组；`recViol` 是 `Map`；`CopperCheck.parseBoardItems` 返回 `{}` 不是数组。
+- DFM 的 Trace 对象字段是 `len`（不是 `length`），也没有 `segments` 数组。
+- 大样本数据集（数个 MB）不入库；引用前先 `fs.existsSync`，缺失就跳过。
+- 经典脚本里同名函数后者覆盖前者，拆分文件时先 `grep -n "^function 名字"` 确认没有重复定义。
+- 拆分经典脚本后顶层 `const` 的初始化顺序依赖脚本顺序：被初始化代码引用的默认值文件要排在前面。
 
-## 8. 提交与 PR
+## 10. 提交与 PR
 
-- 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`test(ui): …`、`docs: …`，
-  正文写清「原来怎样 / 现在怎样 / 为什么」，并附上关键验证数字。
-- 每个任务一个分支，PR 到 `main`；PR 描述包含：背景、改动清单、样例数据实测数字、测试结果。
-- **合并前 `npm test` 必须全绿**（当前基线：几何 7 / 走线 41 / DFM 22 / 扇出 7 / 铜皮 11 /
-  集成 21 / 115 / 23 / 17 / 16 / 参数记忆 21）。
-- 不要提交 `node_modules/`、临时脚本、开发机绝对路径（`/home/xxx/...`、`/tmp/...`）、
-  `dev/`、`uploads/`、截图等过程产物。
+- 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`refactor(unified): …`、`test(ui): …`、`docs: …`，
+  正文写「原来怎样 / 现在怎样 / 为什么」，并附关键验证数字。
+- 每个任务一个分支，PR 到 `main`；PR 描述含：背景、改动清单、样例数据实测数字、测试结果。
+- **合并前 `npm test` 必须全绿**。
+- 不提交 `node_modules/`、临时脚本、开发机绝对路径、`dev/`、`uploads/`、截图等过程产物。
 
-## 9. 交付标准
+## 11. 交付标准
 
 一个改动算「完成」，需要同时满足：
 
-1. 功能在**真实浏览器**（`node serve.js` + 页面）里可用，控制台无报错；
-2. `npm test` 全绿，且**新增行为有对应用例**（不是只跑旧用例）；
-3. 中文 UI 、`escHtml()`、无 CDN、无构建步骤；
-4. 改引擎 → 全站 `?v=` 已 +1；
-5. README / 本文件里与该改动相关的描述同步更新。
+1. 功能在真实浏览器（`npm run serve` + 页面）里可用，控制台无报错；
+2. `npm test` 全绿，且**新增行为有对应用例**；
+3. 中文 UI、`escHtml()`、无 CDN、无构建步骤；
+4. 符合第 3 节工程化原则：文件与函数未超标、职责单一；
+5. 符合第 5 节界面与文案规范：左导航、右工具、`data-tip`、无括号解释、无废话；
+6. 改了样式或脚本包 → 全站 `?v=` 已 +1；
+7. README 与本文件里相关描述同步更新。
