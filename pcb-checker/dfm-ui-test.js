@@ -582,6 +582,29 @@ test('分层规则：存到 localStorage，刷新后能读回来', () => {
   if (rows[0].querySelector('.lrLayers').value !== arr[0].layers) throw new Error('读回来的适用层不对');
 });
 
+test('规则配置支持导出完整 JSON 快照与从文件数据恢复', () => {
+  if (!$('btnSaveDfmRules') || !$('btnLoadDfmRules') || !$('fileDfmRules')) throw new Error('缺少规则保存/读取控件');
+  const config = w.DfmRuleConfig;
+  if (!config) throw new Error('规则配置管理器未初始化');
+  $('selMode').value = 'center_to_trace';
+  $('inpGndPadDiam').value = '8.25';
+  $('selPadShape').value = 'rect';
+  $('inpThresholdPadPair').value = '0';
+  config.loadFromObject({
+    kind: config.kind, version: config.version,
+    fields: { selMode: 'pad_to_trace', inpGndPadDiam: '7.906', selPadShape: 'circle', inpThresholdPadPair: '6.25' },
+    layerRules: [{ layers: 'Top、Bot', gnd: 4.5, sig: 5.5, pad: 6.5 }]
+  });
+  if ($('selMode').value !== 'pad_to_trace' || $('inpGndPadDiam').value !== '7.906' || $('selPadShape').value !== 'circle' || $('inpThresholdPadPair').value !== '6.25') throw new Error('基础规则字段恢复不完整');
+  const rows = [...$('layerRuleBody').querySelectorAll('tr[data-row]')];
+  if (rows.length !== 1 || rows[0].querySelector('.lrLayers').value !== 'Top、Bot' || rows[0].querySelector('.lrPad').value !== '6.5') throw new Error('分层规则恢复不完整');
+  const saved = config.snapshot();
+  if (saved.kind !== 'pcb-dfm-rule-config' || saved.fields.selMode !== 'pad_to_trace' || saved.layerRules.length !== 1) throw new Error('导出的 JSON 快照内容不完整');
+  let rejected = false;
+  try { config.loadFromObject({ fields: {} }); } catch (_) { rejected = true; }
+  if (!rejected) throw new Error('应拒绝不支持的 JSON 格式');
+});
+
 test('分层规则：说明页写了按层覆盖的判定口径', () => {
   const legend = d.getElementById('tab-legend').textContent;
   if (legend.indexOf('分层规则（按层覆盖）') < 0) throw new Error('说明页没写分层规则');

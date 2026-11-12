@@ -220,6 +220,9 @@ html.pcb-global-wide .canvas-wrap{height:calc(100vh - 230px) !important;min-heig
           <button type="button" class="btn sec small" onclick="applyPresetScheme('eda_project')" title="载入当前 EDA 实测参数方案"> 当前 EDA 工程配置</button>
           <button type="button" class="btn sec small" onclick="applyPresetScheme('std_6mil')" title="载入 6.0 mil 标准规则"> 6.0 mil 标准规则</button>
           <button type="button" class="btn sec small" onclick="applyPresetScheme('high_density_5mil')" title="载入 5.0 mil 高密规则"> 5.0 mil 高密规则</button>
+          <button type="button" class="btn sec small" id="btnSaveDfmRules" title="将当前完整加工能力规则下载为 JSON 文件">保存规则到本地</button>
+          <button type="button" class="btn sec small" id="btnLoadDfmRules" title="从本地 JSON 文件读取加工能力规则">从本地文件读取规则</button>
+          <input type="file" id="fileDfmRules" accept=".json,application/json" style="display:none">
         </div>
       </div>
 
@@ -1092,6 +1095,68 @@ window.LayerRules = LayerRules;
     if (State.checkResult) runCheck(true);
   });
 })();
+
+// 加工能力规则完整备份：文件包含判定方式、孔盘/钻孔/焊盘形状、默认阈值及分层规则。
+const DfmRuleConfig = {
+  kind: 'pcb-dfm-rule-config',
+  version: 1,
+  fieldIds: ['selMode', 'inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill', 'selNetFilter', 'selPadShape', 'inpGndPadW', 'inpGndPadH', 'inpSigPadW', 'inpSigPadH', 'inpPadCorner', 'inpPadRot', 'inpThresholdGnd', 'inpThresholdSignal', 'inpThresholdPadPair'],
+  snapshot() {
+    const fields = {};
+    this.fieldIds.forEach(id => { const el = $(id); if (el) fields[id] = el.value; });
+    return { kind: this.kind, version: this.version, savedAt: new Date().toISOString(), fields, layerRules: LayerRules.read() };
+  },
+  saveToFile() {
+    const blob = new Blob([JSON.stringify(this.snapshot(), null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PCB_加工能力规则_' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (typeof showToast === 'function') showToast('加工能力规则已保存为 JSON 文件。');
+  },
+  loadFromObject(data) {
+    if (!data || data.kind !== this.kind || data.version !== this.version || !data.fields || typeof data.fields !== 'object') {
+      throw new Error('文件格式不正确，或不是受支持的加工能力规则文件。');
+    }
+    this.fieldIds.forEach(id => {
+      if (!Object.prototype.hasOwnProperty.call(data.fields, id)) return;
+      const el = $(id); if (!el) return;
+      const value = String(data.fields[id]);
+      if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === value)) return;
+      if (el.type === 'number' && (value.trim() === '' || !Number.isFinite(Number(value)))) return;
+      el.value = value;
+    });
+    const rows = Array.isArray(data.layerRules) ? data.layerRules.filter(r => r && typeof r.layers === 'string').map(r => ({
+      layers: r.layers,
+      gnd: Number.isFinite(Number(r.gnd)) ? Number(r.gnd) : 0,
+      sig: Number.isFinite(Number(r.sig)) ? Number(r.sig) : 0,
+      pad: Number.isFinite(Number(r.pad)) ? Number(r.pad) : 0
+    })) : [];
+    LayerRules.render(rows);
+    LayerRules.save();
+    HistoryManager.renderAll();
+    if (State.checkResult && State.vias.length && State.traces.length) runCheck(true);
+  }
+};
+window.DfmRuleConfig = DfmRuleConfig;
+$('btnSaveDfmRules').addEventListener('click', () => DfmRuleConfig.saveToFile());
+$('btnLoadDfmRules').addEventListener('click', () => $('fileDfmRules').click());
+$('fileDfmRules').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      DfmRuleConfig.loadFromObject(JSON.parse(String(reader.result || '')));
+      if (typeof showToast === 'function') showToast('已从本地文件读取并应用加工能力规则。');
+    } catch (err) { alert('读取加工能力规则失败：' + err.message); }
+    e.target.value = '';
+  };
+  reader.onerror = () => { alert('读取规则文件失败。'); e.target.value = ''; };
+  reader.readAsText(file, 'utf-8');
+});
 
 // Initial history chip render
 HistoryManager.renderAll();
