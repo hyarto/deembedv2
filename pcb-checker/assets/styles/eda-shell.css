@@ -1,0 +1,719 @@
+/* ============================================================================
+ * eda-shell.css —— 现代 EDA 三栏渐进式工作台壳层 + 全站悬浮 Tips 样式
+ * 左列：模块导航与五步渐进工序流（aside.eda-left-rail）
+ * 中列：工序状态条 + 主视口/画布/表格（div.eda-center-col > main）
+ * 右列：快捷执行、实时遥测检视器与工作区工具区（aside.eda-right-dock）
+ * ========================================================================== */
+
+body.eda-workbench {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--dock-w);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+html.eda-rail-collapsed body.eda-workbench {
+  --rail-w: 56px;
+}
+
+html.eda-dock-collapsed body.eda-workbench {
+  --dock-w: 38px;
+}
+
+/* ---------- 左列：全局模块切换 + 当前模块工序流 ---------- */
+aside.eda-left-rail {
+  background: var(--rail-bg);
+  border-right: 1px solid var(--rail-border);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  user-select: none;
+  z-index: 35;
+}
+
+aside.eda-left-rail header {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--rail-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+aside.eda-left-rail header .eda-brand-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+aside.eda-left-rail header .eda-sys-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+aside.eda-left-rail header h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+aside.eda-left-rail header h1 .tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  background: #1e293b;
+  color: #93c5fd;
+  border: 1px solid #334155;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+aside.eda-left-rail header .sub {
+  font-size: 11px;
+  color: var(--rail-sub);
+  line-height: 1.4;
+}
+
+aside.eda-left-rail header .sub.meta {
+  color: #38bdf8;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.eda-rail-section {
+  padding: 10px 8px 8px;
+  border-bottom: 1px solid var(--rail-border);
+}
+
+.eda-rail-label {
+  padding: 0 6px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 模块切换导航 */
+aside.eda-left-rail .navlinks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+aside.eda-left-rail .navlinks a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+aside.eda-left-rail .navlinks a:hover {
+  background: var(--rail-bg-hover);
+  color: #ffffff;
+}
+
+aside.eda-left-rail .navlinks a.active {
+  background: rgba(37, 99, 235, 0.22);
+  border-left-color: var(--pri);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+aside.eda-left-rail .navlinks a .mod-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #94a3b8;
+  flex: none;
+}
+
+aside.eda-left-rail .navlinks a.active .mod-code {
+  color: #93c5fd;
+}
+
+/* 当前页面工序流（纵向渐进页签条 nav#tabs） */
+aside.eda-left-rail nav#tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+}
+
+aside.eda-left-rail nav#tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+aside.eda-left-rail nav#tabs button:hover {
+  background: var(--rail-bg-hover);
+  color: #ffffff;
+}
+
+aside.eda-left-rail nav#tabs button.active {
+  background: var(--pri);
+  border-left-color: #93c5fd;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+aside.eda-left-rail nav#tabs button.step-done:not(.active) {
+  color: #e2e8f0;
+  border-left-color: #16a34a;
+}
+
+aside.eda-left-rail nav#tabs .badge,
+aside.eda-left-rail nav#tabs .badge-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  background: #1e293b;
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 1px 6px;
+  flex: none;
+}
+
+aside.eda-left-rail nav#tabs button.active .badge,
+aside.eda-left-rail nav#tabs button.active .badge-pill {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.eda-rail-footer {
+  margin-top: auto;
+  padding: 8px;
+  border-top: 1px solid var(--rail-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.eda-rail-toggle {
+  width: 100%;
+  background: #111b2e;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.eda-rail-toggle:hover {
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* 左栏收起紧凑态 */
+html.eda-rail-collapsed aside.eda-left-rail header h1,
+html.eda-rail-collapsed aside.eda-left-rail header .sub,
+html.eda-rail-collapsed aside.eda-left-rail .eda-rail-label,
+html.eda-rail-collapsed aside.eda-left-rail .navlinks a .mod-name {
+  display: none;
+}
+
+html.eda-rail-collapsed aside.eda-left-rail .navlinks a {
+  justify-content: center;
+  padding: 7px 4px;
+}
+
+html.eda-rail-collapsed aside.eda-left-rail nav#tabs button {
+  padding: 7px 6px;
+  justify-content: center;
+  font-size: 12px;
+}
+
+/* ---------- 中列：渐进式主视口 ---------- */
+.eda-center-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.eda-stage-bar {
+  flex: none;
+  height: 40px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 20;
+}
+
+.eda-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.eda-breadcrumb .bc-mod {
+  font-weight: 700;
+  color: var(--heading);
+  white-space: nowrap;
+}
+
+.eda-breadcrumb .bc-sep {
+  color: #cbd5e1;
+}
+
+.eda-breadcrumb .bc-stage {
+  color: var(--pri);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.eda-stage-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.eda-stage-status {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--sub);
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.eda-next-step-btn {
+  background: var(--pri-soft);
+  color: var(--pri);
+  border: 1px solid var(--pri-border);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.eda-next-step-btn:hover {
+  background: var(--pri);
+  color: #ffffff;
+  border-color: var(--pri);
+}
+
+.eda-center-col > main,
+.eda-center-col > .container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 18px 20px;
+  max-width: 1560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+html.pcb-global-wide .eda-center-col > main,
+html.pcb-global-wide .eda-center-col > .container {
+  max-width: 100% !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+/* 渐进式折叠面板（Progressive Disclosure） */
+details.eda-fold {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+  margin-top: 10px;
+}
+
+details.eda-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  user-select: none;
+}
+
+details.eda-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.eda-fold > summary::after {
+  content: "▶";
+  font-size: 11px;
+  color: var(--sub);
+  transition: transform 0.15s;
+}
+
+details.eda-fold[open] > summary {
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 8px 8px 0 0;
+}
+
+details.eda-fold[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+details.eda-fold .eda-fold-body {
+  padding: 10px 12px;
+  background: #ffffff;
+  border-radius: 0 0 8px 8px;
+}
+
+/* ---------- 右列：功能、操作工具与实时遥测检视栏 ---------- */
+aside.eda-right-dock {
+  background: var(--dock-bg);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 30;
+}
+
+.eda-dock-head {
+  height: 40px;
+  flex: none;
+  padding: 0 12px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.eda-dock-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.eda-dock-collapse-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.eda-dock-collapse-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+}
+
+.eda-dock-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+html.eda-dock-collapsed .eda-dock-title,
+html.eda-dock-collapsed .eda-dock-body {
+  display: none;
+}
+
+html.eda-dock-collapsed .eda-dock-head {
+  padding: 0;
+  justify-content: center;
+}
+
+.eda-dock-panel {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.eda-dock-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eda-dock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eda-dock-actions .dock-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--txt);
+  text-decoration: none;
+  transition: all 0.12s;
+}
+
+.eda-dock-actions .dock-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+  background: var(--pri-soft);
+}
+
+.eda-dock-actions .dock-btn.pri {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #ffffff;
+}
+
+.eda-dock-actions .dock-btn.pri:hover {
+  background: var(--pri-hover);
+}
+
+.eda-dock-actions .dock-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+/* 右侧实时遥测检视网格 */
+.eda-telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.eda-tele-cell {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.eda-tele-cell .k {
+  font-size: 11px;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eda-tele-cell .v {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.eda-tele-cell.bad .v { color: var(--bad); }
+.eda-tele-cell.ok .v { color: var(--ok); }
+.eda-tele-cell.warn .v { color: var(--warn); }
+
+/* 工作区显示与参数记忆控制区（位于右侧工具栏内） */
+.global-display-ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.global-display-ctrl .gdisp-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--txt);
+  transition: all 0.12s;
+}
+
+.global-display-ctrl .gdisp-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+  background: var(--pri-soft);
+}
+
+.global-display-ctrl .gdisp-btn.active {
+  background: var(--pri-soft);
+  border-color: var(--pri);
+  color: var(--pri);
+}
+
+/* ---------- 悬浮气泡提示（替代界面内括号解释文案） ---------- */
+.eda-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 4px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #6b7280;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+  user-select: none;
+  flex: none;
+}
+
+.eda-tip:hover,
+.eda-tip:focus {
+  border-color: var(--pri);
+  background: var(--pri);
+  color: #ffffff;
+  outline: none;
+}
+
+[data-tip] {
+  cursor: help;
+}
+
+button[data-tip],
+a[data-tip],
+select[data-tip],
+input[data-tip],
+label[data-tip] {
+  cursor: pointer;
+}
+
+input[type="text"][data-tip],
+input[type="number"][data-tip] {
+  cursor: text;
+}
+
+#edaFloatingTooltip {
+  position: fixed;
+  z-index: 10050;
+  max-width: 320px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  pointer-events: none;
+  display: none;
+  word-break: break-word;
+}
+
+@media (max-width: 1100px) {
+  body.eda-workbench {
+    grid-template-columns: 196px minmax(0, 1fr) 228px;
+  }
+}
+
+@media (max-width: 860px) {
+  body.eda-workbench {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+  aside.eda-left-rail,
+  .eda-center-col,
+  aside.eda-right-dock {
+    height: auto;
+    width: 100%;
+  }
+}

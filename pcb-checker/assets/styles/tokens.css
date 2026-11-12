@@ -1,0 +1,72 @@
+/* ============================================================================
+ * tokens.css —— 全站 EDA 工作台设计令牌（色彩、字号阶梯、边框与排版变量）
+ * 字号严格遵循阶梯：11 / 12 / 13 / 14 / 15 / 16 / 18 / 22px
+ * ========================================================================== */
+:root {
+  --bg: #f4f6f9;
+  --surface-subtle: #f8fafc;
+  --card: #ffffff;
+  --card-border: #e3e8ef;
+  --line: #e3e8ef;
+  --line-strong: #cbd5e1;
+
+  --txt: #1f2937;
+  --text: #1f2937;
+  --heading: #111827;
+  --sub: #6b7280;
+  --muted: #9ca3af;
+
+  --pri: #2563eb;
+  --accent: #2563eb;
+  --pri-d: #1d4ed8;
+  --pri-hover: #1d4ed8;
+  --pri-soft: #eff6ff;
+  --pri-border: #93c5fd;
+
+  --ok: #16a34a;
+  --ok-bg: #f0fdf4;
+  --ok-border: #bbf7d0;
+
+  --warn: #d97706;
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;
+
+  --bad: #dc2626;
+  --bad-bg: #fef2f2;
+  --bad-border: #fecaca;
+
+  --purple: #7c3aed;
+  --copper: #b45309;
+  --teal: #0d9488;
+
+  /* 左侧导航与流程栏（深色 CAD 导轨） */
+  --rail-w: 224px;
+  --rail-bg: #0b1220;
+  --rail-bg-hover: #162033;
+  --rail-border: #1e293b;
+  --rail-txt: #dbeafe;
+  --rail-sub: #94a3b8;
+
+  /* 右侧功能与检视工具栏 */
+  --dock-w: 264px;
+  --dock-bg: #f8fafc;
+
+  --font: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
