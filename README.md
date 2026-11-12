@@ -12,6 +12,7 @@
 
 | 页面 | 作用 |
 | --- | --- |
+| `pcb-checker/portal.html` | 统一入口主页：同屏导航「PCB 五大专项独立检查页」与「SI 综合检查一体化工作台」两大入口 |
 | `pcb-checker/index.html` | 走线检查：导入网络走线报告 → 概览 → 按出线层配规则（线宽组合 / 总线长 / 指定线宽线长 / 弧半径）→ 结果标注 → 差分对逐层线长差分析 |
 | `pcb-checker/copper.html` | 约束检查：把铜皮 / 焊盘栈参数整理成可导入 EDA 的约束条件，并核对回读数据是否符合 |
 | `pcb-checker/dfm.html` | 加工能力检查：孔到孔、走线到过孔的空间间距（Airgap）判定，含 2D 几何测量与逐层定位；盲埋孔按 `Padstack Defined` 起止层判定是否穿越当前走线层，不穿越的直接跳过；「规律分析」按**信号孔或走线**为对象归纳全板问题分布（层 / 网络 / 孔型 / Padstack 维度、亏欠量分档、对象排行与自动结论） |
@@ -21,10 +22,12 @@
 
 页面之间通过顶部导航互相跳转，`unified.html` 复用四个独立引擎文件（`*-check.js`），逻辑只有一份。
 
-## 快速开始
+## 快速开始（统一入口与分模式启动）
 
 ```bash
-npm run serve          # 默认 http://localhost:8000/ ，端口可用 PORT=8080 覆盖
+npm run serve          # 默认打开统一入口主页 portal.html (http://localhost:8000/ ，端口可用 PORT=8080 覆盖)
+npm run serve:pcb      # 默认直接进入 PCB 专项检查入口 index.html
+npm run serve:si       # 默认直接进入 SI 综合一体化工作台 unified.html
 ```
 
 或任意静态服务器：

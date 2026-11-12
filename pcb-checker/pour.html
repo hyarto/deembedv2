@@ -509,7 +509,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
         <div id="pourCanvasReviewBox" style="display:none;position:absolute;top:54px;right:14px;width:315px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.42);border-radius:8px;padding:12px 14px;color:#f1f5f9;z-index:25;box-shadow:0 12px 28px rgba(0,0,0,0.45)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(148,163,184,0.2)">
             <strong id="pourCanvasRevTitle" style="font-size:12px;color:#38bdf8">定位异常详情与复核</strong>
-            <span onclick="document.getElementById('pourCanvasReviewBox').style.display='none';State.activeReviewKey=null;" style="cursor:pointer;color:#94a3b8;font-size:14px"></span>
+            <span onclick="document.getElementById('pourCanvasReviewBox').style.display='none';State.activeReviewKey=null;" style="cursor:pointer;color:#94a3b8;font-size:14px">×</span>
           </div>
           <div id="pourCanvasRevBody"></div>
         </div>
@@ -541,7 +541,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="modalR1Title">配置孔经过层铺铜覆盖规则</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule1')"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule1')">×</span>
     </div>
     <div class="form-grid">
       <div class="form-item">
@@ -572,7 +572,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
   <div class="modal-box" style="max-width:780px">
     <div class="modal-header">
       <h3 id="modalR2Title">配置特定异型铜皮比对规则 (导入 Shape TXT)</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule2')"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule2')">×</span>
     </div>
 
     <div class="form-grid">
@@ -628,7 +628,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="modalR3Title">配置走线参考层超宽规则</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule3')"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule3')">×</span>
     </div>
     <div class="form-grid">
       <div class="form-item">
@@ -664,7 +664,7 @@ html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
       <h3 id="exportModalTitle">导出文件</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalExport')"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalExport')">×</span>
     </div>
     <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出数据，可直接点击下载文件或一键复制全部内容：</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -902,7 +902,7 @@ function renderRule1Table() {
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn sec small" onclick="openEditRule1Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule1(${idx})"></button>
+          <button class="btn bad small" onclick="deleteRule1(${idx})">删除</button>
         </div>
       </td>
     </tr>
@@ -930,7 +930,7 @@ function renderRule2Table() {
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn sec small" onclick="openEditRule2Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule2(${idx})"></button>
+          <button class="btn bad small" onclick="deleteRule2(${idx})">删除</button>
         </div>
       </td>
     </tr>
@@ -986,7 +986,7 @@ function renderRule3Table() {
       <td>
         <div style="display:flex;gap:4px">
           <button class="btn sec small" onclick="openEditRule3Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule3(${idx})"></button>
+          <button class="btn bad small" onclick="deleteRule3(${idx})">删除</button>
         </div>
       </td>
     </tr>

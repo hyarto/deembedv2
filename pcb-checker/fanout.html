@@ -519,7 +519,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
         <div class="canvas-info-box" id="canvasInfoBox">
           <h4>
             <span id="infoBoxTitle">孔群详情 (Cluster_1)</span>
-            <span class="close-btn" onclick="closeInfoBox()"></span>
+            <span class="close-btn" onclick="closeInfoBox()">×</span>
           </h4>
           <div id="infoBoxContent">
             <!-- Rendered by JS -->
@@ -633,7 +633,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="modal-box" style="max-width:880px">
     <div class="modal-header">
       <h3 style="color:#111827">批量导入扇出方案 (Multi-Scheme Batch Import)</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closeBatchFanoutModal()"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8;font-weight:700" onclick="closeBatchFanoutModal()">×</span>
     </div>
     <div style="padding:16px 0;max-height:calc(85vh - 120px);overflow-y:auto;font-size:12px">
       <div style="background:#f8fafc;border:1px solid #e3e8ef;padding:10px 12px;border-radius:6px;margin-bottom:12px;color:#1d4ed8;font-size:12px;line-height:1.6">
@@ -687,7 +687,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="modalSchemeTitle">新建扇出方案模板</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeSchemeModal()"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeSchemeModal()">×</span>
     </div>
 
     <div class="form-grid">
@@ -794,7 +794,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
       <h3 id="exportModalTitle">导出文件</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeExportBox()"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeExportBox()">×</span>
     </div>
     <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出数据，可直接点击下载文件或一键复制全部内容：</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -814,7 +814,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
   <div class="modal-box" style="max-width:680px">
     <div class="modal-header">
       <h3 id="quickRenameTitle">快捷修改扇出方案名称</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeQuickRenameModal()"></span>
+      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeQuickRenameModal()">×</span>
     </div>
 
     <div style="font-size:12px;color:#6b7280;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
@@ -943,7 +943,7 @@ html.pcb-global-wide #modalViewScheme .modal-box{max-width:96vw !important;width
 </div>
 
 <!-- Load Core Engine -->
-<script src="fanout-check.js?v=5"></script>
+<script src="fanout-check.js?v=6"></script>
 
 <script>
 /**
@@ -1838,7 +1838,7 @@ function renderViewSchemeMeasureUI() {
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-weight:800;font-size:12px;color:#2563eb">${m.distMil.toFixed(2)} mil</span>
             <span style="color:#6b7280">(${m.distMm.toFixed(3)} mm)</span>
-            <span onclick="removeViewSchemeMeasuredPair(${idx})" title="移除此条测量" style="cursor:pointer;color:#ef4444;font-weight:700;padding:0 3px"></span>
+            <span onclick="removeViewSchemeMeasuredPair(${idx})" title="移除此条测量" style="cursor:pointer;color:#ef4444;font-weight:700;padding:0 3px">×</span>
           </div>
         </div>
         <div style="color:#6b7280;font-size:11px;margin-top:2px">
@@ -2507,7 +2507,7 @@ function renderModalTable() {
       <td><input type="text" value="${escapeHtml(v.padstack)}" style="width:160px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'padstack', this.value)"></td>
       <td><input type="text" value="${escapeHtml(v.net || '')}" style="width:70px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'net', this.value)"></td>
       <td><input type="text" value="${escapeHtml(v.role || '')}" style="width:90px;padding:2px 4px;font-size:11px" onchange="updateModalVia(${idx}, 'role', this.value)"></td>
-      <td><button class="btn bad small" onclick="removeModalVia(${idx})"></button></td>
+      <td><button class="btn bad small" onclick="removeModalVia(${idx})">删除</button></td>
     </tr>
   `).join('');
 
