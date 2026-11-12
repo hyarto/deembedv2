@@ -11,10 +11,10 @@
   - [x] 抽离五大检查引擎包：`pcb-checker/packages/engines/{trace,copper,dfm,fanout,pour}/*`
   - [x] 建立模块化引擎单测与网格基准测试：`pcb-checker/tests/{engine,bench}/*`（全部通过）
 
-- [ ] **Stage 2：共用测试加载器与统一入口页 `portal.html` 重构**
-  - [ ] 建立支持 `<link>` 与 `<script src>` 解析的 JSDOM 页面加载辅助模块 `pcb-checker/tests/helpers/open-page.js`
-  - [ ] 抽离 `pcb-checker/assets/styles/pages/portal.css`
-  - [ ] 重构 `pcb-checker/portal.html` 为现代 EDA 启动台，移除括号解释改为 `data-tip` 悬浮提示，清除冗余套话文案
+- [x] **Stage 2：共用测试加载器与统一入口页 `portal.html` 重构**
+  - [x] 建立支持 `<link>` 与 `<script src>` 解析的 JSDOM 页面加载辅助模块 `pcb-checker/tests/helpers/open-page.js`
+  - [x] 抽离 `pcb-checker/assets/styles/pages/portal.css`
+  - [x] 重构 `pcb-checker/portal.html` 为现代 EDA 启动台，移除括号解释改为 `data-tip` 悬浮提示，清除冗余套话文案
 
 - [ ] **Stage 3：走线检查模块 `index.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/trace.css`

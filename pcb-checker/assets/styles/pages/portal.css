@@ -1,0 +1,145 @@
+/* ============================================================================
+ * portal.css —— 统一入口启动台专属布局样式
+ * ========================================================================== */
+
+.hero-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 980px) {
+  .hero-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.entry-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entry-card.featured {
+  border-color: var(--pri-border);
+}
+
+.entry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.entry-head h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--heading);
+}
+
+.badge-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--pri-soft);
+  color: var(--pri-d);
+  border: 1px solid #bfdbfe;
+}
+
+.badge-pill.neutral {
+  background: var(--surface-subtle);
+  color: #374151;
+  border-color: var(--line);
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.grid-5 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.mod-item {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.mod-item:hover {
+  border-color: var(--pri);
+  background: var(--pri-soft);
+}
+
+.mod-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mod-top h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.mod-step {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pri);
+  font-family: var(--mono);
+}
+
+.mod-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pri);
+}
+
+.cmd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.cmd-table th,
+.cmd-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.cmd-table th {
+  background: var(--surface-subtle);
+  color: #374151;
+  font-weight: 600;
+  font-size: 12px;
+}
