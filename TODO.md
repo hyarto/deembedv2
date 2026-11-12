@@ -46,11 +46,12 @@
   - [x] 重构 `pour.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
   - [x] 通过铜皮引擎与铜皮 UI 全流程测试
 
-- [ ] **Stage 8：综合一体化工作台 `unified.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离 965 行内联样式至 `pcb-checker/assets/styles/pages/unified.css`
-  - [ ] 将 5913 行内联巨型脚本拆分为 `pcb-checker/packages/pages/unified/{unified-state,unified-rules-trace-copper,unified-rules-dfm-fanout-pour,unified-runner,unified-dashboard-defects,unified-canvas-viewer}.js`，复用五大引擎与 `XlsxExport`
-  - [ ] 重构 `unified.html` 为三栏渐进式 EDA 布局，括号说明全量迁移至 `data-tip`，清除冗余描述文案
-  - [ ] 通过综合一体化全链路测试
+- [x] **Stage 8：综合一体化工作台 `unified.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离 959 行内联样式至 `pcb-checker/assets/styles/pages/unified.css`，页面壳层样式回归 `eda-shell.css`
+  - [x] 将 5913 行内联巨型脚本拆分为 `pcb-checker/packages/pages/unified/unified-*.js` 共 20 个按功能命名的页面包（约束解析、默认规则、状态、数据导入、示例数据、五类规则 UI、扇出方案库/命名/查看/导入导出、调度、仪表盘、2D 视口、规则文件读写、报告导出、启动）
+  - [x] 480 行 `runMasterInspection` 拆为 `buildInspectionContext` + 五个独立引擎阶段函数，复用五大引擎分包
+  - [x] 重构 `unified.html` 为左导轨（模块导航 + 六工序）+ 中视口 + 右工具与遥测栏，规则配置独立成工序，括号说明迁移至 `data-tip`，删除冗余文案
+  - [x] 新增 `tests/ui/unified-ui.test.js`；联检结果与重构前基线逐项一致（88 项 / 69 不符合）
 
 - [ ] **Stage 9：测试体系与性能基准包化整理及旧巨型文件清理**
   - [ ] 迁移并升级 UI 回归测试至 `pcb-checker/tests/ui/{trace-ui,copper-ui,dfm-ui,fanout-ui,pour-ui,ui-prefs,eda-shell-unify,theme-unify,portal-and-controls}.test.js`

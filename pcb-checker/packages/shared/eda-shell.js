@@ -5,7 +5,7 @@
  *   2. 铺满宽屏 / 标准宽度跨页面同步（toggleGlobalWideMode / setGlobalWideMode）
  *   3. 顶部渐进式工序状态条（当前工序面包屑 + 下一步快捷推进）与 nav#tabs 联动
  *   4. 右侧实时工程检视面板（Telemetry）与页面统计卡片自动同步
- *   5. 键盘快捷键：Alt+1..5 快速切换工序页签
+ *   5. 键盘快捷键：Alt+1..9 快速切换工序页签
  * ========================================================================== */
 (function () {
   'use strict';
@@ -203,7 +203,7 @@
     if (btnNext) btnNext.addEventListener('click', stepNextStage);
 
     document.addEventListener('keydown', function (e) {
-      if (e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && /^[1-9]$/.test(e.key)) {
         var btns = getTabButtons();
         var target = btns[Number(e.key) - 1];
         if (target) {
