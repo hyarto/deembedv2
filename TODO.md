@@ -16,11 +16,11 @@
   - [x] 抽离 `pcb-checker/assets/styles/pages/portal.css`
   - [x] 重构 `pcb-checker/portal.html` 为现代 EDA 启动台，移除括号解释改为 `data-tip` 悬浮提示，清除冗余套话文案
 
-- [ ] **Stage 3：走线检查模块 `index.html` 拆分与三栏 EDA 重构**
-  - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/trace.css`
-  - [ ] 将 2455 行内联脚本拆分为 `pcb-checker/packages/pages/trace/{trace-state,trace-overview-ui,trace-rules-ui,trace-results-ui}.js`，复用 `TraceEngine` 与 `XlsxExport`
-  - [ ] 重构 `index.html` 为左导轨 + 中视口渐进工序 + 右遥测/工具栏三栏结构，括号说明全量迁移至 `data-tip`
-  - [ ] 通过走线引擎与走线 UI 全流程测试
+- [x] **Stage 3：走线检查模块 `index.html` 拆分与三栏 EDA 重构**
+  - [x] 抽离页面样式 `pcb-checker/assets/styles/pages/trace.css`
+  - [x] 将 2455 行内联脚本拆分为 `pcb-checker/packages/pages/trace/{trace-state,trace-overview-ui,trace-rules-ui,trace-results-ui}.js`，复用 `TraceEngine` 与 `XlsxExport`
+  - [x] 重构 `index.html` 为左导轨 + 中视口渐进工序 + 右遥测/工具栏三栏结构，括号说明全量迁移至 `data-tip`
+  - [x] 通过走线引擎与走线 UI 全流程测试
 
 - [ ] **Stage 4：约束检查模块 `copper.html` 拆分与三栏 EDA 重构**
   - [ ] 抽离页面样式 `pcb-checker/assets/styles/pages/copper.css`
