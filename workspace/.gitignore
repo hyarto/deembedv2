@@ -1,8 +1,0 @@
-node_modules/
-npm-debug.log*
-.DS_Store
-Thumbs.db
-
-# 浏览器/工具临时产物
-.chromium-headless/
-*.log
