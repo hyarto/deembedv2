@@ -23,7 +23,8 @@ npm test                    # engine + ui 全部测试，由 tools/run-tests.js 
 npm run test:engine         # 只跑引擎（含 shapely 几何对拍）
 npm run test:geometry       # 只跑几何对拍
 npm run test:ui             # 只跑 UI
-npm run bench               # 性能基准
+npm run bench               # 规模基准：样例平移复制成大盘数据，断言数量线性放大与耗时上限
+npm run smoke               # 真实浏览器冒烟（需 playwright，不入库）：逐页逐工序点击，控制台零报错
 node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
 ```
 
@@ -36,7 +37,12 @@ node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
 1. **一个文件一个职责**。文件名说明职责（`trace-rules.js`、`unified-fanout-viewer.js`），不用 `utils2.js`、`common.js`。
 2. **体量上限**：单个 JS 文件 **≤ 600 行**（超过 800 行视为必须拆分），单个函数 **≤ 80 行**。
    新增功能时顺手把碰到的超标文件或函数拆开，不要继续往上堆。
-   超标文件拆分后要用行数脚本复核（见 3.1），不要凭印象说“已拆完”。
+   超标文件拆分后要用行数脚本复核，不要凭印象说“已拆完”。
+   **当前实测**：`packages/` 下 JS 文件均 ≤ 600 行；函数 > 80 行仍有约 58 个，最大的是
+   `computeSchemeViewLayout`（511 行）、`runFanoutInspection`（404 行）、`renderSchemeEnlargedCanvas`（351 行）、
+   `runCopperCheck`（258 行）、各页 `renderCanvas`（260~280 行）、`runDfmCheck`（204 行，已抽出选项解析 / 网格索引 / 网络汇总）。
+   HTML 与 CSS 超 600 行的有 `unified.html`（1337）、`fanout.html`（663）、`dfm.html`（635）、`unified.css`（892）、`eda-shell.css`（755）。
+   以上是下一轮拆分清单；动到这些函数时按阶段函数拆，并用「重构前后输出逐项一致」的对拍验证。
 3. **页面 = 薄 HTML + 一份 CSS + 若干页面包**。HTML 里不写内联 `<style>` / 大段 `<script>`；
    内联 `style=""` 只用于一次性的动态尺寸，布局与配色一律进样式表。
 4. **逻辑分三层，依赖只能向下**：
@@ -227,7 +233,8 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 - 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`refactor(unified): …`、`test(ui): …`、`docs: …`，
   正文写「原来怎样 / 现在怎样 / 为什么」，并附关键验证数字。
 - 每个任务一个分支，PR 到 `main`；PR 描述含：背景、改动清单、样例数据实测数字、测试结果。
-- **合并前 `npm test` 必须全绿**。
+- **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 34 + 6 / 扇出 7 / 铜皮 11 / 约束导入 17；
+  UI：copper 115 + 8 / dfm 35 + 7 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7。
 - 不提交 `node_modules/`、临时脚本、开发机绝对路径、`dev/`、`uploads/`、截图等过程产物。
 
 ## 11. 交付标准

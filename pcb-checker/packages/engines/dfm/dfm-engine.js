@@ -127,7 +127,8 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
     if (trace.kind === 'line') { return PG.signedSegmentRegionDist(trace.p1, trace.p2, region); }
     return PG.signedArcRegionDist(trace.center, trace.radius, trace.p1, trace.p2, trace.dir, region, 0);
   }
-  function runDfmCheck(vias, traces, opts) {
+  /* 解析检查参数：阈值、焊盘与一钻默认值、分层规则（按层覆盖） */
+  function resolveDfmOptions(opts) {
     opts = opts || {};
     const fallbackThresh = typeof opts.minClearance === 'number' ? opts.minClearance : 6.0;
     const minClearanceGnd = typeof opts.minClearanceGnd === 'number' ? opts.minClearanceGnd : fallbackThresh;
@@ -172,7 +173,12 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
       return null;
     };
     const minClearancePadPair = typeof opts.minClearancePadPair === 'number' ? opts.minClearancePadPair : 0;
-    const activeTraces = layerFilter ? traces.filter(t => t.subset === layerFilter) : traces;
+    return { minClearanceGnd, minClearanceSignal, mode, diffNetOnly, layerFilter, defaultGndPadDiam, defaultSignalPadDiam,
+      defaultGndFirstDrill, defaultSignalFirstDrill, maxPassingToKeep, layerRules, ruleForLayer, minClearancePadPair };
+  }
+
+  /* 按走线层统计走线数与各网络走线数，供候选对计数使用 */
+  function buildSubsetStats(activeTraces) {
     const subsetLayerNumMap = new Map();
     activeTraces.forEach(t => {
       if (!subsetLayerNumMap.has(t.subset)) {
@@ -188,6 +194,11 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
       st.total++;
       st.byNet.set(t.net, (st.byNet.get(t.net) || 0) + 1);
     });
+    return { subsetLayerNumMap, subsetStatsMap };
+  }
+
+  /* 统计需要检查的过孔-走线对数（按盲埋孔跨层判定剔除不穿越的层） */
+  function countCandidatePairs(vias, subsetStatsMap, diffNetOnly) {
     let totalChecked = 0;
     let gndTotal = 0;
     let sigTotal = 0;
@@ -213,7 +224,11 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
       if (v.isGnd) gndTotal += count;
       else sigTotal += count;
     });
-    const CELL_SIZE = 100.0; // 100 mil grid cell
+    return { totalChecked, gndTotal, sigTotal, skippedNonSpanningPairs, undeterminedSpanPairs, viaTypeCounts };
+  }
+
+  /* 每个走线层建 100 mil 网格索引，过孔只查邻近格 */
+  function buildTraceGrids(activeTraces, CELL_SIZE) {
     const layerGrids = new Map();
     activeTraces.forEach(t => {
       let lGrid = layerGrids.get(t.subset);
@@ -246,6 +261,106 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
           cell.push(tObj); }
   }
     });
+    return layerGrids;
+  }
+
+  /* 汇总每个层 + 网络的走线、缺陷与最小间距 */
+  function buildNetLayerAnalysis(activeTraces, defectPairs, closePassingPairs) {
+    const netLayerMap = new Map();
+    activeTraces.forEach(t => {
+      const key = `${t.subset}__${t.net}`;
+      let entry = netLayerMap.get(key);
+      if (!entry) {
+        entry = {
+          layer: t.subset,
+          net: t.net,
+          traceSegments: 0,
+          totalLength: 0,
+          failCount: 0,
+          gndFailCount: 0,
+          signalFailCount: 0,
+          minDist: Infinity,
+          maxDeviation: 0,
+          uniqueVias: new Set(),
+          defects: [],
+          allPairs: []
+        };
+        netLayerMap.set(key, entry);
+      }
+      entry.traceSegments++;
+      entry.totalLength += (t.len || 0);
+    });
+    defectPairs.forEach(p => {
+      const key = `${p.trace.subset}__${p.trace.net}`;
+      let entry = netLayerMap.get(key);
+      if (!entry) {
+        entry = {
+          layer: p.trace.subset,
+          net: p.trace.net,
+          traceSegments: 1,
+          totalLength: p.trace.len || 0,
+          failCount: 0,
+          gndFailCount: 0,
+          signalFailCount: 0,
+          minDist: Infinity,
+          maxDeviation: 0,
+          uniqueVias: new Set(),
+          defects: [],
+          allPairs: []
+        };
+        netLayerMap.set(key, entry);
+      }
+      entry.failCount++;
+      if (p.isGndVia) entry.gndFailCount++; else entry.signalFailCount++;
+      if (p.evalDist < entry.minDist) entry.minDist = p.evalDist;
+      const dev = Math.abs(p.diff);
+      if (dev > entry.maxDeviation) entry.maxDeviation = dev;
+      entry.uniqueVias.add(p.via.id);
+      entry.defects.push(p);
+      entry.allPairs.push(p);
+    });
+    closePassingPairs.forEach(p => {
+      const key = `${p.trace.subset}__${p.trace.net}`;
+      const entry = netLayerMap.get(key);
+      if (entry) {
+        if (p.evalDist < entry.minDist) entry.minDist = p.evalDist;
+        entry.allPairs.push(p); }
+  });
+    const netLayerAnalysis = Array.from(netLayerMap.values()).map(e => {
+      return {
+        layer: e.layer,
+        net: e.net,
+        traceSegments: e.traceSegments,
+        totalLength: e.totalLength,
+        failCount: e.failCount,
+        gndFailCount: e.gndFailCount,
+        signalFailCount: e.signalFailCount,
+        uniqueViaCount: e.uniqueVias.size,
+        uniqueViaIds: Array.from(e.uniqueVias),
+        minDist: e.minDist === Infinity ? 0 : e.minDist,
+        maxDeviation: e.maxDeviation,
+        status: e.failCount > 0 ? '不满足' : '满足',
+        defects: e.defects,
+        allPairs: e.allPairs
+      };
+    });
+    netLayerAnalysis.sort((a, b) => {
+      if (b.failCount !== a.failCount) return b.failCount - a.failCount;
+      if (a.layer !== b.layer) return a.layer.localeCompare(b.layer);
+      return a.net.localeCompare(b.net);
+    });
+    return netLayerAnalysis;
+  }
+
+  function runDfmCheck(vias, traces, opts) {
+    const cfg = resolveDfmOptions(opts);
+    const { minClearanceGnd, minClearanceSignal, mode, diffNetOnly, layerFilter, defaultGndPadDiam, defaultSignalPadDiam,
+      defaultGndFirstDrill, defaultSignalFirstDrill, maxPassingToKeep, layerRules, ruleForLayer, minClearancePadPair } = cfg;
+    const activeTraces = layerFilter ? traces.filter(t => t.subset === layerFilter) : traces;
+    const { subsetLayerNumMap, subsetStatsMap } = buildSubsetStats(activeTraces);
+    const { totalChecked, gndTotal, sigTotal, skippedNonSpanningPairs, undeterminedSpanPairs, viaTypeCounts } = countCandidatePairs(vias, subsetStatsMap, diffNetOnly);
+    const CELL_SIZE = 100.0; // 100 mil grid cell
+    const layerGrids = buildTraceGrids(activeTraces, CELL_SIZE);
     const maxThresh = Math.max(minClearanceGnd, minClearanceSignal);
     const maxPadR = Math.max(defaultGndPadDiam, defaultSignalPadDiam) / 2.0 + 10.0;
     const SEARCH_RADIUS = Math.max(80.0, maxThresh + maxPadR + 30.0);
@@ -417,89 +532,7 @@ var PG = (typeof module === "object" && module.exports) ? require("../../geometr
     const passCount = totalChecked - failCount;
     const gndPass = gndTotal - gndFail;
     const sigPass = sigTotal - sigFail;
-    const netLayerMap = new Map();
-    activeTraces.forEach(t => {
-      const key = `${t.subset}__${t.net}`;
-      let entry = netLayerMap.get(key);
-      if (!entry) {
-        entry = {
-          layer: t.subset,
-          net: t.net,
-          traceSegments: 0,
-          totalLength: 0,
-          failCount: 0,
-          gndFailCount: 0,
-          signalFailCount: 0,
-          minDist: Infinity,
-          maxDeviation: 0,
-          uniqueVias: new Set(),
-          defects: [],
-          allPairs: []
-        };
-        netLayerMap.set(key, entry);
-      }
-      entry.traceSegments++;
-      entry.totalLength += (t.len || 0);
-    });
-    defectPairs.forEach(p => {
-      const key = `${p.trace.subset}__${p.trace.net}`;
-      let entry = netLayerMap.get(key);
-      if (!entry) {
-        entry = {
-          layer: p.trace.subset,
-          net: p.trace.net,
-          traceSegments: 1,
-          totalLength: p.trace.len || 0,
-          failCount: 0,
-          gndFailCount: 0,
-          signalFailCount: 0,
-          minDist: Infinity,
-          maxDeviation: 0,
-          uniqueVias: new Set(),
-          defects: [],
-          allPairs: []
-        };
-        netLayerMap.set(key, entry);
-      }
-      entry.failCount++;
-      if (p.isGndVia) entry.gndFailCount++; else entry.signalFailCount++;
-      if (p.evalDist < entry.minDist) entry.minDist = p.evalDist;
-      const dev = Math.abs(p.diff);
-      if (dev > entry.maxDeviation) entry.maxDeviation = dev;
-      entry.uniqueVias.add(p.via.id);
-      entry.defects.push(p);
-      entry.allPairs.push(p);
-    });
-    closePassingPairs.forEach(p => {
-      const key = `${p.trace.subset}__${p.trace.net}`;
-      const entry = netLayerMap.get(key);
-      if (entry) {
-        if (p.evalDist < entry.minDist) entry.minDist = p.evalDist;
-        entry.allPairs.push(p); }
-  });
-    const netLayerAnalysis = Array.from(netLayerMap.values()).map(e => {
-      return {
-        layer: e.layer,
-        net: e.net,
-        traceSegments: e.traceSegments,
-        totalLength: e.totalLength,
-        failCount: e.failCount,
-        gndFailCount: e.gndFailCount,
-        signalFailCount: e.signalFailCount,
-        uniqueViaCount: e.uniqueVias.size,
-        uniqueViaIds: Array.from(e.uniqueVias),
-        minDist: e.minDist === Infinity ? 0 : e.minDist,
-        maxDeviation: e.maxDeviation,
-        status: e.failCount > 0 ? '不满足' : '满足',
-        defects: e.defects,
-        allPairs: e.allPairs
-      };
-    });
-    netLayerAnalysis.sort((a, b) => {
-      if (b.failCount !== a.failCount) return b.failCount - a.failCount;
-      if (a.layer !== b.layer) return a.layer.localeCompare(b.layer);
-      return a.net.localeCompare(b.net);
-    });
+    const netLayerAnalysis = buildNetLayerAnalysis(activeTraces, defectPairs, closePassingPairs);
     return {
       pairs: allPairs, defectPairs: defectPairs,
       closePassingPairs: keptPassing, failCount: failCount, passCount: passCount, totalChecked: totalChecked, skippedNonSpanningPairs: skippedNonSpanningPairs, undeterminedSpanPairs: undeterminedSpanPairs, viaTypeCounts: viaTypeCounts,
