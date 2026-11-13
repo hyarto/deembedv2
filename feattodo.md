@@ -25,7 +25,7 @@
 | F2 | 配置页：Padstack 尺寸覆盖表（自动列出、逐项覆盖、勾选批量应用、全选）；全局默认值输入框改隐藏；规则快照读写 padstackRules；新页面包 dfm-padstack-rules.js；UI 用例 3 条 | [x] |
 | F3 | 结果页：孔盘到孔盘缺陷并入统一明细表，去掉独立孔盘卡片；表列由 13 列改 9 列；新页面包 dfm-results-pairs.js（过滤 / 分页 / 行渲染拆成小函数） | [x] |
 | F4 | 结果页：「未复核不满足」筛选（视图一、视图二都生效）、总复核、返回检查结果明细按钮与位置记忆（dfm-result-nav.js）、孔对定位与画布高亮、过孔总览低细节绘制（dfm-canvas-vias.js） | [x] |
-| F5 | 分析页：缺陷模式归并（线到孔 / 孔到孔）与列筛选弹层 | [ ] |
+| F5 | 分析页：缺陷模式归并（引擎纯函数 buildDfmDefectPatternAnalysis）、线到孔 / 孔到孔两张模式表、列筛选弹层（dfm-pattern-modes.js、dfm-pattern-filter-popover.js）；旧四个下拉与旧图表收进隐藏容器；引擎用例 3 条、UI 用例 12 条 | [x] |
 | F6 | 大样本保护：孔盘缺陷超过 1000 时禁止「全部显示」，退回每页 200 条 | [x] |
 | F7 | 测试：迁入 dfm-ui-test 新增用例并适配重构后的 tests/ui | [ ] |
 | F8 | unified.html 导出弹窗下载逻辑核对；综合页是否需要同步 padstackRules | [ ] |
@@ -41,4 +41,6 @@
 | D3 | 批量应用无选择时 `alert()` 弹窗 | 改为面板内状态行 `#padstackBulkHint` | 不阻塞页面，可被测试断言 |
 | D4 | 导出窗口全部内联样式、依赖页面 `showToast` | 样式进 dfm.css，反馈走窗口内状态行 | AGENTS 3.3；dfm 页没有 toast |
 | D5 | 按钮「只看不满足（未复核）」、表头「走线（所在层 / 网络）或配对过孔…」带括号解释 | 改为「未复核不满足」「走线或配对过孔」，解释进 data-tip | AGENTS 5.3 |
+| D7 | 筛选弹层的外点关闭逻辑 `onOutside` 反复重挂监听，且无 Esc | 重写：Esc 立即生效，外点监听延后一拍挂接并在弹层移除时自动卸载 | 避免监听泄漏 |
+| D8 | dfm.css 追加 200 余行会超 600 行 | 新增样式放入 dfm-panels.css，dfm.css 不变；dfm.html 压缩新表头保持在封顶 636 行内 | AGENTS 3.2 |
 | D6 | 缩放按钮、关闭按钮、删除按钮文字被抹掉；`fanout-check.js?v=6` 退回 `?v=5` | 不合并 | 压缩包里的退化改动 |

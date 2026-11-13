@@ -216,9 +216,78 @@ function buildPatternCsv(analysis) {
   analysis.deficitBuckets.forEach(b => lines.push([esc('分档'), esc(b.label), b.count, (b.pct * 100).toFixed(1) + '%'].join(',')));
   return lines.join('\r\n');
 }
+
+/* ---------- 缺陷类型重复模式归并：线到孔 / 孔到孔 ---------- */
+function round2(n) { return Number.isFinite(Number(n)) ? Number(Number(n).toFixed(2)) : 0; }
+
+/** 线到孔：按「孔类别 + Padstack + 焊盘 + 一钻 + 层 + 线宽 + 判定口径 + 阈值 + 实测」归并。 */
+function groupLineDefects(defects) {
+  const groups = new Map();
+  defects.forEach(p => {
+    const v = p.via, t = p.trace;
+    const sig = [v.isGnd ? 'GND' : '信号', v.padstack || '未知Padstack', round2(v.padDiameter), round2(v.firstDrill),
+      t.subset || '未知层', round2(t.width), p.mode || '', round2(p.threshold), round2(p.evalDist)].join('|');
+    let g = groups.get(sig);
+    if (!g) {
+      g = { viaKind: v.isGnd ? 'GND' : '信号', padstack: v.padstack || '未知 Padstack', padDiameter: v.padDiameter,
+        firstDrill: v.firstDrill, layer: t.subset || '未知层', width: t.width, mode: p.mode || '焊盘 Airgap',
+        threshold: Number(p.threshold) || 0, measured: round2(p.evalDist), count: 0, maxDeficit: 0,
+        vias: new Set(), traces: new Set(), nets: new Set() };
+      groups.set(sig, g);
+    }
+    g.count++;
+    g.maxDeficit = Math.max(g.maxDeficit, Number(p.threshold) - Number(p.evalDist));
+    g.vias.add(String(v.id)); g.traces.add(String(t.id));
+    g.nets.add((v.net || '') + '/' + (t.net || ''));
+  });
+  return groups;
+}
+
+/** 孔到孔：按「GND Padstack + 焊盘 + 信号 Padstack + 焊盘 + 阈值 + 孔盘间距」归并。 */
+function groupPadDefects(defects) {
+  const groups = new Map();
+  defects.forEach(p => {
+    const gnd = p.gndVia, sigVia = p.sigVia;
+    const sig = [gnd.padstack || '未知GND Padstack', round2(p.gndPadDiameter), sigVia.padstack || '未知信号Padstack',
+      round2(p.sigPadDiameter), round2(p.threshold), round2(p.padAirgap)].join('|');
+    let g = groups.get(sig);
+    if (!g) {
+      g = { gndStack: gnd.padstack || '未知 Padstack', gndDia: p.gndPadDiameter, sigStack: sigVia.padstack || '未知 Padstack',
+        sigDia: p.sigPadDiameter, threshold: Number(p.threshold) || 0, measured: round2(p.padAirgap),
+        count: 0, maxDeficit: 0, pairs: new Set(), layers: new Set() };
+      groups.set(sig, g);
+    }
+    g.count++;
+    g.maxDeficit = Math.max(g.maxDeficit, Number(p.threshold) - Number(p.padAirgap));
+    g.pairs.add(gnd.id + ' × ' + sigVia.id);
+    g.layers.add(p.ruleLayers || '全部层');
+  });
+  return groups;
+}
+
+const byCountThenDeficit = (a, b) => b.count - a.count || b.maxDeficit - a.maxDeficit;
+
+/**
+ * 分别归并线到孔与孔到孔缺陷中重复出现的尺寸 / 规则 / 实测组合。
+ * 返回 { lineDefectCount, padDefectCount, lineGroupCount, padGroupCount, lineRows, padRows }，
+ * 行按出现次数降序、最大亏欠降序。相同组合反复出现只提示可能的重复设计单元，不断言同一根因。
+ */
+function buildDfmDefectPatternAnalysis(result) {
+  const lineDefects = (result && Array.isArray(result.defectPairs) ? result.defectPairs : []).filter(p => p && p.via && p.trace);
+  const padDefects = (result && Array.isArray(result.padPairDefects) ? result.padPairDefects : []).filter(p => p && p.gndVia && p.sigVia);
+  const lineRows = [...groupLineDefects(lineDefects).values()].sort(byCountThenDeficit);
+  const padRows = [...groupPadDefects(padDefects).values()].sort(byCountThenDeficit);
+  return {
+    lineDefectCount: lineDefects.length, padDefectCount: padDefects.length,
+    lineGroupCount: lineRows.length, padGroupCount: padRows.length,
+    lineRows: lineRows, padRows: padRows
+  };
+}
+
   return {
     patDeficitOf: patDeficitOf,
     buildDfmPatternAnalysis: buildDfmPatternAnalysis,
+    buildDfmDefectPatternAnalysis: buildDfmDefectPatternAnalysis,
     patDimLabel: patDimLabel,
     buildPatternCsv: buildPatternCsv
   };

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="assets/styles/eda-dock.css?v=11">
 <link rel="stylesheet" href="assets/styles/components.css?v=11">
 <link rel="stylesheet" href="assets/styles/pages/dfm.css?v=11">
+<link rel="stylesheet" href="assets/styles/pages/dfm-panels.css?v=11">
 </head>
 <body class="eda-workbench">
 
@@ -434,53 +435,47 @@
           </div>
         </div>
 
-        <div class="row" style="gap:14px;align-items:flex-end">
+        <div class="row" style="gap:14px;align-items:center">
           <div>
             <div class="hint" style="margin-bottom:4px">分析对象</div>
             <div class="row" style="gap:6px">
-              <button type="button" class="btn sec small pat-obj-btn active" id="btnPatObjVia" data-obj="via">按信号孔</button>
-              <button type="button" class="btn sec small pat-obj-btn" id="btnPatObjTrace" data-obj="trace">按走线</button>
+              <button type="button" class="btn pri small pat-obj-btn active" id="btnPatObjVia" data-obj="via" data-defect-mode="line" data-tip="归并过孔与走线之间的间距缺陷">线到孔</button>
+              <button type="button" class="btn sec small pat-obj-btn" id="btnPatObjTrace" data-obj="trace" data-defect-mode="pad" data-tip="归并 GND 孔盘与信号孔盘之间的间距缺陷">孔到孔</button>
             </div>
           </div>
-          <div>
-            <label for="selPatViaKind" class="hint" style="display:block;margin-bottom:4px">过孔范围</label>
-            <select id="selPatViaKind">
-              <option value="all">全部过孔</option>
-              <option value="signal">仅信号孔</option>
-              <option value="gnd">仅 GND 孔</option>
-            </select>
-          </div>
-          <div>
-            <label for="selPatDim" class="hint" style="display:block;margin-bottom:4px">归纳维度</label>
-            <select id="selPatDim">
-              <option value="layer">出线层</option>
-              <option value="net">网络</option>
-              <option value="kind">孔型</option>
-              <option value="padstack">Padstack</option>
-              <option value="width">走线线宽</option>
-            </select>
-          </div>
-          <div>
-            <label for="selPatSort" class="hint" style="display:block;margin-bottom:4px">排序指标</label>
-            <select id="selPatSort">
-              <option value="failCount">缺陷处数降序</option>
-              <option value="maxDeficit">最大亏欠量降序</option>
-              <option value="minDist">最小间距升序</option>
-            </select>
-          </div>
-          <div>
-            <label for="selPatTopN" class="hint" style="display:block;margin-bottom:4px">显示数量</label>
-            <select id="selPatTopN">
-              <option value="5">Top 5</option>
-              <option value="10" selected>Top 10</option>
-              <option value="20">Top 20</option>
-              <option value="50">Top 50</option>
-              <option value="0">全部</option>
-            </select>
+          <div hidden aria-hidden="true">
+            <select id="selPatViaKind"><option value="all">全部过孔</option><option value="signal">仅信号孔</option><option value="gnd">仅 GND 孔</option></select>
+            <select id="selPatDim"><option value="layer">出线层</option><option value="net">网络</option><option value="kind">孔型</option><option value="padstack">Padstack</option><option value="width">走线线宽</option></select>
+            <select id="selPatSort"><option value="failCount">缺陷处数降序</option><option value="maxDeficit">最大亏欠量降序</option><option value="minDist">最小间距升序</option></select>
+            <select id="selPatTopN"><option value="5">Top 5</option><option value="10" selected>Top 10</option><option value="20">Top 20</option><option value="50">Top 50</option><option value="0">全部</option></select>
           </div>
         </div>
       </div>
 
+      <div class="card" id="patDefectModesCard">
+        <h3 style="margin:0 0 6px">缺陷类型与重复模式归纳</h3>
+        <div class="hint" id="patDefectModesHint">运行检查后归并线到孔、孔到孔缺陷。</div>
+        <div id="patLineModeSection">
+          <h4 class="pat-mode-title">线到孔 <span class="eda-tip" tabindex="0" data-tip="过孔 × 走线；按孔类别、Padstack、焊盘与一钻尺寸、出线层、线宽、判定口径、阈值、实测间距归并">?</span></h4>
+          <div class="tbl-wrap">
+            <table id="tblPatViaTraceModes">
+              <thead><tr><th>重复模式 / 几何特征 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="0" data-tip="筛选此列">筛选</button></th><th>规则阈值 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="1" data-tip="筛选此列">筛选</button></th><th>实测间距 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="2" data-tip="筛选此列">筛选</button></th><th>最大亏欠 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="3" data-tip="筛选此列">筛选</button></th><th>不满足数 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="4" data-tip="筛选此列">筛选</button></th><th>代表对象 过孔 / 走线 <button type="button" class="pat-filter-btn" data-pat-table="line" data-pat-col="5" data-tip="筛选此列">筛选</button></th></tr></thead>
+              <tbody id="patViaTraceModes"><tr><td colspan="6" class="hint empty-cell">导入数据并运行检查后生成</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="patPadModeSection" hidden>
+          <h4 class="pat-mode-title">孔到孔 <span class="eda-tip" tabindex="0" data-tip="GND 孔盘 × 信号孔盘；按两侧 Padstack、焊盘尺寸、阈值、孔盘间距归并">?</span></h4>
+          <div class="tbl-wrap">
+            <table id="tblPatViaViaModes">
+              <thead><tr><th>重复模式 / 几何特征 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="0" data-tip="筛选此列">筛选</button></th><th>规则阈值 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="1" data-tip="筛选此列">筛选</button></th><th>实测间距 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="2" data-tip="筛选此列">筛选</button></th><th>最大亏欠 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="3" data-tip="筛选此列">筛选</button></th><th>不满足数 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="4" data-tip="筛选此列">筛选</button></th><th>代表过孔对 <button type="button" class="pat-filter-btn" data-pat-table="pad" data-pat-col="5" data-tip="筛选此列">筛选</button></th></tr></thead>
+              <tbody id="patViaViaModes"><tr><td colspan="6" class="hint empty-cell">导入数据并运行检查后生成</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="pat-legacy" hidden aria-hidden="true">
       <div class="stats-grid" id="patStatsGrid">
         <div class="stat-box">
           <div class="num" id="patKpiObjects">0</div>
@@ -541,6 +536,7 @@
             <tbody id="tblPatObjectsBody"></tbody>
           </table>
         </div>
+      </div>
       </div>
     </section>
 
@@ -621,6 +617,8 @@
 <script src="packages/pages/dfm/dfm-results-pairs.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-results-ui.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-pattern-ui.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-pattern-filter-popover.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-pattern-modes.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-canvas-vias.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-canvas-viewer.js?v=11"></script>
 <script src="packages/shared/eda-tooltip.js?v=11"></script>

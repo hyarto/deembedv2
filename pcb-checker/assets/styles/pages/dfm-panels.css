@@ -1,0 +1,217 @@
+/* ============================================================================
+ * dfm-panels.css —— 加工能力检查页新增面板样式
+ * Padstack 尺寸覆盖表、规则 JSON 导出窗口、统一结果明细表、规律分析重复模式表与列筛选弹层
+ * ========================================================================== */
+
+/* ---------- Padstack 尺寸覆盖表 ---------- */
+#padstackRuleBox {
+  margin-top: 10px;
+}
+
+.dfm-padstack-bulk {
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dfm-padstack-bulk .form-item {
+  min-width: 125px;
+}
+
+.dfm-padstack-scroll {
+  overflow-x: auto;
+}
+
+#padstackRuleTable {
+  margin: 0;
+  min-width: 680px;
+}
+
+#padstackRuleTable .dfm-ps-col-sel { width: 54px; }
+#padstackRuleTable .dfm-ps-col-kind { width: 100px; }
+#padstackRuleTable .dfm-ps-col-en { width: 115px; }
+#padstackRuleTable .dfm-ps-col-num { width: 160px; }
+
+#padstackRuleTable .ps-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+#padstackRuleTable input.ps-pad-diameter,
+#padstackRuleTable input.ps-first-drill {
+  width: 100%;
+}
+
+#padstackRuleTable .dfm-ps-empty {
+  text-align: center;
+}
+
+/* ---------- 规则 JSON 导出窗口 ---------- */
+.dfm-export-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(31, 41, 55, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dfm-export-panel {
+  background: #ffffff;
+  color: var(--text, #1f2937);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  width: min(760px, 96vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dfm-export-panel h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.dfm-export-json {
+  width: 100%;
+  height: min(48vh, 420px);
+  box-sizing: border-box;
+  font: 12px/1.5 var(--mono, ui-monospace, monospace);
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.dfm-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- 结果明细统一表 ---------- */
+.empty-cell {
+  text-align: center;
+  color: var(--sub);
+  padding: 24px;
+}
+
+.dfm-pager {
+  justify-content: space-between;
+  margin: 0 0 10px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.dfm-review-all {
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+#resTable td.num-cell {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+#resTable td.num-cell.bad { color: var(--bad); }
+#resTable td.num-cell.ok { color: var(--ok); }
+
+/* ---------- 规律分析：缺陷类型重复模式 ---------- */
+.pat-legacy[hidden] {
+  display: none;
+}
+
+.pat-mode-title {
+  font-size: 13px;
+  margin: 12px 0 6px;
+}
+
+.pat-filter-btn {
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--sub);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.pat-filter-btn.active {
+  background: #eff6ff;
+  color: var(--pri-d);
+  border-color: var(--pri);
+}
+
+.pat-filter-pop {
+  position: fixed;
+  z-index: 12000;
+  width: 300px;
+  max-height: 440px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text, #1f2937);
+}
+
+.pat-filter-pop h4 {
+  font-size: 13px;
+  margin: 0 0 7px;
+}
+
+.pat-filter-pop input[type="search"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pat-filter-quick {
+  display: flex;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.pat-filter-quick button {
+  border: 0;
+  background: none;
+  color: var(--pri);
+  padding: 2px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.pat-filter-list {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  margin: 8px 0;
+  padding: 4px;
+}
+
+.pat-filter-option {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.pat-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}

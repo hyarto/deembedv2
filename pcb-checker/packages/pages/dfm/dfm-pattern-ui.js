@@ -16,7 +16,9 @@
     dimension: 'layer',
     sortBy: 'failCount',
     topN: 10,
-    last: null
+    last: null,
+    defectMode: 'line',          // 'line' 线到孔 | 'pad' 孔到孔
+    defectModeFilters: { line: {}, pad: {} }
   };
 
   function patDimTitleFor(dim, object) {
@@ -39,6 +41,7 @@
   }
 
   function renderPatternAnalysis() {
+    if (root.renderDfmDefectPatternAnalysis) root.renderDfmDefectPatternAnalysis();
     var res = State.checkResult;
     var hasResult = res && Array.isArray(res.defectPairs);
     var analysis = root.DfmCheck.buildDfmPatternAnalysis(res, {
@@ -208,7 +211,9 @@
     ["btnPatObjVia", "btnPatObjTrace"].forEach(function (id) {
       var btn = $(id);
       if (btn) btn.addEventListener("click", function () {
+        PatternState.defectMode = id === "btnPatObjTrace" ? 'pad' : 'line';
         PatternState.object = btn.dataset.obj;
+        if (root.DfmApp.PatternModes) root.DfmApp.PatternModes.syncSections();
         syncPatDimOptions();
         renderPatternAnalysis();
       });

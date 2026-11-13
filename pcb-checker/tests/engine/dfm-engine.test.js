@@ -694,5 +694,47 @@ test('Padstack 尺寸覆盖：非圆形焊盘按外接尺寸等比缩放', () =>
   if (r.padDiameter !== 10 || r.firstDrill !== 5) throw new Error('尺寸错误');
 });
 
+test('缺陷模式归并：线到孔与孔到孔分别把尺寸 / 规则 / 实测相同的缺陷合成一组', () => {
+  const v = (id, extra) => Object.assign({ id, net: 'SIG' + id, isGnd: false, padstack: 'SIG_D4_R3', padDiameter: 10.5, firstDrill: 4.5 }, extra || {});
+  const t = id => ({ id, net: 'NET' + id, subset: 'L2', width: 4.5 });
+  const result = {
+    defectPairs: [
+      { via: v(1), trace: t(1), mode: 'pad_to_trace', threshold: 3, evalDist: 2.05 },
+      { via: v(2), trace: t(2), mode: 'pad_to_trace', threshold: 3, evalDist: 2.05 },
+      { via: v(3), trace: t(3), mode: 'pad_to_trace', threshold: 3, evalDist: 1.2 }
+    ],
+    padPairDefects: [
+      { gndVia: v(4, { isGnd: true, padstack: 'GND_D4_R3' }), sigVia: v(5), gndPadDiameter: 10.5, sigPadDiameter: 10.5, threshold: 3, padAirgap: 1.5, ruleLayers: 'L2-L5' },
+      { gndVia: v(6, { isGnd: true, padstack: 'GND_D4_R3' }), sigVia: v(7), gndPadDiameter: 10.5, sigPadDiameter: 10.5, threshold: 3, padAirgap: 1.5, ruleLayers: 'L2-L5' }
+    ]
+  };
+  const a = DfmCheck.buildDfmDefectPatternAnalysis(result);
+  if (a.lineDefectCount !== 3 || a.lineGroupCount !== 2) throw new Error('线到孔应 3 处合成 2 组，实际 ' + a.lineDefectCount + '/' + a.lineGroupCount);
+  if (a.padDefectCount !== 2 || a.padGroupCount !== 1) throw new Error('孔到孔应 2 对合成 1 组');
+  if (a.lineRows[0].count !== 2 || a.lineRows[0].vias.size !== 2 || a.lineRows[0].traces.size !== 2) throw new Error('首组应含 2 个过孔 2 条走线');
+  if (Math.abs(a.lineRows[1].maxDeficit - 1.8) > 1e-9) throw new Error('第二组最大亏欠应为 1.8，实际 ' + a.lineRows[1].maxDeficit);
+  if (a.padRows[0].pairs.size !== 2 || !a.padRows[0].layers.has('L2-L5')) throw new Error('孔到孔代表对象或规则层不对');
+});
+
+test('缺陷模式归并：按出现次数降序，次数相同按最大亏欠降序；尺寸不同不合并', () => {
+  const mk = (id, pad, dist) => ({ via: { id, net: 'S', isGnd: false, padstack: 'P', padDiameter: pad, firstDrill: 4 }, trace: { id, net: 'N', subset: 'L3', width: 4 }, mode: 'pad_to_trace', threshold: 4, evalDist: dist });
+  const a = DfmCheck.buildDfmDefectPatternAnalysis({ defectPairs: [mk(1, 10, 3), mk(2, 12, 1), mk(3, 12, 1), mk(4, 8, 3.5), mk(5, 9, 0.5)], padPairDefects: [] });
+  if (a.lineGroupCount !== 4) throw new Error('焊盘尺寸不同应分组，实际 ' + a.lineGroupCount);
+  if (a.lineRows[0].count !== 2) throw new Error('出现次数最多的组应排首位');
+  const rest = a.lineRows.slice(1).map(r => r.maxDeficit);
+  if (rest[0] < rest[1] || rest[1] < rest[2]) throw new Error('同次数应按最大亏欠降序：' + rest.join(','));
+});
+
+test('缺陷模式归并：空结果、缺字段与非法记录不抛错', () => {
+  [null, undefined, {}, { defectPairs: 'x', padPairDefects: 5 }].forEach(r => {
+    const a = DfmCheck.buildDfmDefectPatternAnalysis(r);
+    if (a.lineDefectCount !== 0 || a.padDefectCount !== 0 || a.lineRows.length || a.padRows.length) throw new Error('空输入应得空结果');
+  });
+  const a = DfmCheck.buildDfmDefectPatternAnalysis({ defectPairs: [null, { via: {} }, { trace: {} }], padPairDefects: [{ gndVia: {} }, null] });
+  if (a.lineDefectCount !== 0 || a.padDefectCount !== 0) throw new Error('缺 via/trace 或 gndVia/sigVia 的记录应被丢弃');
+  const b = DfmCheck.buildDfmDefectPatternAnalysis({ defectPairs: [{ via: { id: 1 }, trace: { id: 2 }, threshold: 3, evalDist: 1 }], padPairDefects: [] });
+  if (b.lineRows[0].padstack !== '未知 Padstack' || b.lineRows[0].layer !== '未知层') throw new Error('缺字段应落到「未知」占位');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);
