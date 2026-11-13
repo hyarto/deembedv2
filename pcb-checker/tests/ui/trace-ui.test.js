@@ -202,7 +202,7 @@ t('差分分析: 3对, 301 超差, 逐层 2/4, 包含所有层总线长差检查
   if (!cards.includes('总长超差对数')) throw new Error('缺总长超差对数卡片');
   const tbl = d.getElementById('diffTbl').textContent;
   if (!tbl.includes('301')) throw new Error('no 301');
-  if (!tbl.includes('总线长差 (所有层合计)')) throw new Error('缺总线长差合计行');
+  if (!tbl.includes('总线长差 · 所有层合计')) throw new Error('缺总线长差合计行');
   const totalRows = d.querySelectorAll('#diffTbl tr.totalrow');
   if (totalRows.length !== 3) throw new Error('总长行数应为 3，实际：' + totalRows.length);
   const failTotal = d.querySelector('#diffTbl tr.totalrow.fail');

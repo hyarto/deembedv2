@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PCB 综合一体化检查</title>
-<link rel="stylesheet" href="assets/styles/tokens.css?v=7">
-<link rel="stylesheet" href="assets/styles/eda-shell.css?v=7">
-<link rel="stylesheet" href="assets/styles/components.css?v=7">
-<link rel="stylesheet" href="assets/styles/pages/unified.css?v=7">
+<link rel="stylesheet" href="assets/styles/tokens.css?v=8">
+<link rel="stylesheet" href="assets/styles/eda-shell.css?v=8">
+<link rel="stylesheet" href="assets/styles/components.css?v=8">
+<link rel="stylesheet" href="assets/styles/pages/unified.css?v=8">
 </head>
 <body class="eda-workbench">
 
@@ -702,10 +702,10 @@
           <div class="legend-item"><div class="legend-color" style="background:rgba(180, 83, 9, 0.4);border:1px solid #d97706"></div> 铜皮 Shape</div>
           <div class="legend-item"><div class="legend-color" style="background:rgba(250, 204, 21, 0.3);border:1.5px solid #facc15"></div> BGA 信号孔</div>
           <div class="legend-item"><div class="legend-color" style="background:#475569;border:1px solid #94a3b8"></div> GND 接地孔</div>
-          <div class="legend-item"><div class="legend-color" style="background:#22c55e"></div> 26_N (P1 亮绿)</div>
-          <div class="legend-item"><div class="legend-color" style="background:#c084fc"></div> 25_N (P2 紫色)</div>
-          <div class="legend-item"><div class="legend-color" style="background:#84cc16"></div> 25_P (P3 橄榄绿)</div>
-          <div class="legend-item"><div class="legend-color" style="background:#06b6d4"></div> 26_P (P4 青蓝)</div>
+          <div class="legend-item" data-tip="P1 亮绿"><div class="legend-color" style="background:#22c55e"></div> 26_N</div>
+          <div class="legend-item" data-tip="P2 紫色"><div class="legend-color" style="background:#c084fc"></div> 25_N</div>
+          <div class="legend-item" data-tip="P3 橄榄绿"><div class="legend-color" style="background:#84cc16"></div> 25_P</div>
+          <div class="legend-item" data-tip="P4 青蓝"><div class="legend-color" style="background:#06b6d4"></div> 26_P</div>
           <div class="legend-item"><div class="legend-color" style="background:#ef4444;box-shadow:0 0 6px #ef4444"></div> 缺陷位置</div>
         </div>
 
@@ -997,7 +997,7 @@
         <div id="uModalKwSeqBar" style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px;align-items:center;padding:4px 8px;background:#ffffff;border:1px dashed #cbd5e1;border-radius:6px;margin-bottom:8px;font-size:12px;color:#6b7280"></div>
         <div id="uModalKwChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词 (支持回车添加)..." style="width:220px;padding:4px 8px;font-size:12px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}" data-no-persist>
+          <input type="text" id="inpUAddKwModal" placeholder="输入自定义新关键词..." data-tip="按 Enter 添加到词库" style="width:220px;padding:4px 8px;font-size:12px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('modal');}" data-no-persist>
           <button type="button" class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="addUnifiedCustomKw('modal')">+ 新增关键词</button>
         </div>
       </div>
@@ -1145,7 +1145,7 @@
           </svg>
         </div>
         <div style="flex:1;font-size:12px;color:#94a3b8">
-          <div style="font-weight:700;color:#38bdf8;font-size:12px" id="modalPourShapePreviewTitle">已成功解析 Shape 几何 (所在层: 02G01P)</div>
+          <div style="font-weight:700;color:#38bdf8;font-size:12px" id="modalPourShapePreviewTitle">已解析 Shape 几何 · 所在层: 02G01P</div>
           <div id="modalPourShapePreviewStats" style="margin-top:6px;line-height:1.7;color:#cbd5e1">
             实测面积: <b style="color:#ffffff">452.39 sq mil</b> (0.2919 mm²)<br>
             边界包含: 1 段 <span class="eda-tip" tabindex="0" data-tip="直线 0 / 圆弧 1">?</span>
@@ -1187,7 +1187,7 @@
         <div id="uQuickKwSeqBar" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;align-items:center;padding:5px 8px;background:#fff;border:1px dashed #94a3b8;border-radius:6px;margin-bottom:10px"></div>
         <div id="uQuickKwChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px dashed #cbd5e1">
-          <input type="text" id="inpUAddKwQuick" placeholder="输入自定义新关键词 (支持回车添加)..." style="flex:1;padding:5px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('quick');}" data-no-persist>
+          <input type="text" id="inpUAddKwQuick" placeholder="输入自定义新关键词..." data-tip="按 Enter 添加到词库" style="flex:1;padding:5px 10px" onkeydown="if(event.key==='Enter'){event.preventDefault();addUnifiedCustomKw('quick');}" data-no-persist>
           <button type="button" class="btn sec small" onclick="addUnifiedCustomKw('quick')">+ 增加新关键词</button>
         </div>
       </div>
@@ -1290,46 +1290,48 @@
 </div>
 
 
-<script src="packages/shared/xlsx-export.js?v=7"></script>
-<script src="packages/geometry/pad-primitives.js?v=7"></script>
-<script src="packages/geometry/pad-region.js?v=7"></script>
-<script src="packages/engines/copper/copper-engine.js?v=7"></script>
-<script src="packages/engines/dfm/dfm-layers.js?v=7"></script>
-<script src="packages/engines/dfm/dfm-parser.js?v=7"></script>
-<script src="packages/engines/dfm/dfm-engine.js?v=7"></script>
-<script src="packages/engines/dfm/dfm-pattern.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-parser.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-palette.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-scheme.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-clustering.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-inspector.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-layout.js?v=7"></script>
-<script src="packages/engines/fanout/fanout-canvas.js?v=7"></script>
-<script src="packages/engines/pour/pour-geom.js?v=7"></script>
-<script src="packages/engines/pour/pour-parser.js?v=7"></script>
-<script src="packages/engines/pour/pour-engine.js?v=7"></script>
-<script src="packages/pages/unified/unified-constraint-parse.js?v=7"></script>
-<script src="packages/pages/unified/unified-defaults.js?v=7"></script>
-<script src="packages/pages/unified/unified-state.js?v=7"></script>
-<script src="packages/pages/unified/unified-data-ingest.js?v=7"></script>
-<script src="packages/pages/unified/unified-sample-data.js?v=7"></script>
-<script src="packages/pages/unified/unified-rules-constraint.js?v=7"></script>
-<script src="packages/pages/unified/unified-rules-dfm.js?v=7"></script>
-<script src="packages/pages/unified/unified-fanout-library.js?v=7"></script>
-<script src="packages/pages/unified/unified-fanout-naming.js?v=7"></script>
-<script src="packages/pages/unified/unified-fanout-viewer.js?v=7"></script>
-<script src="packages/pages/unified/unified-fanout-io.js?v=7"></script>
-<script src="packages/pages/unified/unified-rules-pour.js?v=7"></script>
-<script src="packages/pages/unified/unified-rules-render.js?v=7"></script>
-<script src="packages/pages/unified/unified-trace-analysis.js?v=7"></script>
-<script src="packages/pages/unified/unified-runner.js?v=7"></script>
-<script src="packages/pages/unified/unified-dashboard.js?v=7"></script>
-<script src="packages/pages/unified/unified-canvas-viewer.js?v=7"></script>
-<script src="packages/pages/unified/unified-rules-io.js?v=7"></script>
-<script src="packages/pages/unified/unified-report-export.js?v=7"></script>
-<script src="packages/pages/unified/unified-bootstrap.js?v=7"></script>
-<script src="packages/shared/eda-tooltip.js?v=7"></script>
-<script src="packages/shared/eda-shell.js?v=7"></script>
-<script src="packages/shared/ui-prefs.js?v=7"></script>
+<script src="packages/shared/xlsx-export.js?v=8"></script>
+<script src="packages/geometry/pad-primitives.js?v=8"></script>
+<script src="packages/geometry/pad-region.js?v=8"></script>
+<script src="packages/engines/copper/copper-engine.js?v=8"></script>
+<script src="packages/engines/copper/constraint-parser.js?v=8"></script>
+<script src="packages/engines/dfm/dfm-layers.js?v=8"></script>
+<script src="packages/engines/dfm/dfm-parser.js?v=8"></script>
+<script src="packages/engines/dfm/dfm-engine.js?v=8"></script>
+<script src="packages/engines/dfm/dfm-pattern.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-parser.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-palette.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-scheme.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-clustering.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-inspector.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-layout.js?v=8"></script>
+<script src="packages/engines/fanout/fanout-canvas.js?v=8"></script>
+<script src="packages/engines/pour/pour-geom.js?v=8"></script>
+<script src="packages/engines/pour/pour-parser.js?v=8"></script>
+<script src="packages/engines/pour/pour-engine.js?v=8"></script>
+<script src="packages/pages/unified/unified-constraint-parse.js?v=8"></script>
+<script src="packages/pages/unified/unified-defaults.js?v=8"></script>
+<script src="packages/pages/unified/unified-state.js?v=8"></script>
+<script src="packages/pages/unified/unified-data-ingest.js?v=8"></script>
+<script src="packages/pages/unified/unified-sample-data.js?v=8"></script>
+<script src="packages/pages/unified/unified-rules-constraint.js?v=8"></script>
+<script src="packages/pages/unified/unified-rules-dfm.js?v=8"></script>
+<script src="packages/pages/unified/unified-fanout-library.js?v=8"></script>
+<script src="packages/pages/unified/unified-fanout-batch.js?v=8"></script>
+<script src="packages/pages/unified/unified-fanout-naming.js?v=8"></script>
+<script src="packages/pages/unified/unified-fanout-viewer.js?v=8"></script>
+<script src="packages/pages/unified/unified-fanout-io.js?v=8"></script>
+<script src="packages/pages/unified/unified-rules-pour.js?v=8"></script>
+<script src="packages/pages/unified/unified-rules-render.js?v=8"></script>
+<script src="packages/pages/unified/unified-trace-analysis.js?v=8"></script>
+<script src="packages/pages/unified/unified-runner.js?v=8"></script>
+<script src="packages/pages/unified/unified-dashboard.js?v=8"></script>
+<script src="packages/pages/unified/unified-canvas-viewer.js?v=8"></script>
+<script src="packages/pages/unified/unified-rules-io.js?v=8"></script>
+<script src="packages/pages/unified/unified-report-export.js?v=8"></script>
+<script src="packages/pages/unified/unified-bootstrap.js?v=8"></script>
+<script src="packages/shared/eda-tooltip.js?v=8"></script>
+<script src="packages/shared/eda-shell.js?v=8"></script>
+<script src="packages/shared/ui-prefs.js?v=8"></script>
 </body>
 </html>

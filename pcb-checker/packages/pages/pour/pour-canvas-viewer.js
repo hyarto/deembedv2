@@ -2,9 +2,8 @@
  * pour-canvas-viewer.js —— 铜皮检查模块：2D 空间几何视口、标尺测量与定位复核浮窗
  * ========================================================================== */
 (function (root) {
-  'use strict';
+'use strict';
   if (typeof document === 'undefined') return;
-
   var esc = root.escHtml || function (str) {
     if (!str) return '';
     return String(str)
@@ -14,16 +13,13 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   };
-
   var cleanMsg = root.PourCleanMsg || function (s) {
     return String(s == null ? '' : s).replace(/^[\s✅❌⚠️]+/u, '').trim();
   };
-
   var safeRAF = root.PourSafeRAF || function (fn) {
     if (typeof root.requestAnimationFrame === 'function') root.requestAnimationFrame(fn);
     else setTimeout(fn, 0);
   };
-
   var NET_COLORS = {
     GND: '#475569',
     '25_N': '#c084fc',
@@ -35,9 +31,7 @@
     '106_P': '#f472b6',
     '106_N': '#fb7185'
   };
-
   var DYNAMIC_NET_PALETTE = ['#38bdf8', '#c084fc', '#84cc16', '#22c55e', '#06b6d4', '#f43f5e', '#eab308', '#ec4899', '#a855f7', '#14b8a6'];
-
   function getNetColor(netName) {
     if (!netName) return '#94a3b8';
     if (NET_COLORS[netName]) return NET_COLORS[netName];
@@ -45,7 +39,6 @@
     for (var i = 0; i < netName.length; i++) h = (h * 31 + netName.charCodeAt(i)) >>> 0;
     return DYNAMIC_NET_PALETTE[h % DYNAMIC_NET_PALETTE.length];
   }
-
   function resizeCanvas() {
     var canvas = document.getElementById('mainCanvas');
     var container = document.getElementById('canvasContainer');
@@ -53,7 +46,6 @@
     canvas.width = container.clientWidth || 920;
     canvas.height = container.clientHeight || 640;
   }
-
   function worldToScreen(wx, wy) {
     var c = root.State.canvas;
     return {
@@ -61,7 +53,6 @@
       y: c.panY - wy * c.zoom
     };
   }
-
   function screenToWorld(sx, sy) {
     var c = root.State.canvas;
     return {
@@ -69,17 +60,14 @@
       y: -(sy - c.panY) / c.zoom
     };
   }
-
   function fitCanvasToLayout() {
     var State = root.State;
     var canvas = document.getElementById('mainCanvas');
     if (!canvas) return;
     var w = canvas.width || 920;
     var h = canvas.height || 640;
-
     var minX = Infinity, maxX = -Infinity;
     var minY = Infinity, maxY = -Infinity;
-
     (State.shapes || []).forEach(function (s) {
       if (!s.bbox) return;
       if (s.bbox.minX < minX) minX = s.bbox.minX;
@@ -87,14 +75,12 @@
       if (s.bbox.minY < minY) minY = s.bbox.minY;
       if (s.bbox.maxY > maxY) maxY = s.bbox.maxY;
     });
-
     (State.vias || []).forEach(function (v) {
       if (v.x < minX) minX = v.x;
       if (v.x > maxX) maxX = v.x;
       if (v.y < minY) minY = v.y;
       if (v.y > maxY) maxY = v.y;
     });
-
     (State.traces || []).forEach(function (t) {
       if (!t.bbox) return;
       if (t.bbox.minX < minX) minX = t.bbox.minX;
@@ -102,27 +88,21 @@
       if (t.bbox.minY < minY) minY = t.bbox.minY;
       if (t.bbox.maxY > maxY) maxY = t.bbox.maxY;
     });
-
     if (minX === Infinity) return;
-
     var spanX = Math.max(maxX - minX, 100);
     var spanY = Math.max(maxY - minY, 100);
     var zoomX = (w * 0.85) / spanX;
     var zoomY = (h * 0.85) / spanY;
     State.canvas.zoom = Math.min(zoomX, zoomY);
-
     var midX = (minX + maxX) / 2;
     var midY = (minY + maxY) / 2;
     State.canvas.panX = w / 2 - midX * State.canvas.zoom;
     State.canvas.panY = h / 2 + midY * State.canvas.zoom;
-
     renderCanvas();
   }
-
   function resetCanvasView() {
     fitCanvasToLayout();
   }
-
   function zoomCanvas(factor) {
     var State = root.State;
     var canvas = document.getElementById('mainCanvas');
@@ -135,7 +115,6 @@
     State.canvas.zoom = newZoom;
     renderCanvas();
   }
-
   function toggleCanvasLayer(layerKey) {
     var c = root.State.canvas;
     if (layerKey === 'shapes') c.showShapes = !c.showShapes;
@@ -143,7 +122,6 @@
     if (layerKey === 'traces') c.showTraces = !c.showTraces;
     if (layerKey === 'ports') c.showPorts = !c.showPorts;
     if (layerKey === 'defects') c.showDefects = !c.showDefects;
-
     var map = {
       btnToggleShapes: c.showShapes,
       btnToggleVias: c.showVias,
@@ -157,7 +135,6 @@
     });
     renderCanvas();
   }
-
   function toggleMeasureMode() {
     var c = root.State.canvas;
     c.measureMode = !c.measureMode;
@@ -169,30 +146,24 @@
     }
     renderCanvas();
   }
-
   function renderCanvas() {
     var State = root.State;
     var canvas = document.getElementById('mainCanvas');
     if (!canvas || !canvas.getContext) return;
-
     var readout = document.getElementById('canvasRulerReadout');
     if (readout) {
       readout.textContent = '比例: ' + State.canvas.zoom.toFixed(2) + 'x | 视口中心: [' +
         (-State.canvas.panX / State.canvas.zoom).toFixed(0) + ', ' +
         (State.canvas.panY / State.canvas.zoom).toFixed(0) + ']';
     }
-
     var ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     var w = canvas.width;
     var h = canvas.height;
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = '#050811';
     ctx.fillRect(0, 0, w, h);
-
     var PC = root.PourChecker;
-
     /* 1. 铜皮轮廓 */
     if (State.canvas.showShapes && State.shapes) {
       State.shapes.forEach(function (shape) {
@@ -200,7 +171,6 @@
         ctx.fillStyle = 'rgba(180, 83, 9, 0.22)';
         ctx.strokeStyle = '#d97706';
         ctx.lineWidth = Math.max(1.0, 1.2 * State.canvas.zoom);
-
         ctx.beginPath();
         shape.boundary.forEach(function (seg) {
           if (seg.type === 'line') {
@@ -224,7 +194,6 @@
         });
         ctx.fill();
         ctx.stroke();
-
         if (State.canvas.zoom > 1.5 && shape.centroid) {
           var cent = worldToScreen(shape.centroid.x, shape.centroid.y);
           ctx.fillStyle = '#fde68a';
@@ -235,7 +204,6 @@
         ctx.restore();
       });
     }
-
     /* 2. 过孔 */
     if (State.canvas.showVias && State.vias) {
       State.vias.forEach(function (v) {
@@ -252,14 +220,12 @@
           ctx.strokeStyle = '#94a3b8';
           ctx.lineWidth = 1;
           ctx.stroke();
-
           ctx.beginPath();
           ctx.arc(sp.x, sp.y, drillR, 0, Math.PI * 2);
           ctx.fillStyle = '#020617';
           ctx.fill();
           ctx.strokeStyle = '#cbd5e1';
           ctx.stroke();
-
           ctx.fillStyle = '#f8fafc';
           ctx.font = 'bold 9px sans-serif';
           ctx.textAlign = 'center';
@@ -277,13 +243,11 @@
           ctx.strokeStyle = '#facc15';
           ctx.lineWidth = 1.2;
           ctx.stroke();
-
           ctx.beginPath();
           ctx.arc(sp.x, sp.y, dR, 0, Math.PI * 2);
           ctx.strokeStyle = '#fef08a';
           ctx.lineWidth = 0.8;
           ctx.stroke();
-
           if (State.canvas.zoom > 2.2) {
             ctx.fillStyle = '#fde047';
             ctx.font = '9px sans-serif';
@@ -294,7 +258,6 @@
         }
       });
     }
-
     /* 3. 走线（直线与圆弧参数化采样） */
     if (State.canvas.showTraces && State.traces) {
       State.traces.forEach(function (trace) {
@@ -306,7 +269,6 @@
         ctx.lineJoin = 'round';
         var traceWidth = Math.max(1.8, (trace.width || 6.0) * State.canvas.zoom);
         ctx.lineWidth = traceWidth;
-
         trace.segments.forEach(function (seg) {
           if (seg.type === 'line') {
             var p1 = worldToScreen(seg.x1, seg.y1);
@@ -326,7 +288,6 @@
             ctx.stroke();
           }
         });
-
         if (State.canvas.zoom > 1.2 && trace.segments.length > 0) {
           var firstSeg = trace.segments[0];
           var midX = (firstSeg.x1 + (firstSeg.x2 || firstSeg.x1)) / 2;
@@ -340,7 +301,6 @@
         ctx.restore();
       });
     }
-
     /* 4. 端口 P1~P4 标注 */
     if (State.canvas.showPorts && State.traces && State.traces.length > 0) {
       var allMinX = Infinity, allMaxX = -Infinity, allMinY = Infinity, allMaxY = -Infinity;
@@ -353,7 +313,6 @@
       });
       var centerX = (allMinX + allMaxX) / 2;
       var centerY = (allMinY + allMaxY) / 2;
-
       var netEndpoints = {};
       State.traces.forEach(function (t) {
         if (!netEndpoints[t.net]) netEndpoints[t.net] = [];
@@ -362,7 +321,6 @@
           netEndpoints[t.net].push({ x: s.x2, y: s.y2 });
         });
       });
-
       Object.keys(netEndpoints).forEach(function (net) {
         if (net === 'GND' || net === 'UNKNOWN') return;
         var pts = netEndpoints[net];
@@ -373,13 +331,11 @@
           if (d > maxDist) { maxDist = d; outerPt = p; }
         });
         if (!outerPt) return;
-
         var portName = '';
         if (net === '26_N' || (outerPt.y > centerY && outerPt.x > centerX)) portName = 'P1';
         else if (net === '25_N' || (outerPt.y < centerY && outerPt.x < centerX)) portName = 'P2';
         else if (net === '25_P' || (outerPt.y > centerY && outerPt.x < centerX)) portName = 'P3';
         else if (net === '26_P' || (outerPt.y < centerY && outerPt.x > centerX)) portName = 'P4';
-
         if (portName) {
           var sp = worldToScreen(outerPt.x, outerPt.y);
           ctx.save();
@@ -393,7 +349,6 @@
         }
       });
     }
-
     /* 5. 缺陷信标 */
     if (State.canvas.showDefects && State.summary) {
       (State.rawResults || []).filter(function (r) { return !r.pass; }).forEach(function (d) {
@@ -410,7 +365,6 @@
           ctx.beginPath();
           ctx.arc(sp.x, sp.y, Math.max(12, 15 * State.canvas.zoom), 0, Math.PI * 2);
           ctx.stroke();
-
           ctx.fillStyle = '#ef4444';
           ctx.beginPath();
           ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
@@ -419,7 +373,6 @@
         }
       });
     }
-
     /* 6. 两点测距标尺 */
     if (State.canvas.measurePoints.length > 0) {
       var pts = State.canvas.measurePoints.map(function (p) { return worldToScreen(p.x, p.y); });
@@ -437,7 +390,6 @@
         ctx.moveTo(pts[0].x, pts[0].y);
         ctx.lineTo(pts[1].x, pts[1].y);
         ctx.stroke();
-
         var w1 = State.canvas.measurePoints[0];
         var w2 = State.canvas.measurePoints[1];
         var dMil = Math.hypot(w1.x - w2.x, w1.y - w2.y);
@@ -455,14 +407,12 @@
       ctx.restore();
     }
   }
-
   function renderPourCanvasReviewBox(itemKey) {
     var State = root.State;
     var box = document.getElementById('pourCanvasReviewBox');
     var titleEl = document.getElementById('pourCanvasRevTitle');
     var bodyEl = document.getElementById('pourCanvasRevBody');
     if (!box || !bodyEl) return;
-
     State.activeReviewKey = itemKey;
     var findMatch = function (arr) {
       return (arr || []).find(function (x, idx) {
@@ -471,16 +421,13 @@
       });
     };
     var r = findMatch(State.filteredResults) || findMatch(State.groupedResults) || findMatch(State.rawResults);
-
     var isReviewed = State.reviewedItems.has(itemKey);
     if (titleEl && r) {
       titleEl.textContent = (r.checkCategoryName || '铜皮检查') + ' · ' + (r.targetLabel || itemKey);
     }
-
     var barStyle = isReviewed
       ? 'background:rgba(16,185,129,0.18);border:1px solid rgba(52,211,153,0.55);'
       : 'background:rgba(245,158,11,0.15);border:1px solid rgba(251,191,36,0.45);';
-
     var safeKey = esc(itemKey);
     bodyEl.innerHTML =
       '<div style="' + barStyle + 'border-radius:6px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">' +
@@ -498,13 +445,11 @@
       '</div>';
     box.style.display = 'block';
   }
-
   function closePourReviewBox() {
     var box = document.getElementById('pourCanvasReviewBox');
     if (box) box.style.display = 'none';
     root.State.activeReviewKey = null;
   }
-
   function locateElementInCanvas(checkCategory, targetId, itemKey) {
     root.switchTab('tabCanvas');
     safeRAF(function () {
@@ -513,7 +458,6 @@
       var w = canvas ? (canvas.width || 900) : 900;
       var h = canvas ? (canvas.height || 600) : 600;
       var tx = null, ty = null;
-
       var via = (root.State.vias || []).find(function (v) { return String(v.id) === String(targetId); });
       if (via) {
         tx = via.x;
@@ -531,7 +475,6 @@
           }
         }
       }
-
       if (tx != null && ty != null) {
         root.State.canvas.zoom = 5.5;
         root.State.canvas.panX = w / 2 - tx * root.State.canvas.zoom;
@@ -541,12 +484,10 @@
       renderCanvas();
     });
   }
-
   function initCanvas() {
     var canvas = document.getElementById('mainCanvas');
     if (!canvas || canvas.__pourBound) return;
     canvas.__pourBound = true;
-
     canvas.addEventListener('wheel', function (e) {
       e.preventDefault();
       var rect = canvas.getBoundingClientRect();
@@ -554,20 +495,17 @@
       var mouseY = e.clientY - rect.top;
       var zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
       var newZoom = Math.max(0.01, Math.min(500, root.State.canvas.zoom * zoomFactor));
-
       root.State.canvas.panX = mouseX - (mouseX - root.State.canvas.panX) * (newZoom / root.State.canvas.zoom);
       root.State.canvas.panY = mouseY - (mouseY - root.State.canvas.panY) * (newZoom / root.State.canvas.zoom);
       root.State.canvas.zoom = newZoom;
       renderCanvas();
     });
-
     canvas.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return;
       root.State.canvas.isDragging = true;
       root.State.canvas.dragStartX = e.clientX - root.State.canvas.panX;
       root.State.canvas.dragStartY = e.clientY - root.State.canvas.panY;
     });
-
     root.addEventListener('mousemove', function (e) {
       if (root.State.canvas.isDragging) {
         root.State.canvas.panX = e.clientX - root.State.canvas.dragStartX;
@@ -575,11 +513,9 @@
         renderCanvas();
       }
     });
-
     root.addEventListener('mouseup', function () {
       root.State.canvas.isDragging = false;
     });
-
     canvas.addEventListener('click', function (e) {
       if (!root.State.canvas.measureMode) return;
       var rect = canvas.getBoundingClientRect();
@@ -590,7 +526,6 @@
       }
       renderCanvas();
     });
-
     root.addEventListener('resize', function () {
       if (root.State.activeTab === 'tabCanvas') {
         resizeCanvas();
@@ -598,7 +533,6 @@
       }
     });
   }
-
   root.initCanvas = initCanvas;
   root.resizeCanvas = resizeCanvas;
   root.fitCanvasToLayout = fitCanvasToLayout;
@@ -610,7 +544,6 @@
   root.renderPourCanvasReviewBox = renderPourCanvasReviewBox;
   root.closePourReviewBox = closePourReviewBox;
   root.locateElementInCanvas = locateElementInCanvas;
-
   if (typeof root.initApp === 'function') {
     root.initApp();
   }

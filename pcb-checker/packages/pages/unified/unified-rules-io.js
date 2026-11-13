@@ -203,7 +203,7 @@ function handleTraceRulesFile(e) {
 
       renderRulesUI();
       if (State.rawText) runMasterInspection();
-      showToast(`已导入走线规则 JSON（已更新 ${newRules.length || State.rules.traceLayers.length} 条层规则）`);
+      showToast(`已导入走线规则 JSON：已更新 ${newRules.length || State.rules.traceLayers.length} 条层规则`);
     } catch (err) {
       alert('走线规则解析失败: ' + err.message);
     }
@@ -271,7 +271,7 @@ function handleConstraintJsonFile(e) {
       reexpandAll();
       renderRulesUI();
       if (State.rawText) runMasterInspection();
-      showToast(`已导入约束规则 JSON（已更新 ${State.rules.constraintSets.length} 套约束）`);
+      showToast(`已导入约束规则 JSON：已更新 ${State.rules.constraintSets.length} 套约束`);
     } catch (err) { alert('约束 JSON 解析失败: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);

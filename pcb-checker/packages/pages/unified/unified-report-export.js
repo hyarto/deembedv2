@@ -37,6 +37,6 @@ function exportUnifiedExcel() {
     c.categoryName, c.target, c.layer, c.item, c.actual, c.rule, c.pass ? '符合' : '不符合', c.reason
   ]);
   const csvContent = [csvHeaders.join(',')].concat(csvRows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(','))).join('\n');
-  openModal('导出工程分析报告 (CSV/Excel兼容)', csvContent, 'PCB_综合体检工程分析汇总表.csv');
+  openModal('导出工程分析报告', csvContent, 'PCB_综合体检工程分析汇总表.csv');
 }
 

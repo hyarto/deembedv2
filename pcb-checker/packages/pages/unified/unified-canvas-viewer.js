@@ -5,13 +5,11 @@
 function initCanvas() {
   const canvas = $('mainCanvas');
   if (!canvas) return;
-
   canvas.addEventListener('mousedown', e => {
     State.canvas.isDragging = true;
     State.canvas.dragStartX = e.clientX - State.canvas.panX;
     State.canvas.dragStartY = e.clientY - State.canvas.panY;
   });
-
   window.addEventListener('mousemove', e => {
     if (State.canvas.isDragging) {
       State.canvas.panX = e.clientX - State.canvas.dragStartX;
@@ -19,18 +17,15 @@ function initCanvas() {
       renderCanvas();
     }
   });
-
   window.addEventListener('mouseup', () => {
     State.canvas.isDragging = false;
   });
-
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.15 : 0.85;
     zoomCanvas(factor);
   }, { passive: false });
 }
-
 function resizeCanvas() {
   const canvas = $('mainCanvas');
   const container = $('canvasContainer');
@@ -38,21 +33,18 @@ function resizeCanvas() {
   canvas.width = container.clientWidth || 900;
   canvas.height = container.clientHeight || 650;
 }
-
 function worldToScreen(wx, wy) {
   return {
     x: wx * State.canvas.scale + State.canvas.panX,
     y: wy * State.canvas.scale + State.canvas.panY
   };
 }
-
 function screenToWorld(sx, sy) {
   return {
     x: (sx - State.canvas.panX) / State.canvas.scale,
     y: (sy - State.canvas.panY) / State.canvas.scale
   };
 }
-
 function getNetColor(netName) {
   const map = {
     '26_N': '#22c55e',
@@ -79,15 +71,11 @@ function getNetColor(netName) {
   const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
   return '#' + '00000'.substring(0, 6 - c.length) + c;
 }
-
 function fitCanvasToLayout() {
   const canvas = $('mainCanvas');
   if (!canvas) return;
   const { vias, traces, shapes } = State.elements;
-
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-  // 1. Include Vias
   vias.forEach(v => {
     const vx = v.x != null ? v.x : (v.origin ? v.origin[0] : 0);
     const vy = v.y != null ? v.y : (v.origin ? v.origin[1] : 0);
@@ -96,8 +84,6 @@ function fitCanvasToLayout() {
       minY = Math.min(minY, vy - 25); maxY = Math.max(maxY, vy + 25);
     }
   });
-
-  // 2. Include Traces
   traces.forEach(t => {
     const segs = (t.segments && t.segments.length > 0) ? t.segments : [t];
     segs.forEach(s => {
@@ -105,7 +91,6 @@ function fitCanvasToLayout() {
       const y1 = s.y1 != null ? s.y1 : (s.start ? s.start[1] : (s.p1 ? s.p1[1] : 0));
       const x2 = s.x2 != null ? s.x2 : (s.end ? s.end[0] : (s.p2 ? s.p2[0] : 0));
       const y2 = s.y2 != null ? s.y2 : (s.end ? s.end[1] : (s.p2 ? s.p2[1] : 0));
-
       if (x1 || y1 || x2 || y2) {
         minX = Math.min(minX, x1, x2); maxX = Math.max(maxX, x1, x2);
         minY = Math.min(minY, y1, y2); maxY = Math.max(maxY, y1, y2);
@@ -116,8 +101,6 @@ function fitCanvasToLayout() {
       }
     });
   });
-
-  // 3. Include Copper Shapes
   shapes.forEach(sh => {
     const pts = sh.polygon || sh.points || [];
     pts.forEach(pt => {
@@ -125,41 +108,33 @@ function fitCanvasToLayout() {
       minY = Math.min(minY, pt[1]); maxY = Math.max(maxY, pt[1]);
     });
   });
-
   if (minX === Infinity || minX === maxX || minY === maxY) {
     minX = 20900; maxX = 22700; minY = 35400; maxY = 35700;
   }
-
   const padding = 50;
   const cw = Math.max(100, (canvas.width || 900) - padding * 2);
   const ch = Math.max(100, (canvas.height || 650) - padding * 2);
   const ww = Math.max(maxX - minX, 20);
   const wh = Math.max(maxY - minY, 20);
-
   const scale = Math.min(cw / ww, ch / wh) * 0.95;
   State.canvas.scale = Math.max(0.0001, scale);
   State.canvas.panX = padding + (cw - ww * scale) / 2 - minX * scale;
   State.canvas.panY = padding + (ch - wh * scale) / 2 - minY * scale;
-
   renderCanvas();
 }
-
 function resetCanvasView() {
   fitCanvasToLayout();
 }
-
 function zoomCanvas(factor) {
   const canvas = $('mainCanvas');
   const cx = (canvas?.width || 900) / 2;
   const cy = (canvas?.height || 650) / 2;
-
   const newScale = Math.max(0.0001, Math.min(200, State.canvas.scale * factor));
   State.canvas.panX = cx - (cx - State.canvas.panX) * (newScale / State.canvas.scale);
   State.canvas.panY = cy - (cy - State.canvas.panY) * (newScale / State.canvas.scale);
   State.canvas.scale = newScale;
   requestCanvasRender();
 }
-
 function toggleLayer(layerKey) {
   if (layerKey === 'shapes') {
     State.canvas.showShapes = !State.canvas.showShapes;
@@ -179,7 +154,6 @@ function toggleLayer(layerKey) {
   }
   renderCanvas();
 }
-
 function toggleMeasure() {
   State.canvas.measuring = !State.canvas.measuring;
   State.canvas.measurePoints = [];
@@ -187,16 +161,12 @@ function toggleMeasure() {
   if (State.canvas.measuring) showToast('在画布上依次点击两点测量距离');
   renderCanvas();
 }
-
 function renderCanvas() {
   const canvas = $('mainCanvas');
   if (!canvas || !canvas.getContext) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // 1. Grid Background
   ctx.save();
   ctx.strokeStyle = '#1e293b';
   ctx.lineWidth = 0.5;
@@ -212,10 +182,7 @@ function renderCanvas() {
     }
   }
   ctx.restore();
-
   const { vias, traces, shapes } = State.elements;
-
-  // 2. Render Copper Shapes
   if (State.canvas.showShapes && shapes.length) {
     shapes.forEach(sh => {
       const pts = sh.polygon || sh.points || [];
@@ -237,8 +204,6 @@ function renderCanvas() {
       ctx.restore();
     });
   }
-
-  // 3. Render Traces (Full Line + Arc Segments Color-coded by Net)
   if (State.canvas.showTraces && traces.length) {
     traces.forEach(t => {
       const col = getNetColor(t.net);
@@ -248,9 +213,7 @@ function renderCanvas() {
       ctx.lineWidth = Math.max(2, w * State.canvas.scale);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-
       const segs = (t.segments && t.segments.length > 0) ? t.segments : [t];
-
       segs.forEach(s => {
         const isArc = s.type === 'arc' || s.isArc || s.kind === 'arc';
         if (isArc) {
@@ -261,23 +224,19 @@ function renderCanvas() {
           const y1 = s.y1 != null ? s.y1 : (s.start ? s.start[1] : (s.p1 ? s.p1[1] : 0));
           const x2 = s.x2 != null ? s.x2 : (s.end ? s.end[0] : (s.p2 ? s.p2[0] : 0));
           const y2 = s.y2 != null ? s.y2 : (s.end ? s.end[1] : (s.p2 ? s.p2[1] : 0));
-
           const scCenter = worldToScreen(cx, cy);
           const scRad = r * State.canvas.scale;
           const a1 = Math.atan2(y1 - cy, x1 - cx);
           const a2 = Math.atan2(y2 - cy, x2 - cx);
           const isCCW = (s.dir === 'CCW' || s.isClockwise === false);
-
           ctx.beginPath();
           ctx.arc(scCenter.x, scCenter.y, Math.max(1, scRad), a1, a2, !isCCW);
           ctx.stroke();
         } else {
-          // Line segment
           const x1 = s.x1 != null ? s.x1 : (s.start ? s.start[0] : (s.p1 ? s.p1[0] : 0));
           const y1 = s.y1 != null ? s.y1 : (s.start ? s.start[1] : (s.p1 ? s.p1[1] : 0));
           const x2 = s.x2 != null ? s.x2 : (s.end ? s.end[0] : (s.p2 ? s.p2[0] : 0));
           const y2 = s.y2 != null ? s.y2 : (s.end ? s.end[1] : (s.p2 ? s.p2[1] : 0));
-
           if (x1 || y1 || x2 || y2) {
             const p1 = worldToScreen(x1, y1);
             const p2 = worldToScreen(x2, y2);
@@ -291,8 +250,6 @@ function renderCanvas() {
       ctx.restore();
     });
   }
-
-  // 4. Render Vias (Batched & Frustum Culled for 60FPS Performance)
   if (State.canvas.showVias && vias.length) {
     const wTopLeft = screenToWorld(0, 0);
     const wBotRight = screenToWorld(canvas.width, canvas.height);
@@ -300,27 +257,21 @@ function renderCanvas() {
     const viewMaxX = Math.max(wTopLeft.x, wBotRight.x) + 30;
     const viewMinY = Math.min(wTopLeft.y, wBotRight.y) - 30;
     const viewMaxY = Math.max(wTopLeft.y, wBotRight.y) + 30;
-
     const gndPath = new Path2D();
     const sigPath = new Path2D();
     const drillPath = new Path2D();
     const labels = [];
     const showLabels = State.canvas.scale > 0.15;
-
     for (let i = 0; i < vias.length; i++) {
       const v = vias[i];
       const vx = v.x != null ? v.x : (v.origin ? v.origin[0] : 0);
       const vy = v.y != null ? v.y : (v.origin ? v.origin[1] : 0);
-
-      // Frustum culling
       if (vx < viewMinX || vx > viewMaxX || vy < viewMinY || vy > viewMaxY) continue;
-
       const sp = worldToScreen(vx, vy);
       const isGnd = /GND/i.test(v.net) || /GND/i.test(v.padstack);
       const padDiam = isGnd ? 7.906 : 9.94;
       const padRadScreen = Math.max(3, (padDiam / 2) * State.canvas.scale);
       const drillRadScreen = Math.max(1.5, (5.54 / 2) * State.canvas.scale);
-
       if (isGnd) {
         gndPath.moveTo(sp.x + padRadScreen, sp.y);
         gndPath.arc(sp.x, sp.y, padRadScreen, 0, Math.PI * 2);
@@ -328,30 +279,22 @@ function renderCanvas() {
         sigPath.moveTo(sp.x + padRadScreen, sp.y);
         sigPath.arc(sp.x, sp.y, padRadScreen, 0, Math.PI * 2);
       }
-
       drillPath.moveTo(sp.x + drillRadScreen, sp.y);
       drillPath.arc(sp.x, sp.y, drillRadScreen, 0, Math.PI * 2);
-
       if (showLabels) {
         labels.push({ text: v.net || v.name || `#${v.id}`, x: sp.x, y: sp.y - padRadScreen - 3, color: isGnd ? '#94a3b8' : '#38bdf8' });
       }
     }
-
-    // Draw GND in 1 batch
     ctx.fillStyle = '#475569';
     ctx.fill(gndPath);
     ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 1.2;
     ctx.stroke(gndPath);
-
-    // Draw Signal in 1 batch
     ctx.fillStyle = '#6366f1';
     ctx.fill(sigPath);
     ctx.strokeStyle = '#a5b4fc';
     ctx.lineWidth = 1.5;
     ctx.stroke(sigPath);
-
-    // Draw Padstack Error Vias in RED
     if (typeof State !== 'undefined' && State.results && State.results.fanout && State.results.fanout.checks) {
       const padErrPath = new Path2D();
       State.results.fanout.checks.forEach(chk => {
@@ -375,12 +318,8 @@ function renderCanvas() {
       ctx.lineWidth = 2;
       ctx.stroke(padErrPath);
     }
-
-    // Draw Drills in 1 batch
     ctx.fillStyle = '#0f172a';
     ctx.fill(drillPath);
-
-    // Draw labels
     if (labels.length > 0 && labels.length < 400) {
       ctx.font = '10px var(--mono)';
       ctx.textAlign = 'center';
@@ -390,8 +329,6 @@ function renderCanvas() {
       }
     }
   }
-
-  // 5. Render Defect Markers
   if (State.canvas.showDefects && State.allChecks.length) {
     const fails = State.allChecks.filter(c => !c.pass);
     fails.forEach(f => {
@@ -415,7 +352,6 @@ function renderCanvas() {
           }
         }
       }
-
       if (pt) {
         ctx.save();
         ctx.beginPath();
@@ -424,7 +360,6 @@ function renderCanvas() {
         ctx.lineWidth = 2;
         ctx.setLineDash([3, 3]);
         ctx.stroke();
-
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = '#ef4444';
@@ -433,8 +368,6 @@ function renderCanvas() {
       }
     });
   }
-
-  // 6. Interactive Measure Line
   if (State.canvas.measuring && State.canvas.measurePoints.length) {
     ctx.save();
     ctx.strokeStyle = '#facc15';
@@ -447,7 +380,6 @@ function renderCanvas() {
       const p2 = State.canvas.measurePoints[1];
       ctx.lineTo(p2.x, p2.y);
       ctx.stroke();
-
       const w1 = screenToWorld(p1.x, p1.y);
       const w2 = screenToWorld(p2.x, p2.y);
       const dist = Math.sqrt((w1.x - w2.x) ** 2 + (w1.y - w2.y) ** 2);
@@ -457,28 +389,21 @@ function renderCanvas() {
     }
     ctx.restore();
   }
-
-  // 7. Render Highlight Target Focus Reticle & Zoom Banner (When located from checklist)
   if (State.canvas.highlightTarget) {
     const ht = State.canvas.highlightTarget;
     const sp = worldToScreen(ht.x, ht.y);
-
     ctx.save();
-    // Glowing pulse rings
     ctx.beginPath();
     ctx.arc(sp.x, sp.y, 46, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
     ctx.lineWidth = 8;
     ctx.stroke();
-
     ctx.beginPath();
     ctx.arc(sp.x, sp.y, 30, 0, Math.PI * 2);
     ctx.strokeStyle = '#ef4444';
     ctx.lineWidth = 3;
     ctx.setLineDash([5, 4]);
     ctx.stroke();
-
-    // Crosshairs
     ctx.setLineDash([]);
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 2;
@@ -488,8 +413,6 @@ function renderCanvas() {
     ctx.moveTo(sp.x, sp.y - 42); ctx.lineTo(sp.x, sp.y - 14);
     ctx.moveTo(sp.x, sp.y + 14); ctx.lineTo(sp.x, sp.y + 42);
     ctx.stroke();
-
-    // Center focal point
     ctx.beginPath();
     ctx.arc(sp.x, sp.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = '#ef4444';
@@ -497,8 +420,6 @@ function renderCanvas() {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
     ctx.stroke();
-
-    // Callout Box
     const labelTxt = `【缺陷定位焦点】 ${ht.label || ''}`;
     ctx.font = 'bold 13.5px sans-serif';
     const txtWidth = ctx.measureText(labelTxt).width;
@@ -506,48 +427,40 @@ function renderCanvas() {
     const boxH = 30;
     const boxX = sp.x - boxW / 2;
     const boxY = sp.y - 68;
-
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(boxX, boxY, boxW, boxH);
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 2;
     ctx.strokeRect(boxX, boxY, boxW, boxH);
-
     ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
     ctx.fillText(labelTxt, sp.x, boxY + 20);
     ctx.restore();
   }
 }
-
 function closeUnifiedCanvasReviewBox() {
   const box = $('unifiedCanvasReviewBox');
   if (box) box.style.display = 'none';
   State.canvas.activeReviewCheckId = null;
 }
-
 function renderUnifiedCanvasReviewBox(checkId) {
   const box = $('unifiedCanvasReviewBox');
   const titleEl = $('unifiedCanvasRevTitle');
   const bodyEl = $('unifiedCanvasRevBody');
   if (!box || !bodyEl) return;
-
   const chk = State.allChecks.find(c => c.id == checkId || c.objId == checkId);
   if (!chk) {
     box.style.display = 'none';
     return;
   }
-
   State.canvas.activeReviewCheckId = chk.id;
   const isReviewed = State.reviewedSet.has(chk.id);
   if (titleEl) {
     titleEl.textContent = `[${chk.categoryName || '检查项'}] ${chk.target || chk.id}`;
   }
-
   const barBg = isReviewed
     ? 'background:rgba(16,185,129,.18);border:1px solid rgba(52,211,153,.55);'
     : 'background:rgba(245,158,11,.15);border:1px solid rgba(251,191,36,.45);';
-
   bodyEl.innerHTML = `
     ${!chk.pass ? `
       <div style="${barBg}border-radius:6px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -571,16 +484,12 @@ function renderUnifiedCanvasReviewBox(checkId) {
   `;
   box.style.display = 'block';
 }
-
 function locateDefectInCanvas(category, id) {
-  // 1. Find target defect item or object in State.allChecks or elements
   const fails = State.allChecks.filter(c => !c.pass);
   const target = fails.find(f => f.id == id) || State.allChecks.find(f => f.id == id) || fails.find(f => f.objId == id) || State.allChecks.find(f => f.objId == id);
   const searchId = (target && target.objId != null) ? target.objId : id;
-
   let targetX = null, targetY = null;
   let targetLabel = '';
-
   if (target && target.viaCoord) {
     targetX = target.viaCoord[0];
     targetY = target.viaCoord[1];
@@ -610,30 +519,22 @@ function locateDefectInCanvas(category, id) {
       }
     }
   }
-
-  // 2. Switch tab without autoFit resetting the view
   switchTab('tabCanvas', false);
   resizeCanvas();
-
   if (targetX != null && targetY != null) {
     const canvas = $('mainCanvas');
     const cx = (canvas?.width || 900) / 2;
     const cy = (canvas?.height || 650) / 2;
-
-    // Magnify onto the defect location (scale = 5.0 for close-up inspection)
     const targetScale = 5.0;
     State.canvas.scale = targetScale;
     State.canvas.panX = cx - targetX * targetScale;
     State.canvas.panY = cy - targetY * targetScale;
-
-    // Set highlighted target marker
     State.canvas.highlightTarget = {
       x: targetX,
       y: targetY,
       label: targetLabel || `缺陷点 X ${targetX.toFixed(1)} · Y ${targetY.toFixed(1)}`,
       time: Date.now()
     };
-
     renderCanvas();
     if (target) renderUnifiedCanvasReviewBox(target.id);
     showToast(`已定位缺陷 X ${targetX.toFixed(1)} · Y ${targetY.toFixed(1)}`);
@@ -642,7 +543,3 @@ function locateDefectInCanvas(category, id) {
     if (target) renderUnifiedCanvasReviewBox(target.id);
   }
 }
-
-/**
- * 通用弹窗与导出系统
- */
