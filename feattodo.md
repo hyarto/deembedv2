@@ -29,5 +29,5 @@
 | F6 | 大样本保护：孔盘缺陷超过 1000 时禁止「全部显示」 | [ ] |
 | F7 | 测试：迁入 dfm-ui-test 新增用例并适配重构后的 tests/ui | [ ] |
 | F8 | unified.html 导出弹窗下载逻辑核对；综合页是否需要同步 padstackRules | [ ] |
-| F10 | 规则保存：点击保存后弹出可复制的 JSON 导出窗口（dfmRuleExportDialog），受限 iframe 拦截下载时仍可取到内容 | [ ] |
+| F10 | 规则保存：点击保存后弹出可复制的 JSON 导出窗口（dfmRuleExportDialog），受限 iframe 拦截下载时仍可取到内容；新页面包 dfm-rule-export.js；rules-io 旧用例迁移并新增 2 条 | [x] |
 | F9 | 文档与缓存版本号：AGENTS.md / README.md 同步，`?v=` 全站 +1，`npm run check` 全绿 | [ ] |

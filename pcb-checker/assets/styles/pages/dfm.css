@@ -466,3 +466,51 @@ tr.reviewed {
 #padstackRuleTable .dfm-ps-empty {
   text-align: center;
 }
+
+/* ---------- 规则 JSON 导出窗口 ---------- */
+.dfm-export-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(31, 41, 55, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dfm-export-panel {
+  background: #ffffff;
+  color: var(--text, #1f2937);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  width: min(760px, 96vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dfm-export-panel h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.dfm-export-json {
+  width: 100%;
+  height: min(48vh, 420px);
+  box-sizing: border-box;
+  font: 12px/1.5 var(--mono, ui-monospace, monospace);
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.dfm-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}

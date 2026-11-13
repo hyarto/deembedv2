@@ -65,14 +65,48 @@ function test(name, fn) {
     assert.strictEqual(rows(), 2);
   });
 
-  test('点击「保存规则到本地」生成 JSON 下载', () => {
+  test('点击「保存规则到本地」先弹出 JSON 窗口，点「下载 JSON」才生成文件', () => {
     let blobs = 0;
     w.URL.createObjectURL = () => { blobs++; return 'blob:test'; };
     w.URL.revokeObjectURL = () => {};
     w.HTMLAnchorElement.prototype.click = function () {};
     $('btnSaveDfmRules').click();
+    assert.strictEqual(blobs, 0, '弹窗前不应直接下载');
+    const dlg = $('dfmRuleExportDialog');
+    assert.ok(dlg && $('dfmRuleExportJson'), '应显示 JSON 导出窗口');
+    const json = JSON.parse($('dfmRuleExportJson').value);
+    assert.strictEqual(json.kind, w.DfmRuleConfig.kind);
+    assert.ok(json.fields && Array.isArray(json.layerRules) && json.padstackRules, '导出内容缺少 fields / layerRules / padstackRules');
+    const buttons = [...dlg.querySelectorAll('button')];
+    assert.deepStrictEqual(buttons.map(b => b.textContent), ['复制 JSON', '下载 JSON', '关闭']);
+    buttons[1].click();
     assert.strictEqual(blobs, 1);
+    assert.ok(/下载/.test(dlg.querySelector('[role=status]').textContent), '下载后应有状态提示');
+    buttons[2].click();
+    assert.strictEqual($('dfmRuleExportDialog'), null, '关闭按钮应移除窗口');
     assert.strictEqual(ctx.errors.length, 0, ctx.errors.join(' | '));
+  });
+
+  test('导出窗口：重复点击只保留一个，Esc 与点击遮罩可关闭', () => {
+    $('btnSaveDfmRules').click();
+    $('btnSaveDfmRules').click();
+    assert.strictEqual(d.querySelectorAll('#dfmRuleExportDialog').length, 1);
+    d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.strictEqual($('dfmRuleExportDialog'), null, 'Esc 应关闭');
+    $('btnSaveDfmRules').click();
+    $('dfmRuleExportDialog').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    assert.strictEqual($('dfmRuleExportDialog'), null, '点击遮罩应关闭');
+  });
+
+  test('导出窗口内容经 textarea.value 输出，名称含 HTML 字符时不被解析', () => {
+    w.DfmRuleConfig.loadFromObject({
+      kind: 'pcb-dfm-rule-config', version: 1, fields: {},
+      layerRules: [{ layers: '<img src=x onerror=alert(1)>', gnd: 1, sig: 1, pad: 1 }]
+    });
+    $('btnSaveDfmRules').click();
+    assert.ok($('dfmRuleExportJson').value.includes('<img src=x'), 'JSON 原文应保留');
+    assert.strictEqual(d.querySelectorAll('#dfmRuleExportDialog img').length, 0, '不得产生 img 节点');
+    $('dfmRuleExportDialog').querySelector('button:last-child').click();
   });
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
