@@ -42,7 +42,7 @@ node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
    函数 > 80 行仍有 55 个（棘轮基线，只降不升），最大的是
    `computeSchemeViewLayout`（511 行）、`runFanoutInspection`（404 行）、`renderSchemeEnlargedCanvas`（351 行）、
    `runCopperCheck`（258 行）、各页 `renderCanvas`（260~280 行）、`runDfmCheck`（204 行，已抽出选项解析 / 网格索引 / 网络汇总）。
-   HTML 与 CSS 超 600 行的有 `unified.html`（1337）、`fanout.html`（663）、`dfm.html`（635）、`unified.css`（892）、`eda-shell.css`（755）。
+   HTML 与 CSS 超 600 行的有 `unified.html`（1337）、`fanout.html`（663）、`dfm.html`（628）、`unified.css`（892）、`eda-shell.css`（755）。
    以上是下一轮拆分清单；动到这些函数时按阶段函数拆，并用「重构前后输出逐项一致」的对拍验证。
 3. **页面 = 薄 HTML + 一份 CSS + 若干页面包**。HTML 里不写内联 `<style>` / 大段 `<script>`；
    内联 `style=""` 只用于一次性的动态尺寸，布局与配色一律进样式表。
@@ -90,7 +90,7 @@ pcb-checker/
 | --- | --- |
 | index.html | engines/trace |
 | copper.html | engines/copper |
-| dfm.html | geometry + engines/dfm |
+| dfm.html | geometry + engines/dfm；Padstack 尺寸覆盖经解析选项 `padstackRules` 进引擎，综合页不传该选项，行为不变 |
 | fanout.html | engines/fanout |
 | pour.html | engines/pour |
 | unified.html | geometry + copper + dfm + fanout + pour，走线判定在 `unified-runner.js` 与 `unified-trace-analysis.js` |
@@ -230,15 +230,22 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 - 引擎结果里的 `summary.elapsedMs` 是耗时遥测、扇出方案库记录 id 带 `时间戳+随机` 后缀：
   两者不影响判定字段，做「同输入输出一致」对拍时要先剔除耗时键（`tests/engine/engine-determinism.test.js` 已处理）。
 - 拆分经典脚本后顶层 `const` 的初始化顺序依赖脚本顺序：被初始化代码引用的默认值文件要排在前面。
+- DFM 页的全局焊盘直径 / 一钻直径输入框（`inpGndPadDiam` 等）只是隐藏，不是删除：旧用例、规则快照与综合页口径仍读它们当默认值，
+  真正生效的尺寸来自 Padstack 覆盖表（`padstackRules`，未覆盖的 Padstack 用全局默认值）。不要删这四个 id。
+- DFM 明细表是 9 列：孔到孔（孔盘对）缺陷并入同一张表，行带 `tr.pad-pair-row`，序号接在线到孔记录之后。
+  孔盘对缺陷超过 1000 条时禁止「全部显示」，自动退回每页 200 条。
+- DFM「规律分析」的归并是引擎纯函数 `buildDfmDefectPatternAnalysis`；旧四个下拉与旧图表收进隐藏容器但保留 id，
+  列筛选弹层是 `dfm-pattern-filter-popover.js`，外点监听延后一拍挂接，Esc 立即关闭。
+- DFM 规则保存先弹出可复制的 JSON 窗口（`dfmRuleExportDialog`），再选复制或下载；受限 iframe 拦截下载时仍能取到内容。
 
 ## 10. 提交与 PR
 
 - 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`refactor(unified): …`、`test(ui): …`、`docs: …`，
   正文写「原来怎样 / 现在怎样 / 为什么」，并附关键验证数字。
 - 每个任务一个分支，PR 到 `main`；PR 描述含：背景、改动清单、样例数据实测数字、测试结果。
-- **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 34 + 6 / 扇出 12 / 铜皮 11 / 约束导入 17 /
+- **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 40 + 6 / 扇出 12 / 铜皮 11 / 约束导入 17 /
   工程守卫 5 / UMD 双端 5 / 引擎确定性双跑 5；
-  UI：copper 115 + 8 / dfm 35 + 7 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7 /
+  UI：copper 115 + 8 / dfm 回归 35 + 界面 10 + 规律模式 12 + 明细合并 15 + 规则读写 8 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7 /
   脚本清单 5。
 - 不提交 `node_modules/`、临时脚本、开发机绝对路径、`dev/`、`uploads/`、截图等过程产物。
 

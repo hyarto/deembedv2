@@ -30,7 +30,7 @@
 | F7 | 测试：迁入 dfm-ui-test 新增用例并适配重构后的 tests/ui。核对结果：旧 dfm-ui-test 里按名字查不到的 6 条（10 mil 孔盘对 8 条、列筛选、归并、分页位置、Padstack 批量、返回保留定位行）已逐条对应到 dfm-regression / dfm-ui / dfm-pattern-modes / dfm-results-merge 的同义用例，断言覆盖不少于旧版 | [x] |
 | F8 | unified.html 导出弹窗下载逻辑核对；综合页是否需要同步 padstackRules。结论：压缩包里综合页没有任何 padstackRules 相关改动，引擎选项可选、不传则行为不变，不同步；导出弹窗只是下载按钮改成每次 openModal 重绑 onclick 并删掉 downloadModalContent，功能等价，重构后保留「全局下载函数 + 弹窗名状态」，不合并（见 D9） | [x] |
 | F10 | 规则保存：点击保存后弹出可复制的 JSON 导出窗口（dfmRuleExportDialog），受限 iframe 拦截下载时仍可取到内容；新页面包 dfm-rule-export.js；rules-io 旧用例迁移并新增 2 条 | [x] |
-| F9 | 文档与缓存版本号：AGENTS.md / README.md 同步，`?v=` 全站 +1，`npm run check` 全绿 | [ ] |
+| F9 | 文档与缓存版本号：AGENTS.md / README.md 同步（用例基线、已知坑、dfm.html 行数 628、综合页不传 padstackRules），全站 `?v=11` → `?v=12`（153 处），`npm run check` 32 个脚本全绿 | [x] |
 
 ## 与旧版压缩包的有意偏离
 
