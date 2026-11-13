@@ -38,7 +38,8 @@ node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
 2. **体量上限**：单个 JS 文件 **≤ 600 行**（超过 800 行视为必须拆分），单个函数 **≤ 80 行**。
    新增功能时顺手把碰到的超标文件或函数拆开，不要继续往上堆。
    超标文件拆分后要用行数脚本复核，不要凭印象说“已拆完”。
-   **当前实测**：`packages/` 下 JS 文件均 ≤ 600 行；函数 > 80 行仍有约 58 个，最大的是
+   **当前实测**（由 `tests/engine/engineering-guards.test.js` 自动守住）：`packages/` 下 JS 文件均 ≤ 600 行；
+   函数 > 80 行仍有 55 个（棘轮基线，只降不升），最大的是
    `computeSchemeViewLayout`（511 行）、`runFanoutInspection`（404 行）、`renderSchemeEnlargedCanvas`（351 行）、
    `runCopperCheck`（258 行）、各页 `renderCanvas`（260~280 行）、`runDfmCheck`（204 行，已抽出选项解析 / 网格索引 / 网络汇总）。
    HTML 与 CSS 超 600 行的有 `unified.html`（1337）、`fanout.html`（663）、`dfm.html`（635）、`unified.css`（892）、`eda-shell.css`（755）。
@@ -77,7 +78,7 @@ pcb-checker/
     pages/<页面>/                 页面包，经典脚本，按功能拆分
   sample/                         示例数据 + shapely 基准夹具
   tests/
-    engine/*.test.js              引擎单测、几何对拍
+    engine/*.test.js              引擎单测、几何对拍、工程化守卫与 UMD 双端审计
     ui/*.test.js                  jsdom 页面测试
     bench/*.bench.js              性能基准
     helpers/open-page.js          jsdom 页面加载器：自动内联 <link> 与 <script src>
@@ -233,8 +234,10 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 - 提交信息用**中文约定式**：`feat(dfm): …`、`fix(geometry): …`、`refactor(unified): …`、`test(ui): …`、`docs: …`，
   正文写「原来怎样 / 现在怎样 / 为什么」，并附关键验证数字。
 - 每个任务一个分支，PR 到 `main`；PR 描述含：背景、改动清单、样例数据实测数字、测试结果。
-- **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 34 + 6 / 扇出 7 / 铜皮 11 / 约束导入 17；
-  UI：copper 115 + 8 / dfm 35 + 7 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7。
+- **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 34 + 6 / 扇出 12 / 铜皮 11 / 约束导入 17 /
+  工程守卫 5 / UMD 双端 5；
+  UI：copper 115 + 8 / dfm 35 + 7 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7 /
+  脚本清单 5。
 - 不提交 `node_modules/`、临时脚本、开发机绝对路径、`dev/`、`uploads/`、截图等过程产物。
 
 ## 11. 交付标准
