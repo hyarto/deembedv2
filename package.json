@@ -7,11 +7,14 @@
     "serve": "node serve.js",
     "serve:pcb": "node serve.js --entry=pcb",
     "serve:si": "node serve.js --entry=si",
-    "test": "node pcb-checker/geometry-oracle-test.js && node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js && node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/copper-rule-import-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js && node pcb-checker/theme-unify-test.js && node pcb-checker/portal-and-controls-test.js",
-    "test:engine": "node pcb-checker/geometry-oracle-test.js && node pcb-checker/test.js && node pcb-checker/dfm-test.js && node pcb-checker/fanout-test.js && node pcb-checker/pour-test.js",
-    "test:ui": "node pcb-checker/ui-test.js && node pcb-checker/copper-ui-test.js && node pcb-checker/copper-rule-import-test.js && node pcb-checker/dfm-ui-test.js && node pcb-checker/fanout-ui-test.js && node pcb-checker/pour-ui-test.js && node pcb-checker/ui-prefs-test.js && node pcb-checker/nav-unify-test.js && node pcb-checker/theme-unify-test.js && node pcb-checker/portal-and-controls-test.js",
-    "bench": "node pcb-checker/bench-perf.js",
-    "test:geometry": "node pcb-checker/geometry-oracle-test.js"
+    "test": "node tools/run-tests.js all",
+    "test:engine": "node tools/run-tests.js engine",
+    "test:ui": "node tools/run-tests.js ui",
+    "test:geometry": "node tools/run-tests.js engine geometry",
+    "bench": "node tools/run-tests.js bench",
+    "smoke": "node tools/browser-smoke.js",
+    "check": "node tools/run-tests.js full",
+    "smoke:click": "node tools/browser-clickall.js"
   },
   "devDependencies": {
     "jsdom": "^29.1.1"

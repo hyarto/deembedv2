@@ -2,2791 +2,560 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PCB 铜皮检查工具 (Copper Pour Inspection)</title>
-<style>
-:root{
-  --bg:#f4f6f9;--card:#ffffff;--text:#1f2937;--sub:#6b7280;--line:#e3e8ef;
-  --pri:#2563eb;--pri-bg:#f8fafc;--pri-hover:#1d4ed8;
-  --bad:#dc2626;--bad-bg:#fef2f2;--bad-line:#fecaca;
-  --ok:#16a34a;--ok-bg:#f0fdf4;--ok-line:#bbf7d0;
-  --warn:#d97706;--warn-bg:#fffbeb;--warn-line:#fde68a;
-  --copper:#b45309;--copper-bg:#fef3c7;--copper-line:#fcd34d;
-  --font:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
-
-
-nav#tabs button .badge{font-size:11px;padding:1px 6px;border-radius:10px;background:#334155;color:#f1f5f9}
-nav#tabs button.active .badge{background:#2563eb;color:#fff}
-
-main{flex:1;max-width:1500px;width:100%;margin:0 auto;padding:12px 24px 16px}
-.tab{display:none}
-.tab.active{display:block}
-
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#111827}
-.card h3{font-size:13px;font-weight:700;margin:12px 0 6px 0;color:#374151}
-.hint{font-size:12px;color:var(--sub);line-height:1.6}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none}
-.btn.pri{background:var(--pri);color:#fff}
-.btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;border-color:var(--line);color:#374151}
-.btn.sec:hover{background:#f8fafc;border-color:#cbd5e1}
-.btn.sec.active{background:#f1f5f9;border-color:#38bdf8;color:#2563eb}
-.btn.bad{background:#fee2e2;color:var(--bad);border-color:#fecaca}
-.btn.bad:hover{background:#fecaca}
-.btn.copper{background:var(--pri);color:#fff}
-.btn.copper:hover{background:var(--pri-hover)}
-.btn.small{font-size:12px;padding:4px 8px}
-
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
-.stat-box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.stat-box .lbl{font-size:12px;color:var(--sub)}
-.stat-box .val{font-size:22px;font-weight:700;color:#111827;margin-top:2px;font-family:var(--mono)}
-
-.stat-box.ok .val{color:var(--ok)}
-
-.stat-box.bad .val{color:var(--bad)}
-
-.stat-box.warn .val{color:var(--warn)}
-
-.stat-box.copper .val{color:var(--copper)}
-
-.dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all .15s}
-.dropzone:hover,.dropzone.dragover{border-color:var(--pri);background:var(--pri-bg)}
-.dropzone .t1{font-size:14px;font-weight:600;color:#1e293b}
-.dropzone .t2{font-size:12px;color:var(--sub);margin-top:4px}
-
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
-.form-item{display:flex;flex-direction:column;gap:4px}
-.form-item label{font-size:12px;font-weight:600;color:#374151}
-.form-item input, .form-item select, .form-item textarea{border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:var(--text);font-family:inherit}
-.form-item textarea{font-family:var(--mono);font-size:12px}
-
-.chip-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
-.chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:12px;background:#f1f5f9;border:1px solid #e3e8ef;color:#6b7280;cursor:pointer;transition:all .15s;font-family:var(--mono);user-select:none}
-.chip:hover{background:#f1f5f9;border-color:#38bdf8;color:#2563eb}
-.chip.active{background:#2563eb;color:#fff;border-color:#2563eb}
-
-.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
-th{background:#f1f5f9;padding:8px 10px;font-weight:600;color:#334155;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid var(--line);color:#1f2937;vertical-align:middle}
-tr:hover td{background:#f8fafc}
-tr.reviewed td{opacity:.55;background:#fcfcfc}
-tr.row-fail td{background:#fffaf0}
-tr.row-pass td{background:#fafdfb}
-tr.subrow td{background:#f8fafc;padding:6px 12px;border-left:3px solid #2563eb}
-
-.badge-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px}
-.badge-tag.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
-.badge-tag.bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
-.badge-tag.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
-.badge-tag.copper{background:var(--copper-bg);color:var(--copper);border:1px solid var(--copper-line)}
-.badge-tag.gray{background:#f1f5f9;color:#6b7280;border:1px solid #e3e8ef}
-
-/* Canvas Viewport */
-.canvas-container{position:relative;width:100%;height:680px;background:#0f172a;border-radius:8px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
-canvas#mainCanvas{width:100%;height:100%;display:block;cursor:grab}
-canvas#mainCanvas:active{cursor:grabbing}
-
-.canvas-toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;background:rgba(15,23,42,.85);backdrop-filter:blur(6px);padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,.15);z-index:10}
-.canvas-toolbar button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 10px;font-size:12px;border-radius:4px;cursor:pointer;font-weight:600;transition:all .15s}
-.canvas-toolbar button:hover{background:rgba(255,255,255,.25)}
-.canvas-toolbar button.active{background:#2563eb;border-color:#38bdf8}
-
-.canvas-legend{position:absolute;bottom:12px;left:12px;background:rgba(15,23,42,.88);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.15);color:#e3e8ef;font-size:11px;display:flex;gap:12px;align-items:center;z-index:10}
-.legend-item{display:flex;align-items:center;gap:6px}
-.legend-color{width:12px;height:12px;border-radius:3px}
-
-.ruler-readout{position:absolute;bottom:12px;right:12px;background:rgba(15,23,42,.88);border:1px solid rgba(255,255,255,.2);color:#38bdf8;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;z-index:10}
-
-/* Modal */
-.modal-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:all .2s}
-.modal-mask.open{opacity:1;pointer-events:auto}
-.modal-box{background:#fff;border-radius:10px;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2);padding:20px;position:relative}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.modal-header h3{font-size:16px;font-weight:700;color:#111827}
-
-.pattern-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:14px}
-.pattern-card h3{font-size:13px;font-weight:700;color:#111827;margin-bottom:10px}
-.pattern-box{background:#f8fafc;border-left:4px solid var(--copper);padding:10px 14px;border-radius:0 6px 6px 0;margin:8px 0;font-size:12px;line-height:1.7;color:#374151}
-
-/* Global Display: 铺满宽屏（全站跨页面记忆） */
-.global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#f1f5f9 !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
-.global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#38bdf8;color:#fff !important}
-html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
-html.pcb-global-wide .canvas-container{height:calc(100vh - 230px) !important;min-height:580px !important}
-  /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
-  header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
-  header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
-  header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
-  header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
-  header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
-  nav#tabs{flex:none;display:flex;gap:4px;background:#fff;border-bottom:1px solid #e3e8ef;padding:0 16px;overflow-x:auto;z-index:29}
-  nav#tabs button{display:inline-flex;align-items:center;gap:6px;background:none;border:none;border-bottom:3px solid transparent;padding:12px 18px;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;white-space:nowrap;transition:all .15s}
-  nav#tabs button:hover{color:#2563eb;background:#f7f9fc}
-  nav#tabs button.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600}
-  nav#tabs .badge,nav#tabs .badge-pill{font-size:11px;font-weight:600;line-height:1.5;background:#e2e8f0;color:#6b7280;border-radius:10px;padding:1px 7px}
-  nav#tabs button.active .badge,nav#tabs button.active .badge-pill{background:#2563eb;color:#fff}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCB 铜皮检查工具</title>
+<link rel="stylesheet" href="assets/styles/tokens.css?v=11">
+<link rel="stylesheet" href="assets/styles/eda-shell.css?v=11">
+<link rel="stylesheet" href="assets/styles/eda-dock.css?v=11">
+<link rel="stylesheet" href="assets/styles/components.css?v=11">
+<link rel="stylesheet" href="assets/styles/pages/pour.css?v=11">
 </head>
-<body>
+<body class="eda-workbench">
 
-<header>
-  <h1>PCB 铜皮检查工具 <span class="tag">Copper Pour / 铺铜覆盖与几何规则</span></h1>
-  <span class="sub">孔经过层铺铜 (50mil) · 异型铜皮比对 · 走线参考层超宽 (50mil) · 孤立小铜皮 · 圆弧半径</span>
-  <div class="navlinks">
-    <a href="index.html">走线检查</a>
-    <a href="copper.html">约束检查</a>
-    <a href="dfm.html">加工能力检查</a>
-    <a href="fanout.html">扇出方案检查</a>
-    <a href="pour.html" class="active">铜皮检查</a>
-    <a href="unified.html">综合一体化检查</a>
-<div class="global-display-ctrl">
-      <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8h13M4.5 5l-3 3 3 3M11.5 5l3 3-3 3"/></svg>
-        <span id="lblGlobalWide">铺满宽屏</span>
-      </button>
+<aside class="eda-left-rail">
+  <header>
+    <div class="eda-brand-top">
+      <span class="eda-sys-code">EDA · POR</span>
+      <a href="portal.html" class="eda-portal-link" data-tip="返回统一入口启动台">启动台</a>
     </div>
-  </div>
-</header>
+    <h1>PCB 铜皮检查工具 <span class="tag">POUR</span></h1>
+    <span class="sub">孔层铺铜 · 异型模板 · 参考层超宽 · 孤立小铜皮 · 最小弧半径</span>
+  </header>
 
-<nav id="tabs">
-  <button class="active" onclick="switchTab('tabRules')">① 规则约束配置</button>
-  <button onclick="switchTab('tabImport')">② 检查数据导入</button>
-  <button onclick="switchTab('tabResults')">③ 检查结果与异常明细 <span class="badge" id="badgeDefectCount">0</span></button>
-  <button onclick="switchTab('tabCanvas')">④ 空间几何 2D 可视化</button>
-  <button onclick="switchTab('tabAnalysis')">⑤ 缺陷规律与工程分析</button>
-</nav>
-
-<main>
-
-  <!-- Top KPI Summary Bar -->
-  <div class="summary-grid">
-    <div class="stat-box copper">
-      <div class="lbl">导入铜皮总数</div>
-      <div class="val"><span id="statTotalShapes">0</span> <span style="font-size:12px;font-weight:normal;color:#b45309">块 Shape</span></div>
-    </div>
-    <div class="stat-box">
-      <div class="lbl">导入过孔 / 走线</div>
-      <div class="val"><span id="statViasTraces">0 / 0</span> <span style="font-size:12px;font-weight:normal;color:#6b7280">个</span></div>
-    </div>
-    <div class="stat-box bad">
-      <div class="lbl"> 检查不符合项 (缺陷总数)</div>
-      <div class="val"><span id="statTotalDefects">0</span> <span style="font-size:12px;font-weight:normal;color:#dc2626">处超标</span></div>
-    </div>
-    <div class="stat-box ok">
-      <div class="lbl"> 检查通过项</div>
-      <div class="val"><span id="statTotalPass">0</span> <span style="font-size:12px;font-weight:normal;color:#16a34a">项符合</span></div>
+  <div class="eda-rail-section">
+    <div class="eda-rail-label">检查模块</div>
+    <div class="navlinks">
+      <a href="index.html" data-code="TRC" data-tip="网络走线线宽组合顺序、线长区间与差分对等长核对">走线检查</a>
+      <a href="copper.html" data-code="CON" data-tip="叠层约束表解析、过孔配对与反焊盘逐层尺寸核对">约束检查</a>
+      <a href="dfm.html" data-code="DFM" data-tip="孔-孔、线-孔及异网孔盘 Airgap 几何间距测量与分层判定">加工能力检查</a>
+      <a href="fanout.html" data-code="FAN" data-tip="过孔连通聚类、刚体变换方案匹配与孔心距分色预览">扇出方案检查</a>
+      <a href="pour.html" class="active" data-code="POR" data-tip="孔经过层铺铜、异型铜皮比对、参考层超宽、碎铜与圆弧半径核对">铜皮检查</a>
+      <a href="unified.html" data-code="UNI" data-tip="四槽位数据输入与五大检查引擎联动汇总工作台">综合一体化检查</a>
     </div>
   </div>
 
-  <!-- TAB 1: 规则约束配置 (Multi-rules Configuration with History Chips) -->
-  <section id="tabRules" class="tab active">
-    
-    <!-- Rule File Management Header Card -->
-    <div class="card" style="background:#f1f5f9;border:1px solid #cbd5e1;padding:12px 18px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div>
-          <h2 style="margin-bottom:2px;color:#111827">铜皮规则约束方案库 (本地持久化与导入/导出)</h2>
-          <p class="hint" style="color:#6b7280">
-            支持将整页 5 项规则与异型铜皮模板一键保存为本地 JSON 文件，或从本地文件读取规则，便于下一次直接调用与复用。
-          </p>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <button class="btn copper" id="btnExportRulesTop" onclick="exportRulesToLocalFile()">
-            <span></span> 保存规则到本地 (JSON)
-          </button>
-          <button class="btn sec" id="btnImportRulesTop" onclick="document.getElementById('fileRuleImport').click()">
-            <span></span> 从本地文件读取约束
-          </button>
-          <button class="btn sec small" onclick="resetToDefaultRules()" title="恢复内置默认规则">
-            <span></span> 恢复默认
-          </button>
-          <input type="file" id="fileRuleImport" accept=".json,.txt,application/json" style="display:none" onchange="importRulesFromLocalFile(event)">
-        </div>
-      </div>
-      <div id="lblRuleFileStatus" style="font-size:12px;color:#16a34a;font-weight:600;margin-top:6px;display:none"></div>
+  <div class="eda-rail-section">
+    <div class="eda-rail-label">工序流程 <span data-tip="支持快捷键 Alt+1..5 快速切换工序">Alt+1..5</span></div>
+    <nav id="tabs">
+      <button type="button" data-tab="tabRules" class="active" data-tip="配置五大铜皮检查规则、异型铜皮模板与本地 JSON 规则快照">① 规则约束配置</button>
+      <button type="button" data-tab="tabImport" data-tip="导入包含 Shape、Via、Trace 的 EDA TXT 坐标报告并执行检查">② 检查数据导入</button>
+      <button type="button" data-tab="tabResults" data-tip="按目标对象聚合或逐层平铺检视异常明细并同步复核状态">③ 检查结果明细 <span class="badge" id="badgeDefectCount">0</span></button>
+      <button type="button" data-tab="tabCanvas" data-tip="2D 几何画布渲染铜皮轮廓、过孔、走线、缺陷信标与两点标尺">④ 空间几何视口</button>
+      <button type="button" data-tab="tabAnalysis" data-tip="按规则与层别归纳缺陷成因、目标网络映射与工程整改措施">⑤ 缺陷规律分析</button>
+    </nav>
+  </div>
+
+  <div class="eda-rail-footer">
+    <button type="button" class="eda-rail-toggle" id="btnToggleLeftRail" data-tip="折叠或展开左侧导航栏">◀ 收起导航</button>
+  </div>
+</aside>
+
+<div class="eda-center-col">
+  <div class="eda-stage-bar">
+    <div class="eda-breadcrumb">
+      <span class="bc-mod">铜皮检查</span>
+      <span class="bc-sep">/</span>
+      <span class="bc-stage" id="edaActiveStageLabel">① 规则约束配置</span>
     </div>
+    <div class="eda-stage-bar-right">
+      <button type="button" class="eda-next-step-btn" id="btnEdaNextStage">下一工序 →</button>
+    </div>
+  </div>
 
-    <!-- Rule 1: Via Layer Coverage (Multi-rule list) -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div>
-          <h2>1. 【孔经过层铺铜覆盖检查规则】 <span class="badge-tag copper" id="lblR1Count">2 条规则</span></h2>
-          <p class="hint">支持配置多种过孔类型与层范围。检查特定类型的孔在所经过各层距离孔中心 <strong>50 mil</strong>（可自定义）内是否存在铜皮。不限铜皮形状，只要有铜即判定通过。</p>
-        </div>
-        <button class="btn copper small" onclick="openAddRule1Modal()"> 新增孔铺铜规则</button>
+  <main>
+    <div class="summary-grid">
+      <div class="stat-box copper">
+        <div class="lbl">导入铜皮总数</div>
+        <div class="val"><span id="statTotalShapes">0</span></div>
       </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px">序号</th>
-              <th>过孔类型 (Padstack 关键字)</th>
-              <th>要求铺铜层范围</th>
-              <th>距孔心最大判定距离</th>
-              <th style="width:120px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="tblRule1Body">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
+      <div class="stat-box" data-tip="左值为过孔数，右值为走线记录数">
+        <div class="lbl">导入过孔 / 走线</div>
+        <div class="val"><span id="statViasTraces">0 / 0</span></div>
+      </div>
+      <div class="stat-box bad">
+        <div class="lbl">检查不符合对象</div>
+        <div class="val"><span id="statTotalDefects">0</span></div>
+      </div>
+      <div class="stat-box ok">
+        <div class="lbl">检查通过项</div>
+        <div class="val"><span id="statTotalPass">0</span></div>
       </div>
     </div>
 
-    <!-- Rule 2: Special Shaped Copper Template (Multi-template list with TXT import) -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div>
-          <h2>2. 【特定类型孔在指定层的异型铜皮比对规则】 <span class="badge-tag copper" id="lblR2Count">2 条规则</span></h2>
-          <p class="hint">支持配置多种过孔类型与多个目标层。异型铜皮的几何轮廓与面积由导入的 TXT 数据获得，系统比对孔周围铜皮是否符合模板要求。</p>
+    <!-- ================= ① 规则约束配置 ================= -->
+    <section id="tabRules" class="tab active">
+      <div class="card rule-pack-bar">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2 style="margin-bottom:2px">铜皮规则约束快照 <span class="eda-tip" tabindex="0" data-tip="支持将全部五项铜皮规则、异型铜皮模板及候选记录导出为 JSON 文件或从本地读取恢复">?</span></h2>
+            <div class="hint">整页五项几何规则与异型铜皮模板本地 JSON 读写</div>
+          </div>
+          <div class="row">
+            <button type="button" class="btn pri small" id="btnExportRulesTop" onclick="exportRulesToLocalFile()" data-tip="导出全部五项规则与异型模板为本地 JSON 文件">保存规则到本地</button>
+            <button type="button" class="btn sec small" id="btnImportRulesTop" onclick="document.getElementById('fileRuleImport').click()" data-tip="读取已保存的 JSON 规则快照并立即生效">读取本地规则</button>
+            <button type="button" class="btn sec small" onclick="resetToDefaultRules()" data-tip="恢复内置默认规则集">恢复默认</button>
+            <input type="file" id="fileRuleImport" accept=".json,.txt,application/json" style="display:none" onchange="importRulesFromLocalFile(event)">
+          </div>
         </div>
-        <button class="btn copper small" onclick="openAddRule2Modal()"> 导入异型铜皮模板 (TXT)</button>
+        <div id="lblRuleFileStatus" style="font-size:12px;color:var(--ok);font-weight:600;margin-top:6px;display:none"></div>
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px">序号</th>
-              <th>模板缩略图</th>
-              <th>模板名称</th>
-              <th>过孔类型 (Padstack)</th>
-              <th>目标层别</th>
-              <th>期望面积与容差</th>
-              <th style="width:120px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="tblRule2Body">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Rule 3: Trace Reference Layer Overhang Margin (Multi-rule list) -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div>
-          <h2>3. 【走线上/下参考层铺铜覆盖与单侧超宽检查规则】 <span class="badge-tag copper" id="lblR3Count">2 条规则</span></h2>
-          <p class="hint">支持配置多种信号走线层。检查走线正对着的上下参考层是否存在铺铜，且铜皮在相同位置单侧边缘比走线宽出至少 <strong>50 mil</strong>（可自定义）。</p>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div>
+            <h2>1. 孔经过层铺铜覆盖规则 <span class="badge-tag copper" id="lblR1Count">2 条规则</span> <span class="eda-tip" tabindex="0" data-tip="核对指定 Padstack 过孔在目标层范围内距孔心设定阈值内是否存在铺铜，不限铜皮形状">?</span></h2>
+          </div>
+          <button type="button" class="btn pri small" onclick="openAddRule1Modal()">+ 新增孔铺铜规则</button>
         </div>
-        <button class="btn copper small" onclick="openAddRule3Modal()"> 新增走线参考层规则</button>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:52px">序号</th>
+                <th data-tip="按子串匹配过孔 Padstack Name，填 * 匹配全部过孔">过孔类型</th>
+                <th data-tip="支持 L1-L5 或逗号分隔层名列表">要求铺铜层范围</th>
+                <th>距孔心最大判定距离</th>
+                <th style="width:124px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tblRule1Body"></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px">序号</th>
-              <th>走线信号层</th>
-              <th>上参考层</th>
-              <th>下参考层</th>
-              <th>单侧最小超宽 (mil)</th>
-              <th style="width:120px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="tblRule3Body">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div>
+            <h2>2. 特定异型铜皮模板比对规则 <span class="badge-tag copper" id="lblR2Count">2 条规则</span> <span class="eda-tip" tabindex="0" data-tip="导入标准异型泪滴或局部加宽铜皮 Shape TXT 提取基准面积与轮廓，核对目标层过孔周边铜皮面积偏差">?</span></h2>
+          </div>
+          <button type="button" class="btn pri small" onclick="openAddRule2Modal()" data-tip="粘贴 EDA Shape Item 文本自动提取边界与基准面积">+ 导入异型铜皮模板</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:52px">序号</th>
+                <th style="width:68px">缩略图</th>
+                <th>模板名称</th>
+                <th data-tip="目标过孔 Padstack 匹配关键字">过孔类型</th>
+                <th>目标层别</th>
+                <th>基准面积与容差</th>
+                <th style="width:124px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tblRule2Body"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- Rule 4 & 5: Small Copper & Arc Radius with History Chips -->
-    <div class="form-grid">
-      <div class="card" style="margin-bottom:0">
-        <h2>4. 【孤立小铜皮面积阈值规则】</h2>
-        <p class="hint">面积小于设定值的铜皮（且未连接有效过孔）将被标记为孤立小铜皮/碎铜/死铜。</p>
-        <div class="form-item" style="margin-top:10px">
-          <label>小铜皮最大面积阈值 (sq mil)</label>
-          <input type="number" id="rule4InpArea" value="500.0" step="50.0" min="10.0" max="50000.0" onchange="recordHistory('r4_area', this.value)">
-          <div class="chip-bar" id="chipsRule4Area">
-            <!-- Rendered by JS -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div>
+            <h2>3. 走线上下参考层铺铜与单侧超宽规则 <span class="badge-tag copper" id="lblR3Count">2 条规则</span> <span class="eda-tip" tabindex="0" data-tip="核对信号走线在上下参考平面投影区是否存在连续铺铜，且铜皮单侧边缘超出走线边缘不少于设定距离">?</span></h2>
+          </div>
+          <button type="button" class="btn pri small" onclick="openAddRule3Modal()">+ 新增走线参考层规则</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:52px">序号</th>
+                <th>走线信号层</th>
+                <th>上参考层</th>
+                <th>下参考层</th>
+                <th>单侧最小超宽 mil</th>
+                <th style="width:124px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tblRule3Body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="card" style="margin-bottom:0">
+          <h2>4. 孤立小铜皮面积阈值规则 <span class="eda-tip" tabindex="0" data-tip="面积小于阈值且轮廓内无同层有效过孔连接的铜皮判为孤立浮空碎铜">?</span></h2>
+          <div class="form-item" style="margin-top:8px">
+            <label for="rule4InpArea" data-tip="单位 sq mil，小于该面积且无过孔连接的铜皮判为异常">小铜皮最大面积阈值 sq mil</label>
+            <input type="number" id="rule4InpArea" value="500.0" step="50.0" min="10.0" max="50000.0" onchange="recordHistory('r4_area', this.value)">
+            <div class="chip-bar" id="chipsRule4Area"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:0">
+          <h2>5. 铜皮最小圆弧半径规则 <span class="eda-tip" tabindex="0" data-tip="核查铜皮边界所有 Arc seg 半径，防范过小内凹圆弧造成湿法蚀刻药水滞留侧蚀">?</span></h2>
+          <div class="form-item" style="margin-top:8px">
+            <label for="rule5InpRadius" data-tip="单位 mil，轮廓圆弧半径低于该值判为尖角超标">铜皮最小圆弧半径 mil</label>
+            <input type="number" id="rule5InpRadius" value="10.0" step="1.0" min="1.0" max="100.0" onchange="recordHistory('r5_radius', this.value)">
+            <div class="chip-bar" id="chipsRule5Radius"></div>
           </div>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:0">
-        <h2>5. 【铜皮最小圆弧半径规则】</h2>
-        <p class="hint">检查铜皮轮廓边界的所有圆弧段，圆弧半径小于设定值的将被标记为尖角或过小圆弧缺陷。</p>
-        <div class="form-item" style="margin-top:10px">
-          <label>铜皮允许的最小圆弧半径 (mil)</label>
-          <input type="number" id="rule5InpRadius" value="10.0" step="1.0" min="1.0" max="100.0" onchange="recordHistory('r5_radius', this.value)">
-          <div class="chip-bar" id="chipsRule5Radius">
-            <!-- Rendered by JS -->
+      <div class="row" style="justify-content:space-between;margin-top:14px">
+        <div class="row">
+          <button type="button" class="btn sec small" id="btnExportRulesBottom" onclick="exportRulesToLocalFile()">保存规则到本地</button>
+          <button type="button" class="btn sec small" id="btnImportRulesBottom" onclick="document.getElementById('fileRuleImport').click()">读取本地规则</button>
+        </div>
+        <button type="button" class="btn pri" onclick="saveRulesAndJump()">应用规则并进入数据导入 →</button>
+      </div>
+    </section>
+
+    <!-- ================= ② 检查数据导入 ================= -->
+    <section id="tabImport" class="tab">
+      <div class="card">
+        <h2>导入铜皮、过孔与走线坐标数据 <span class="eda-tip" tabindex="0" data-tip="支持包含 Shape、Via、Trace 块的 EDA 报告 TXT，自动兼容 UTF-8 与 GB18030 编码">?</span></h2>
+        <div class="dropzone" id="dropzoneData" onclick="document.getElementById('fileDataInput').click()" data-tip="点击选择或拖拽 .txt / .csv / .dat 报告文件">
+          <input type="file" id="fileDataInput" accept=".txt,.csv,.dat" style="display:none" onchange="handleFileUpload(event)">
+          <div class="t1">点击选择或拖拽 EDA 铜皮 / 过孔 / 走线 TXT 文件至此处</div>
+          <div class="t2">自动解析 Shape 外轮廓直线/圆弧、Via 坐标及 Trace 线段</div>
+        </div>
+
+        <div class="form-item" style="margin-top:12px">
+          <label for="txtDataInput">或直接粘贴 TXT 报告文本</label>
+          <textarea id="txtDataInput" rows="8" placeholder="Total 4 Items&#10;Item 1  < Shape >&#10;  Subset: Top&#10;  Area: 907.92028 (sq mil)&#10;  ..."></textarea>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button type="button" class="btn pri" id="btnRunCheck" onclick="executeCopperChecks()">▶ 运行铜皮五项检查</button>
+          <button type="button" class="btn sec" onclick="loadSampleShapes()" data-tip="载入 sample/铜皮数据示例.txt 并立即运行">加载混合样本</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ③ 检查结果明细 ================= -->
+    <section id="tabResults" class="tab">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div>
+            <h2 style="margin:0">铜皮五项检查结果明细 <span class="eda-tip" tabindex="0" data-tip="汇总视图按目标过孔/走线/铜皮对象聚合多层异常并支持行内展开子表；平铺视图逐层逐段列出原始记录">?</span></h2>
+          </div>
+          <div class="row">
+            <div style="display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden">
+              <button type="button" class="btn small pri" id="btnViewModeGrouped" onclick="setViewMode('grouped')">按目标对象汇总</button>
+              <button type="button" class="btn small sec" id="btnViewModeFlat" onclick="setViewMode('flat')">逐层平铺展开</button>
+            </div>
+            <button type="button" class="btn sec small" onclick="exportResultsCSV()" data-tip="按当前视图模式导出带 UTF-8 BOM 的 CSV 明细表">导出 CSV</button>
+            <button type="button" class="btn sec small" onclick="switchTab('tabCanvas')">打开 2D 视口</button>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:space-between;margin:10px 0">
+          <div class="row" style="gap:4px">
+            <button type="button" class="btn small pri" id="btnFilterAll" onclick="setCategoryFilter('all')">全部对象 · <span id="cntFilterAll">0</span></button>
+            <button type="button" class="btn small sec" id="btnFilterDefects" onclick="setCategoryFilter('defects')">不符合项 · <span id="cntFilterDefects">0</span></button>
+            <button type="button" class="btn small sec" id="btnFilterCov" onclick="setCategoryFilter('via_coverage')">① 孔层铺铜</button>
+            <button type="button" class="btn small sec" id="btnFilterSpecial" onclick="setCategoryFilter('special_shape')">② 异型铜皮</button>
+            <button type="button" class="btn small sec" id="btnFilterMargin" onclick="setCategoryFilter('trace_ref_margin')">③ 参考层超宽</button>
+            <button type="button" class="btn small sec" id="btnFilterSmall" onclick="setCategoryFilter('isolated_copper')">④ 孤立小铜皮</button>
+            <button type="button" class="btn small sec" id="btnFilterArc" onclick="setCategoryFilter('arc_radius')">⑤ 圆弧半径</button>
+          </div>
+          <div>
+            <input type="text" id="inpSearch" placeholder="搜索孔号 / 网络 / 层名 / Shape..." style="width:220px" oninput="applyFilters()" data-no-persist>
+          </div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:38px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)" data-no-persist data-tip="全选或取消当前筛选列表复核状态"></th>
+                <th>检查分类</th>
+                <th>目标对象 / 网络</th>
+                <th>涉及层别</th>
+                <th>实测值与规则阈值</th>
+                <th>判定</th>
+                <th>比对说明与异常归因</th>
+                <th style="width:76px">复核</th>
+                <th style="width:128px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tblResultsBody">
+              <tr>
+                <td colspan="9" style="text-align:center;padding:28px;color:var(--sub)">请先在工序 ② 导入数据并执行检查</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="row" style="justify-content:space-between;margin-top:12px;font-size:12px;color:var(--sub)">
+          <div>显示第 <span id="lblPageStart">0</span> - <span id="lblPageEnd">0</span> 条，共 <span id="lblTotalCount">0</span> 项</div>
+          <div class="row" style="gap:6px">
+            <button type="button" class="btn sec small" id="btnPrevPage" onclick="changePage(-1)">上一页</button>
+            <span id="lblCurrentPage" style="padding:0 8px">1 / 1</span>
+            <button type="button" class="btn sec small" id="btnNextPage" onclick="changePage(1)">下一页</button>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- ================= ④ 空间几何视口 ================= -->
+    <section id="tabCanvas" class="tab">
+      <div class="card" style="padding:10px 14px">
+        <div class="canvas-container" id="canvasContainer">
+          <div class="canvas-toolbar">
+            <button type="button" onclick="resetCanvasView()" data-tip="自动缩放平移包络全部铜皮、过孔与走线">适应全板</button>
+            <button type="button" onclick="zoomCanvas(1.2)">放大</button>
+            <button type="button" onclick="zoomCanvas(0.8)">缩小</button>
+            <button type="button" id="btnToggleShapes" class="active" onclick="toggleCanvasLayer('shapes')" data-tip="显示或隐藏 Shape 铜皮轮廓">铜皮</button>
+            <button type="button" id="btnToggleVias" class="active" onclick="toggleCanvasLayer('vias')" data-tip="显示或隐藏信号过孔与 GND 接地孔">过孔</button>
+            <button type="button" id="btnToggleTraces" class="active" onclick="toggleCanvasLayer('traces')" data-tip="显示或隐藏直线与圆弧走线段">走线</button>
+            <button type="button" id="btnTogglePorts" class="active" onclick="toggleCanvasLayer('ports')" data-tip="显示或隐藏外围 P1–P4 端口标记">端口</button>
+            <button type="button" id="btnToggleDefects" class="active" onclick="toggleCanvasLayer('defects')" data-tip="显示或隐藏超标位置红色虚线信标">缺陷信标</button>
+            <button type="button" id="btnMeasureMode" onclick="toggleMeasureMode()" data-tip="激活后依次点击画布任意两点测量欧氏距离">测距标尺</button>
+          </div>
+
+          <canvas id="mainCanvas"></canvas>
+
+          <div class="canvas-legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background:rgba(180,83,9,0.4);border:1px solid #d97706"></div>
+              <span>铜皮轮廓</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:rgba(250,204,21,0.3);border:1.5px solid #facc15"></div>
+              <span>信号孔</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#475569;border:1px solid #94a3b8"></div>
+              <span>GND 孔</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#c084fc"></div>
+              <span>25_N</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#84cc16"></div>
+              <span>25_P</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#22c55e"></div>
+              <span>26_N</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#06b6d4"></div>
+              <span>26_P</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background:#ef4444"></div>
+              <span>缺陷信标</span>
+            </div>
+          </div>
+
+          <div class="ruler-readout" id="canvasRulerReadout">比例: 1.00x | 视口中心: [0, 0]</div>
+
+          <div id="pourCanvasReviewBox" class="pour-review-float">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(148,163,184,0.2)">
+              <strong id="pourCanvasRevTitle" style="font-size:12px;color:#38bdf8">定位异常详情与复核</strong>
+              <button type="button" onclick="closePourReviewBox()" style="background:transparent;border:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0 4px">×</button>
+            </div>
+            <div id="pourCanvasRevBody"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ⑤ 缺陷规律分析 ================= -->
+    <section id="tabAnalysis" class="tab">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <h2 style="margin:0">铜皮五项检查缺陷规律与工程整改分析 <span class="eda-tip" tabindex="0" data-tip="按规则与层别聚合超标项，列出全部关联网络及对应 SI / DFM 整改措施">?</span></h2>
+          </div>
+          <button type="button" class="btn sec small" onclick="exportAnalysisReport()">导出 Markdown 分析报告</button>
+        </div>
+
+        <div id="pnlAnalysisContainer" style="margin-top:14px">
+          <div style="text-align:center;padding:36px;color:var(--sub)">尚无检查数据，请先在工序 ② 导入数据并执行检查。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<aside class="eda-right-dock">
+  <div class="eda-dock-head">
+    <span class="eda-dock-title">检视与工具区</span>
+    <button type="button" class="eda-dock-collapse-btn" id="btnToggleRightDock" data-tip="折叠或展开右侧工具栏">▶</button>
+  </div>
+  <div class="eda-dock-body">
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">快捷执行</div>
+      <div class="eda-dock-actions">
+        <button type="button" class="dock-btn pri" id="dockPourRun">▶ 运行铜皮检查</button>
+        <div class="dock-btn-row">
+          <button type="button" class="dock-btn" id="dockPourSample">加载样本</button>
+          <button type="button" class="dock-btn" id="dockPourCanvas">2D 视口</button>
+        </div>
+        <button type="button" class="dock-btn" id="dockPourExport">导出 CSV 报告</button>
+      </div>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn sec" id="btnExportRulesBottom" onclick="exportRulesToLocalFile()">
-          <span></span> 保存规则到本地 (JSON)
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">实时遥测</div>
+      <div class="eda-telemetry-grid" id="edaDockTelemetry"></div>
+    </div>
+
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">视口与参数记忆</div>
+      <div class="global-display-ctrl">
+        <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" data-tip="切换主视口 100% 铺满宽屏与标准最大宽度">
+          <span id="lblGlobalWide">铺满宽屏</span>
         </button>
-        <button class="btn sec" id="btnImportRulesBottom" onclick="document.getElementById('fileRuleImport').click()">
-          <span></span> 从本地文件读取约束
-        </button>
-      </div>
-      <button class="btn copper" onclick="saveRulesAndJump()">
-        <span style="font-size:14px"></span> 保存全部规则配置并前往数据导入 
-      </button>
-    </div>
-
-  </section>
-
-  <!-- TAB 2: 数据导入 (Import Data) -->
-  <section id="tabImport" class="tab">
-    <div class="card">
-      <h2>导入 PCB 铜皮、过孔与走线数据 (EDA TXT 格式)</h2>
-      <p class="hint">可导入包含 <code>&lt; Shape &gt;</code>、<code>&lt; Via &gt;</code> 和 <code>&lt; Trace &gt;</code> 的 Allegro/EDA 坐标报告文本。</p>
-
-      <div class="dropzone" id="dropzoneData" onclick="document.getElementById('fileDataInput').click()" style="margin-top:14px">
-        <input type="file" id="fileDataInput" accept=".txt,.csv,.dat" style="display:none" onchange="handleFileUpload(event)">
-        <div class="t1"> 点击上传或将 EDA 铜皮/过孔/走线 TXT 文件拖拽至此</div>
-        <div class="t2">支持包含 Shape、Via 与 Trace 块的综合数据报告</div>
-      </div>
-
-      <div class="form-item" style="margin-top:12px">
-        <label>或直接粘贴 TXT 文本数据：</label>
-        <textarea id="txtDataInput" rows="7" placeholder="Total 4 Items&#10;Item 1  < Shape >&#10;  Set: Route Keepout&#10;  Subset: Top&#10;  Area: 907.92028 (sq mil)&#10;  ..."></textarea>
-      </div>
-
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-        <button class="btn copper" id="btnRunCheck" onclick="executeCopperChecks()">
-          <span style="font-size:14px"></span> 立即运行铜皮五大项检查
-        </button>
-        <button class="btn sec" onclick="loadSampleShapes()">
-          <span></span> 载入铜皮与过孔混合示例
-        </button>
       </div>
     </div>
-  </section>
+  </div>
+</aside>
 
-  <!-- TAB 3: 检查结果明细 (Results Table - Grouped by Target Object) -->
-  <section id="tabResults" class="tab">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div>
-          <h2>铜皮五项检查结果与异常明细</h2>
-          <p class="hint">自动将同一目标对象（过孔/走线/铜皮）在各层与各段的问题进行<strong>统一汇总与归纳</strong>，并支持展开逐层明细。</p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div style="display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden">
-            <button class="btn small pri" id="btnViewModeGrouped" onclick="setViewMode('grouped')"> 按目标对象汇总展示</button>
-            <button class="btn small sec" id="btnViewModeFlat" onclick="setViewMode('flat')"> 展开逐层平铺展示</button>
-          </div>
-          <button class="btn sec small" onclick="exportResultsCSV()"> 导出检查结果 (CSV)</button>
-          <button class="btn sec small" onclick="switchTab('tabCanvas')"> 切换至 2D 空间可视化画布</button>
-        </div>
-      </div>
-
-      <!-- Filters & Search -->
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          <button class="btn small pri" id="btnFilterAll" onclick="setCategoryFilter('all')">全部对象 (<span id="cntFilterAll">0</span>)</button>
-          <button class="btn small sec" id="btnFilterDefects" onclick="setCategoryFilter('defects')"> 全部不符合 (<span id="cntFilterDefects">0</span>)</button>
-          <button class="btn small sec" id="btnFilterCov" onclick="setCategoryFilter('via_coverage')">① 孔经过层铺铜</button>
-          <button class="btn small sec" id="btnFilterSpecial" onclick="setCategoryFilter('special_shape')">② 异型铜皮比对</button>
-          <button class="btn small sec" id="btnFilterMargin" onclick="setCategoryFilter('trace_ref_margin')">③ 走线参考层超宽</button>
-          <button class="btn small sec" id="btnFilterSmall" onclick="setCategoryFilter('isolated_copper')">④ 孤立小铜皮</button>
-          <button class="btn small sec" id="btnFilterArc" onclick="setCategoryFilter('arc_radius')">⑤ 圆弧半径</button>
-        </div>
-
-        <div style="margin-left:auto;display:flex;gap:6px">
-          <input type="text" id="inpSearch" placeholder=" 搜索孔号/网络/层名/Shape号..." style="border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;width:220px" oninput="applyFilters()" data-no-persist>
-        </div>
-      </div>
-
-      <!-- Results Table -->
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px"><input type="checkbox" id="chkSelectAll" onclick="toggleSelectAll(this)" data-no-persist></th>
-              <th>检查分类</th>
-              <th>目标对象 / 网络</th>
-              <th>涉及层别范围</th>
-              <th>实测值 vs 规则阈值汇总</th>
-              <th>综合判定</th>
-              <th>详细比对说明与异常归因 (文字表述)</th>
-              <th style="width:70px">复核</th>
-              <th style="width:110px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="tblResultsBody">
-            <tr>
-              <td colspan="9" style="text-align:center;padding:30px;color:#94a3b8">请先在「 ② 检查数据导入」页面导入数据并运行检查</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--sub)">
-        <div>显示第 <span id="lblPageStart">0</span> - <span id="lblPageEnd">0</span> 条，共 <span id="lblTotalCount">0</span> 项</div>
-        <div style="display:flex;gap:6px">
-          <button class="btn sec small" id="btnPrevPage" onclick="changePage(-1)">上一页</button>
-          <span style="display:flex;align-items:center;padding:0 8px" id="lblCurrentPage">1 / 1</span>
-          <button class="btn sec small" id="btnNextPage" onclick="changePage(1)">下一页</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB 4: 空间几何 2D 可视化 (2D Canvas) -->
-  <section id="tabCanvas" class="tab">
-    <div class="card" style="padding:12px">
-      <div class="canvas-container" id="canvasContainer">
-        <!-- Floating Canvas Toolbar -->
-        <div class="canvas-toolbar">
-          <button onclick="resetCanvasView()" title="重置并自动居中视野"> 居中重置</button>
-          <button onclick="zoomCanvas(1.2)" title="放大"> 放大</button>
-          <button onclick="zoomCanvas(0.8)" title="缩小"> 缩小</button>
-          <button id="btnToggleShapes" class="active" onclick="toggleCanvasLayer('shapes')"> 铜皮 (Shapes)</button>
-          <button id="btnToggleVias" class="active" onclick="toggleCanvasLayer('vias')"> 过孔 (Vias)</button>
-          <button id="btnToggleTraces" class="active" onclick="toggleCanvasLayer('traces')">〰 走线 (Traces)</button>
-          <button id="btnTogglePorts" class="active" onclick="toggleCanvasLayer('ports')"> 端口 (P1~P4)</button>
-          <button id="btnToggleDefects" class="active" onclick="toggleCanvasLayer('defects')"> 缺陷信标</button>
-          <button id="btnMeasureMode" onclick="toggleMeasureMode()"> 测距标尺</button>
-        </div>
-
-        <canvas id="mainCanvas"></canvas>
-
-        <div class="canvas-legend">
-          <div class="legend-item">
-            <div class="legend-color" style="background:rgba(180, 83, 9, 0.4);border:1px solid #d97706"></div>
-            <span>铜皮 Shape 轮廓</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:rgba(250, 204, 21, 0.3);border:1.5px solid #facc15"></div>
-            <span>BGA / 信号孔</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#475569;border:1px solid #94a3b8"></div>
-            <span>GND 接地孔</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#c084fc"></div>
-            <span>25_N 走线 (P2)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#84cc16"></div>
-            <span>25_P 走线 (P3)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#22c55e"></div>
-            <span>26_N 走线 (P1)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#06b6d4"></div>
-            <span>26_P 走线 (P4)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#ef4444;box-shadow:0 0 6px #ef4444"></div>
-            <span> 缺陷位置</span>
-          </div>
-        </div>
-
-        <div class="ruler-readout" id="canvasRulerReadout">比例: 1.0x | 视口: [0, 0]</div>
-
-        <!-- 空间几何视图定位异常同步复核浮窗 -->
-        <div id="pourCanvasReviewBox" style="display:none;position:absolute;top:54px;right:14px;width:315px;background:rgba(15,23,42,0.94);border:1px solid rgba(56,189,248,0.42);border-radius:8px;padding:12px 14px;color:#f1f5f9;z-index:25;box-shadow:0 12px 28px rgba(0,0,0,0.45)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(148,163,184,0.2)">
-            <strong id="pourCanvasRevTitle" style="font-size:12px;color:#38bdf8">定位异常详情与复核</strong>
-            <span onclick="document.getElementById('pourCanvasReviewBox').style.display='none';State.activeReviewKey=null;" style="cursor:pointer;color:#94a3b8;font-size:14px">×</span>
-          </div>
-          <div id="pourCanvasRevBody"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAB 5: 缺陷规律与工程分析 (Analysis) -->
-  <section id="tabAnalysis" class="tab">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div>
-          <h2>铜皮五项检查缺陷规律与工程分析总结</h2>
-          <p class="hint">深入归纳每一种缺陷分类在层别分布、网络特征、几何尺寸及信号完整性/制造工艺方面的核心规律与整改建议。</p>
-        </div>
-        <button class="btn sec small" onclick="exportAnalysisReport()"> 导出缺陷规律分析报告</button>
-      </div>
-
-      <div id="pnlAnalysisContainer" style="margin-top:14px">
-        <div style="text-align:center;padding:40px;color:#94a3b8">尚无检查数据，请先在「 ② 检查数据导入」导入数据并运行检查。</div>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- Modal: Add/Edit Rule 1 -->
+<!-- 弹窗：规则 1 -->
 <div class="modal-mask" id="modalRule1">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 id="modalR1Title">配置孔经过层铺铜覆盖规则</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule1')">×</span>
+      <h3 id="modalR1Title">配置孔铺铜覆盖规则</h3>
+      <button type="button" class="btn sec small" onclick="closeModal('modalRule1')">×</button>
     </div>
     <div class="form-grid">
       <div class="form-item">
-        <label>过孔类型 (Padstack 关键字) *</label>
-        <input type="text" id="modalR1InpPadstack" placeholder="例如: HDI_045drill_ring3_1_4 或 BGA_GND" data-no-persist>
+        <label for="modalR1InpPadstack" data-tip="按子串匹配过孔 Padstack Name，填 * 匹配全部过孔">过孔类型关键字 *</label>
+        <input type="text" id="modalR1InpPadstack" placeholder="如 HDI_045drill_ring3_1_4 或 BGA_GND" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Padstack"></div>
       </div>
       <div class="form-item">
-        <label>要求铺铜层范围 (如 L1-L5 / Top, 02G01P, 19IS08) *</label>
-        <input type="text" id="modalR1InpLayers" placeholder="例如: L1-L5 或 Top, 02G01P, 19IS08" data-no-persist>
+        <label for="modalR1InpLayers" data-tip="支持层区间 L1-L5 或逗号分隔层名列表">要求铺铜层范围 *</label>
+        <input type="text" id="modalR1InpLayers" placeholder="如 L1-L5 或 Top, 02G01P, 19IS08" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Layers"></div>
       </div>
       <div class="form-item">
-        <label>距孔中心最大铺铜判定距离 (mil) *</label>
+        <label for="modalR1InpDist" data-tip="孔心到同层铜皮边缘的最大允许距离，单位 mil">距孔心最大铺铜距离 mil *</label>
         <input type="number" id="modalR1InpDist" value="50.0" step="1.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR1Dist"></div>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-      <button class="btn sec" onclick="closeModal('modalRule1')">取消</button>
-      <button class="btn copper" onclick="saveRule1FromModal()"> 保存规则</button>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button type="button" class="btn sec" onclick="closeModal('modalRule1')">取消</button>
+      <button type="button" class="btn pri" onclick="saveRule1FromModal()">保存规则</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Add/Edit Rule 2 (Import Shape TXT) -->
+<!-- 弹窗：规则 2 -->
 <div class="modal-mask" id="modalRule2">
   <div class="modal-box" style="max-width:780px">
     <div class="modal-header">
-      <h3 id="modalR2Title">配置特定异型铜皮比对规则 (导入 Shape TXT)</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule2')">×</span>
+      <h3 id="modalR2Title">配置特定异型铜皮模板</h3>
+      <button type="button" class="btn sec small" onclick="closeModal('modalRule2')">×</button>
     </div>
-
     <div class="form-grid">
       <div class="form-item">
-        <label>模板名称 *</label>
-        <input type="text" id="modalR2InpName" placeholder="例如: L2特定异型泪滴铜皮" data-no-persist>
+        <label for="modalR2InpName">模板名称 *</label>
+        <input type="text" id="modalR2InpName" placeholder="如 L2特定异型泪滴铜皮" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Name"></div>
       </div>
       <div class="form-item">
-        <label>过孔类型 (Padstack 关键字) *</label>
-        <input type="text" id="modalR2InpPadstack" placeholder="例如: BGA_3510" data-no-persist>
+        <label for="modalR2InpPadstack" data-tip="匹配目标过孔 Padstack Name 关键字">过孔类型关键字 *</label>
+        <input type="text" id="modalR2InpPadstack" placeholder="如 BGA_3510" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Padstack"></div>
       </div>
       <div class="form-item">
-        <label>目标层别 (Layer / Subset) *</label>
-        <input type="text" id="modalR2InpLayer" placeholder="例如: 02G01P 或 L2" data-no-persist>
+        <label for="modalR2InpLayer" data-tip="EDA TXT 中的 Subset 层名">目标层别 *</label>
+        <input type="text" id="modalR2InpLayer" placeholder="如 02G01P 或 L2" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Layer"></div>
       </div>
       <div class="form-item">
-        <label>面积允许容差 (± sq mil)</label>
+        <label for="modalR2InpTol" data-tip="实测铜皮面积相对模板面积的正负容差，单位 sq mil">面积允许容差 ± sq mil</label>
         <input type="number" id="modalR2InpTol" value="30.0" step="5.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR2Tol"></div>
       </div>
     </div>
 
     <div class="form-item" style="margin-top:10px">
-      <label style="font-weight:700">导入异型铜皮 Item TXT 数据 (包含 Exterior Boundary 与 Area)：</label>
-      <textarea id="modalR2TxtShape" rows="5" placeholder="粘贴 EDA Shape Item 文本，例如:&#10;Item 2  < Shape >&#10;  Subset: 02G01P&#10;  Area: 452.38934 (sq mil)&#10;  Exterior Boundary:&#10;    Arc seg: xy [23274.13, 27990.27] ... Center-xy: [23286.13, 27990.27] Radius (12.0) CCW" oninput="previewModalShape()"></textarea>
+      <label for="modalR2TxtShape" data-tip="包含 Shape、Area 与 Exterior Boundary 的 EDA 报告片段">异型铜皮 Shape TXT 数据</label>
+      <textarea id="modalR2TxtShape" rows="5" placeholder="Item 2  < Shape >&#10;  Subset: 02G01P&#10;  Area: 452.38934 (sq mil)&#10;  Exterior Boundary:&#10;    Arc seg: xy [23274.13, 27990.27] ... Radius (12.0) CCW" oninput="previewModalShape()"></textarea>
     </div>
 
-    <!-- Live Preview of Shape -->
-    <div style="margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:14px;align-items:center">
-      <div style="width:110px;height:110px;background:#0f172a;border-radius:6px;overflow:hidden;flex-shrink:0">
+    <div class="shape-preview-strip">
+      <div class="shape-preview-canvas-wrap">
         <canvas id="modalR2Canvas" width="110" height="110"></canvas>
       </div>
       <div style="flex:1;font-size:12px;color:var(--sub)">
-        <div style="font-weight:700;color:#111827" id="modalR2PreviewTitle">异型铜皮几何预览</div>
-        <div id="modalR2PreviewDesc" style="margin-top:4px;line-height:1.5">
-          请粘贴 Shape TXT 文本以解析边界、面积与圆弧...
-        </div>
+        <div style="font-weight:700;color:var(--heading)" id="modalR2PreviewTitle">异型铜皮几何预览</div>
+        <div id="modalR2PreviewDesc" style="margin-top:4px;line-height:1.5">粘贴 Shape TXT 文本以解析边界与面积</div>
       </div>
     </div>
 
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-      <button class="btn sec" onclick="closeModal('modalRule2')">取消</button>
-      <button class="btn copper" onclick="saveRule2FromModal()"> 保存异型铜皮模板</button>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button type="button" class="btn sec" onclick="closeModal('modalRule2')">取消</button>
+      <button type="button" class="btn pri" onclick="saveRule2FromModal()">保存异型铜皮模板</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Add/Edit Rule 3 -->
+<!-- 弹窗：规则 3 -->
 <div class="modal-mask" id="modalRule3">
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="modalR3Title">配置走线参考层超宽规则</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalRule3')">×</span>
+      <button type="button" class="btn sec small" onclick="closeModal('modalRule3')">×</button>
     </div>
     <div class="form-grid">
       <div class="form-item">
-        <label>走线信号层 *</label>
-        <input type="text" id="modalR3InpTraceLayer" placeholder="例如: 19IS08 或 L4" data-no-persist>
+        <label for="modalR3InpTraceLayer">走线信号层 *</label>
+        <input type="text" id="modalR3InpTraceLayer" placeholder="如 19IS08 或 L4" data-no-persist>
         <div class="chip-bar" id="chipsModalR3TraceLayer"></div>
       </div>
       <div class="form-item">
-        <label>上参考层</label>
-        <input type="text" id="modalR3InpUpperRef" placeholder="例如: 08IS03 或 L3" data-no-persist>
+        <label for="modalR3InpUpperRef">上参考层</label>
+        <input type="text" id="modalR3InpUpperRef" placeholder="如 08IS03 或 L3" data-no-persist>
         <div class="chip-bar" id="chipsModalR3UpperRef"></div>
       </div>
       <div class="form-item">
-        <label>下参考层</label>
-        <input type="text" id="modalR3InpLowerRef" placeholder="例如: Bottom 或 L5" data-no-persist>
+        <label for="modalR3InpLowerRef">下参考层</label>
+        <input type="text" id="modalR3InpLowerRef" placeholder="如 Bottom 或 L5" data-no-persist>
         <div class="chip-bar" id="chipsModalR3LowerRef"></div>
       </div>
       <div class="form-item">
-        <label>铜皮单侧最小超宽 (mil) *</label>
+        <label for="modalR3InpMargin" data-tip="参考层铜皮单侧边缘超出走线边缘的最小距离，单位 mil">铜皮单侧最小超宽 mil *</label>
         <input type="number" id="modalR3InpMargin" value="50.0" step="1.0" data-no-persist>
         <div class="chip-bar" id="chipsModalR3Margin"></div>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-      <button class="btn sec" onclick="closeModal('modalRule3')">取消</button>
-      <button class="btn copper" onclick="saveRule3FromModal()"> 保存规则</button>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button type="button" class="btn sec" onclick="closeModal('modalRule3')">取消</button>
+      <button type="button" class="btn pri" onclick="saveRule3FromModal()">保存规则</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Export File Box (Fix fail-safe copy) -->
+<!-- 通用文件导出弹窗 -->
 <div class="modal-mask" id="modalExport">
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
       <h3 id="exportModalTitle">导出文件</h3>
-      <span style="cursor:pointer;font-size:18px;color:#94a3b8" onclick="closeModal('modalExport')">×</span>
+      <button type="button" class="btn sec small" onclick="closeModal('modalExport')">×</button>
     </div>
-    <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出数据，可直接点击下载文件或一键复制全部内容：</div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <a class="btn pri" id="exportDownloadBtn" download="export.csv" href="#"> 点击下载文件</a>
-      <button class="btn sec" id="btnCopyExport" onclick="copyExportContent()"> 一键复制全部内容</button>
-      <span id="copySuccessTip" style="font-size:12px;color:#16a34a;display:none;align-items:center;font-weight:600"> 复制成功！</span>
+    <div id="exportModalHint" class="hint" style="margin-bottom:10px">已生成导出内容，可下载文件或复制文本：</div>
+    <div class="row" style="margin-bottom:12px">
+      <a class="btn pri" id="exportDownloadBtn" download="export.csv" href="#">下载文件</a>
+      <button type="button" class="btn sec" id="btnCopyExport" onclick="copyExportContent()">复制全部内容</button>
+      <span id="copySuccessTip" style="font-size:12px;color:var(--ok);display:none;align-items:center;font-weight:600">已复制</span>
     </div>
-    <textarea id="exportModalText" rows="12" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;background:#f8fafc;color:#111827;resize:vertical" onfocus="this.select()"></textarea>
-    <div style="display:flex;justify-content:flex-end;margin-top:14px">
-      <button class="btn sec" onclick="closeModal('modalExport')">关闭窗口</button>
+    <textarea id="exportModalText" rows="12" style="width:100%;font-family:var(--mono);font-size:11px;background:var(--surface-subtle);resize:vertical" onfocus="this.select()"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:14px">
+      <button type="button" class="btn sec" onclick="closeModal('modalExport')">关闭窗口</button>
     </div>
   </div>
 </div>
 
-<script src="pour-check.js?v=5"></script>
-
-<script>
-/**
- * UI State & Multi-Rule Configuration Controller
- */
-const State = {
-  // Multi-rules
-  viaCoverageRules: [
-    { id: 'cov_1', padstack: 'HDI_045drill_ring3_1_4', layers: 'L1-L5', coverageRadius: 50.0 },
-    { id: 'cov_2', padstack: 'BGA_GND_pad1mil_0902', layers: '02G01P, 19IS08', coverageRadius: 30.0 }
-  ],
-  specialShapeTemplates: [
-    { id: 'tmpl_1', name: 'L2特定异型泪滴铜皮', padstack: 'BGA_3510', layer: '02G01P', expectedArea: 452.38, areaTolerance: 30.0, rawShapeText: '' },
-    { id: 'tmpl_2', name: 'L19特定异型铜皮', padstack: 'BGA_3510', layer: '19IS08', expectedArea: 113.10, areaTolerance: 20.0, rawShapeText: '' }
-  ],
-  traceMarginRules: [
-    { id: 'margin_1', traceLayer: '19IS08', upperRefLayer: '08IS03', lowerRefLayer: 'Bottom', minMargin: 50.0 },
-    { id: 'margin_2', traceLayer: '08IS03', upperRefLayer: '02G01P', lowerRefLayer: '19IS08', minMargin: 40.0 }
-  ],
-  smallCopperAreaThreshold: 500.0,
-  minArcRadius: 10.0,
-
-  // Runtime Data
-  shapes: [],
-  vias: [],
-  traces: [],
-  layers: [],
-  rawResults: [],
-  groupedResults: [],
-  results: [],
-  summary: null,
-  activeTab: 'tabRules',
-  categoryFilter: 'all',
-  viewMode: 'grouped', // 'grouped' (按目标对象汇总) vs 'flat' (平铺明细)
-  expandedRows: new Set(),
-  page: 1,
-  pageSize: 20,
-  reviewedItems: new Set(),
-
-  // Unified History Store for EVERY field
-  history: {
-    r1_padstack: ['HDI_045drill_ring3_1_4', 'BGA_GND_pad1mil_0902', 'BGA_3510', 'SMA_via'],
-    r1_layers: ['L1-L5', 'L1-L10', 'Top, 02G01P, 08IS03, 19IS08, Bottom', '02G01P-19IS08', '全部层'],
-    r1_dist: ['50.0', '40.0', '30.0', '20.0', '15.0'],
-
-    r2_name: ['L2特定异型泪滴铜皮', 'L19特定异型铜皮', 'SMA专用接地异型铜皮', 'BGA局部加宽铜皮'],
-    r2_padstack: ['BGA_3510', 'HDI_045drill', 'SMA_Bot-L19', 'BGA_GND'],
-    r2_layer: ['02G01P', '19IS08', 'L2', 'L4', 'L17'],
-    r2_tol: ['30.0', '20.0', '10.0', '50.0'],
-
-    r3_tracelayer: ['19IS08', '08IS03', '02G01P', 'L4', 'L6', 'L8'],
-    r3_upperref: ['08IS03', '02G01P', 'Top', 'L3', 'L5'],
-    r3_lowerref: ['Bottom', '19IS08', '08IS03', 'L5', 'L7'],
-    r3_margin: ['50.0', '45.0', '40.0', '30.0', '20.0'],
-
-    r4_area: ['500.0', '300.0', '200.0', '1000.0', '2000.0'],
-    r5_radius: ['10.0', '8.0', '6.0', '5.0', '12.0']
-  },
-
-  canvas: {
-    zoom: 1.0,
-    panX: 0,
-    panY: 0,
-    isDragging: false,
-    dragStartX: 0,
-    dragStartY: 0,
-    showShapes: true,
-    showVias: true,
-    showTraces: true,
-    showPorts: true,
-    showDefects: true,
-    measureMode: false,
-    measurePoints: []
-  },
-
-  editingIndex: -1,
-  modalShapeParsed: null
-};
-
-function safeRAF(fn) {
-  if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(fn);
-  } else {
-    setTimeout(fn, 0);
-  }
-}
-
-function initApp() {
-  loadStoredHistory();
-  loadSavedRules();
-  renderAllRuleTables();
-  renderHistoryChips();
-  initCanvas();
-  updateTopKPIs();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-  window.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
-
-function switchTab(tabId) {
-  document.querySelectorAll('nav#tabs button').forEach((btn, idx) => {
-    const tabs = ['tabRules', 'tabImport', 'tabResults', 'tabCanvas', 'tabAnalysis'];
-    btn.classList.toggle('active', tabs[idx] === tabId);
-  });
-  document.querySelectorAll('main > section.tab').forEach(sec => {
-    sec.classList.toggle('active', sec.id === tabId);
-  });
-  State.activeTab = tabId;
-
-  if (tabId === 'tabCanvas') {
-    safeRAF(() => {
-      resizeCanvas();
-      if (!State.canvas.hasInitialFit && (State.shapes.length > 0 || State.vias.length > 0)) {
-        fitCanvasToLayout();
-        State.canvas.hasInitialFit = true;
-      } else {
-        renderCanvas();
-      }
-    });
-  } else if (tabId === 'tabAnalysis') {
-    renderAnalysisTab();
-  }
-}
-
-/**
- * Universal History Manager for EVERY Field
- */
-function recordHistory(key, val) {
-  if (!val || typeof val !== 'string') return;
-  const str = val.trim();
-  if (!str) return;
-
-  if (!State.history[key]) State.history[key] = [];
-  const list = State.history[key];
-  const idx = list.indexOf(str);
-  if (idx >= 0) list.splice(idx, 1);
-  list.unshift(str);
-  if (list.length > 6) list.pop();
-
-  try {
-    localStorage.setItem('pcb_pour_unified_history', JSON.stringify(State.history));
-  } catch (e) {}
-
-  renderHistoryChips();
-}
-
-function loadStoredHistory() {
-  try {
-    const raw = localStorage.getItem('pcb_pour_unified_history');
-    if (raw) {
-      State.history = Object.assign(State.history, JSON.parse(raw));
-    }
-  } catch (e) {}
-}
-
-function renderHistoryChips() {
-  // Rule 1 Chips
-  renderChipBar('chipsModalR1Padstack', 'modalR1InpPadstack', State.history.r1_padstack);
-  renderChipBar('chipsModalR1Layers', 'modalR1InpLayers', State.history.r1_layers);
-  renderChipBar('chipsModalR1Dist', 'modalR1InpDist', State.history.r1_dist, 'mil');
-
-  // Rule 2 Chips
-  renderChipBar('chipsModalR2Name', 'modalR2InpName', State.history.r2_name);
-  renderChipBar('chipsModalR2Padstack', 'modalR2InpPadstack', State.history.r2_padstack);
-  renderChipBar('chipsModalR2Layer', 'modalR2InpLayer', State.history.r2_layer);
-  renderChipBar('chipsModalR2Tol', 'modalR2InpTol', State.history.r2_tol, 'sq mil');
-
-  // Rule 3 Chips
-  renderChipBar('chipsModalR3TraceLayer', 'modalR3InpTraceLayer', State.history.r3_tracelayer);
-  renderChipBar('chipsModalR3UpperRef', 'modalR3InpUpperRef', State.history.r3_upperref);
-  renderChipBar('chipsModalR3LowerRef', 'modalR3InpLowerRef', State.history.r3_lowerref);
-  renderChipBar('chipsModalR3Margin', 'modalR3InpMargin', State.history.r3_margin, 'mil');
-
-  // Rule 4 & 5 Chips
-  renderChipBar('chipsRule4Area', 'rule4InpArea', State.history.r4_area, 'sq mil');
-  renderChipBar('chipsRule5Radius', 'rule5InpRadius', State.history.r5_radius, 'mil');
-}
-
-function renderChipBar(containerId, inputId, list, unit = '') {
-  const el = document.getElementById(containerId);
-  if (!el || !list) return;
-  el.innerHTML = '<span style="font-size:11px;color:#6b7280">快捷选项:</span>' + list.map(v => 
-    `<span class="chip" onclick="fillInputAndRecord('${inputId}', '${escapeHtml(v)}')">${escapeHtml(v)}${unit ? ' ' + unit : ''}</span>`
-  ).join('');
-}
-
-function fillInputAndRecord(inputId, val) {
-  const inp = document.getElementById(inputId);
-  if (inp) {
-    inp.value = val;
-    inp.dispatchEvent(new Event('change'));
-  }
-}
-
-/**
- * Multi-rule Renderers for Rule 1, Rule 2, Rule 3
- */
-function renderAllRuleTables() {
-  renderRule1Table();
-  renderRule2Table();
-  renderRule3Table();
-}
-
-function renderRule1Table() {
-  const tbody = document.getElementById('tblRule1Body');
-  const countEl = document.getElementById('lblR1Count');
-  if (countEl) countEl.textContent = `${State.viaCoverageRules.length} 条规则`;
-
-  if (!tbody) return;
-  tbody.innerHTML = State.viaCoverageRules.map((r, idx) => `
-    <tr>
-      <td><strong>#${idx + 1}</strong></td>
-      <td><span class="badge-tag copper">${escapeHtml(r.padstack || '所有孔')}</span></td>
-      <td><span class="badge-tag gray">${escapeHtml(String(r.layers))}</span></td>
-      <td><strong>${r.coverageRadius} mil</strong></td>
-      <td>
-        <div style="display:flex;gap:4px">
-          <button class="btn sec small" onclick="openEditRule1Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule1(${idx})">删除</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function renderRule2Table() {
-  const tbody = document.getElementById('tblRule2Body');
-  const countEl = document.getElementById('lblR2Count');
-  if (countEl) countEl.textContent = `${State.specialShapeTemplates.length} 条规则`;
-
-  if (!tbody) return;
-  tbody.innerHTML = State.specialShapeTemplates.map((t, idx) => `
-    <tr>
-      <td><strong>#${idx + 1}</strong></td>
-      <td>
-        <div style="width:48px;height:48px;background:#0f172a;border-radius:4px;overflow:hidden">
-          <canvas id="r2Thumb_${idx}" width="48" height="48"></canvas>
-        </div>
-      </td>
-      <td><strong>${escapeHtml(t.name)}</strong></td>
-      <td><span class="badge-tag copper">${escapeHtml(t.padstack)}</span></td>
-      <td><span class="badge-tag gray">${escapeHtml(t.layer)}</span></td>
-      <td><strong>${PourChecker.roundN(t.expectedArea, 1)} sq mil</strong> (±${t.areaTolerance})</td>
-      <td>
-        <div style="display:flex;gap:4px">
-          <button class="btn sec small" onclick="openEditRule2Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule2(${idx})">删除</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
-  safeRAF(() => {
-    State.specialShapeTemplates.forEach((t, idx) => {
-      drawShapeThumb(`r2Thumb_${idx}`, t);
-    });
-  });
-}
-
-function drawShapeThumb(canvasId, tmpl) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 0, w, h);
-
-  ctx.fillStyle = 'rgba(180, 83, 9, 0.4)';
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 1.2;
-
-  ctx.beginPath();
-  ctx.arc(w / 2, h / 2, w * 0.35, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = '#10b981';
-  ctx.beginPath();
-  ctx.arc(w / 2, h / 2, 3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function renderRule3Table() {
-  const tbody = document.getElementById('tblRule3Body');
-  const countEl = document.getElementById('lblR3Count');
-  if (countEl) countEl.textContent = `${State.traceMarginRules.length} 条规则`;
-
-  if (!tbody) return;
-  tbody.innerHTML = State.traceMarginRules.map((r, idx) => `
-    <tr>
-      <td><strong>#${idx + 1}</strong></td>
-      <td><span class="badge-tag copper">${escapeHtml(r.traceLayer)}</span></td>
-      <td><span class="badge-tag gray">${escapeHtml(r.upperRefLayer || '-')}</span></td>
-      <td><span class="badge-tag gray">${escapeHtml(r.lowerRefLayer || '-')}</span></td>
-      <td><strong>${r.minMargin} mil</strong></td>
-      <td>
-        <div style="display:flex;gap:4px">
-          <button class="btn sec small" onclick="openEditRule3Modal(${idx})"> 编辑</button>
-          <button class="btn bad small" onclick="deleteRule3(${idx})">删除</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-
-/**
- * Modals & Rule CRUD Operations
- */
-function openAddRule1Modal() {
-  State.editingIndex = -1;
-  document.getElementById('modalR1Title').textContent = '新增孔铺铜覆盖规则';
-  document.getElementById('modalR1InpPadstack').value = 'HDI_045drill_ring3_1_4';
-  document.getElementById('modalR1InpLayers').value = 'L1-L5';
-  document.getElementById('modalR1InpDist').value = '50.0';
-  renderHistoryChips();
-  openModal('modalRule1');
-}
-
-function openEditRule1Modal(idx) {
-  State.editingIndex = idx;
-  const r = State.viaCoverageRules[idx];
-  document.getElementById('modalR1Title').textContent = `编辑孔铺铜覆盖规则 #${idx + 1}`;
-  document.getElementById('modalR1InpPadstack').value = r.padstack;
-  document.getElementById('modalR1InpLayers').value = String(r.layers);
-  document.getElementById('modalR1InpDist').value = r.coverageRadius;
-  renderHistoryChips();
-  openModal('modalRule1');
-}
-
-function saveRule1FromModal() {
-  const pad = document.getElementById('modalR1InpPadstack').value.trim();
-  const layers = document.getElementById('modalR1InpLayers').value.trim();
-  const dist = parseFloat(document.getElementById('modalR1InpDist').value) || 50.0;
-
-  recordHistory('r1_padstack', pad);
-  recordHistory('r1_layers', layers);
-  recordHistory('r1_dist', String(dist));
-
-  const newRule = { id: `cov_${Date.now()}`, padstack: pad, layers, coverageRadius: dist };
-
-  if (State.editingIndex >= 0) {
-    State.viaCoverageRules[State.editingIndex] = newRule;
-  } else {
-    State.viaCoverageRules.push(newRule);
-  }
-
-  renderRule1Table();
-  closeModal('modalRule1');
-}
-
-function deleteRule1(idx) {
-  State.viaCoverageRules.splice(idx, 1);
-  renderRule1Table();
-}
-
-// Rule 2 Modals & Shape TXT Preview
-function openAddRule2Modal() {
-  State.editingIndex = -1;
-  document.getElementById('modalR2Title').textContent = '新增特定异型铜皮模板 (导入 Shape TXT)';
-  document.getElementById('modalR2InpPadstack').disabled = false;
-  document.getElementById('modalR2InpPadstack').style.background = '#ffffff';
-  document.getElementById('modalR2InpLayer').disabled = false;
-  document.getElementById('modalR2InpLayer').style.background = '#ffffff';
-  document.getElementById('modalR2TxtShape').disabled = false;
-  document.getElementById('modalR2TxtShape').style.background = '#ffffff';
-  document.getElementById('modalR2InpPadstack').disabled = false;
-  document.getElementById('modalR2InpPadstack').style.background = '#ffffff';
-  document.getElementById('modalR2InpLayer').disabled = false;
-  document.getElementById('modalR2InpLayer').style.background = '#ffffff';
-  document.getElementById('modalR2TxtShape').disabled = false;
-  document.getElementById('modalR2TxtShape').style.background = '#ffffff';
-  document.getElementById('modalR2InpName').value = 'L2特定异型铜皮_' + (State.specialShapeTemplates.length + 1);
-  document.getElementById('modalR2InpPadstack').value = 'BGA_3510';
-  document.getElementById('modalR2InpLayer').value = '02G01P';
-  document.getElementById('modalR2InpTol').value = '30.0';
-  document.getElementById('modalR2TxtShape').value = `Item 2  < Shape >\n  Subset: 02G01P\n  Area: 452.38934  (sq mil)\nExterior Boundary:\n  Arc seg: xy [23274.13, 27990.27]  xy [23274.13, 27990.27]\n    Center-xy: [23286.13, 27990.27] Radius (12.0000) CCW`;
-  previewModalShape();
-  renderHistoryChips();
-  openModal('modalRule2');
-}
-
-function openEditRule2Modal(idx) {
-  State.editingIndex = idx;
-  const t = State.specialShapeTemplates[idx];
-  document.getElementById('modalR2Title').textContent = `编辑特定异型铜皮模板`;
-  document.getElementById('modalR2InpPadstack').disabled = true;
-  document.getElementById('modalR2InpPadstack').style.background = '#f8fafc';
-  document.getElementById('modalR2InpLayer').disabled = true;
-  document.getElementById('modalR2InpLayer').style.background = '#f8fafc';
-  document.getElementById('modalR2TxtShape').disabled = true;
-  document.getElementById('modalR2TxtShape').style.background = '#f8fafc';
-  document.getElementById('modalR2InpName').value = t.name;
-  document.getElementById('modalR2InpPadstack').value = t.padstack;
-  document.getElementById('modalR2InpLayer').value = t.layer;
-  document.getElementById('modalR2InpTol').value = t.areaTolerance;
-  document.getElementById('modalR2TxtShape').value = t.rawShapeText || `Item 1  < Shape >\n  Subset: ${t.layer}\n  Area: ${t.expectedArea} (sq mil)`;
-  previewModalShape();
-  renderHistoryChips();
-  openModal('modalRule2');
-}
-
-function previewModalShape() {
-  const txt = document.getElementById('modalR2TxtShape').value;
-  const parsed = PourChecker.parsePcbElements(txt);
-  const title = document.getElementById('modalR2PreviewTitle');
-  const desc = document.getElementById('modalR2PreviewDesc');
-
-  if (parsed.shapes.length > 0) {
-    const s = parsed.shapes[0];
-    State.modalShapeParsed = s;
-    title.textContent = `已成功解析 Shape 几何 (所在层: ${s.layer})`;
-    desc.innerHTML = `
-      <div>实测面积: <strong>${PourChecker.roundN(s.area, 2)} sq mil</strong> (${PourChecker.roundN(s.areaMm2, 4)} mm²)</div>
-      <div>边界包含: ${s.boundary.length} 段 (直线 ${s.boundary.filter(b=>b.type==='line').length} / 圆弧 ${s.arcs.length})</div>
-    `;
-    drawModalShapeCanvas(s);
-  } else {
-    State.modalShapeParsed = null;
-    title.textContent = '未识别到有效 Shape 块';
-    desc.textContent = '请确保粘贴包含 < Shape > 与 Area 的文本片段。';
-  }
-}
-
-function drawModalShapeCanvas(shape) {
-  const canvas = document.getElementById('modalR2Canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 0, w, h);
-
-  const span = Math.max(shape.bbox.spanX, shape.bbox.spanY, 10);
-  const scale = (w * 0.75) / span;
-  const cx = w / 2;
-  const cy = h / 2;
-
-  ctx.fillStyle = 'rgba(180, 83, 9, 0.35)';
-  ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 1.5;
-
-  ctx.beginPath();
-  shape.boundary.forEach(seg => {
-    if (seg.type === 'line') {
-      ctx.moveTo(cx + (seg.x1 - shape.centroid.x) * scale, cy - (seg.y1 - shape.centroid.y) * scale);
-      ctx.lineTo(cx + (seg.x2 - shape.centroid.x) * scale, cy - (seg.y2 - shape.centroid.y) * scale);
-    } else if (seg.type === 'arc') {
-      ctx.arc(cx + (seg.cx - shape.centroid.x) * scale, cy - (seg.cy - shape.centroid.y) * scale, seg.radius * scale, 0, Math.PI * 2);
-    }
-  });
-  ctx.fill();
-  ctx.stroke();
-
-  // Draw Center Via
-  ctx.fillStyle = '#10b981';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function saveRule2FromModal() {
-  const name = document.getElementById('modalR2InpName').value.trim();
-  const pad = document.getElementById('modalR2InpPadstack').value.trim();
-  const layer = document.getElementById('modalR2InpLayer').value.trim();
-  const tol = parseFloat(document.getElementById('modalR2InpTol').value) || 30.0;
-  const rawTxt = document.getElementById('modalR2TxtShape').value;
-
-  recordHistory('r2_name', name);
-  recordHistory('r2_padstack', pad);
-  recordHistory('r2_layer', layer);
-  recordHistory('r2_tol', String(tol));
-
-  let expectedArea = 452.38;
-  if (State.modalShapeParsed && State.modalShapeParsed.area > 0) {
-    expectedArea = State.modalShapeParsed.area;
-  }
-
-  const newTmpl = {
-    id: `tmpl_${Date.now()}`,
-    name,
-    padstack: pad,
-    layer,
-    expectedArea,
-    areaTolerance: tol,
-    rawShapeText: rawTxt,
-    shape: State.modalShapeParsed
-  };
-
-  if (State.editingIndex >= 0) {
-    State.specialShapeTemplates[State.editingIndex] = newTmpl;
-  } else {
-    State.specialShapeTemplates.push(newTmpl);
-  }
-
-  renderRule2Table();
-  closeModal('modalRule2');
-}
-
-function deleteRule2(idx) {
-  State.specialShapeTemplates.splice(idx, 1);
-  renderRule2Table();
-}
-
-// Rule 3 Modals
-function openAddRule3Modal() {
-  State.editingIndex = -1;
-  document.getElementById('modalR3Title').textContent = '新增走线参考层超宽规则';
-  document.getElementById('modalR3InpTraceLayer').value = '19IS08';
-  document.getElementById('modalR3InpUpperRef').value = '08IS03';
-  document.getElementById('modalR3InpLowerRef').value = 'Bottom';
-  document.getElementById('modalR3InpMargin').value = '50.0';
-  renderHistoryChips();
-  openModal('modalRule3');
-}
-
-function openEditRule3Modal(idx) {
-  State.editingIndex = idx;
-  const r = State.traceMarginRules[idx];
-  document.getElementById('modalR3Title').textContent = `编辑走线参考层规则 #${idx + 1}`;
-  document.getElementById('modalR3InpTraceLayer').value = r.traceLayer;
-  document.getElementById('modalR3InpUpperRef').value = r.upperRefLayer || '';
-  document.getElementById('modalR3InpLowerRef').value = r.lowerRefLayer || '';
-  document.getElementById('modalR3InpMargin').value = r.minMargin;
-  renderHistoryChips();
-  openModal('modalRule3');
-}
-
-function saveRule3FromModal() {
-  const traceL = document.getElementById('modalR3InpTraceLayer').value.trim();
-  const upper = document.getElementById('modalR3InpUpperRef').value.trim();
-  const lower = document.getElementById('modalR3InpLowerRef').value.trim();
-  const margin = parseFloat(document.getElementById('modalR3InpMargin').value) || 50.0;
-
-  recordHistory('r3_tracelayer', traceL);
-  recordHistory('r3_upperref', upper);
-  recordHistory('r3_lowerref', lower);
-  recordHistory('r3_margin', String(margin));
-
-  const newRule = {
-    id: `margin_${Date.now()}`,
-    traceLayer: traceL,
-    upperRefLayer: upper,
-    lowerRefLayer: lower,
-    minMargin: margin
-  };
-
-  if (State.editingIndex >= 0) {
-    State.traceMarginRules[State.editingIndex] = newRule;
-  } else {
-    State.traceMarginRules.push(newRule);
-  }
-
-  renderRule3Table();
-  closeModal('modalRule3');
-}
-
-function deleteRule3(idx) {
-  State.traceMarginRules.splice(idx, 1);
-  renderRule3Table();
-}
-
-function openModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.add('open');
-}
-
-function closeModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.remove('open');
-}
-
-/**
- * Rule Snapshot Export & Import Management (Local File & Persistent Storage)
- */
-function getRulesSnapshot() {
-  const inp4 = document.getElementById('rule4InpArea');
-  const inp5 = document.getElementById('rule5InpRadius');
-  State.smallCopperAreaThreshold = inp4 ? (parseFloat(inp4.value) || 500.0) : 500.0;
-  State.minArcRadius = inp5 ? (parseFloat(inp5.value) || 10.0) : 10.0;
-
-  return {
-    version: '1.0',
-    tool: 'pcb_pour_checker',
-    exportTime: new Date().toLocaleString(),
-    ruleSummary: '铜皮检查全套规则约束配置（含孔铺铜覆盖、异型铜皮模板、走线参考层超宽、孤立小铜皮与圆弧半径）',
-    viaCoverageRules: JSON.parse(JSON.stringify(State.viaCoverageRules)),
-    specialShapeTemplates: JSON.parse(JSON.stringify(State.specialShapeTemplates)),
-    traceMarginRules: JSON.parse(JSON.stringify(State.traceMarginRules)),
-    smallCopperAreaThreshold: State.smallCopperAreaThreshold,
-    minArcRadius: State.minArcRadius,
-    history: JSON.parse(JSON.stringify(State.history))
-  };
-}
-
-function exportRulesToLocalFile() {
-  const snapshot = getRulesSnapshot();
-  const jsonText = JSON.stringify(snapshot, null, 2);
-
-  try {
-    localStorage.setItem('pcb_pour_saved_rules', JSON.stringify(snapshot));
-  } catch (e) {}
-
-  const counts = `${snapshot.viaCoverageRules.length} 条孔铺铜规则、${snapshot.specialShapeTemplates.length} 条异型铜皮模板、${snapshot.traceMarginRules.length} 条走线参考层超宽规则`;
-  const hint = `已成功生成铜皮检查全套规则约束文件（含 ${counts}）。请点击「下载文件」保存到电脑。下次使用时点击「从本地文件读取约束」打开该 JSON 即可一键恢复！`;
-
-  const statusEl = document.getElementById('lblRuleFileStatus');
-  if (statusEl) {
-    statusEl.style.display = 'block';
-    statusEl.textContent = ` 规则约束配置已成功保存！共 ${snapshot.viaCoverageRules.length} 条孔铺铜规则、${snapshot.specialShapeTemplates.length} 条异型模板、${snapshot.traceMarginRules.length} 条走线超宽规则。`;
-  }
-
-  showExportBox('铜皮检查规则约束.json', jsonText, hint, 'application/json');
-}
-
-function importRulesFromLocalFile(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const raw = String(e.target.result).replace(/^\uFEFF/, '').trim();
-      const data = JSON.parse(raw);
-      applyRuleSnapshot(data, true);
-
-      const statusEl = document.getElementById('lblRuleFileStatus');
-      if (statusEl) {
-        statusEl.style.display = 'block';
-        statusEl.textContent = ` 已成功从本地文件「${file.name}」载入规则约束（含 ${State.viaCoverageRules.length} 条孔铺铜规则、${State.specialShapeTemplates.length} 条异型模板、${State.traceMarginRules.length} 条走线超宽规则）`;
-      }
-      event.target.value = '';
-    } catch (err) {
-      alert('读取失败：请选择由「保存规则到本地」生成的 JSON 规则文件。\n' + (err && err.message ? err.message : ''));
-    }
-  };
-  reader.onerror = () => {
-    alert('无法读取选中的本地文件');
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-function applyRuleSnapshot(data, saveToStorage = true) {
-  if (!data || typeof data !== 'object') return;
-
-  if (Array.isArray(data.viaCoverageRules)) {
-    State.viaCoverageRules = data.viaCoverageRules;
-  }
-  if (Array.isArray(data.specialShapeTemplates)) {
-    State.specialShapeTemplates = data.specialShapeTemplates;
-    // Re-parse shapes for templates if needed
-    State.specialShapeTemplates.forEach(t => {
-      if (t.rawShapeText && !t.shape && typeof PourChecker !== 'undefined' && PourChecker.parsePcbElements) {
-        try {
-          const parsed = PourChecker.parsePcbElements(t.rawShapeText);
-          if (parsed.shapes.length > 0) t.shape = parsed.shapes[0];
-        } catch (e) {}
-      }
-    });
-  }
-  if (Array.isArray(data.traceMarginRules)) {
-    State.traceMarginRules = data.traceMarginRules;
-  }
-  if (typeof data.smallCopperAreaThreshold === 'number') {
-    State.smallCopperAreaThreshold = data.smallCopperAreaThreshold;
-    const inp = document.getElementById('rule4InpArea');
-    if (inp) inp.value = String(State.smallCopperAreaThreshold);
-  }
-  if (typeof data.minArcRadius === 'number') {
-    State.minArcRadius = data.minArcRadius;
-    const inp = document.getElementById('rule5InpRadius');
-    if (inp) inp.value = String(State.minArcRadius);
-  }
-  if (data.history && typeof data.history === 'object') {
-    State.history = Object.assign(State.history, data.history);
-  }
-
-  renderAllRuleTables();
-  renderHistoryChips();
-
-  if (saveToStorage) {
-    try {
-      localStorage.setItem('pcb_pour_saved_rules', JSON.stringify(data));
-      localStorage.setItem('pcb_pour_unified_history', JSON.stringify(State.history));
-    } catch (e) {}
-  }
-}
-
-function loadSavedRules() {
-  try {
-    const raw = localStorage.getItem('pcb_pour_saved_rules');
-    if (raw) {
-      const data = JSON.parse(raw);
-      applyRuleSnapshot(data, false);
-    }
-  } catch (e) {}
-}
-
-function resetToDefaultRules() {
-  if (!confirm('确定要恢复出厂内置默认规则吗？当前修改的规则将被覆盖。')) return;
-
-  State.viaCoverageRules = [
-    { id: 'cov_1', padstack: 'HDI_045drill_ring3_1_4', layers: 'L1-L5', coverageRadius: 50.0 },
-    { id: 'cov_2', padstack: 'BGA_GND_pad1mil_0902', layers: '02G01P, 19IS08', coverageRadius: 30.0 }
-  ];
-  State.specialShapeTemplates = [
-    { id: 'tmpl_1', name: 'L2特定异型泪滴铜皮', padstack: 'BGA_3510', layer: '02G01P', expectedArea: 452.38, areaTolerance: 30.0, rawShapeText: '' },
-    { id: 'tmpl_2', name: 'L19特定异型铜皮', padstack: 'BGA_3510', layer: '19IS08', expectedArea: 113.10, areaTolerance: 20.0, rawShapeText: '' }
-  ];
-  State.traceMarginRules = [
-    { id: 'margin_1', traceLayer: '19IS08', upperRefLayer: '08IS03', lowerRefLayer: 'Bottom', minMargin: 50.0 },
-    { id: 'margin_2', traceLayer: '08IS03', upperRefLayer: '02G01P', lowerRefLayer: '19IS08', minMargin: 40.0 }
-  ];
-  State.smallCopperAreaThreshold = 500.0;
-  State.minArcRadius = 10.0;
-
-  const inp4 = document.getElementById('rule4InpArea');
-  const inp5 = document.getElementById('rule5InpRadius');
-  if (inp4) inp4.value = '500.0';
-  if (inp5) inp5.value = '10.0';
-
-  try {
-    localStorage.removeItem('pcb_pour_saved_rules');
-  } catch (e) {}
-
-  renderAllRuleTables();
-  renderHistoryChips();
-
-  const statusEl = document.getElementById('lblRuleFileStatus');
-  if (statusEl) {
-    statusEl.style.display = 'block';
-    statusEl.textContent = ' 已恢复出厂内置默认规则配置。';
-  }
-}
-
-function saveRulesAndJump() {
-  State.smallCopperAreaThreshold = parseFloat(document.getElementById('rule4InpArea').value) || 500.0;
-  State.minArcRadius = parseFloat(document.getElementById('rule5InpRadius').value) || 10.0;
-  recordHistory('r4_area', String(State.smallCopperAreaThreshold));
-  recordHistory('r5_radius', String(State.minArcRadius));
-  switchTab('tabImport');
-}
-
-/**
- * Execution Engine
- */
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('txtDataInput').value = e.target.result;
-    executeCopperChecks();
-  };
-  reader.readAsText(file);
-}
-
-function loadSampleShapes() {
-  fetch('sample/铜皮数据示例.txt')
-    .then(r => r.text())
-    .then(txt => {
-      document.getElementById('txtDataInput').value = txt;
-      executeCopperChecks();
-    })
-    .catch(() => alert('无法载入示例文件'));
-}
-
-
-function executeCopperChecks() {
-  const txt = document.getElementById('txtDataInput').value.trim();
-  if (!txt) {
-    alert('请先上传或粘贴 PCB 铜皮/过孔/走线 TXT 数据！');
-    return;
-  }
-
-  State.smallCopperAreaThreshold = parseFloat(document.getElementById('rule4InpArea').value) || 500.0;
-  State.minArcRadius = parseFloat(document.getElementById('rule5InpRadius').value) || 10.0;
-
-  const btn = document.getElementById('btnRunCheck');
-  btn.innerHTML = ' 正在进行五项铜皮几何运算...';
-  btn.disabled = true;
-
-  const doCheck = () => {
-    const config = {
-      viaCoverageRules: State.viaCoverageRules,
-      specialShapeTemplates: State.specialShapeTemplates,
-      traceMarginRules: State.traceMarginRules,
-      smallCopperAreaThreshold: State.smallCopperAreaThreshold,
-      minArcRadius: State.minArcRadius
-    };
-
-    const res = PourChecker.runAllCopperChecks(txt, config);
-
-    btn.innerHTML = '<span style="font-size:14px"></span> 立即运行铜皮五大项检查';
-    btn.disabled = false;
-
-    State.shapes = res.shapes;
-    State.vias = res.vias;
-    State.traces = res.traces;
-    State.layers = res.layers;
-    State.rawResults = res.results.all;
-    State.groupedResults = res.results.grouped || PourChecker.groupResultsByTargetObject(res.results.all);
-    State.summary = res.summary;
-    State.page = 1;
-    State.expandedRows.clear();
-    State.canvas.hasInitialFit = false;
-
-    updateTopKPIs();
-    applyFilters();
-    switchTab('tabResults');
-  };
-
-  if (window.__SYNC_CHECK__) {
-    doCheck();
-  } else {
-    setTimeout(doCheck, 40);
-  }
-}
-
-function updateTopKPIs() {
-  const s = State.summary;
-  const elShapes = document.getElementById('statTotalShapes');
-  const elViasTraces = document.getElementById('statViasTraces');
-  const elDefects = document.getElementById('statTotalDefects');
-  const elPass = document.getElementById('statTotalPass');
-  const elBadgeDefects = document.getElementById('badgeDefectCount');
-
-  if (!s) {
-    if (elShapes) elShapes.textContent = '0';
-    if (elViasTraces) elViasTraces.textContent = '0 / 0';
-    if (elDefects) elDefects.textContent = '0';
-    if (elPass) elPass.textContent = '0';
-    if (elBadgeDefects) elBadgeDefects.textContent = '0';
-    return;
-  }
-
-  if (elShapes) elShapes.textContent = String(s.totalShapes);
-  if (elViasTraces) elViasTraces.textContent = `${s.totalVias} / ${s.totalTraces}`;
-  if (elDefects) elDefects.textContent = String(s.totalGroupedDefects != null ? s.totalGroupedDefects : s.totalDefects);
-  if (elPass) elPass.textContent = String(s.passCount);
-  if (elBadgeDefects) elBadgeDefects.textContent = String(s.totalGroupedDefects != null ? s.totalGroupedDefects : s.totalDefects);
-
-  const elFilterAll = document.getElementById('cntFilterAll');
-  const elFilterDefects = document.getElementById('cntFilterDefects');
-  const totalObj = State.groupedResults ? State.groupedResults.length : s.totalChecks;
-  const defectObj = State.groupedResults ? State.groupedResults.filter(g => !g.pass).length : s.totalDefects;
-  if (elFilterAll) elFilterAll.textContent = String(totalObj);
-  if (elFilterDefects) elFilterDefects.textContent = String(defectObj);
-}
-
-/**
- * Results Tab & Filter Handlers
- */
-let filteredResults = [];
-
-function setViewMode(mode) {
-  State.viewMode = mode;
-  document.getElementById('btnViewModeGrouped').className = `btn small ${mode === 'grouped' ? 'pri' : 'sec'}`;
-  document.getElementById('btnViewModeFlat').className = `btn small ${mode === 'flat' ? 'pri' : 'sec'}`;
-  applyFilters();
-}
-
-function setCategoryFilter(catKey) {
-  State.categoryFilter = catKey;
-  const filterBtns = {
-    all: 'btnFilterAll',
-    defects: 'btnFilterDefects',
-    via_coverage: 'btnFilterCov',
-    special_shape: 'btnFilterSpecial',
-    trace_ref_margin: 'btnFilterMargin',
-    isolated_copper: 'btnFilterSmall',
-    arc_radius: 'btnFilterArc'
-  };
-
-  Object.entries(filterBtns).forEach(([k, btnId]) => {
-    const btn = document.getElementById(btnId);
-    if (btn) btn.className = `btn small ${k === catKey ? 'pri' : 'sec'}`;
-  });
-
-  applyFilters();
-}
-
-function applyFilters() {
-  const query = (document.getElementById('inpSearch').value || '').trim().toLowerCase();
-  const source = State.viewMode === 'grouped' ? (State.groupedResults || []) : (State.rawResults || []);
-
-  filteredResults = source.filter(r => {
-    if (State.categoryFilter === 'defects' && r.pass) return false;
-    if (State.categoryFilter !== 'all' && State.categoryFilter !== 'defects') {
-      if (r.checkCategory !== State.categoryFilter) return false;
-    }
-
-    if (query) {
-      const str = `${r.checkCategoryName || ''} ${r.viaId || ''} ${r.viaPadstack || ''} ${r.viaNet || ''} ${r.traceNet || ''} ${r.layer || ''} ${r.layerListStr || ''} ${r.shapeId || ''} ${r.message || ''}`.toLowerCase();
-      if (!str.includes(query)) return false;
-    }
-
-    return true;
-  });
-
-  State.filteredResults = filteredResults;
-  State.page = 1;
-  renderResultsTable();
-}
-
-function toggleRowExpand(groupKey) {
-  if (State.expandedRows.has(groupKey)) {
-    State.expandedRows.delete(groupKey);
-  } else {
-    State.expandedRows.add(groupKey);
-  }
-  renderResultsTable();
-}
-
-function renderResultsTable() {
-  const tbody = document.getElementById('tblResultsBody');
-  const total = filteredResults.length;
-
-  document.getElementById('lblTotalCount').textContent = total;
-
-  if (total === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" style="text-align:center;padding:30px;color:#94a3b8">
-          ${State.rawResults.length === 0 ? '请先导入并运行检查' : '无符合当前筛选条件的检查记录'}
-        </td>
-      </tr>
-    `;
-    document.getElementById('lblPageStart').textContent = '0';
-    document.getElementById('lblPageEnd').textContent = '0';
-    document.getElementById('lblCurrentPage').textContent = '1 / 1';
-    return;
-  }
-
-  const pageSize = State.pageSize;
-  const totalPages = Math.ceil(total / pageSize);
-  if (State.page > totalPages) State.page = totalPages;
-  if (State.page < 1) State.page = 1;
-
-  const startIdx = (State.page - 1) * pageSize;
-  const endIdx = Math.min(startIdx + pageSize, total);
-  const slice = filteredResults.slice(startIdx, endIdx);
-
-  document.getElementById('lblPageStart').textContent = startIdx + 1;
-  document.getElementById('lblPageEnd').textContent = endIdx;
-  document.getElementById('lblCurrentPage').textContent = `${State.page} / ${totalPages}`;
-
-  let htmlRows = '';
-
-  slice.forEach((r, idx) => {
-    const itemKey = r.groupKey || `${r.checkCategory}_${r.viaId || r.traceId || r.shapeId}_${r.layer}_${idx}`;
-    const isReviewed = State.reviewedItems.has(itemKey);
-    const rowClass = isReviewed ? 'reviewed' : (r.pass ? 'row-pass' : 'row-fail');
-    const isExpanded = State.expandedRows.has(itemKey);
-
-    let targetStr = r.targetLabel;
-    if (!targetStr) {
-      if (r.viaId) targetStr = `孔 #${r.viaId} (${r.viaNet || 'GND'})`;
-      else if (r.traceId) targetStr = `走线 #${r.traceId} (${r.traceNet})`;
-      else if (r.shapeId) targetStr = `铜皮 Shape #${r.shapeId}`;
-    }
-
-    let metricsStr = r.metricsStr;
-    if (!metricsStr) {
-      if (r.checkCategory === 'via_coverage') {
-        metricsStr = `实测距铜皮: <strong>${r.actualDistStr}</strong> (要求 ≤ ${r.requiredDist} mil)`;
-      } else if (r.checkCategory === 'special_shape') {
-        metricsStr = `实测面积: ${PourChecker.roundN(r.actualArea, 1)} sq mil (期望 ${r.expectedArea})`;
-      } else if (r.checkCategory === 'trace_ref_margin') {
-        metricsStr = `单侧外延: <strong>${PourChecker.roundN(r.actualMargin, 1)} mil</strong> (要求 ≥ ${r.minMargin} mil)`;
-      } else if (r.checkCategory === 'isolated_copper') {
-        metricsStr = `铜皮面积: <strong>${PourChecker.roundN(r.area, 1)} sq mil</strong> (阈值 < ${r.areaThreshold})`;
-      } else if (r.checkCategory === 'arc_radius') {
-        metricsStr = `实测半径: <strong>${PourChecker.roundN(r.actualRadius, 2)} mil</strong> (要求 ≥ ${r.requiredRadius} mil)`;
-      }
-    }
-
-    const hasSub = r.subRecords && r.subRecords.length > 1;
-
-    htmlRows += `
-      <tr class="${rowClass}" id="row_${itemKey}">
-        <td><input type="checkbox" ${isReviewed ? 'checked' : ''} onchange="toggleReviewItem('${itemKey}', this.checked)"></td>
-        <td><span class="badge-tag copper">${escapeHtml(r.checkCategoryName)}</span></td>
-        <td><strong>${escapeHtml(targetStr)}</strong></td>
-        <td><span class="badge-tag gray">${escapeHtml(r.layerListStr || r.layer || '-')}</span></td>
-        <td style="font-size:11px">${metricsStr}</td>
-        <td>
-          <span class="badge-tag ${r.pass ? 'ok' : 'bad'}">${r.pass ? ' 符合' : ` 不符合${r.failCount ? ` (${r.failCount}层超标)` : ''}`}</span>
-        </td>
-        <td style="font-size:11px;line-height:1.4">${escapeHtml(r.message)}</td>
-        <td>
-          <label style="font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer">
-            <input type="checkbox" ${isReviewed ? 'checked' : ''} onchange="toggleReviewItem('${itemKey}', this.checked)">
-            <span>${isReviewed ? '已复核' : '待复核'}</span>
-          </label>
-        </td>
-        <td>
-          <div style="display:flex;gap:4px;align-items:center">
-            <button class="btn small sec" onclick="locateElementInCanvas('${r.checkCategory}', '${r.viaId || r.traceId || r.shapeId}', '${itemKey}')" title="在 2D 画布中定位并复核"> 定位</button>
-            ${hasSub ? `
-              <button class="btn small ${isExpanded ? 'pri' : 'sec'}" onclick="toggleRowExpand('${itemKey}')">
-                ${isExpanded ? '▼ 收起' : `▶ 明细 (${r.subRecords.length})`}
-              </button>
-            ` : ''}
-          </div>
-        </td>
-      </tr>
-    `;
-
-    // Render Sub-records breakdown if expanded
-    if (hasSub && isExpanded) {
-      htmlRows += `
-        <tr class="subrow">
-          <td></td>
-          <td colspan="8" style="padding:10px 14px">
-            <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#1d4ed8">
-               【${escapeHtml(targetStr)}】逐层 / 逐段检查明细拆解 (共 ${r.subRecords.length} 项)：
-            </div>
-            <div style="background:#fff;border:1px solid #cbd5e1;border-radius:6px;overflow:hidden">
-              <table style="font-size:11px">
-                <thead>
-                  <tr style="background:#f1f5f9">
-                    <th style="padding:6px 10px">层别 / 检查项</th>
-                    <th style="padding:6px 10px">实测参数</th>
-                    <th style="padding:6px 10px">规则标准</th>
-                    <th style="padding:6px 10px">单项结论</th>
-                    <th style="padding:6px 10px">单项详细说明</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${r.subRecords.map(sub => `
-                    <tr>
-                      <td style="padding:5px 10px"><span class="badge-tag gray">${escapeHtml(sub.layer || sub.refLayer || '-')}</span></td>
-                      <td style="padding:5px 10px"><strong>${escapeHtml(sub.actualDistStr || (sub.actualMargin != null ? sub.actualMargin + ' mil' : (sub.actualRadius != null ? sub.actualRadius + ' mil' : '-')))}</strong></td>
-                      <td style="padding:5px 10px">${escapeHtml(sub.requiredDist ? `≤ ${sub.requiredDist} mil` : (sub.minMargin ? `≥ ${sub.minMargin} mil` : `≥ ${sub.requiredRadius || 10} mil`))}</td>
-                      <td style="padding:5px 10px"><span class="badge-tag ${sub.pass ? 'ok' : 'bad'}">${sub.pass ? ' 符合' : ' 不符合'}</span></td>
-                      <td style="padding:5px 10px;color:#6b7280">${escapeHtml(sub.message)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-      `;
-    }
-  });
-
-  tbody.innerHTML = htmlRows;
-}
-
-function changePage(delta) {
-  State.page += delta;
-  renderResultsTable();
-}
-
-function toggleReviewItem(key, reviewed) {
-  const nextVal = reviewed !== undefined ? Boolean(reviewed) : !State.reviewedItems.has(key);
-  if (nextVal) State.reviewedItems.add(key);
-  else State.reviewedItems.delete(key);
-  renderResultsTable();
-  if (State.activeReviewKey === key) {
-    renderPourCanvasReviewBox(key);
-  }
-  renderCanvas();
-}
-
-function renderPourCanvasReviewBox(itemKey) {
-  const box = document.getElementById('pourCanvasReviewBox');
-  const titleEl = document.getElementById('pourCanvasRevTitle');
-  const bodyEl = document.getElementById('pourCanvasRevBody');
-  if (!box || !bodyEl) return;
-
-  State.activeReviewKey = itemKey;
-  const r = filteredResults.find((x, idx) => (x.groupKey || `${x.checkCategory}_${x.viaId || x.traceId || x.shapeId}_${x.layer}_${idx}`) === itemKey)
-    || State.results.find((x, idx) => (x.groupKey || `${x.checkCategory}_${x.viaId || x.traceId || x.shapeId}_${x.layer}_${idx}`) === itemKey);
-
-  const isReviewed = State.reviewedItems.has(itemKey);
-  if (titleEl && r) {
-    titleEl.textContent = `${r.checkCategoryName || '铜皮检查'} - ${r.targetLabel || itemKey}`;
-  }
-
-  const barStyle = isReviewed
-    ? 'background:rgba(16,185,129,.18);border:1px solid rgba(52,211,153,.55);'
-    : 'background:rgba(245,158,11,.15);border:1px solid rgba(251,191,36,.45);';
-
-  bodyEl.innerHTML = `
-    <div style="${barStyle}border-radius:6px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:${isReviewed ? '#6ee7b7' : '#fde68a'};margin:0">
-        <input type="checkbox" id="chkPourSpatialReview" ${isReviewed ? 'checked' : ''} onchange="toggleReviewItem('${itemKey}', this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#10b981">
-        <span>${isReviewed ? '已复核 (明细已同步勾选)' : '勾选复核此项'}</span>
-      </label>
-      <button class="btn small" onclick="toggleReviewItem('${itemKey}', ${!isReviewed})" style="padding:3px 9px;font-size:11px;border:none;background:${isReviewed ? 'rgba(51,65,85,.9)' : '#10b981'};color:#fff">
-        ${isReviewed ? '取消复核' : ' 确认复核'}
-      </button>
-    </div>
-    ${r ? `<div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">${escapeHtml(r.message || '')}</div>` : ''}
-    <div style="display:flex;justify-content:flex-end">
-      <button class="btn sec small" onclick="switchTab('tabResults')"> 返回检查结果明细</button>
-    </div>
-  `;
-  box.style.display = 'block';
-}
-
-function locateElementInCanvas(checkCategory, targetId, itemKey) {
-  switchTab('tabCanvas');
-  requestAnimationFrame(() => {
-    resizeCanvas();
-    const canvas = document.getElementById('mainCanvas');
-    const w = canvas ? canvas.width : 900;
-    const h = canvas ? canvas.height : 600;
-    let tx = null, ty = null;
-
-    const via = (State.vias || []).find(v => String(v.id) === String(targetId));
-    if (via) {
-      tx = via.x; ty = via.y;
-    } else {
-      const tr = (State.traces || []).find(t => String(t.id) === String(targetId));
-      if (tr && tr.bbox) {
-        tx = (tr.bbox.minX + tr.bbox.maxX) / 2;
-        ty = (tr.bbox.minY + tr.bbox.maxY) / 2;
-      } else {
-        const sh = (State.shapes || []).find(s => String(s.id) === String(targetId));
-        if (sh && sh.bbox) {
-          tx = (sh.bbox.minX + sh.bbox.maxX) / 2;
-          ty = (sh.bbox.minY + sh.bbox.maxY) / 2;
-        }
-      }
-    }
-
-    if (tx != null && ty != null) {
-      State.canvas.zoom = 5.5;
-      State.canvas.panX = w / 2 - tx * State.canvas.zoom;
-      State.canvas.panY = h / 2 + ty * State.canvas.zoom;
-    }
-    if (itemKey) renderPourCanvasReviewBox(itemKey);
-    renderCanvas();
-  });
-}
-
-function toggleSelectAll(masterChk) {
-  filteredResults.forEach((r, idx) => {
-    const key = r.groupKey || `${r.checkCategory}_${r.viaId || r.traceId || r.shapeId}_${r.layer}_${idx}`;
-    if (masterChk.checked) State.reviewedItems.add(key);
-    else State.reviewedItems.delete(key);
-  });
-  renderResultsTable();
-}
-
-/**
- * Tab 4: 2D Canvas Visualization
- */
-function initCanvas() {
-  const canvas = document.getElementById('mainCanvas');
-
-  canvas.addEventListener('wheel', e => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
-    const newZoom = Math.max(0.01, Math.min(500, State.canvas.zoom * zoomFactor));
-
-    State.canvas.panX = mouseX - (mouseX - State.canvas.panX) * (newZoom / State.canvas.zoom);
-    State.canvas.panY = mouseY - (mouseY - State.canvas.panY) * (newZoom / State.canvas.zoom);
-    State.canvas.zoom = newZoom;
-
-    renderCanvas();
-  });
-
-  canvas.addEventListener('mousedown', e => {
-    if (e.button !== 0) return;
-    State.canvas.isDragging = true;
-    State.canvas.dragStartX = e.clientX - State.canvas.panX;
-    State.canvas.dragStartY = e.clientY - State.canvas.panY;
-  });
-
-  window.addEventListener('mousemove', e => {
-    if (State.canvas.isDragging) {
-      State.canvas.panX = e.clientX - State.canvas.dragStartX;
-      State.canvas.panY = e.clientY - State.canvas.dragStartY;
-      renderCanvas();
-    }
-  });
-
-  window.addEventListener('mouseup', () => {
-    State.canvas.isDragging = false;
-  });
-
-  canvas.addEventListener('click', e => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const worldPos = screenToWorld(mouseX, mouseY);
-
-    if (State.canvas.measureMode) {
-      State.canvas.measurePoints.push(worldPos);
-      if (State.canvas.measurePoints.length > 2) State.canvas.measurePoints = [worldPos];
-      renderCanvas();
-      return;
-    }
-  });
-
-  window.addEventListener('resize', () => {
-    if (State.activeTab === 'tabCanvas') {
-      resizeCanvas();
-      renderCanvas();
-    }
-  });
-}
-
-function resizeCanvas() {
-  const canvas = document.getElementById('mainCanvas');
-  const container = document.getElementById('canvasContainer');
-  if (!canvas || !container) return;
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
-}
-
-function worldToScreen(wx, wy) {
-  return {
-    x: State.canvas.panX + wx * State.canvas.zoom,
-    y: State.canvas.panY - wy * State.canvas.zoom
-  };
-}
-
-function screenToWorld(sx, sy) {
-  return {
-    x: (sx - State.canvas.panX) / State.canvas.zoom,
-    y: -(sy - State.canvas.panY) / State.canvas.zoom
-  };
-}
-
-function fitCanvasToLayout() {
-  const canvas = document.getElementById('mainCanvas');
-  const w = canvas.width;
-  const h = canvas.height;
-
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-
-  State.shapes.forEach(s => {
-    if (s.bbox.minX < minX) minX = s.bbox.minX;
-    if (s.bbox.maxX > maxX) maxX = s.bbox.maxX;
-    if (s.bbox.minY < minY) minY = s.bbox.minY;
-    if (s.bbox.maxY > maxY) maxY = s.bbox.maxY;
-  });
-
-  State.vias.forEach(v => {
-    if (v.x < minX) minX = v.x;
-    if (v.x > maxX) maxX = v.x;
-    if (v.y < minY) minY = v.y;
-    if (v.y > maxY) maxY = v.y;
-  });
-
-  if (State.traces) {
-    State.traces.forEach(t => {
-      if (t.bbox) {
-        if (t.bbox.minX < minX) minX = t.bbox.minX;
-        if (t.bbox.maxX > maxX) maxX = t.bbox.maxX;
-        if (t.bbox.minY < minY) minY = t.bbox.minY;
-        if (t.bbox.maxY > maxY) maxY = t.bbox.maxY;
-      }
-    });
-  }
-
-  if (minX === Infinity) return;
-
-  const spanX = Math.max(maxX - minX, 100);
-  const spanY = Math.max(maxY - minY, 100);
-
-  const zoomX = (w * 0.85) / spanX;
-  const zoomY = (h * 0.85) / spanY;
-  State.canvas.zoom = Math.min(zoomX, zoomY);
-
-  const midX = (minX + maxX) / 2;
-  const midY = (minY + maxY) / 2;
-
-  State.canvas.panX = w / 2 - midX * State.canvas.zoom;
-  State.canvas.panY = h / 2 + midY * State.canvas.zoom;
-
-  renderCanvas();
-}
-
-function resetCanvasView() {
-  fitCanvasToLayout();
-}
-
-function zoomCanvas(factor) {
-  const canvas = document.getElementById('mainCanvas');
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const newZoom = Math.max(0.01, Math.min(500, State.canvas.zoom * factor));
-  State.canvas.panX = cx - (cx - State.canvas.panX) * (newZoom / State.canvas.zoom);
-  State.canvas.panY = cy - (cy - State.canvas.panY) * (newZoom / State.canvas.zoom);
-  State.canvas.zoom = newZoom;
-  renderCanvas();
-}
-
-function toggleCanvasLayer(layerKey) {
-  if (layerKey === 'shapes') State.canvas.showShapes = !State.canvas.showShapes;
-  if (layerKey === 'vias') State.canvas.showVias = !State.canvas.showVias;
-  if (layerKey === 'traces') State.canvas.showTraces = !State.canvas.showTraces;
-  if (layerKey === 'ports') State.canvas.showPorts = !State.canvas.showPorts;
-  if (layerKey === 'defects') State.canvas.showDefects = !State.canvas.showDefects;
-
-  const btnShapes = document.getElementById('btnToggleShapes');
-  const btnVias = document.getElementById('btnToggleVias');
-  const btnTraces = document.getElementById('btnToggleTraces');
-  const btnPorts = document.getElementById('btnTogglePorts');
-  const btnDefects = document.getElementById('btnToggleDefects');
-
-  if (btnShapes) btnShapes.className = State.canvas.showShapes ? 'active' : '';
-  if (btnVias) btnVias.className = State.canvas.showVias ? 'active' : '';
-  if (btnTraces) btnTraces.className = State.canvas.showTraces ? 'active' : '';
-  if (btnPorts) btnPorts.className = State.canvas.showPorts ? 'active' : '';
-  if (btnDefects) btnDefects.className = State.canvas.showDefects ? 'active' : '';
-
-  renderCanvas();
-}
-
-function toggleMeasureMode() {
-  State.canvas.measureMode = !State.canvas.measureMode;
-  State.canvas.measurePoints = [];
-  const btn = document.getElementById('btnMeasureMode');
-  if (btn) {
-    btn.className = State.canvas.measureMode ? 'active' : '';
-    btn.textContent = State.canvas.measureMode ? ' 测距中(点击两点)' : ' 测距标尺';
-  }
-  renderCanvas();
-}
-
-const NET_COLORS = {
-  'GND': '#475569',
-  '25_N': '#c084fc', // purple / lavender (P2 bottom-left)
-  '25_P': '#84cc16', // olive green / chartreuse (P3 top-left)
-  '26_N': '#22c55e', // bright green (P1 top-right)
-  '26_P': '#06b6d4', // cyan / teal (P4 bottom-right)
-  '105_P': '#38bdf8',
-  '105_N': '#818cf8',
-  '106_P': '#f472b6',
-  '106_N': '#fb7185'
-};
-
-const DYNAMIC_NET_PALETTE = ['#38bdf8', '#c084fc', '#84cc16', '#22c55e', '#06b6d4', '#f43f5e', '#eab308', '#ec4899', '#a855f7', '#14b8a6'];
-
-function getNetColor(netName) {
-  if (!netName) return '#94a3b8';
-  if (NET_COLORS[netName]) return NET_COLORS[netName];
-  let h = 0;
-  for (let i = 0; i < netName.length; i++) h = (h * 31 + netName.charCodeAt(i)) >>> 0;
-  return DYNAMIC_NET_PALETTE[h % DYNAMIC_NET_PALETTE.length];
-}
-
-function renderCanvas() {
-  const canvas = document.getElementById('mainCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const w = canvas.width;
-  const h = canvas.height;
-
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#000000'; // Deep EDA Black canvas
-  ctx.fillRect(0, 0, w, h);
-
-  const readout = document.getElementById('canvasRulerReadout');
-  if (readout) readout.textContent = `比例: ${State.canvas.zoom.toFixed(2)}x | 视口中心: [${(-State.canvas.panX/State.canvas.zoom).toFixed(0)}, ${(State.canvas.panY/State.canvas.zoom).toFixed(0)}]`;
-
-  // 1. Shapes (铜皮)
-  if (State.canvas.showShapes && State.shapes) {
-    State.shapes.forEach(shape => {
-      ctx.save();
-      ctx.fillStyle = 'rgba(180, 83, 9, 0.22)';
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = Math.max(1.0, 1.2 * State.canvas.zoom);
-
-      ctx.beginPath();
-      shape.boundary.forEach(seg => {
-        if (seg.type === 'line') {
-          const p1 = worldToScreen(seg.x1, seg.y1);
-          const p2 = worldToScreen(seg.x2, seg.y2);
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-        } else if (seg.type === 'arc') {
-          if (Math.abs(seg.x1 - seg.x2) < 1e-4 && Math.abs(seg.y1 - seg.y2) < 1e-4) {
-            const cp = worldToScreen(seg.cx, seg.cy);
-            const r = seg.radius * State.canvas.zoom;
-            ctx.arc(cp.x, cp.y, r, 0, Math.PI * 2);
-          } else if (typeof PourChecker !== 'undefined' && PourChecker.sampleArcPoints) {
-            const pts = PourChecker.sampleArcPoints([seg.cx, seg.cy], seg.radius, [seg.x1, seg.y1], [seg.x2, seg.y2], seg.dir || (seg.ccw ? 'CCW' : 'CW'), 24);
-            pts.forEach((pt, i) => {
-              const sp = worldToScreen(pt[0], pt[1]);
-              if (i === 0) ctx.moveTo(sp.x, sp.y);
-              else ctx.lineTo(sp.x, sp.y);
-            });
-          }
-        }
-      });
-      ctx.fill();
-      ctx.stroke();
-
-      if (State.canvas.zoom > 1.5) {
-        const cp = worldToScreen(shape.centroid.x, shape.centroid.y);
-        ctx.fillStyle = '#fde68a';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Shape #${shape.id} (${shape.layer})`, cp.x, cp.y);
-      }
-      ctx.restore();
-    });
-  }
-
-  // 2. Vias (过孔: BGA金盘孔 + GND大灰盘孔)
-  if (State.canvas.showVias && State.vias) {
-    State.vias.forEach(v => {
-      const sp = worldToScreen(v.x, v.y);
-      const isGnd = (v.net && v.net.toUpperCase() === 'GND');
-
-      if (isGnd) {
-        // GND Pad (Large grey pad with center hole and "GND" text, matching image-1)
-        const padR = Math.max(6.0, 4.0 * State.canvas.zoom);
-        const drillR = Math.max(2.0, 1.8 * State.canvas.zoom);
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, padR, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(71, 85, 105, 0.75)';
-        ctx.fill();
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, drillR, 0, Math.PI * 2);
-        ctx.fillStyle = '#020617';
-        ctx.fill();
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.stroke();
-
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('GND', sp.x, sp.y);
-        ctx.restore();
-      } else {
-        // BGA / Signal Via (Gold / Yellow Annular Ring, matching image-1 center array)
-        const rad = Math.max(3.5, 4.0 * State.canvas.zoom);
-        const drillR = Math.max(1.8, 2.0 * State.canvas.zoom);
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, rad, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(250, 204, 21, 0.18)';
-        ctx.fill();
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, drillR, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fef08a';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-
-        if (State.canvas.zoom > 2.2) {
-          ctx.fillStyle = '#fde047';
-          ctx.font = '9px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`#${v.id}`, sp.x, sp.y - rad - 2);
-        }
-        ctx.restore();
-      }
-    });
-  }
-
-  // 3. Traces (走线渲染: 真实参数化采样还原直线与圆弧转弯，精准对齐 image-1)
-  if (State.canvas.showTraces && State.traces) {
-    State.traces.forEach(trace => {
-      ctx.save();
-      const col = getNetColor(trace.net);
-      ctx.strokeStyle = col;
-      ctx.fillStyle = col;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      const traceWidth = Math.max(1.8, (trace.width || 6.0) * State.canvas.zoom);
-      ctx.lineWidth = traceWidth;
-
-      trace.segments.forEach(seg => {
-        if (seg.type === 'line') {
-          const p1 = worldToScreen(seg.x1, seg.y1);
-          const p2 = worldToScreen(seg.x2, seg.y2);
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        } else if (seg.type === 'arc') {
-          const dir = seg.dir || 'CCW';
-          if (typeof PourChecker !== 'undefined' && PourChecker.sampleArcPoints) {
-            const pts = PourChecker.sampleArcPoints([seg.cx, seg.cy], seg.radius, [seg.x1, seg.y1], [seg.x2, seg.y2], dir, 32);
-            ctx.beginPath();
-            pts.forEach((pt, i) => {
-              const sp = worldToScreen(pt[0], pt[1]);
-              if (i === 0) ctx.moveTo(sp.x, sp.y);
-              else ctx.lineTo(sp.x, sp.y);
-            });
-            ctx.stroke();
-          }
-        }
-      });
-
-      // Net and layer label along trace when zoomed
-      if (State.canvas.zoom > 1.2 && trace.segments.length > 0) {
-        const firstSeg = trace.segments[0];
-        const midX = (firstSeg.x1 + (firstSeg.x2 || firstSeg.x1)) / 2;
-        const midY = (firstSeg.y1 + (firstSeg.y2 || firstSeg.y1)) / 2;
-        const sp = worldToScreen(midX, midY);
-
-        ctx.font = 'bold 10px monospace';
-        ctx.fillStyle = col;
-        ctx.textAlign = 'center';
-        ctx.fillText(`${trace.net} (${trace.layer})`, sp.x, sp.y - traceWidth / 2 - 3);
-      }
-      ctx.restore();
-    });
-  }
-
-  // 4. Ports (P1 ~ P4 端口黄色大标，精准对齐 image-1.png)
-  if (State.canvas.showPorts && State.traces && State.traces.length > 0) {
-    let allMinX = Infinity, allMaxX = -Infinity, allMinY = Infinity, allMaxY = -Infinity;
-    State.traces.forEach(t => {
-      if (t.bbox) {
-        allMinX = Math.min(allMinX, t.bbox.minX);
-        allMaxX = Math.max(allMaxX, t.bbox.maxX);
-        allMinY = Math.min(allMinY, t.bbox.minY);
-        allMaxY = Math.max(allMaxY, t.bbox.maxY);
-      }
-    });
-    const centerX = (allMinX + allMaxX) / 2;
-    const centerY = (allMinY + allMaxY) / 2;
-
-    const netEndpoints = {};
-    State.traces.forEach(t => {
-      if (!netEndpoints[t.net]) netEndpoints[t.net] = [];
-      t.segments.forEach(s => {
-        netEndpoints[t.net].push({ x: s.x1, y: s.y1 });
-        netEndpoints[t.net].push({ x: s.x2, y: s.y2 });
-      });
-    });
-
-    Object.keys(netEndpoints).forEach(net => {
-      if (net === 'GND' || net === 'UNKNOWN') return;
-      const pts = netEndpoints[net];
-      if (!pts || !pts.length) return;
-
-      let maxDist = -1, outerPt = null;
-      pts.forEach(p => {
-        const d = Math.hypot(p.x - centerX, p.y - centerY);
-        if (d > maxDist) { maxDist = d; outerPt = p; }
-      });
-
-      if (outerPt) {
-        let portName = '';
-        if (net === '26_N' || (outerPt.y > centerY && outerPt.x > centerX)) portName = 'P1';
-        else if (net === '25_N' || (outerPt.y < centerY && outerPt.x < centerX)) portName = 'P2';
-        else if (net === '25_P' || (outerPt.y > centerY && outerPt.x < centerX)) portName = 'P3';
-        else if (net === '26_P' || (outerPt.y < centerY && outerPt.x > centerX)) portName = 'P4';
-
-        if (portName) {
-          const sp = worldToScreen(outerPt.x, outerPt.y);
-          ctx.save();
-          ctx.font = 'bold 22px monospace';
-          ctx.fillStyle = '#fde047'; // Bright Yellow
-          ctx.shadowColor = 'rgba(250, 204, 21, 0.8)';
-          ctx.shadowBlur = 6;
-          ctx.textAlign = (outerPt.x >= centerX) ? 'left' : 'right';
-          const offsetX = (outerPt.x >= centerX) ? 14 : -14;
-          const offsetY = (outerPt.y >= centerY) ? -10 : 18;
-          ctx.fillText(portName, sp.x + offsetX, sp.y + offsetY);
-          ctx.restore();
-        }
-      }
-    });
-  }
-
-  // 5. Defects (缺陷信标)
-  if (State.canvas.showDefects && State.summary) {
-    const defects = State.rawResults.filter(r => !r.pass);
-    defects.forEach(d => {
-      let dx = 0, dy = 0;
-      if (d.viaCoord) { dx = d.viaCoord[0]; dy = d.viaCoord[1]; }
-      else if (d.centroid) { dx = d.centroid.x; dy = d.centroid.y; }
-      else if (d.centerCoord) { dx = d.centerCoord[0]; dy = d.centerCoord[1]; }
-
-      if (dx !== 0) {
-        const sp = worldToScreen(dx, dy);
-        ctx.save();
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([3, 2]);
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, Math.max(12, 15 * State.canvas.zoom), 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    });
-  }
-
-  // 6. Measure Line (测距标尺)
-  if (State.canvas.measurePoints.length > 0) {
-    const pts = State.canvas.measurePoints.map(p => worldToScreen(p.x, p.y));
-    ctx.save();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 2;
-    pts.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#f59e0b';
-      ctx.fill();
-    });
-    if (pts.length === 2) {
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      ctx.lineTo(pts[1].x, pts[1].y);
-      ctx.stroke();
-
-      const w1 = State.canvas.measurePoints[0];
-      const w2 = State.canvas.measurePoints[1];
-      const dMil = Math.hypot(w1.x - w2.x, w1.y - w2.y);
-      const txt = `实测距离: ${(dMil * 0.0254).toFixed(3)} mm (${dMil.toFixed(2)} mil)`;
-      const mx = (pts[0].x + pts[1].x) / 2;
-      const my = (pts[0].y + pts[1].y) / 2;
-      ctx.font = 'bold 12px monospace';
-      ctx.fillStyle = '#0f172a';
-      const tw = ctx.measureText(txt).width;
-      ctx.fillRect(mx - tw / 2 - 4, my - 16, tw + 8, 18);
-      ctx.fillStyle = '#fde68a';
-      ctx.textAlign = 'center';
-      ctx.fillText(txt, mx, my - 3);
-    }
-    ctx.restore();
-  }
-}
-
-function renderReasonNetBadges(byNet) {
-  const keys = Object.keys(byNet || {});
-  if (!keys.length) return '<span style="color:#94a3b8">无网络</span>';
-  keys.sort((a, b) => {
-    const lenA = (byNet[a] || []).length;
-    const lenB = (byNet[b] || []).length;
-    return lenB - lenA || a.localeCompare(b);
-  });
-  return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">' +
-    keys.map(netName => {
-      const list = byNet[netName] || [];
-      const itemStr = list.slice(0, 5).map(id => '#' + id).join('、') + (list.length > 5 ? ` 等${list.length}个` : '');
-      return '<span style="display:inline-flex;align-items:center;background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">' +
-        '<code>' + escapeHtml(netName) + '</code>' +
-        '<span style="color:#6b7280;margin-left:4px;font-size:11px">(' + list.length + '项: ' + escapeHtml(itemStr) + ')</span>' +
-      '</span>';
-    }).join('') +
-  '</div>';
-}
-
-/**
- * Tab 5: Deep-Dive Defect Pattern & Engineering Analysis (Matching 约束检查 format)
- */
-function renderAnalysisTab() {
-  const container = document.getElementById('pnlAnalysisContainer');
-  if (!State.summary || !State.rawResults || State.rawResults.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8">尚无检查数据，请先导入数据并运行检查。</div>';
-    return;
-  }
-
-  const b = State.summary.breakdown;
-  const raw = State.rawResults;
-  const defects = raw.filter(r => !r.pass);
-  const badTotal = defects.length;
-
-  // 1. Layer distribution aggregation
-  const layerBadMap = {};
-  defects.forEach(r => {
-    const lk = r.layer || r.traceLayer || '未知层';
-    layerBadMap[lk] = (layerBadMap[lk] || 0) + 1;
-  });
-
-  // 2. Defect group aggregation (by Rule/Constraint + Category)
-  const badMap = {};
-  defects.forEach(r => {
-    let ruleTitle = '铜皮规则约束';
-    let padName = '-';
-
-    if (r.checkCategory === 'via_coverage') {
-      ruleTitle = r.viaPadstack || '孔铺铜覆盖规则';
-      padName = r.viaPadstack || 'HDI过孔';
-    } else if (r.checkCategory === 'special_shape') {
-      ruleTitle = r.templateName || (r.viaPadstack + '·异型模板');
-      padName = r.viaPadstack || 'BGA过孔';
-    } else if (r.checkCategory === 'trace_ref_margin') {
-      ruleTitle = `${r.traceLayer || '信号层'}·走线参考层超宽`;
-      padName = `走线层: ${r.traceLayer || '-'}`;
-    } else if (r.checkCategory === 'isolated_copper') {
-      ruleTitle = `全板孤立小铜皮 (< ${r.areaThreshold || 500} sq mil)`;
-      padName = `Shape #${r.shapeId}`;
-    } else if (r.checkCategory === 'arc_radius') {
-      ruleTitle = `全板铜皮圆弧半径 (< ${r.requiredRadius || 10} mil)`;
-      padName = `Shape #${r.shapeId}`;
-    }
-
-    const bKey = `${ruleTitle} · ${r.checkCategoryName}`;
-    if (!badMap[bKey]) {
-      badMap[bKey] = {
-        title: ruleTitle,
-        checkType: r.checkCategoryName,
-        n: 0,
-        padstacks: {},
-        reasons: {}
-      };
-    }
-    badMap[bKey].n++;
-    badMap[bKey].padstacks[padName] = 1;
-
-    // Reason subkey
-    const lk = r.layer || r.traceLayer || r.refLayer || '通用层';
-    let reasonText = '';
-    let netName = r.viaNet || r.traceNet || (r.shapeId ? `Shape #${r.shapeId}` : 'GND');
-    let targetId = r.viaId || r.traceId || r.shapeId || 0;
-
-    if (r.checkCategory === 'via_coverage') {
-      reasonText = `<b class="bad">无铜皮</b> (距孔中心 > ${r.requiredDist || 50} mil，缺失该层铺铜)`;
-    } else if (r.checkCategory === 'special_shape') {
-      reasonText = `<b class="bad">异型铜皮不匹配</b> (实测面积 ${PourChecker.roundN(r.actualArea, 1)} sq mil，期望 ${r.expectedArea} ± ${r.areaTolerance})`;
-    } else if (r.checkCategory === 'trace_ref_margin') {
-      reasonText = `<b class="bad">参考层外延不足</b> (${r.refType}【${r.refLayer}】实测外延仅 ${PourChecker.roundN(r.actualMargin, 1)} mil < 规则要求 ${r.minMargin} mil)`;
-    } else if (r.checkCategory === 'isolated_copper') {
-      reasonText = `<b class="bad">孤立死铜/碎铜</b> (面积仅 ${PourChecker.roundN(r.area, 1)} sq mil < 阈值 ${r.areaThreshold} sq mil，未连接有效过孔)`;
-    } else if (r.checkCategory === 'arc_radius') {
-      reasonText = `<b class="bad">圆弧半径过小</b> (第 ${r.arcIndex || 1} 段圆弧半径仅 ${PourChecker.roundN(r.actualRadius, 2)} mil < 允许值 ${r.requiredRadius} mil，易产生蚀刻酸角)`;
-    }
-
-    const subKey = `${lk}|${reasonText}`;
-    if (!badMap[bKey].reasons[subKey]) {
-      badMap[bKey].reasons[subKey] = {
-        layer: lk,
-        reason: reasonText,
-        n: 0,
-        targets: {},
-        byNet: {}
-      };
-    }
-    badMap[bKey].reasons[subKey].n++;
-    badMap[bKey].reasons[subKey].targets[targetId] = 1;
-    if (!badMap[bKey].reasons[subKey].byNet[netName]) badMap[bKey].reasons[subKey].byNet[netName] = [];
-    if (badMap[bKey].reasons[subKey].byNet[netName].indexOf(targetId) < 0) {
-      badMap[bKey].reasons[subKey].byNet[netName].push(targetId);
-    }
-  });
-
-  let h = '';
-
-  // ==========================================
-  // 【置顶展示】各约束下不符合的具体原因展开明细（过孔网络一一对应全列出）
-  // ==========================================
-  h += '<div class="card" style="padding:16px 20px;margin-bottom:18px">';
-  h += `<h3 style="margin-top:0;color:#111827">各约束下不符合的具体原因展开明细（过孔/走线网络一一对应全列出${badTotal ? `，共 <span class="bad">${badTotal}</span> 条` : ''}）</h3>`;
-
-  if (!badTotal) {
-    h += '<div class="hint" style="margin-bottom:16px;color:#16a34a;font-weight:600"> 本次检查所有铜皮、过孔与走线均符合约束规则，没有不符合的记录。</div>';
-  } else {
-    // 按层汇总条
-    const layerKeys = Object.keys(layerBadMap).sort((a, b) => layerBadMap[b] - layerBadMap[a]);
-    h += '<div style="margin:10px 0 16px 0"><span style="font-size:12px;color:var(--sub);font-weight:600">按层分布概览：</span>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">' +
-      layerKeys.map(lk => {
-        return `<span style="padding:3px 9px;border-radius:4px;background:#f8fafc;border:1px solid #e3e8ef;font-size:12px">` +
-          `${lk}：<b class="bad">${layerBadMap[lk]}</b> 条</span>`;
-      }).join('') +
-      '</div></div>';
-
-    const badKeys = Object.keys(badMap).sort((a, b) => badMap[b].n - badMap[a].n);
-    h += '<div class="table-wrap"><table><thead><tr><th style="width:200px">约束 · 检查项</th><th style="width:70px">总条数</th><th>具体原因与对应过孔/走线网络明细（一一对应全列出）</th><th style="width:180px">Padstack / 目标层</th></tr></thead><tbody>';
-
-    badKeys.forEach(k => {
-      const v = badMap[k];
-      const subReasons = Object.keys(v.reasons).map(srk => v.reasons[srk]).sort((a, b) => b.n - a.n);
-
-      let detailHtml = '<div style="display:flex;flex-direction:column;gap:8px">';
-      subReasons.forEach(sr => {
-        const netCount = Object.keys(sr.byNet).length;
-        const targetCount = Object.keys(sr.targets).length;
-        detailHtml += '<div style="padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #e3e8ef">' +
-          '<div style="font-size:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">' +
-            `<div><b>${escapeHtml(sr.layer)}</b>：${sr.reason}</div>` +
-            `<div class="bad" style="font-weight:700;white-space:nowrap">${sr.n} 条 (${targetCount} 个对象)</div>` +
-          '</div>' +
-          '<div style="margin-top:4px;font-size:11px;color:#6b7280">' +
-            `<span style="font-weight:600">对应目标网络（共 ${netCount} 个网络，全列出）：</span>` +
-            renderReasonNetBadges(sr.byNet) +
-          '</div>' +
-        '</div>';
-      });
-      detailHtml += '</div>';
-
-      h += '<tr>' +
-        `<td style="vertical-align:top"><b>${escapeHtml(k)}</b></td>` +
-        `<td class="bad" style="font-size:15px;font-weight:800;vertical-align:top;font-family:var(--mono)">${v.n}</td>` +
-        `<td>${detailHtml}</td>` +
-        `<td class="hint" style="font-size:11px;vertical-align:top">${escapeHtml(Object.keys(v.padstacks).join('、'))}</td>` +
-      '</tr>';
-    });
-    h += '</tbody></table></div>';
-  }
-  h += '</div>';
-
-  // ==========================================
-  // 【五大分类工程机理与优化指引】
-  // ==========================================
-  h += `
-    <div style="font-weight:700;font-size:14px;color:#111827;margin:20px 0 10px 0;display:flex;align-items:center;gap:6px">
-      <span> 五大检查分类工程机理归纳与整改优化指导</span>
-    </div>
-
-    <!-- Category 1 Analysis Card -->
-    <div class="pattern-card">
-      <h3>
-        <span>① 孔经过层铺铜覆盖检查 — 缺陷规律与工程分析</span>
-        <span class="badge-tag ${b.viaCoverageDefects > 0 ? 'bad' : 'ok'}">${b.viaCoverageDefects} 处层位不符合</span>
-      </h3>
-      <div class="pattern-box">
-        <strong> 核心不满足规律总结：</strong><br>
-        1. <strong>高发层位分布规律</strong>：缺陷主要集中在 <strong>${Object.entries(layerBadMap).map(([l,c])=>`${l} (${c}条)`).join('、') || '各内层'}</strong>。过孔在穿越盲埋孔段或跨越信号层时，由于未铺设接地伴随铜箔或局部反焊盘过大，造成孔中心 50 mil 范围内完全无铜皮。<br>
-        2. <strong>信号完整性 (SI/EMI) 危害</strong>：过孔在内层缺少铺铜伴随，过孔分布寄生电感增加，导致过孔特征阻抗突升 10~15Ω，且回流路径被拉长，易引发高频电磁辐射与临近串扰。
-      </div>
-      <div style="font-size:12px;color:#374151;margin-top:6px">
-        <strong> 工程优化指导：</strong> 建议在相应内层补充接地参考铜皮铺设；对于高速差分过孔对，在孔中心 30~50 mil 范围内增设接地伴随过孔（GND Return Via）以保证回流连续性。
-      </div>
-    </div>
-
-    <!-- Category 2 Analysis Card -->
-    <div class="pattern-card">
-      <h3>
-        <span>② 特定异型铜皮比对检查 — 缺陷规律与工程分析</span>
-        <span class="badge-tag ${b.specialShapeDefects > 0 ? 'bad' : 'ok'}">${b.specialShapeDefects} 处异型铜皮不匹配</span>
-      </h3>
-      <div class="pattern-box">
-        <strong> 核心不满足规律总结：</strong><br>
-        1. <strong>形状与面积偏差规律</strong>：检出过孔在指定目标层周围未生成标准异型泪滴铜皮，或实测面积与模板偏差超过设定容差。<br>
-        2. <strong>工艺成因分析</strong>：EDA 自动泪滴生成脚本未在特定层（如 02G01P / 19IS08）正确运行，或异型铜皮被相邻网络的 Anti-pad/避让槽意外切割削减。
-      </div>
-      <div style="font-size:12px;color:#374151;margin-top:6px">
-        <strong> 工程优化指导：</strong> 检查 EDA 异型铜皮/泪滴生成规则，确保特定封装类型的过孔在指定层别自动生成设计要求的泪滴过渡铜皮。
-      </div>
-    </div>
-
-    <!-- Category 3 Analysis Card -->
-    <div class="pattern-card">
-      <h3>
-        <span>③ 走线参考层铺铜覆盖与单侧超宽 — 缺陷规律与工程分析</span>
-        <span class="badge-tag ${b.traceMarginDefects > 0 ? 'bad' : 'ok'}">${b.traceMarginDefects} 处参考层异常</span>
-      </h3>
-      <div class="pattern-box">
-        <strong> 核心不满足规律总结：</strong><br>
-        1. <strong>单侧外延不足与跨分割规律</strong>：走线边缘过于靠近参考地平面边缘（外延 < 50 mil），或走线下方地参考平面被反焊盘/分割槽挖空形成平面缝隙。<br>
-        2. <strong>阻抗与电磁泄漏机理</strong>：微带线/带状线单侧铜皮超宽不足 50 mil 时，走线边缘电磁力线无法完全终结在参考平面上，导致边缘漏电容增加、特征阻抗失配（阻抗偏高 3~8Ω），并增加对外辐射。
-      </div>
-      <div style="font-size:12px;color:#374151;margin-top:6px">
-        <strong> 工程优化指导：</strong> 扩展上下参考地平面的边界，确保参考铜皮边缘比高速走线边缘宽出至少 50 mil（满足 3W / 50mil 铺铜保护准则）；严禁高速差分线贴近平面分割边缘走线。
-      </div>
-    </div>
-
-    <!-- Category 4 Analysis Card -->
-    <div class="pattern-card">
-      <h3>
-        <span>④ 孤立小铜皮 (碎铜/死铜) 检查 — 缺陷规律与工程分析</span>
-        <span class="badge-tag ${b.smallCopperDefects > 0 ? 'bad' : 'ok'}">${b.smallCopperDefects} 处孤立小铜皮 (&lt; ${State.smallCopperAreaThreshold} sq mil)</span>
-      </h3>
-      <div class="pattern-box">
-        <strong> 核心不满足规律总结：</strong><br>
-        1. <strong>空间聚集特征</strong>：碎铜主要散落在密集过孔阵列（BGA 扇出区域或排阻引脚间隙）中，面积通常小于 300 sq mil。<br>
-        2. <strong>浮空天线与生产隐患</strong>：未连接有效过孔的孤立铜皮处于浮空状态，在高速射频环境下易充当贴片天线发射 EMI 噪声；在波峰焊/回流焊时吸热不均易引发板面起泡或翘曲。
-      </div>
-      <div style="font-size:12px;color:#374151;margin-top:6px">
-        <strong> 工程优化指导：</strong> 在 EDA 铺铜管理器中开启「自动删除孤立死铜 (Remove Unconnected Copper Island)」功能，彻底清理面积 &lt; 500 sq mil 的无网络碎铜。
-      </div>
-    </div>
-
-    <!-- Category 5 Analysis Card -->
-    <div class="pattern-card">
-      <h3>
-        <span>⑤ 铜皮最小圆弧半径检查 — 缺陷规律与工程分析</span>
-        <span class="badge-tag ${b.arcRadiusDefects > 0 ? 'bad' : 'ok'}">${b.arcRadiusDefects} 处圆弧 &lt; ${State.minArcRadius} mil</span>
-      </h3>
-      <div class="pattern-box">
-        <strong> 核心不满足规律总结：</strong><br>
-        1. <strong>几何尖角分布特征</strong>：过小圆弧半径（&lt; 10 mil）多出现在铜皮避让密集过孔群或直角拐弯处。<br>
-        2. <strong>PCB 制造 (DFM) 腐蚀酸角隐患</strong>：尖锐内凹圆弧在 PCB 湿法蚀刻过程中易残留药水（Acid Trap / 酸角），导致铜皮局部过度侧蚀、甚至断裂脱落，降低 PCB 制造良率。
-      </div>
-      <div style="font-size:12px;color:#374151;margin-top:6px">
-        <strong> 工程优化指导：</strong> 优化铜皮铺铜倒角设置，将铜皮边界避让圆弧的平滑半径统一设定为 ≥ 10~15 mil，消除尖角与锐角过渡。
-      </div>
-    </div>
-  `;
-
-  container.innerHTML = h;
-}
-
-function exportAnalysisReport() {
-  const container = document.getElementById('pnlAnalysisContainer');
-  if (!container || !State.summary) {
-    alert('暂无分析数据可导出');
-    return;
-  }
-
-  const b = State.summary.breakdown;
-  const report = `# PCB 铜皮五大项检查缺陷规律与工程分析报告
-生成时间: ${new Date().toLocaleString()}
-
-## 1. 全板检查数据概览
-- 导入铜皮总数: ${State.summary.totalShapes} 块
-- 导入过孔总数: ${State.summary.totalVias} 个
-- 导入走线总数: ${State.summary.totalTraces} 条
-- 目标对象总数: ${State.groupedResults ? State.groupedResults.length : State.summary.totalChecks} 个
-- 检出缺陷对象: ${State.groupedResults ? State.groupedResults.filter(g=>!g.pass).length : State.summary.totalDefects} 个 (逐层超标项共 ${State.summary.totalDefects} 处)
-
-## 2. 五大检查分类缺陷归纳与工程改进建议
-
-### ① 孔经过层铺铜覆盖检查 (${b.viaCoverageDefects} 处超标)
-- 核心规律: 过孔跨越盲埋孔段或信号层时周围 50mil 缺失接地参考铜皮，增加寄生电感并拉长回流路径。
-- 整改建议: 在相关内层补充铺铜，或在孔周边 30~50mil 增设接地伴随孔。
-
-### ② 特定异型铜皮比对检查 (${b.specialShapeDefects} 处超标)
-- 核心规律: 特定层（如 02G01P/19IS08）未生成设计要求的异型泪滴铜皮，或被相邻反焊盘削减。
-- 整改建议: 检查并重新运行 EDA 异型铜皮/泪滴自动生成脚本。
-
-### ③ 走线参考层超宽检查 (${b.traceMarginDefects} 处超标)
-- 核心规律: 走线贴近参考地平面边缘（外延 < 50 mil）或跨越分割缝，导致边缘漏磁与阻抗偏高。
-- 整改建议: 扩展地平面边界确保外延 ≥ 50 mil，避免贴近边缘走线。
-
-### ④ 孤立小铜皮/碎铜检查 (${b.smallCopperDefects} 处超标)
-- 核心规律: 密集过孔缝隙中残留无网络浮空碎铜，易形成辐射天线并引起焊接热应力集中。
-- 整改建议: 在 EDA 铺铜管理器中开启「自动删除孤立铜皮」功能。
-
-### ⑤ 铜皮圆弧半径检查 (${b.arcRadiusDefects} 处超标)
-- 核心规律: 铜皮避让转弯处圆弧半径 < 10 mil，在湿法蚀刻中滞留药水形成 Acid Trap 酸角侧蚀。
-- 整改建议: 设置铺铜避让圆角半径 ≥ 10~15 mil。
-`;
-
-  showExportBox('铜皮检查缺陷规律分析报告.md', report, '已生成 Markdown 格式分析报告。', 'text/markdown');
-}
-
-/**
- * Exporting & Fail-Safe Copy
- */
-function showExportBox(filename, text, hint = '', mimeType = 'text/csv') {
-  const modal = document.getElementById('modalExport');
-  const title = document.getElementById('exportModalTitle');
-  const hintEl = document.getElementById('exportModalHint');
-  const txtArea = document.getElementById('exportModalText');
-  const dlBtn = document.getElementById('exportDownloadBtn');
-  const tip = document.getElementById('copySuccessTip');
-
-  if (title) title.textContent = ` 导出: ${filename}`;
-  if (hintEl) hintEl.textContent = hint || `已成功生成 ${filename}，可点击下方按钮下载或直接复制内容：`;
-  if (txtArea) txtArea.value = text;
-  if (tip) tip.style.display = 'none';
-
-  let url = '';
-  try {
-    const blob = new Blob([text], { type: mimeType });
-    url = URL.createObjectURL(blob);
-  } catch (e) {
-    url = `data:${mimeType};charset=utf-8,` + encodeURIComponent(text);
-  }
-
-  if (dlBtn) {
-    dlBtn.href = url;
-    dlBtn.download = filename;
-  }
-
-  if (modal) modal.classList.add('open');
-
-  try {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { if (a.parentNode) document.body.removeChild(a); }, 100);
-  } catch (err) {}
-}
-
-function copyExportContent() {
-  const txtArea = document.getElementById('exportModalText');
-  const tip = document.getElementById('copySuccessTip');
-  if (!txtArea) return;
-
-  txtArea.focus();
-  txtArea.select();
-  txtArea.setSelectionRange(0, txtArea.value.length);
-
-  let success = false;
-  try {
-    success = document.execCommand('copy');
-  } catch (err) {
-    success = false;
-  }
-
-  if (!success && navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(txtArea.value).then(() => {
-      showTip();
-    }).catch(() => {
-      showTip();
-    });
-  } else {
-    showTip();
-  }
-
-  function showTip() {
-    if (tip) {
-      tip.style.display = 'inline-flex';
-      setTimeout(() => { if (tip) tip.style.display = 'none'; }, 2500);
-    }
-  }
-}
-
-function exportResultsCSV() {
-  const source = State.viewMode === 'grouped' ? (State.groupedResults || []) : (State.rawResults || []);
-  if (source.length === 0) {
-    alert('暂无检查结果可导出');
-    return;
-  }
-
-  let csv = '\uFEFF检查分类,目标对象,涉及层别,实测与规则说明,判定结果,详细文字表述,复核状态\n';
-
-  source.forEach((r, idx) => {
-    const key = r.groupKey || `${r.checkCategory}_${r.viaId || r.traceId || r.shapeId}_${r.layer}_${idx}`;
-    const isRev = State.reviewedItems.has(key) ? '已复核' : '待复核';
-    let target = r.targetLabel || (r.viaId ? `孔 #${r.viaId}` : (r.traceId ? `走线 #${r.traceId}` : `铜皮 #${r.shapeId}`));
-
-    csv += [
-      `"${r.checkCategoryName}"`,
-      `"${target}"`,
-      `"${r.layerListStr || r.layer || r.traceLayer || '-'}"`,
-      `"${(r.metricsStr || r.actualDistStr || r.actualMargin || r.area || '-').replace(/"/g, '""')}"`,
-      `"${r.pass ? '符合' : '不符合'}"`,
-      `"${(r.message || '').replace(/"/g, '""')}"`,
-      `"${isRev}"`
-    ].join(',') + '\n';
-  });
-
-  const filename = `copper_pour_inspection_${State.viewMode}_${Date.now()}.csv`;
-  showExportBox(filename, csv, `共包含 ${source.length} 项铜皮检查记录（${State.viewMode === 'grouped' ? '按目标对象汇总' : '逐层明细平铺'}）。`, 'text/csv');
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-window.State = State;
-
-// Global Display Controller: 100% 铺满宽屏（全站跨页面记忆）
-(function() {
-  if (typeof document === 'undefined' || !document.documentElement) return;
-  const KEY = 'pcb_workbench_wide_v1';
-  function syncUI() {
-    const wide = document.documentElement.classList.contains('pcb-global-wide');
-    const bW = document.getElementById('btnGlobalWide'), lW = document.getElementById('lblGlobalWide');
-    if (bW) bW.classList.toggle('active', wide);
-    if (lW) lW.textContent = wide ? '已铺满宽屏' : '铺满宽屏';
-  }
-  function triggerResize() {
-    try { window.dispatchEvent(new Event('resize')); setTimeout(() => window.dispatchEvent(new Event('resize')), 120); } catch (e) {}
-  }
-  window.setGlobalWideMode = function(enable, persist = true) {
-    document.documentElement.classList.toggle('pcb-global-wide', !!enable);
-    if (persist) { try { localStorage.setItem(KEY, enable ? '1' : '0'); } catch (e) {} }
-    syncUI(); triggerResize();
-  };
-  window.toggleGlobalWideMode = function() { window.setGlobalWideMode(!document.documentElement.classList.contains('pcb-global-wide'), true); };
-  try {
-    if (localStorage.getItem(KEY) === '1') document.documentElement.classList.add('pcb-global-wide');
-  } catch (e) {}
-  document.addEventListener('DOMContentLoaded', syncUI);
-  syncUI();
-})();
-</script>
-
-<script src="ui-prefs.js?v=1"></script>
+<script src="packages/shared/dom-utils.js?v=11"></script>
+<script src="packages/engines/pour/pour-geom.js?v=11"></script>
+<script src="packages/engines/pour/pour-parser.js?v=11"></script>
+<script src="packages/engines/pour/pour-engine.js?v=11"></script>
+<script src="packages/pages/pour/pour-state.js?v=11"></script>
+<script src="packages/pages/pour/pour-rules-ui.js?v=11"></script>
+<script src="packages/pages/pour/pour-results-ui.js?v=11"></script>
+<script src="packages/pages/pour/pour-canvas-viewer.js?v=11"></script>
+<script src="packages/shared/eda-tooltip.js?v=11"></script>
+<script src="packages/shared/eda-shell.js?v=11"></script>
+<script src="packages/shared/ui-prefs.js?v=11"></script>
 </body>
 </html>

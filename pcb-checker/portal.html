@@ -4,231 +4,238 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCB 检查与 SI 工作台 | 统一入口主页</title>
-<style>
-:root{
-  --bg:#f4f6f9;--card:#fff;--line:#e3e8ef;--txt:#1f2937;--sub:#6b7280;
-  --pri:#2563eb;--pri-hover:#1d4ed8;
-  --ok:#16a34a;--warn:#d97706;--bad:#dc2626;
-  --font:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
-main{flex:1;max-width:1360px;width:100%;margin:0 auto;padding:20px 24px 32px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-.card h2{font-size:15px;font-weight:700;margin:0 0 8px 0;color:#111827}
-.card h3{font-size:13px;font-weight:700;margin:0 0 6px 0;color:#111827}
-.hint{font-size:12px;color:var(--sub);line-height:1.6}
-.hero-row{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:16px}
-@media(max-width:960px){.hero-row{grid-template-columns:1fr}}
-.entry-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
-.entry-card.featured{border-color:#93c5fd}
-.entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.badge-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
-.badge-pill.neutral{background:#f8fafc;color:#374151;border-color:var(--line)}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:all .15s}
-.btn.pri{background:var(--pri);color:#fff}
-.btn.pri:hover{background:var(--pri-hover)}
-.btn.sec{background:#fff;color:#1f2937;border-color:#cbd5e1}
-.btn.sec:hover{border-color:var(--pri);color:var(--pri);background:#eff6ff}
-.grid-5{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:12px;margin-top:12px}
-.mod-item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
-.mod-item:hover{border-color:var(--pri);background:#eff6ff}
-.mod-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.mod-step{font-size:11px;font-weight:600;color:var(--pri);font-family:var(--mono)}
-.mod-link{font-size:12px;font-weight:600;color:var(--pri)}
-.cmd-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-.cmd-table th,.cmd-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.cmd-table th{background:#f8fafc;color:#374151;font-weight:600;font-size:12px}
-code{font-family:var(--mono);font-size:12px;background:#f8fafc;border:1px solid var(--line);padding:2px 6px;border-radius:4px;color:#111827}
-.foot{color:var(--sub);font-size:12px;text-align:center;padding:16px}
-.global-display-ctrl{display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding-left:10px;border-left:1px solid rgba(148,163,184,.35)}
-.global-display-ctrl .gdisp-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px !important;border-radius:5px;font-size:12px !important;font-weight:600;cursor:pointer;border:1px solid rgba(56,189,248,.45);background:rgba(15,23,42,.65);color:#e0f2fe !important;text-decoration:none;white-space:nowrap;transition:all .15s;line-height:1.3}
-.global-display-ctrl .gdisp-btn:hover{background:rgba(2,132,199,.4) !important;border-color:#38bdf8;color:#fff !important}
-.global-display-ctrl .gdisp-btn.active{background:#2563eb !important;border-color:#60a5fa;color:#fff !important}
-html.pcb-global-wide main{max-width:100% !important;width:100% !important;padding-left:20px !important;padding-right:20px !important}
-  /* ===== 全站统一顶栏 + 页签条（六个检查页共用同一份，改动请同步六页） ===== */
-  header{flex:none;background:#0f172a;color:#fff;padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:30}
-  header h1{font-size:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;display:flex;align-items:center;gap:8px;margin:0;color:#fff}
-  header h1 .tag{font-size:11px;background:#2563eb;color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0;white-space:nowrap}
-  header .sub{color:#94a3b8;font-size:12px;min-width:0;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  header .sub.meta{color:#7dd3fc;max-width:none;flex:none}
-  header .navlinks{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  header .navlinks a{color:#7dd3fc;font-size:13px;text-decoration:none;padding:4px 10px;border-radius:4px;transition:all .15s;white-space:nowrap}
-  header .navlinks a:hover{background:rgba(255,255,255,.12);color:#fff}
-  header .navlinks a.active{background:#2563eb;color:#fff;font-weight:600}
-</style>
+<link rel="stylesheet" href="assets/styles/tokens.css?v=11">
+<link rel="stylesheet" href="assets/styles/eda-shell.css?v=11">
+<link rel="stylesheet" href="assets/styles/eda-dock.css?v=11">
+<link rel="stylesheet" href="assets/styles/components.css?v=11">
+<link rel="stylesheet" href="assets/styles/pages/portal.css?v=11">
 </head>
-<body>
-<header>
-  <h1>PCB 检查与 SI 工作台 <span class="tag">统一入口</span></h1>
-  <span class="sub">纯前端本地解析 · 支持 PCB 五大专项独立检查与 SI 综合一体化联检两种工作模式</span>
-  <div class="navlinks">
-    <a href="portal.html" class="active">统一入口</a>
-    <a href="index.html">走线检查</a>
-    <a href="copper.html">约束检查</a>
-    <a href="dfm.html">加工能力检查</a>
-    <a href="fanout.html">扇出方案检查</a>
-    <a href="pour.html">铜皮检查</a>
-    <a href="unified.html">综合一体化检查</a>
-    <div class="global-display-ctrl">
-      <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" title="切换 100% 铺满宽屏 / 标准居中宽度（全站跨页面记忆）">
-        <span id="lblGlobalWide">铺满宽屏</span>
-      </button>
-    </div>
-  </div>
-</header>
+<body class="eda-workbench">
 
-<main>
-  <div class="hero-row">
-    <div class="entry-card">
-      <div>
-        <div class="entry-head">
-          <h2 style="font-size:16px;margin:0;color:#111827">入口一：PCB 专项检查工具集（独立分项模式）</h2>
-          <span class="badge-pill neutral">5 个专项页面</span>
-        </div>
-        <p class="hint" style="margin:8px 0 0 0">
-          适合针对单一工序逐项精细核查：走线线宽与差分对线长、叠层反焊盘约束、DFM 空间间隙与规律归纳、过孔扇出聚类匹配、铜皮五大几何规则。每个页面独立配置规则、2D 测量与导出报告，跨页面参数自动记忆。
-        </p>
-      </div>
-      <div class="btn-row">
-        <a class="btn pri" href="index.html">进入走线检查 →</a>
-        <a class="btn sec" href="copper.html">约束检查</a>
-        <a class="btn sec" href="dfm.html">加工能力检查</a>
-        <a class="btn sec" href="fanout.html">扇出方案检查</a>
-        <a class="btn sec" href="pour.html">铜皮检查</a>
-      </div>
+<aside class="eda-left-rail">
+  <header>
+    <div class="eda-brand-top">
+      <span class="eda-sys-code">EDA · DRC / SI</span>
+      <a href="portal.html" class="eda-portal-link active" data-tip="当前位于统一入口启动台">启动台</a>
     </div>
+    <h1>PCB 检查与 SI 工作台 <span class="tag">PORTAL</span></h1>
+    <span class="sub">纯前端 DRC / SI 规则核对与几何检视启动台</span>
+  </header>
 
-    <div class="entry-card featured">
-      <div>
-        <div class="entry-head">
-          <h2 style="font-size:16px;margin:0;color:#111827">入口二：SI 综合检查一体化工作台（全板联检模式）</h2>
-          <span class="badge-pill">5 合 1 联动引擎</span>
-        </div>
-        <p class="hint" style="margin:8px 0 0 0">
-          适合整板交付前一站式体检：四路数据槽导入 EDA 报告后，一次运行走线、约束、DFM、扇出、铜皮五大检查引擎，自动汇总跨模块健康评分、统一缺陷清单、2D 空间缺陷复核及双维度工程分析报告。
-        </p>
-      </div>
-      <div class="btn-row">
-        <a class="btn pri" href="unified.html">进入 SI 综合一体化工作台 →</a>
-      </div>
+  <div class="eda-rail-section">
+    <div class="eda-rail-label">检查模块</div>
+    <div class="navlinks">
+      <a href="index.html" data-code="TRC" data-tip="网络走线线宽组合顺序、线长区间与差分对等长核对">走线检查</a>
+      <a href="copper.html" data-code="CON" data-tip="叠层约束表解析、过孔配对与反焊盘逐层尺寸核对">约束检查</a>
+      <a href="dfm.html" data-code="DFM" data-tip="孔-孔、线-孔及异网孔盘 Airgap 几何间距测量与分层判定">加工能力检查</a>
+      <a href="fanout.html" data-code="FAN" data-tip="过孔连通聚类、刚体变换方案匹配与孔心距分色预览">扇出方案检查</a>
+      <a href="pour.html" data-code="POR" data-tip="孔经过层铺铜、异型铜皮比对、参考层超宽、碎铜与圆弧半径核对">铜皮检查</a>
+      <a href="unified.html" data-code="UNI" data-tip="四槽位数据输入与五大检查引擎联动汇总工作台">综合一体化检查</a>
     </div>
   </div>
 
-  <div class="card">
-    <h2>PCB 五大专项检查页面直达</h2>
-    <div class="hint">点击任意卡片即可进入对应独立检查页；各页面顶栏亦可随时互相切换或跳回综合一体化工作台。</div>
-    <div class="grid-5">
-      <a class="mod-item" href="index.html">
-        <div>
-          <div class="mod-top">
-            <h3>① 走线检查工具</h3>
-            <span class="mod-step">index.html</span>
-          </div>
-          <div class="hint">按出线层配置线宽组合变化顺序、总线长区间、指定线宽线长与最小弧半径；内置差分对逐层/总长线长差分析及 Excel 汇总导出。</div>
-        </div>
-        <div class="mod-link">打开走线检查 →</div>
-      </a>
+  <div class="eda-rail-footer">
+    <button type="button" class="eda-rail-toggle" id="btnToggleLeftRail" data-tip="折叠或展开左侧模块导航栏">◀ 收起导航</button>
+  </div>
+</aside>
 
-      <a class="mod-item" href="copper.html">
-        <div>
-          <div class="mod-top">
-            <h3>② 约束检查工具</h3>
-            <span class="mod-step">copper.html</span>
-          </div>
-          <div class="hint">支持参数行与三列表格型约束 TXT 解析，按 SMA / BGA 封装与连接层生成命名约束表，自动配对过孔与圆形铜皮校验反焊盘尺寸。</div>
-        </div>
-        <div class="mod-link">打开约束检查 →</div>
-      </a>
-
-      <a class="mod-item" href="dfm.html">
-        <div>
-          <div class="mod-top">
-            <h3>③ 加工能力检查工具</h3>
-            <span class="mod-step">dfm.html</span>
-          </div>
-          <div class="hint">孔-孔、走线-过孔及 GND 孔盘-信号孔盘精确 Airgap 判定，支持圆/长圆/矩形焊盘、盲埋孔穿层过滤、分层阈值与全板规律分析。</div>
-        </div>
-        <div class="mod-link">打开加工能力检查 →</div>
-      </a>
-
-      <a class="mod-item" href="fanout.html">
-        <div>
-          <div class="mod-top">
-            <h3>④ 扇出方案检查工具</h3>
-            <span class="mod-step">fanout.html</span>
-          </div>
-          <div class="hint">过孔空间连通聚类与刚体平移/旋转/镜像不变匹配，支持任意角度姿态、批量多方案自动命名、走线导入关联及孔心距分色预览。</div>
-        </div>
-        <div class="mod-link">打开扇出方案检查 →</div>
-      </a>
-
-      <a class="mod-item" href="pour.html">
-        <div>
-          <div class="mod-top">
-            <h3>⑤ 铜皮检查工具</h3>
-            <span class="mod-step">pour.html</span>
-          </div>
-          <div class="hint">覆盖孔经过层铺铜、特定异型铜皮模板比对、走线上下参考层超宽、孤立碎铜死铜识别及铜皮最小圆弧半径五项几何检查。</div>
-        </div>
-        <div class="mod-link">打开铜皮检查 →</div>
-      </a>
+<div class="eda-center-col">
+  <div class="eda-stage-bar">
+    <div class="eda-breadcrumb">
+      <span class="bc-mod">统一入口启动台</span>
+      <span class="bc-sep">/</span>
+      <span class="bc-stage">工作模式选择</span>
+    </div>
+    <div class="eda-stage-bar-right">
+      <span class="eda-stage-status" data-tip="所有 TXT 数据均在本地浏览器内存解析，不产生网络上传">LOCAL ENGINE · ZERO UPLOAD</span>
     </div>
   </div>
 
-  <div class="card">
-    <h2>命令行分模式启动说明</h2>
-    <div class="hint">除通过本统一入口页跳转外，也可在启动静态服务器时直接指定默认打开的入口模式：</div>
-    <table class="cmd-table">
-      <thead>
-        <tr>
-          <th>启动命令</th>
-          <th>默认根路径（<code>/</code>）跳转目标</th>
-          <th>适用场景</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>npm run serve</code></td>
-          <td><code>portal.html</code>（统一入口主页）</td>
-          <td>在一个首页同时查看并进入 PCB 五项独立检查或 SI 综合一体化工作台</td>
-        </tr>
-        <tr>
-          <td><code>npm run serve:pcb</code></td>
-          <td><code>index.html</code>（PCB 走线及专项检查）</td>
-          <td>直接进入单页分项 PCB 检查流程（顶栏可切约束 / DFM / 扇出 / 铜皮）</td>
-        </tr>
-        <tr>
-          <td><code>npm run serve:si</code></td>
-          <td><code>unified.html</code>（SI 综合一体化工作台）</td>
-          <td>直接进入五合一联动检查与综合报告工作台</td>
-        </tr>
-      </tbody>
-    </table>
+  <main>
+    <div class="hero-row">
+      <div class="entry-card">
+        <div>
+          <div class="entry-head">
+            <h2>PCB 专项检查工作流 <span class="eda-tip" tabindex="0" data-tip="五个模块各自独立维护规则、2D 视口与导出报告，控件参数按页面自动持久化">?</span></h2>
+            <span class="badge-pill neutral">5 独立模块</span>
+          </div>
+          <p class="hint">
+            面向单一工序逐项核查：走线线宽与差分等长、叠层反焊盘约束、DFM 空间 Airgap 测量、过孔扇出聚类比对、铜皮五项几何规则。
+          </p>
+        </div>
+        <div class="btn-row">
+          <a class="btn pri" href="index.html">走线检查 →</a>
+          <a class="btn sec" href="copper.html">约束检查</a>
+          <a class="btn sec" href="dfm.html">加工能力检查</a>
+          <a class="btn sec" href="fanout.html">扇出方案检查</a>
+          <a class="btn sec" href="pour.html">铜皮检查</a>
+        </div>
+      </div>
+
+      <div class="entry-card featured">
+        <div>
+          <div class="entry-head">
+            <h2>SI 综合联检工作台 <span class="eda-tip" tabindex="0" data-tip="支持四路报告 TXT 按类导入并一次性调度五大检查内核，统一维护复核状态">?</span></h2>
+            <span class="badge-pill">5 引擎联检</span>
+          </div>
+          <p class="hint">
+            四路 TXT 数据槽输入 → 同步调度走线、约束、DFM、扇出、铜皮五大引擎 → 输出跨模块缺陷清单、2D 坐标定位复核与 Excel 报告。
+          </p>
+        </div>
+        <div class="btn-row">
+          <a class="btn pri" href="unified.html">进入综合联检工作台 →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>专项检查模块矩阵</h2>
+      <div class="grid-5">
+        <a class="mod-item" href="index.html" data-tip="支持 Item 块与分隔表格两种 TXT 格式，内置 OOXML Excel 问题整改表生成">
+          <div>
+            <div class="mod-top">
+              <h3>① 走线检查</h3>
+              <span class="mod-step">index.html</span>
+            </div>
+            <div class="hint">分层线宽组合顺序、总线长区间、指定线宽线长、最小弧半径及差分对逐层与总长线长差核对。</div>
+          </div>
+          <div class="mod-link">进入模块 →</div>
+        </a>
+
+        <a class="mod-item" href="copper.html" data-tip="兼容参数行与三列矩阵约束表，支持 GBK 与 UTF-8 自动解码">
+          <div>
+            <div class="mod-top">
+              <h3>② 约束检查</h3>
+              <span class="mod-step">copper.html</span>
+            </div>
+            <div class="hint">解析叠层约束 TXT，生成 SMA / BGA 命名规则表，空间配对过孔与圆形铜皮并逐层核对反焊盘与焊盘尺寸。</div>
+          </div>
+          <div class="mod-link">进入模块 →</div>
+        </a>
+
+        <a class="mod-item" href="dfm.html" data-tip="凸多边形闵可夫斯基和精确求距，几何容差 0.01 mil，与 Shapely 基准对拍一致">
+          <div>
+            <div class="mod-top">
+              <h3>③ 加工能力检查</h3>
+              <span class="mod-step">dfm.html</span>
+            </div>
+            <div class="hint">孔-孔、线-孔及 GND 孔盘-信号孔盘 Airgap 判定，支持圆/长圆/矩形焊盘、盲埋孔穿层过滤与分层阈值。</div>
+          </div>
+          <div class="mod-link">进入模块 →</div>
+        </a>
+
+        <a class="mod-item" href="fanout.html" data-tip="支持正交 90° 与任意角度姿态匹配，星座图虚线按孔心距自动分色">
+          <div>
+            <div class="mod-top">
+              <h3>④ 扇出方案检查</h3>
+              <span class="mod-step">fanout.html</span>
+            </div>
+            <div class="hint">2 mm 空间连通聚类与刚体平移/旋转/镜像不变比对，支持多方案 TXT 自动命名、走线关联与星座图预览。</div>
+          </div>
+          <div class="mod-link">进入模块 →</div>
+        </a>
+
+        <a class="mod-item" href="pour.html" data-tip="基于圆弧扫掠角与轮廓射线奇偶规则精确判定点在铜皮内外">
+          <div>
+            <div class="mod-top">
+              <h3>⑤ 铜皮检查</h3>
+              <span class="mod-step">pour.html</span>
+            </div>
+            <div class="hint">孔经过层铺铜覆盖、特定异型铜皮模板比对、走线参考层单侧超宽、孤立碎铜死铜识别及铜皮最小弧半径。</div>
+          </div>
+          <div class="mod-link">进入模块 →</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>服务启动参数 <span class="eda-tip" tabindex="0" data-tip="也可通过环境变量 PORT 与 ENTRY=portal|pcb|si 指定监听端口和默认首页">?</span></h2>
+      <table class="cmd-table">
+        <thead>
+          <tr>
+            <th>启动命令</th>
+            <th>根路径默认目标</th>
+            <th>工程用途</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>npm run serve</code></td>
+            <td><code>portal.html</code></td>
+            <td>打开本启动台选择专项模块或综合联检模式</td>
+          </tr>
+          <tr>
+            <td><code>npm run serve:pcb</code></td>
+            <td><code>index.html</code></td>
+            <td>直接进入走线及专项检查工作流</td>
+          </tr>
+          <tr>
+            <td><code>npm run serve:si</code></td>
+            <td><code>unified.html</code></td>
+            <td>直接进入五引擎综合联检工作台</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<aside class="eda-right-dock">
+  <div class="eda-dock-head">
+    <span class="eda-dock-title">工作台控制</span>
+    <button type="button" class="eda-dock-collapse-btn" id="btnToggleRightDock" data-tip="折叠或展开右侧工具栏">▶</button>
   </div>
-</main>
+  <div class="eda-dock-body">
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">快捷启动</div>
+      <div class="eda-dock-actions">
+        <a class="dock-btn pri" href="unified.html">打开综合联检工作台</a>
+        <a class="dock-btn" href="index.html">打开走线检查</a>
+        <div class="dock-btn-row">
+          <a class="dock-btn" href="copper.html">约束检查</a>
+          <a class="dock-btn" href="dfm.html">加工能力</a>
+        </div>
+        <div class="dock-btn-row">
+          <a class="dock-btn" href="fanout.html">扇出方案</a>
+          <a class="dock-btn" href="pour.html">铜皮检查</a>
+        </div>
+      </div>
+    </div>
 
-<div class="foot">所有 EDA 报告数据均在浏览器本地解析计算，零后端上传、零外部依赖。</div>
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">内核规格</div>
+      <div class="eda-telemetry-grid">
+        <div class="eda-tele-cell ok" data-tip="与 Python Shapely 几何基准对拍最大偏差低于 0.01 mil">
+          <div class="k">几何求距容差</div>
+          <div class="v">0.01 mil</div>
+        </div>
+        <div class="eda-tele-cell">
+          <div class="k">独立检查内核</div>
+          <div class="v">5 套</div>
+        </div>
+        <div class="eda-tele-cell">
+          <div class="k">工作台视图</div>
+          <div class="v">6 页</div>
+        </div>
+        <div class="eda-tele-cell ok">
+          <div class="k">数据隐私边界</div>
+          <div class="v">纯本地</div>
+        </div>
+      </div>
+    </div>
 
-<script>
-(function(){
-  var KEY = 'pcb_workbench_wide_v1';
-  function applyWide(on){
-    document.documentElement.classList.toggle('pcb-global-wide', !!on);
-    var btn = document.getElementById('btnGlobalWide');
-    var lbl = document.getElementById('lblGlobalWide');
-    if (btn) btn.classList.toggle('active', !!on);
-    if (lbl) lbl.textContent = on ? '标准宽度' : '铺满宽屏';
-  }
-  window.toggleGlobalWideMode = function(){
-    var next = !document.documentElement.classList.contains('pcb-global-wide');
-    try { localStorage.setItem(KEY, next ? '1' : '0'); } catch (e) {}
-    applyWide(next);
-  };
-  try { applyWide(localStorage.getItem(KEY) === '1'); } catch (e) {}
-})();
-</script>
+    <div class="eda-dock-panel">
+      <div class="eda-dock-panel-title">视口与显示</div>
+      <div class="global-display-ctrl">
+        <button type="button" class="gdisp-btn" id="btnGlobalWide" onclick="toggleGlobalWideMode()" data-tip="切换主视口 100% 铺满宽屏与标准最大宽度，跨页面持久生效">
+          <span id="lblGlobalWide">铺满宽屏</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script src="packages/shared/eda-tooltip.js?v=11"></script>
+<script src="packages/shared/eda-shell.js?v=11"></script>
 </body>
 </html>
