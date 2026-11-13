@@ -26,6 +26,34 @@
   const RE_TRACE_ARC = /(?:^|\n)\s*(?:Arc\s*seg:\s*)?xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*xy\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Width\s*(?:\(\s*([-\d.]+)\s*\)|([-\d.]+))/i;
   const RE_TRACE_CENTER = /Center-xy:\s*\[([-\d.]+),\s*([-\d.]+)\]\s*Radius\s*\(([-\d.]+)\)\s*(CCW|CW)?/i;
 
+  /** 规则值须为正数才生效，否则返回 null。 */
+  function positiveOrNull(v) {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  /**
+   * 按 Padstack 覆盖焊盘直径与一钻直径。
+   * rule: { padDiameter, firstDrill }，缺项或非正数时回退 base。
+   * 覆盖焊盘直径时，形状按外接尺寸等比缩放，保持原有形状类型与长宽比。
+   */
+  function resolvePadstackSizing(rule, base) {
+    const padOverride = rule ? positiveOrNull(rule.padDiameter) : null;
+    const drillOverride = rule ? positiveOrNull(rule.firstDrill) : null;
+    let shape = base.shape;
+    if (shape && padOverride) {
+      const w = Number(shape.w) || 0, h = Number(shape.h) || 0;
+      const baseMax = Math.max(w, h);
+      const scale = baseMax > 0 ? padOverride / baseMax : 1;
+      shape = Object.assign({}, shape, { w: (w || padOverride) * scale, h: (h || padOverride) * scale });
+    }
+    return {
+      shape: shape,
+      padDiameter: padOverride || (shape ? Math.max(shape.w, shape.h) : base.padDiameter),
+      firstDrill: drillOverride || base.firstDrill
+    };
+  }
+
   /**
    * Parse PCB Text content containing Vias and Trace Segments.
    * Options:
@@ -33,6 +61,7 @@
    *   - signalPadDiameter: default pad diameter for non-GND vias (default 9.94 mil)
    *   - gndFirstDrill: default 1st drill diameter for GND vias (default 5.54 mil)
    *   - signalFirstDrill: default 1st drill diameter for non-GND vias (default 5.54 mil)
+   *   - padstackRules: { [Padstack Name]: { padDiameter, firstDrill } } 按 Padstack 覆盖上述默认值
    * Note: Circle Drill in TXT is strictly the finished hole diameter for display/reference, NOT used for clearance calculation.
    */
   function parseDfmItems(text, opts) {
@@ -81,9 +110,14 @@
           const usage = mUsage ? mUsage[1].trim() : '';
           const spanInfo = parseViaLayerSpan(sec);
 
-          const shape = isGnd ? gndPadShape : signalPadShape;
-          const padDiameter = shape ? Math.max(shape.w, shape.h) : (isGnd ? defaultGndPadDiam : defaultSignalPadDiam);
-          const firstDrill = isGnd ? defaultGndFirstDrill : defaultSignalFirstDrill;
+          const sizing = resolvePadstackSizing(opts.padstackRules && opts.padstackRules[padName], {
+            shape: isGnd ? gndPadShape : signalPadShape,
+            padDiameter: isGnd ? defaultGndPadDiam : defaultSignalPadDiam,
+            firstDrill: isGnd ? defaultGndFirstDrill : defaultSignalFirstDrill
+          });
+          const shape = sizing.shape;
+          const padDiameter = sizing.padDiameter;
+          const firstDrill = sizing.firstDrill;
 
           const padRadius = padDiameter / 2.0;   // 外接圆半径（展示用；精确几何见 padRegion）
           const firstDrillRadius = firstDrill / 2.0;
@@ -221,6 +255,7 @@
   }
 
   return {
-    parseDfmItems: parseDfmItems
+    parseDfmItems: parseDfmItems,
+    resolvePadstackSizing: resolvePadstackSizing
   };
 });

@@ -660,5 +660,39 @@ test('分层规则：表达式写错的行直接忽略，不影响默认阈值',
   if (r.defectPairs.length || r.pairs.some(p => p.threshold !== 4)) throw new Error('阈值应仍是默认 4');
 });
 
+test('Padstack 尺寸覆盖：同一 Padstack 可独立覆盖焊盘与一钻尺寸', () => {
+  const txt = fs.readFileSync(path.join(__dirname, '../../sample/via_trace_airgap_sample.txt'), 'utf8');
+  const base = DfmCheck.parseDfmItems(txt, { gndPadDiameter: 7.906, signalPadDiameter: 12, gndFirstDrill: 6, signalFirstDrill: 6 });
+  const via = base.vias[0];
+  const mapped = DfmCheck.parseDfmItems(txt, {
+    gndPadDiameter: 7.906, signalPadDiameter: 12, gndFirstDrill: 6, signalFirstDrill: 6,
+    padstackRules: { [via.padstack]: { padDiameter: 10.5, firstDrill: 4.5 } }
+  });
+  const overridden = mapped.vias.find(v => v.padstack === via.padstack);
+  if (overridden.padDiameter !== 10.5 || overridden.firstDrill !== 4.5) throw new Error('Padstack 独立尺寸未应用');
+  const untouched = mapped.vias.find(v => v.padstack !== via.padstack);
+  if (untouched && untouched.padDiameter === 10.5 && untouched.firstDrill === 4.5) throw new Error('覆盖不应影响其他 Padstack');
+});
+
+test('Padstack 尺寸覆盖：只覆盖一项时另一项沿用默认，非法值被忽略', () => {
+  const txt = fs.readFileSync(path.join(__dirname, '../../sample/via_trace_airgap_sample.txt'), 'utf8');
+  const opts = { gndPadDiameter: 7.906, signalPadDiameter: 12, gndFirstDrill: 6, signalFirstDrill: 6 };
+  const base = DfmCheck.parseDfmItems(txt, opts);
+  const via = base.vias[0];
+  const only = DfmCheck.parseDfmItems(txt, Object.assign({}, opts, { padstackRules: { [via.padstack]: { padDiameter: 9 } } }));
+  const a = only.vias.find(v => v.padstack === via.padstack);
+  if (a.padDiameter !== 9) throw new Error('焊盘直径应为 9，实际 ' + a.padDiameter);
+  if (a.firstDrill !== via.firstDrill) throw new Error('未覆盖的一钻应沿用默认');
+  const bad = DfmCheck.parseDfmItems(txt, Object.assign({}, opts, { padstackRules: { [via.padstack]: { padDiameter: -3, firstDrill: 'x' } } }));
+  const b = bad.vias.find(v => v.padstack === via.padstack);
+  if (b.padDiameter !== via.padDiameter || b.firstDrill !== via.firstDrill) throw new Error('非法覆盖值应被忽略');
+});
+
+test('Padstack 尺寸覆盖：非圆形焊盘按外接尺寸等比缩放', () => {
+  const r = DfmCheck.resolvePadstackSizing({ padDiameter: 10 }, { shape: { kind: 'oblong', w: 8, h: 4 }, padDiameter: 8, firstDrill: 5 });
+  if (r.shape.w !== 10 || r.shape.h !== 5 || r.shape.kind !== 'oblong') throw new Error('形状缩放错误 ' + JSON.stringify(r.shape));
+  if (r.padDiameter !== 10 || r.firstDrill !== 5) throw new Error('尺寸错误');
+});
+
 console.log(`\n结果: ${pass} 通过, ${fail} 失败\n`);
 if (fail > 0) process.exit(1);
