@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* ============================================================================
  * run-tests.js —— 按分组顺序运行 pcb-checker/tests 下的测试脚本
- * 用法：node tools/run-tests.js [engine|ui|bench|all] [文件名关键字]
+ * 用法：node tools/run-tests.js [engine|ui|bench|all|full] [文件名关键字]
+ * all = engine + ui；full = engine + ui + bench（含性能基准，约 30 s）
  * 任一脚本非 0 退出即整体失败；汇总各脚本耗时与结果。
  * ========================================================================== */
 'use strict';
@@ -19,10 +20,10 @@ const GROUPS = {
 
 const group = process.argv[2] || 'all';
 const keyword = process.argv[3] || '';
-const selected = group === 'all' ? ['engine', 'ui'] : [group];
+const selected = group === 'all' ? ['engine', 'ui'] : group === 'full' ? ['engine', 'ui', 'bench'] : [group];
 
 if (!selected.every(g => GROUPS[g])) {
-  console.error('未知分组：' + group + '，可选 engine / ui / bench / all');
+  console.error('未知分组：' + group + '，可选 engine / ui / bench / all / full');
   process.exit(2);
 }
 

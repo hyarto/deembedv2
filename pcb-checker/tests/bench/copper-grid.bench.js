@@ -1,4 +1,9 @@
-/* 性能对照：新（网格索引）vs 旧（逐项全量比较）。用合成大盘数据。 */
+/* ============================================================================
+ * copper-grid.bench.js —— 性能对照：新（网格索引）vs 旧（逐项全量比较），合成大盘数据
+ * 断言：结果数量与默认规模一致、新引擎耗时上限、相对旧做法加速 ≥ 10 倍、重复运行不退化。
+ * 仅在默认规模（6000 / 5000 / 4000 / 40）下断言数量与倍数；自定义规模只打印。
+ * ========================================================================== */
+const assert = require('assert');
 const CC = require("../../packages/engines/copper");
 
 function buildBig(nShape, nVia, nTrace, ptsPerTrace){
@@ -66,6 +71,7 @@ console.log('合成数据：', (txt.length / 1048576).toFixed(1), 'MB  Shape', n
 let t0 = Date.now();
 const items = CC.parseBoardItems(txt);
 let t1 = Date.now();
+const parseMs = t1 - t0;
 console.log('解析：', (t1 - t0) + ' ms  →  Item', items.length, ' 圆形铜皮', items.filter(i => i.circle).length, ' 过孔', items.filter(i => i.type === 'via').length);
 
 const sets = [
@@ -77,14 +83,31 @@ const opts = { layerCount: 21, posTol: 0.05, valTol: 0.01 };
 t0 = Date.now();
 const r = CC.runCopperCheck(items, sets, opts);
 t1 = Date.now();
+const newMs = t1 - t0;
 console.log('新引擎检查：', (t1 - t0) + ' ms  已配对', r.groups.filter(g => g.rows.length).length, ' 未配对铜皮', r.unmatchedCircles.length);
 
 t0 = Date.now();
 const hits = naiveCheck(items, sets, 21, 0.05, 0.01);
 t1 = Date.now();
+const naiveMs = t1 - t0;
 console.log('旧做法对照：', (t1 - t0) + ' ms  命中', hits);
 
 t0 = Date.now();
 CC.runCopperCheck(items, sets, opts);
 t1 = Date.now();
-console.log('新引擎第二次：', (t1 - t0) + ' ms');
+const againMs = t1 - t0;
+console.log('新引擎第二次：', againMs + ' ms');
+
+const DEFAULT_SCALE = nShape === 6000 && nVia === 5000 && nTrace === 4000 && pts === 40;
+const BUDGET_MS = { parse: 3000, check: 5000 };
+assert.ok(parseMs <= BUDGET_MS.parse, `解析 ${parseMs} ms 超过上限 ${BUDGET_MS.parse} ms`);
+assert.ok(newMs <= BUDGET_MS.check, `新引擎检查 ${newMs} ms 超过上限 ${BUDGET_MS.check} ms`);
+assert.ok(againMs <= Math.max(BUDGET_MS.check, newMs * 3), `第二次检查 ${againMs} ms 相对首次 ${newMs} ms 退化`);
+if (DEFAULT_SCALE) {
+  assert.strictEqual(items.length, 15000, 'Item 总数');
+  assert.strictEqual(r.groups.filter(g => g.rows.length).length, 5000, '已配对数');
+  assert.strictEqual(r.unmatchedCircles.length, 1000, '未配对铜皮数');
+  assert.strictEqual(hits, 9000, '旧做法命中数应与基线一致');
+  assert.ok(naiveMs >= newMs * 10, `加速比 ${(naiveMs / Math.max(newMs, 1)).toFixed(1)} 倍，应 ≥ 10 倍`);
+}
+console.log(`基准通过：解析 ${parseMs} ms / 检查 ${newMs} ms / 旧做法 ${naiveMs} ms`);

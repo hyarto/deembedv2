@@ -14,7 +14,7 @@ main：16 个脚本，通过用例合计 372；分支：27 个脚本，全部通
 | A2 | nav-unify-test.js「综合一体化同步 DFM 分层规则与扇出预览特征」 | 分层间距规则表、孔盘到孔盘阈值、扇出分色图例、表格型 TXT 在综合页 22 条分 5 组、命名说明位置、叠层数提示、分层规则模板生成 2 行 | [x] 新增 tests/ui/unified-rules-sync.test.js，6 条通过 |
 | A3 | nav-unify-test.js 六页「页签条 5 个页签、统一文案、可切换」 | 分支只剩 eda-shell-unify 7 条，未逐页断言页签数与切换 | [x] eda-shell-unify 逐页增加逐工序点击断言（单一 active 页签与面板） |
 | A4 | theme-unify-test.js | 正文基准字号 14px；统计卡不填色且标签 12px / 数值 22px；表格正文 13px 且无旧 slate 色；卡片标题 15 / 小节标题 13 | [x] 新增 tests/ui/theme-computed.test.js，7 条通过 |
-| A5 | bench-perf.js | 已迁入 tests/bench/copper-grid.bench.js，行为保留，但无耗时断言 | [ ] |
+| A5 | bench-perf.js | 已迁入 tests/bench/copper-grid.bench.js，行为保留，但无耗时断言 | [x] 增加配对数 / 命中数 / 耗时上限 / 加速比 ≥ 10 倍断言 |
 
 已确认**没有丢失**：ui-test 的 5 条（仅去括号改名）、portal 缓存版本号（改名）、GBK 解码 2 条（`decodeTxt` → `decodeBuffer`）。
 
@@ -23,9 +23,9 @@ main：16 个脚本，通过用例合计 372；分支：27 个脚本，全部通
 | # | 问题 | 位置 | 状态 |
 | --- | --- | --- | --- |
 | B1 | AGENTS.md 自述仍有超标项：`unified.html` 1337 行、`fanout.html` 663、`dfm.html` 635；`unified.css` 892、`eda-shell.css` 755；函数 > 80 行 55 个 | 全仓库 | [ ] |
-| B2 | `tests/bench/*.bench.js` 不在 `npm test`，回归时容易漏跑 | tools/run-tests.js | [ ] |
+| B2 | `tests/bench/*.bench.js` 不在 `npm test`，回归时容易漏跑 | tools/run-tests.js | [x] 新增 `npm run check` = engine + ui + bench |
 | B3 | 删除了静态说明：dfm `patHint`、fanout `pnlAdvice`、`viewSchemeBottomHint`（缩放 / 拖拽 / 测距操作提示）。操作提示对使用有帮助，应改为 data-tip 保留 | dfm.html / fanout.html | [ ] |
-| B4 | 真实浏览器冒烟只在 `tools/browser-smoke.js`，依赖不入库，未接入测试分组 | tools | [ ] |
+| B4 | 真实浏览器冒烟只在 `tools/browser-smoke.js`，且只点工序页签，不覆盖按钮与 canvas 绘制 | tools | [x] 新增 `npm run smoke:click`（tools/browser-clickall.js），6 页点遍按钮零报错 |
 
 ## C. 环境说明
 

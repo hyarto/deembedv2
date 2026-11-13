@@ -12,7 +12,9 @@
     "test:ui": "node tools/run-tests.js ui",
     "test:geometry": "node tools/run-tests.js engine geometry",
     "bench": "node tools/run-tests.js bench",
-    "smoke": "node tools/browser-smoke.js"
+    "smoke": "node tools/browser-smoke.js",
+    "check": "node tools/run-tests.js full",
+    "smoke:click": "node tools/browser-clickall.js"
   },
   "devDependencies": {
     "jsdom": "^29.1.1"
