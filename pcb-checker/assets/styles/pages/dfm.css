@@ -421,3 +421,48 @@ tr.reviewed {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ---------- Padstack 尺寸覆盖表 ---------- */
+#padstackRuleBox {
+  margin-top: 10px;
+}
+
+.dfm-padstack-bulk {
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dfm-padstack-bulk .form-item {
+  min-width: 125px;
+}
+
+.dfm-padstack-scroll {
+  overflow-x: auto;
+}
+
+#padstackRuleTable {
+  margin: 0;
+  min-width: 680px;
+}
+
+#padstackRuleTable .dfm-ps-col-sel { width: 54px; }
+#padstackRuleTable .dfm-ps-col-kind { width: 100px; }
+#padstackRuleTable .dfm-ps-col-en { width: 115px; }
+#padstackRuleTable .dfm-ps-col-num { width: 160px; }
+
+#padstackRuleTable .ps-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+#padstackRuleTable input.ps-pad-diameter,
+#padstackRuleTable input.ps-first-drill {
+  width: 100%;
+}
+
+#padstackRuleTable .dfm-ps-empty {
+  text-align: center;
+}

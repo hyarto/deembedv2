@@ -103,28 +103,11 @@
             </select>
           </div>
 
-          <div class="form-item">
-            <label for="inpGndPadDiam" data-tip="GND 过孔焊盘直径，单位 mil">GND 焊盘直径 mil</label>
-            <input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1">
-            <div class="hist-bar" id="hist_pad_gnd"></div>
-          </div>
-
-          <div class="form-item">
-            <label for="inpSignalPadDiam" data-tip="非 GND 信号过孔焊盘直径，单位 mil">信号焊盘直径 mil</label>
-            <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1">
-            <div class="hist-bar" id="hist_pad_sig"></div>
-          </div>
-
-          <div class="form-item">
-            <label for="inpGndFirstDrill" data-tip="GND 过孔一钻机械孔径，单位 mil">GND 一钻直径 mil</label>
-            <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1">
-            <div class="hist-bar" id="hist_drill_gnd"></div>
-          </div>
-
-          <div class="form-item">
-            <label for="inpSignalFirstDrill" data-tip="非 GND 信号过孔一钻机械孔径，单位 mil">信号一钻直径 mil</label>
-            <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1">
-            <div class="hist-bar" id="hist_drill_sig"></div>
+          <div class="dfm-default-sizes" hidden aria-hidden="true">
+            <input type="number" id="inpGndPadDiam" value="7.906" step="0.001" min="0.1" tabindex="-1">
+            <input type="number" id="inpSignalPadDiam" value="12.0" step="0.001" min="0.1" tabindex="-1">
+            <input type="number" id="inpGndFirstDrill" value="6.0" step="0.01" min="0.1" tabindex="-1">
+            <input type="number" id="inpSignalFirstDrill" value="6.0" step="0.01" min="0.1" tabindex="-1">
           </div>
 
           <div class="form-item">
@@ -177,6 +160,37 @@
                 <label for="inpPadRot" data-tip="相对 X 轴逆时针旋转角度">旋转角 °</label>
                 <input type="number" id="inpPadRot" value="0" step="0.5">
               </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="eda-fold" id="padstackRuleBox">
+          <summary>Padstack 尺寸覆盖 <span class="eda-tip" tabindex="0" data-tip="按导入文件中的 Padstack Name 单独设置焊盘直径与一钻直径；未启用单独尺寸的 Padstack 使用 GND、信号默认尺寸；勾选多行后可批量应用同一组尺寸">?</span></summary>
+          <div class="eda-fold-body">
+            <div class="row dfm-padstack-bulk">
+              <label class="form-item" for="inpBulkPadDiameter">批量焊盘直径 mil
+                <input id="inpBulkPadDiameter" type="number" step="0.001" min="0.1" value="10.5" data-no-persist>
+              </label>
+              <label class="form-item" for="inpBulkFirstDrill">批量一钻直径 mil
+                <input id="inpBulkFirstDrill" type="number" step="0.001" min="0.1" value="4.5" data-no-persist>
+              </label>
+              <button type="button" class="btn sec small" id="btnApplyPadstackBulk" data-tip="把批量尺寸写入已勾选的 Padstack 行并启用单独尺寸">应用到勾选行</button>
+            </div>
+            <div class="hint" id="padstackBulkHint" role="status"></div>
+            <div class="dfm-padstack-scroll">
+              <table id="padstackRuleTable">
+                <thead>
+                  <tr>
+                    <th class="dfm-ps-col-sel"><label data-tip="全选或取消本表所有 Padstack 选择框，不改其他列"><input id="padstackSelectAll" type="checkbox" data-no-persist aria-label="全选 Padstack"></label></th>
+                    <th>Padstack Name</th>
+                    <th class="dfm-ps-col-kind">网络类型</th>
+                    <th class="dfm-ps-col-en">单独尺寸</th>
+                    <th class="dfm-ps-col-num">焊盘直径 mil</th>
+                    <th class="dfm-ps-col-num">一钻直径 mil</th>
+                  </tr>
+                </thead>
+                <tbody id="padstackRuleBody"><tr><td colspan="6" class="hint dfm-ps-empty">导入数据后列出 Padstack</td></tr></tbody>
+              </table>
             </div>
           </div>
         </details>
@@ -625,6 +639,7 @@
 <script src="packages/engines/dfm/dfm-engine.js?v=11"></script>
 <script src="packages/engines/dfm/dfm-pattern.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-config.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-padstack-rules.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-rules-io.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-results-ui.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-pattern-ui.js?v=11"></script>

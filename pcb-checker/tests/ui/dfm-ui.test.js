@@ -174,6 +174,66 @@ test('GND 孔盘到信号孔盘间距、分层规则覆盖与规则 JSON 快照�
   }
 });
 
+test('Padstack 尺寸覆盖：全局尺寸输入移出可见区，导入后列出 Padstack 并可批量应用', () => {
+  ['inpGndPadDiam', 'inpSignalPadDiam', 'inpGndFirstDrill', 'inpSignalFirstDrill'].forEach(id => {
+    if (!$(id) || !$(id).closest('[hidden]')) throw new Error('全局尺寸控件应保留但隐藏：' + id);
+  });
+  const txt = fs.readFileSync(path.join(CHECKER_DIR, 'sample/via_trace_airgap_sample.txt'), 'utf8');
+  w.eval(`loadTextData(${JSON.stringify(txt)}, 'padstack-rule-test.txt'); runCheck(true);`);
+  const rows = [...$('padstackRuleBody').querySelectorAll('tr[data-padstack]')];
+  if (rows.length < 2) throw new Error('应自动列出导入文件中的 Padstack，实际 ' + rows.length);
+  const padBefore = rows[0].querySelector('.ps-pad-diameter').value;
+  $('padstackSelectAll').click();
+  if (rows.some(r => !r.querySelector('.ps-select').checked)) throw new Error('全选应选中全部 Padstack');
+  if (rows[0].querySelector('.ps-pad-diameter').value !== padBefore) throw new Error('全选不应改动尺寸列');
+  $('padstackSelectAll').click();
+  if (rows.some(r => r.querySelector('.ps-select').checked)) throw new Error('再次点击应取消全选');
+  $('btnApplyPadstackBulk').click();
+  if (!/先勾选/.test($('padstackBulkHint').textContent)) throw new Error('未勾选时应提示先勾选：' + $('padstackBulkHint').textContent);
+  rows.slice(0, 2).forEach(r => { r.querySelector('.ps-select').checked = true; });
+  $('inpBulkPadDiameter').value = '10.5'; $('inpBulkFirstDrill').value = '4.5';
+  $('btnApplyPadstackBulk').click();
+  const chosen = rows.slice(0, 2).map(r => r.dataset.padstack);
+  const via = w.State.vias.find(v => chosen.includes(v.padstack));
+  if (!via || via.padDiameter !== 10.5 || via.firstDrill !== 4.5) throw new Error('批量尺寸未应用到解析后的过孔');
+  if (w.State.padstackRules[chosen[0]].padDiameter !== 10.5 || w.State.padstackRules[chosen[1]].firstDrill !== 4.5) {
+    throw new Error('Padstack 尺寸未写入规则状态');
+  }
+  const others = w.State.vias.filter(v => !chosen.includes(v.padstack));
+  if (others.some(v => v.padDiameter === 10.5 && v.firstDrill === 4.5)) throw new Error('未勾选的 Padstack 不应被覆盖');
+});
+
+test('Padstack 尺寸覆盖：逐行改值自动启用，取消启用后规则移除', () => {
+  const row = $('padstackRuleBody').querySelector('tr[data-padstack]');
+  const name = row.dataset.padstack;
+  row.querySelector('.ps-enable').checked = false;
+  row.querySelector('.ps-enable').dispatchEvent(new w.Event('change', { bubbles: true }));
+  if (w.State.padstackRules[name]) throw new Error('取消启用后规则应移除');
+  const pad = row.querySelector('.ps-pad-diameter');
+  pad.value = '9.25';
+  pad.dispatchEvent(new w.Event('change', { bubbles: true }));
+  if (!row.querySelector('.ps-enable').checked) throw new Error('修改尺寸应自动启用单独尺寸');
+  if (w.State.padstackRules[name].padDiameter !== 9.25) throw new Error('逐行尺寸未生效');
+});
+
+test('Padstack 尺寸覆盖：规则快照含 padstackRules，载入后回填并先于数据保留', () => {
+  const name = $('padstackRuleBody').querySelector('tr[data-padstack]').dataset.padstack;
+  const snap = w.DfmRuleConfig.snapshot();
+  if (!snap.padstackRules || !snap.padstackRules[name]) throw new Error('快照缺少 padstackRules');
+  w.DfmRuleConfig.loadFromObject({
+    kind: 'pcb-dfm-rule-config', version: 1, fields: {}, layerRules: [],
+    padstackRules: { [name]: { padDiameter: 11, firstDrill: 5 }, '坏项': { padDiameter: -1, firstDrill: 5 } }
+  });
+  const rule = w.State.padstackRules[name];
+  if (!rule || rule.padDiameter !== 11 || rule.firstDrill !== 5) throw new Error('载入后规则未回填');
+  if (w.State.padstackRules['坏项']) throw new Error('非法条目应被丢弃');
+  const row = $('padstackRuleBody').querySelector('tr[data-padstack="' + name + '"]');
+  if (!row.querySelector('.ps-enable').checked || row.querySelector('.ps-pad-diameter').value !== '11') throw new Error('表格未回填载入的规则');
+  // 清空数据后载入规则，再次读取不得丢失
+  $('padstackRuleBody').innerHTML = '';
+  if (!w.readPadstackRulesFromTable()[name]) throw new Error('无表格行时应保留已载入规则');
+});
+
 test('页面运行期零脚本错误', () => {
   if (ctx.errors.length) throw new Error(ctx.errors.join(' | '));
 });

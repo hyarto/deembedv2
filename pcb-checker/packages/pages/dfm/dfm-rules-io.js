@@ -124,7 +124,7 @@
     snapshot: function () {
       var fields = {};
       this.fieldIds.forEach(function (id) { var el = $(id); if (el) fields[id] = el.value; });
-      return { kind: this.kind, version: this.version, savedAt: new Date().toISOString(), fields: fields, layerRules: LayerRules.read() };
+      return { kind: this.kind, version: this.version, savedAt: new Date().toISOString(), fields: fields, layerRules: LayerRules.read(), padstackRules: App.PadstackRules ? App.PadstackRules.read() : {} };
     },
     saveToFile: function () {
       var blob = new Blob([JSON.stringify(this.snapshot(), null, 2)], { type: 'application/json;charset=utf-8' });
@@ -157,6 +157,7 @@
       }) : [];
       LayerRules.render(rows);
       LayerRules.save();
+      if (App.PadstackRules) App.PadstackRules.load(data.padstackRules);
       HistoryManager.renderAll();
       if (State.checkResult && State.vias.length && State.traces.length) runCheck(true);
     }
