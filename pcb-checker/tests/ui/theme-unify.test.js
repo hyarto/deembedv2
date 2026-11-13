@@ -101,13 +101,27 @@ test('静态文案不含无信息量的套话', () => {
   }
 });
 
-test('页面包脚本里的提示文案不含「成功」「！」类套话', () => {
-  const dir = path.join(CHECKER_DIR, 'packages/pages/unified');
-  for (const f of fs.readdirSync(dir)) {
-    const lines = fs.readFileSync(path.join(dir, f), 'utf8').split('\n');
-    lines.forEach((l, i) => {
-      if (/showToast\(|alert\(/.test(l) && /成功|！/.test(l)) throw new Error(`${f}:${i + 1} ${l.trim().slice(0, 80)}`);
+function jsFiles(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? jsFiles(path.join(dir, e.name)) : e.name.endsWith('.js') ? [path.join(dir, e.name)] : []);
+}
+
+test('全部页面包与引擎的提示文案不含「成功」「！」「一键」', () => {
+  for (const f of jsFiles(path.join(CHECKER_DIR, 'packages'))) {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((l, i) => {
+      const code = l.replace(/\/\/.*$/, '');
+      if (/alert\(|showToast\(|message:|textContent\s*=|<button|<span|<div/.test(code) && /成功|！|一键/.test(code)) {
+        throw new Error(`${path.relative(CHECKER_DIR, f)}:${i + 1} ${l.trim().slice(0, 90)}`);
+      }
     });
+  }
+});
+
+test('HTML 不使用原生 title 属性，补充说明统一用 data-tip', () => {
+  for (const page of PAGES) {
+    const html = stripScripts(fs.readFileSync(path.join(CHECKER_DIR, page), 'utf8'));
+    const m = html.match(/<[a-z][^>]*\stitle="[^"]*"/i);
+    assert(!m, `${page} 使用了原生 title：${m && m[0].slice(0, 80)}`);
   }
 });
 

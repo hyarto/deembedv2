@@ -182,7 +182,7 @@
 
     $('resBanner').innerHTML = st.none > 0
       ? '<div class="hint" style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;padding:10px 14px;margin-bottom:12px">' +
-        st.none + ' 个网络处于「未检查」状态：所在层未配置有效判据。<button type="button" class="btn ghost small" id="btnQuickGen" style="margin-left:10px">一键按数据层生成规则行</button></div>'
+        st.none + ' 个网络处于「未检查」状态：所在层未配置有效判据。<button type="button" class="btn ghost small" id="btnQuickGen" style="margin-left:10px">按数据层生成规则行</button></div>'
       : '';
     if (st.none > 0) {
       $('btnQuickGen').onclick = function () {

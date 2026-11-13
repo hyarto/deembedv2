@@ -311,9 +311,9 @@
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border:1px solid #e3e8ef;border-radius:6px">
               <span style="font-size:12px;color:#6b7280;font-weight:600">常用配置方案预设:</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="btn primary small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('current_eda')" title="线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12">当前 EDA 工程配置</button>
-                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('std_6mil')" title="线到地 6.0 / 线到信号 6.0 / GND盘 8.0 / 信号盘 12">6.0 mil 标准规则</button>
-                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('high_density_5mil')" title="线到地 5.0 / 线到信号 5.0 / GND盘 7.0 / 信号盘 10">5.0 mil 高密规则</button>
+                <button class="btn primary small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('current_eda')" data-tip="线到地 4.02 / 线到信号 5.05 / GND盘 7.91 / 信号盘 12">当前 EDA 工程配置</button>
+                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('std_6mil')" data-tip="线到地 6.0 / 线到信号 6.0 / GND盘 8.0 / 信号盘 12">6.0 mil 标准规则</button>
+                <button class="btn sec small" style="padding:3px 10px;font-size:12px" onclick="applyDfmPreset('high_density_5mil')" data-tip="线到地 5.0 / 线到信号 5.0 / GND盘 7.0 / 信号盘 10">5.0 mil 高密规则</button>
               </div>
             </div>
 
@@ -684,7 +684,7 @@
         
         <!-- Toolbar -->
         <div class="canvas-toolbar">
-          <button onclick="resetCanvasView()" title="居中并自适应视野">居中重置</button>
+          <button onclick="resetCanvasView()" data-tip="居中并自适应视野">居中重置</button>
           <button onclick="zoomCanvas(1.2)">放大</button>
           <button onclick="zoomCanvas(0.8)">缩小</button>
           <button id="btnTogShapes" class="active" onclick="toggleLayer('shapes')">铜皮</button>

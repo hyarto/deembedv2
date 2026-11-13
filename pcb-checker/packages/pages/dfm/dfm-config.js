@@ -280,7 +280,7 @@
 
   function runCheck(sync) {
     if (!State.vias.length && !State.traces.length) {
-      alert('请先导入或加载 PCB 坐标数据！');
+      alert('请先导入或加载 PCB 坐标数据');
       return;
     }
 

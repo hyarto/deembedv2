@@ -259,7 +259,7 @@ var parser = (typeof module === "object" && module.exports) ? require("./fanout-
         else if (parsed.vias && Array.isArray(parsed.vias)) schemes = [parsed];
         meta = parsed;
       }
-      if (schemes.length > 0) { return { success: true, schemes, meta, recovered: false, message: `成功解析 ${schemes.length} 套扇出方案` }; }
+      if (schemes.length > 0) { return { success: true, schemes, meta, recovered: false, message: `解析 ${schemes.length} 套扇出方案` }; }
     } catch (err) {}
     let trimmed = text;
     const candidate1 = trimmed.replace(/,\s*\{[^{}]*"id":\s*\d+[^{}]*$/, '') + '\n    ]\n  }\n]';
@@ -271,7 +271,7 @@ var parser = (typeof module === "object" && module.exports) ? require("./fanout-
           success: true,
           schemes: s1,
           recovered: true,
-          message: `检测到 JSON 文件末尾截断，已自动容错修复并成功提取 ${s1.length} 套扇出方案！`
+          message: `检测到 JSON 文件末尾截断，已自动容错修复，提取 ${s1.length} 套扇出方案`
         }; }
   } catch (e1) {}
     const candidate2 = trimmed.replace(/"role"\s*:\s*"[^"]*$/, '"role": "伴随地孔",\n        "drill": 0\n      }\n    ]\n  }\n]');
@@ -283,7 +283,7 @@ var parser = (typeof module === "object" && module.exports) ? require("./fanout-
           success: true,
           schemes: s2,
           recovered: true,
-          message: `检测到 JSON 文件末尾截断，已自动补全闭合并成功提取全部 ${s2.length} 套扇出方案！`
+          message: `检测到 JSON 文件末尾截断，已自动补全闭合，提取全部 ${s2.length} 套扇出方案`
         }; }
   } catch (e2) {}
     let endIdx = trimmed.length;
@@ -298,7 +298,7 @@ var parser = (typeof module === "object" && module.exports) ? require("./fanout-
             success: true,
             schemes: p3,
             recovered: true,
-            message: `检测到 JSON 文件末尾截断，已自动截取前 ${p3.length} 套完整扇出方案！`
+            message: `检测到 JSON 文件末尾截断，已自动截取前 ${p3.length} 套完整扇出方案`
           }; }
   } catch (e3) {
         endIdx = lastObjClose; }
@@ -318,7 +318,7 @@ var parser = (typeof module === "object" && module.exports) ? require("./fanout-
         success: true,
         schemes: schemeMatches,
         recovered: true,
-        message: `检测到复杂格式异常，已通过模式扫描成功提取 ${schemeMatches.length} 套扇出方案！`
+        message: `检测到复杂格式异常，已通过模式扫描提取 ${schemeMatches.length} 套扇出方案`
       };
     }
     return { success: false, error: '未能从文件中识别出有效的扇出方案 JSON 数据' };

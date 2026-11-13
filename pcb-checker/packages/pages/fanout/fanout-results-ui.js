@@ -225,7 +225,7 @@
     var rawInMemory = State.rawText || '';
     var taVal = document.getElementById('txtViaInput').value.trim();
     var txt = (rawInMemory && taVal.indexOf('[ 已加载大型文件:') === 0) ? rawInMemory : taVal;
-    if (!txt) { alert('请先上传或粘贴 PCB 过孔 / 走线数据 TXT！'); return; }
+    if (!txt) { alert('请先上传或粘贴 PCB 过孔 / 走线数据 TXT'); return; }
 
     var clusterVal = parseFloat(document.getElementById('inpClusterDist').value) || 2.0;
     var clusterUnit = document.getElementById('selClusterUnit').value;
