@@ -227,6 +227,8 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 - 拆分时 UMD 引擎在浏览器与 Node 里导出方式不同：页面包用全局名（`ConstraintParser`、`FanoutChecker`），测试用 `require`；
   新增导出两边都要验证。
 - 经典脚本里同名函数后者覆盖前者，拆分文件时先 `grep -n "^function 名字"` 确认没有重复定义。
+- 引擎结果里的 `summary.elapsedMs` 是耗时遥测、扇出方案库记录 id 带 `时间戳+随机` 后缀：
+  两者不影响判定字段，做「同输入输出一致」对拍时要先剔除耗时键（`tests/engine/engine-determinism.test.js` 已处理）。
 - 拆分经典脚本后顶层 `const` 的初始化顺序依赖脚本顺序：被初始化代码引用的默认值文件要排在前面。
 
 ## 10. 提交与 PR
@@ -235,7 +237,7 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
   正文写「原来怎样 / 现在怎样 / 为什么」，并附关键验证数字。
 - 每个任务一个分支，PR 到 `main`；PR 描述含：背景、改动清单、样例数据实测数字、测试结果。
 - **合并前 `npm test` 必须全绿**，当前基线（用例数只增不减）：几何 7 / 走线 41 / DFM 34 + 6 / 扇出 12 / 铜皮 11 / 约束导入 17 /
-  工程守卫 5 / UMD 双端 5；
+  工程守卫 5 / UMD 双端 5 / 引擎确定性双跑 5；
   UI：copper 115 + 8 / dfm 35 + 7 / fanout 18 + 6 / pour 16 + 7 / trace 23 / 参数记忆 21 / unified 9 / 壳层 7 / 风格 8 / 入口与控件 7 /
   脚本清单 5。
 - 不提交 `node_modules/`、临时脚本、开发机绝对路径、`dev/`、`uploads/`、截图等过程产物。
