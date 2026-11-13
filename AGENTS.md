@@ -36,7 +36,7 @@ node tools/run-tests.js ui pour   # 只跑文件名含 pour 的 UI 测试
 1. **一个文件一个职责**。文件名说明职责（`trace-rules.js`、`unified-fanout-viewer.js`），不用 `utils2.js`、`common.js`。
 2. **体量上限**：单个 JS 文件 **≤ 600 行**（超过 800 行视为必须拆分），单个函数 **≤ 80 行**。
    新增功能时顺手把碰到的超标文件或函数拆开，不要继续往上堆。
-   当前已知超标、待拆：`pour-state.js`、`copper-results-ui.js`、`fanout-library-ui.js`（均 > 900 行）。
+   超标文件拆分后要用行数脚本复核（见 3.1），不要凭印象说“已拆完”。
 3. **页面 = 薄 HTML + 一份 CSS + 若干页面包**。HTML 里不写内联 `<style>` / 大段 `<script>`；
    内联 `style=""` 只用于一次性的动态尺寸，布局与配色一律进样式表。
 4. **逻辑分三层，依赖只能向下**：
@@ -149,6 +149,21 @@ pcb-checker/
    `packages/shared/ui-prefs.js` 记住（按「页面 + 元素 id」，id 必须唯一）。
    搜索框、筛选下拉、弹窗一次录入、行内模板控件加 `data-no-persist`；`textarea` 自动排除。
 
+### 6.1 从旧版规范保留的约束
+
+1. **页签**用 `nav#tabs button[data-tab]` + 壳层统一的 click 监听，不要在页面包里再写自己的 `switchTab()`；
+   新页签同步改页签数量断言（`tests/ui/*` 与 `eda-shell-unify.test.js`）。
+   例外：`fanout` 页内的子视图切换函数 `switchTab('tabCanvas')` 是历史接口，测试在用，不要改名。
+2. **跨页一致性靠测试守住，不靠记忆**：顶栏 / 壳层 / 配色 / 字号由 `eda-shell-unify.test.js`、`theme-unify.test.js` 跨页断言。
+   改壳层样式只改 `eda-shell.css`，不要往页面 CSS 里写 `header{}`、`nav#tabs{}` 覆盖规则。
+3. **旧色值不要写回**：`#0284c7`（天蓝）、`#f8fafc` 作页面底、`#0f172a` 作正文、`#64748b` / `#475569` 作次要文字。
+   分组标题条用浅灰 `#f8fafc` + 下边框，不用彩色实心条；浅蓝底纹只用于悬停、拖放、状态徽标。
+4. **重构不丢测试**：旧测试对不上新结构时，**迁移并改断言**，不要删。删除或合并用例必须在提交信息里列出理由与用例数。
+   用例数基线见第 8 节，下降即视为回归。
+5. **重构不丢文档**：改写 AGENTS.md 时合并而不是推翻；已踩的坑、已知夹具数字、判据口径一律保留，只修正已过时的部分。
+6. **性能与功能都要测**：改动引擎或解析器后跑 `npm run bench`，并在真实浏览器里把每个页面的每个工序点一遍
+   （`npm run smoke` 或手动），控制台零报错才算完成。
+
 ## 7. 数值与几何：安全方向不可反
 
 DRC 类工具的底线是**宁可判危险，不可乐观**：
@@ -176,6 +191,9 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 
 要点：
 
+- `new JSDOM(...)` 返回时 `document.readyState` 仍是 `loading`，页面 `DOMContentLoaded` 逻辑（含 `ui-prefs` 回填）要等一个 tick。
+- 不要用 `JSDOM.fromFile` 或 `file://` 跑页面脚本；需要 `localStorage` 时必须给 `http://` 源（`openPage` 已处理）。
+- 用正则从 HTML 提取内联脚本时必须**非贪婪**，否则会把后面的 `<script src>` 一起吞进来，报 `SyntaxError: Unexpected token '<'`。
 - 页面脚本里的顶层 `const` / `let` 不在 `window` 上，要读用 `w.eval('名字')`。
 - `jsdom` 不触发 `<img onerror>`，XSS 断言请数节点，不要等回调。
 - 页面默认阈值是 0，要造缺陷必须同时设阈值与焊盘直径。
@@ -198,6 +216,9 @@ w.loadUnifiedSampleData(); w.runMasterInspection();
 - `rule.widths` 必须是数组；`recViol` 是 `Map`；`CopperCheck.parseBoardItems` 返回 `{}` 不是数组。
 - DFM 的 Trace 对象字段是 `len`（不是 `length`），也没有 `segments` 数组。
 - 大样本数据集（数个 MB）不入库；引用前先 `fs.existsSync`，缺失就跳过。
+- 页面之间不要“统一”成一套引擎：`index.html` 与 `unified.html` 的实现差异是刻意保留的。
+- 拆分时 UMD 引擎在浏览器与 Node 里导出方式不同：页面包用全局名（`ConstraintParser`、`FanoutChecker`），测试用 `require`；
+  新增导出两边都要验证。
 - 经典脚本里同名函数后者覆盖前者，拆分文件时先 `grep -n "^function 名字"` 确认没有重复定义。
 - 拆分经典脚本后顶层 `const` 的初始化顺序依赖脚本顺序：被初始化代码引用的默认值文件要排在前面。
 
