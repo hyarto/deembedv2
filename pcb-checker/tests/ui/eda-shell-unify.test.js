@@ -66,6 +66,19 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       assert(d.documentElement.classList.contains('eda-dock-collapsed'), '右工具栏未折叠');
       d.getElementById('btnToggleRightDock').click();
 
+      /* 逐个点击工序：恰有一个页签与一个面板处于 active */
+      for (const b of tabs) {
+        b.click();
+        await tick(10);
+        assert(b.classList.contains('active'), '点击后页签未激活：' + b.textContent.trim());
+        assert(d.querySelectorAll('nav#tabs button.active').length === 1, '同时激活多个页签');
+        const panel = d.querySelector('section.tab#' + b.dataset.tab + ', section.tab#tab-' + b.dataset.tab + ', .tab-pane#' + b.dataset.tab);
+        assert(panel && panel.classList.contains('active'), '工序面板未显示：' + b.dataset.tab);
+        assert(d.querySelectorAll('section.tab.active, .tab-pane.active').length === 1, '同时显示多个工序面板');
+      }
+      tabs[0].click();
+      await tick(10);
+
       d.getElementById('btnEdaNextStage').click();
       await tick(30);
       assert(tabs[1].classList.contains('active'), '下一工序未推进到第 2 个页签');
