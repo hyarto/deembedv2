@@ -40,6 +40,8 @@
     expandedNetKeys: {},
     highlightNetRoute: null,
     activeLocatedPair: null,
+    activeLocatedViaPair: null,
+    resultReturnPosition: null,
     viewport: {
       zoom: 1.0,
       panX: 0,

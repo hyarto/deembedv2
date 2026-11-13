@@ -255,6 +255,7 @@
               <button type="button" id="btnZoomIn">放大</button>
               <button type="button" id="btnZoomOut">缩小</button>
               <button type="button" id="btnResetView">复位</button>
+              <button type="button" id="btnReturnDfmResults" class="btn sec small" onclick="returnToDfmResults()" style="display:none" data-tip="切回检查结果明细并恢复到点击定位前的行">返回检查结果明细</button>
             </div>
             <div class="tb-group">
               <button type="button" id="btnMeasureMode" data-tip="激活后依次点击两个过孔或一条走线与一个过孔测量精确间距">测量标尺</button>
@@ -335,28 +336,6 @@
         </div>
       </div>
 
-      <div class="card" id="padPairCard" style="display:none">
-        <h2>GND 孔盘到信号孔盘间距不满足明细</h2>
-        <div class="hint" id="padPairHint" style="margin-bottom:8px"></div>
-        <div class="tbl-wrap">
-          <table id="padPairTable">
-            <thead>
-              <tr>
-                <th style="width:52px">序号</th>
-                <th>GND 孔</th>
-                <th>信号孔</th>
-                <th style="width:110px">中心距 mil</th>
-                <th style="width:130px">孔盘实测 mil</th>
-                <th style="width:110px">规则阈值 mil</th>
-                <th style="width:110px">亏欠 mil</th>
-                <th style="width:150px">焊盘直径 GND / 信号</th>
-              </tr>
-            </thead>
-            <tbody id="padPairBody"></tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="card">
         <div class="row" style="justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">
           <div class="row" style="gap:8px">
@@ -373,6 +352,7 @@
           <div class="row" style="gap:6px">
             <button type="button" class="btn sec small" id="btnFilterAll">全部</button>
             <button type="button" class="btn bad small" id="btnFilterBad">只看不满足</button>
+            <button type="button" class="btn sec small" id="btnFilterBadUnreviewed" data-tip="只列不满足且尚未勾选复核的记录，含线到孔对偶与孔到孔对">未复核不满足</button>
             <button type="button" class="btn sec small" id="btnFilterGnd">GND 孔超标</button>
             <button type="button" class="btn sec small" id="btnFilterSig">信号孔超标</button>
             <button type="button" class="btn sec small" id="btnFilterOk">只看满足</button>
@@ -402,30 +382,7 @@
         </div>
 
         <div id="pairListViewContainer" style="display:none">
-          <div class="tbl-wrap">
-            <table id="resTable">
-              <thead>
-                <tr>
-                  <th style="width:45px">序号</th>
-                  <th style="width:45px">复核</th>
-                  <th style="width:65px">状态</th>
-                  <th style="width:110px">判定类型</th>
-                  <th>过孔</th>
-                  <th>走线</th>
-                  <th>最近点坐标</th>
-                  <th>实测间距</th>
-                  <th>规则阈值</th>
-                  <th>偏差值</th>
-                  <th>一钻 / 焊盘</th>
-                  <th>整改建议</th>
-                  <th style="width:65px">操作</th>
-                </tr>
-              </thead>
-              <tbody id="resTableBody"></tbody>
-            </table>
-          </div>
-
-          <div id="paginationBar" class="row" style="justify-content:space-between;margin-top:12px;padding-top:8px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)">
+          <div id="paginationBar" class="row dfm-pager">
             <div id="pageInfo">显示 0 / 0 条记录</div>
             <div class="row" style="gap:6px">
               <label class="fld" style="font-size:12px">每页显示
@@ -434,7 +391,7 @@
                   <option value="100">100 条</option>
                   <option value="200">200 条</option>
                   <option value="500">500 条</option>
-                  <option value="all">全部显示</option>
+                  <option value="all" data-tip="孔盘对超过 1000 条时自动退回每页 200 条">全部显示</option>
                 </select>
               </label>
               <button type="button" class="btn sec small" id="btnFirstPage">« 首页</button>
@@ -443,6 +400,24 @@
               <button type="button" class="btn sec small" id="btnNextPage">下一页 ›</button>
               <button type="button" class="btn sec small" id="btnLastPage">末页 »</button>
             </div>
+          </div>
+          <div class="tbl-wrap">
+            <table id="resTable">
+              <thead>
+                <tr>
+                  <th style="width:52px">序号</th>
+                  <th style="width:76px" data-tip="已复核的记录在「未复核不满足」筛选下隐藏">复核状态<br><label class="dfm-review-all"><input type="checkbox" id="ckReviewVisible" data-no-persist aria-label="总复核当前显示项目">总复核</label></th>
+                  <th style="width:105px">判定类型</th>
+                  <th data-tip="Padstack、网络与孔号">过孔</th>
+                  <th data-tip="线到孔显示走线所在层与网络；孔到孔显示配对的信号过孔">走线或配对过孔</th>
+                  <th style="width:145px" data-tip="按间距判定口径显示的实测值">实测间距</th>
+                  <th style="width:105px">规则阈值</th>
+                  <th style="width:100px">偏差值</th>
+                  <th style="width:85px">操作</th>
+                </tr>
+              </thead>
+              <tbody id="resTableBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -642,8 +617,11 @@
 <script src="packages/pages/dfm/dfm-padstack-rules.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-rule-export.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-rules-io.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-result-nav.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-results-pairs.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-results-ui.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-pattern-ui.js?v=11"></script>
+<script src="packages/pages/dfm/dfm-canvas-vias.js?v=11"></script>
 <script src="packages/pages/dfm/dfm-canvas-viewer.js?v=11"></script>
 <script src="packages/shared/eda-tooltip.js?v=11"></script>
 <script src="packages/shared/eda-shell.js?v=11"></script>

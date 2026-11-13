@@ -21,44 +21,15 @@
     return '<br><span style="color:#2563eb">' + (PAD_SHAPE_LABEL[sh.kind] || sh.kind) + ' ' + w + '×' + h + corner + rot + '</span>';
   }
 
+  /** 统计卡：孔到孔超标数 / 检查数。缺陷行统一显示在视图二明细表，这里不再有独立卡片。 */
   function renderPadPairResults() {
-    var card = $('padPairCard');
-    if (!card) return;
     var r = State.checkResult;
-    var pp = (r && r.padPairStats) || { enabled: false, total: 0, fail: 0, pass: 0, minDist: 0, threshold: 0 };
+    var pp = (r && r.padPairStats) || { enabled: false, total: 0, fail: 0 };
     if ($('statPadPairBadCount')) {
       $('statPadPairBadCount').textContent = pp.enabled
         ? (pp.fail.toLocaleString() + ' / ' + pp.total.toLocaleString())
         : '未启用';
     }
-    if (!pp.enabled) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    var defects = (r && r.padPairDefects) || [];
-    var shown = defects.slice(0, 200);
-    if ($('padPairHint')) {
-      $('padPairHint').textContent = '阈值 ' + pp.threshold + ' mil ｜ 共核对 ' + pp.total.toLocaleString() +
-        ' 对 GND 孔盘 × 信号孔盘，不满足 ' + pp.fail + ' 对、满足 ' + pp.pass.toLocaleString() +
-        ' 对，最小实测 ' + pp.minDist.toFixed(3) + ' mil' +
-        (defects.length > shown.length ? (' ｜ 仅列间距最小的 ' + shown.length + ' 对') : '');
-    }
-    var body = $('padPairBody');
-    if (!body) return;
-    if (!shown.length) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ok);padding:20px">全部满足，无孔盘到孔盘间距超标对偶</td></tr>';
-      return;
-    }
-    body.innerHTML = shown.map(function (d, i) {
-      var g = d.gndVia, sg = d.sigVia;
-      return '<tr>' +
-        '<td>' + (i + 1) + '</td>' +
-        '<td>#' + escHtml(String(g.id)) + ' · ' + escHtml(g.net || '未命名网络') + ' · ' + escHtml(d.spanGnd || g.viaTypeLabel || '通孔') + '</td>' +
-        '<td>#' + escHtml(String(sg.id)) + ' · ' + escHtml(sg.net || '未命名网络') + ' · ' + escHtml(d.spanSig || sg.viaTypeLabel || '通孔') + '</td>' +
-        '<td>' + d.centerDist.toFixed(3) + '</td>' +
-        '<td class="bad">' + d.padAirgap.toFixed(3) + '</td>' +
-        '<td>' + d.threshold + '</td>' +
-        '<td class="bad">' + d.diff.toFixed(3) + '</td>' +
-        '<td>' + d.gndPadDiameter.toFixed(3) + ' / ' + d.sigPadDiameter.toFixed(3) + '</td></tr>';
-    }).join('');
   }
 
   function renderNetGroupView() {
@@ -74,6 +45,7 @@
     var filter = State.activeFilter;
     var filteredNets = r.netLayerAnalysis.filter(function (item) {
       if (filter === 'bad' && item.failCount === 0) return false;
+      if (filter === 'bad_unreviewed' && (item.failCount === 0 || (item.defects || []).every(function (p) { return State.reviewedKeys[p.via.id + '_' + p.trace.id]; }))) return false;
       if (filter === 'ok' && item.failCount > 0) return false;
       if (filter === 'gnd' && item.gndFailCount === 0) return false;
       if (filter === 'signal' && item.signalFailCount === 0) return false;
@@ -165,104 +137,20 @@
     });
     tbody.querySelectorAll('.btn-locate-net-route').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        root.rememberDfmResultPosition(btn);
         if (root.locateNetRoute) root.locateNetRoute(btn.dataset.layer, btn.dataset.net);
       });
     });
     tbody.querySelectorAll('.btn-locate').forEach(function (b) {
       b.addEventListener('click', function () {
+        root.rememberDfmResultPosition(b);
         if (root.locateInCanvas) root.locateInCanvas(parseInt(b.dataset.via, 10), parseInt(b.dataset.trace, 10));
       });
     });
   }
 
   function renderPairListView() {
-    var r = State.checkResult;
-    if (!r) return;
-    var query = (State.searchQuery || '').toLowerCase().trim();
-    var filter = State.activeFilter;
-
-    var filteredPairs = r.pairs.filter(function (p) {
-      if (filter === 'bad' && p.status !== '不满足') return false;
-      if (filter === 'ok' && p.status !== '满足') return false;
-      if (filter === 'gnd' && !p.isGndVia) return false;
-      if (filter === 'signal' && p.isGndVia) return false;
-      if (query) {
-        var qNorm = query.replace(/^via\s*/i, '').trim();
-        var qText = ('via ' + p.via.id + ' ' + p.via.id + ' ' + p.via.net + ' ' + (p.via.spanLabel || '') + ' ' + (p.via.definedRaw || '') + ' ' + p.targetType + ' trace ' + p.trace.id + ' ' + p.trace.id + ' ' + p.trace.subset + ' ' + p.trace.net).toLowerCase();
-        if (qText.indexOf(query) < 0 && qText.indexOf(qNorm) < 0) return false;
-      }
-      return true;
-    });
-
-    var totalRecords = filteredPairs.length;
-    if (!totalRecords) {
-      $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">未找到符合当前筛选条件的记录</td></tr>';
-      if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
-      if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
-      return;
-    }
-
-    var pageSize = State.pageSize === 'all' ? totalRecords : (parseInt(State.pageSize, 10) || 50);
-    var totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
-    if (State.currentPage > totalPages) State.currentPage = totalPages;
-    if (State.currentPage < 1) State.currentPage = 1;
-
-    var startIndex = (State.currentPage - 1) * pageSize;
-    var endIndex = Math.min(totalRecords, startIndex + pageSize);
-    var pageItems = filteredPairs.slice(startIndex, endIndex);
-
-    if ($('pageInfo')) $('pageInfo').textContent = '显示第 ' + (startIndex + 1) + ' - ' + endIndex + ' 条，共 ' + totalRecords.toLocaleString() + ' 条记录';
-    if ($('pageCurrent')) $('pageCurrent').textContent = '第 ' + State.currentPage + ' / ' + totalPages + ' 页';
-    if ($('btnFirstPage')) $('btnFirstPage').disabled = State.currentPage <= 1;
-    if ($('btnPrevPage')) $('btnPrevPage').disabled = State.currentPage <= 1;
-    if ($('btnNextPage')) $('btnNextPage').disabled = State.currentPage >= totalPages;
-    if ($('btnLastPage')) $('btnLastPage').disabled = State.currentPage >= totalPages;
-
-    var tbody = $('resTableBody');
-    tbody.innerHTML = pageItems.map(function (p, pIdx) {
-      var idx = startIndex + pIdx;
-      var isBad = (p.status === '不满足');
-      var pKey = p.via.id + '_' + p.trace.id;
-      var isRev = !!State.reviewedKeys[pKey];
-      var diffStr = (p.diff >= 0 ? '+' : '') + p.diff.toFixed(2) + ' mil';
-      var isGnd = p.isGndVia;
-      var advice = isBad
-        ? ('间距偏小 ' + Math.abs(p.diff).toFixed(2) + ' mil，建议走线外扩 ≥ ' + Math.ceil(Math.abs(p.diff) + 0.2) + ' mil')
-        : '满足工艺能力';
-      var typeBadge = isGnd
-        ? '<span class="tag-badge">线到GND孔</span>'
-        : '<span class="tag-badge info">线到信号孔</span>';
-      var spanBadge = '<span class="tag-badge" style="font-size:11px;margin-top:2px" data-tip="Padstack Defined: ' + escHtml(p.via.definedRaw || 'Top to Bottom') + '">' + escHtml(p.via.spanLabel || '通孔') + '</span>';
-
-      return '<tr class="' + (isBad ? 'fail-row' : '') + ' ' + (isRev ? 'reviewed' : '') + '" id="row-' + idx + '" data-via="' + p.via.id + '" data-trace="' + p.trace.id + '">' +
-        '<td>' + (idx + 1) + '</td>' +
-        '<td><input type="checkbox" class="ck-rev" data-no-persist data-key="' + pKey + '" ' + (isRev ? 'checked' : '') + '></td>' +
-        '<td><span class="tag-badge ' + (isBad ? 'bad' : 'ok') + '">' + p.status + '</span></td>' +
-        '<td>' + typeBadge + '</td>' +
-        '<td><b>Via ' + p.via.id + '</b> · ' + escHtml(p.via.net) + '<br>' + spanBadge + '<br><span style="font-family:var(--mono);font-size:11px;color:var(--sub)">[' + p.via.origin[0].toFixed(2) + ', ' + p.via.origin[1].toFixed(2) + ']</span></td>' +
-        '<td><b>Trace ' + p.trace.id + '</b> · ' + escHtml(p.trace.subset) + ' / ' + escHtml(p.trace.net) + '<br><span style="font-size:11px;color:var(--sub)">线宽: ' + p.trace.width + ' mil · ' + p.trace.kind + '</span></td>' +
-        '<td style="font-family:var(--mono);font-size:11px">[' + p.proj[0].toFixed(2) + ', ' + p.proj[1].toFixed(2) + ']</td>' +
-        '<td><b class="tag-badge ' + (isBad ? 'bad' : 'ok') + '">' + p.evalDist.toFixed(2) + ' mil</b><div style="font-size:11px;color:var(--sub);margin-top:3px;font-family:var(--mono)">焊盘: <b>' + p.padEdgeDist.toFixed(2) + '</b> | 一钻: <b>' + p.drillEdgeDist.toFixed(2) + '</b></div></td>' +
-        '<td><b>≥ ' + p.threshold.toFixed(2) + ' mil</b></td>' +
-        '<td style="font-family:var(--mono);font-weight:700;color:' + (isBad ? 'var(--bad)' : 'var(--ok)') + '">' + diffStr + '</td>' +
-        '<td style="font-family:var(--mono);font-size:11px;color:var(--sub)">一钻: ' + p.via.firstDrill.toFixed(2) + ' mil<br>焊盘: ' + (p.via.padDiameter || p.via.padRadius * 2).toFixed(2) + ' mil' + padShapeNote(p) + '</td>' +
-        '<td style="font-size:11px;color:#374151">' + advice + '</td>' +
-        '<td><button type="button" class="btn sec small btn-locate" data-via="' + p.via.id + '" data-trace="' + p.trace.id + '">定位图</button></td></tr>';
-    }).join('');
-
-    tbody.querySelectorAll('.ck-rev').forEach(function (ck) {
-      var onToggle = function (e) {
-        State.reviewedKeys[e.target.dataset.key] = e.target.checked;
-        renderResults();
-      };
-      ck.addEventListener('change', onToggle);
-      ck.addEventListener('click', onToggle);
-    });
-    tbody.querySelectorAll('.btn-locate').forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (root.locateInCanvas) root.locateInCanvas(parseInt(b.dataset.via, 10), parseInt(b.dataset.trace, 10));
-      });
-    });
+    App.PairList.render();
   }
 
   function renderResults() {
@@ -275,11 +163,10 @@
       if ($('statTotalCount')) $('statTotalCount').textContent = '0';
       if ($('statMinDist')) $('statMinDist').textContent = '0.00';
       if ($('netGroupTableBody')) $('netGroupTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">暂无走线网络聚合结果</td></tr>';
-      if ($('resTableBody')) $('resTableBody').innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--sub);padding:24px">暂无检查结果</td></tr>';
+      if ($('resTableBody')) $('resTableBody').innerHTML = '<tr><td colspan="9" class="empty-cell">暂无检查结果</td></tr>';
       if ($('pageInfo')) $('pageInfo').textContent = '显示 0 / 0 条记录';
       if ($('pageCurrent')) $('pageCurrent').textContent = '第 1 / 1 页';
       if ($('statPadPairBadCount')) $('statPadPairBadCount').textContent = '未启用';
-      if ($('padPairCard')) $('padPairCard').style.display = 'none';
       return;
     }
 
@@ -366,6 +253,7 @@
 
     if ($('btnFilterAll')) $('btnFilterAll').addEventListener('click', function () { State.activeFilter = 'all'; renderResults(); });
     if ($('btnFilterBad')) $('btnFilterBad').addEventListener('click', function () { State.activeFilter = 'bad'; renderResults(); });
+    if ($('btnFilterBadUnreviewed')) $('btnFilterBadUnreviewed').addEventListener('click', function () { State.activeFilter = 'bad_unreviewed'; renderResults(); });
     if ($('btnFilterGnd')) $('btnFilterGnd').addEventListener('click', function () { State.activeFilter = 'gnd'; renderResults(); });
     if ($('btnFilterSig')) $('btnFilterSig').addEventListener('click', function () { State.activeFilter = 'signal'; renderResults(); });
     if ($('btnFilterOk')) $('btnFilterOk').addEventListener('click', function () { State.activeFilter = 'ok'; renderResults(); });

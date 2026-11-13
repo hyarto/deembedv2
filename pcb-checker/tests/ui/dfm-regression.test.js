@@ -436,23 +436,24 @@ test('新增项：跑检查后统计卡与明细卡给出孔盘对结果', () =>
   if (!st.enabled) throw new Error('应启用孔盘到孔盘检查');
   if (st.total !== 22 || st.fail !== 0) throw new Error('应为 22 对全满足，实际 ' + JSON.stringify(st));
   if ($('statPadPairBadCount').textContent !== '0 / 22') throw new Error('统计卡应为 0 / 22，实际 ' + $('statPadPairBadCount').textContent);
-  if ($('padPairCard').style.display !== 'block') throw new Error('明细卡应显示');
-  if ($('padPairHint').textContent.indexOf('6 mil') < 0) throw new Error('提示里没有阈值：' + $('padPairHint').textContent);
+  if ($('padPairCard')) throw new Error('独立孔盘对明细卡应移除，改在视图二统一显示');
+  if (!d.querySelector('#resTable thead').textContent.includes('配对过孔')) throw new Error('视图二应具备孔到孔的配对过孔展示列');
   if ($('runHint').textContent.indexOf('GND孔盘↔信号孔盘') < 0) throw new Error('运行提示没提到新增项');
 });
 
-test('新增项：阈值调到 10 mil 时明细表列出 8 对不满足', () => {
+test('新增项：阈值调到 10 mil 时统一明细表合并列出 8 对孔盘不满足', () => {
+  $('inpSearch').value = '';
+  $('inpSearch').dispatchEvent(new w.Event('input', { bubbles: true }));
   $('inpThresholdPadPair').value = '10';
   w.eval('runCheck(true)');
   const st = w.State.checkResult.padPairStats;
   if (st.fail !== 8) throw new Error('应 8 对不满足，实际 ' + st.fail);
   if ($('statPadPairBadCount').textContent !== '8 / 34') throw new Error('统计卡应为 8 / 34，实际 ' + $('statPadPairBadCount').textContent);
-  const rows = d.querySelectorAll('#padPairBody tr');
-  if (rows.length !== 8) throw new Error('明细应为 8 行，实际 ' + rows.length);
+  const rows = d.querySelectorAll('#resTableBody tr.pad-pair-row');
+  if (rows.length !== 8) throw new Error('视图二应合并显示 8 条孔盘对超标记录，实际 ' + rows.length);
   const first = rows[0].textContent;
-  if (first.indexOf('GND') < 0 || first.indexOf('mil') >= 0) { /* 文案里没有单位，仅确认有网络名 */ }
-  if (rows[0].querySelectorAll('td').length !== 8) throw new Error('明细列数不对');
-  if (!/不满足 8 对/.test($('padPairHint').textContent)) throw new Error('提示没给出不满足数量：' + $('padPairHint').textContent);
+  if (first.indexOf('GND') < 0 || first.indexOf('孔到孔') < 0) throw new Error('合并行应标识 GND 过孔与孔到孔判定类型');
+  if (rows[0].querySelectorAll('td').length !== 9) throw new Error('统一明细表应为 9 列');
 });
 
 test('新增项：阈值填 0 时不检查，统计卡显示未启用', () => {
@@ -460,7 +461,8 @@ test('新增项：阈值填 0 时不检查，统计卡显示未启用', () => {
   w.eval('runCheck(true)');
   if (w.State.checkResult.padPairStats.enabled) throw new Error('填 0 应关闭');
   if ($('statPadPairBadCount').textContent !== '未启用') throw new Error('统计卡应显示未启用，实际 ' + $('statPadPairBadCount').textContent);
-  if ($('padPairCard').style.display !== 'none') throw new Error('明细卡应隐藏');
+  if ($('padPairCard')) throw new Error('不应再保留独立孔盘对明细卡');
+  if (d.querySelectorAll('#resTableBody tr.pad-pair-row').length) throw new Error('关闭孔盘检查后明细表不应有孔到孔行');
   $('inpThresholdPadPair').value = '6.0';
   w.eval('runCheck(true)');
 });

@@ -219,41 +219,15 @@
     }
 
     if (showVias) {
-      var activeLayerFocus = (State.highlightNetRoute && State.highlightNetRoute.layer) || ($('selLayerFilter') ? $('selLayerFilter').value : '');
-      State.vias.forEach(function (v) {
-        var vx = v.origin[0], vy = v.origin[1];
-        if (vx + v.padRadius < vMinX || vx - v.padRadius > vMaxX || vy + v.padRadius < vMinY || vy - v.padRadius > vMaxY) return;
-        var spansActiveLayer = !activeLayerFocus || root.DfmCheck.doesViaSpanLayer(v, activeLayerFocus);
-        var isBlindOrBuried = v.viaSpanType === 'blind' || v.viaSpanType === 'buried';
-        ctx.save();
-        if (!spansActiveLayer) ctx.globalAlpha = 0.22;
-        var p = worldToScreen(vx, vy);
-        var finishDrillR = Math.max(1.5, (v.drill / 2.0) * vp.zoom);
-        var firstDrillR = Math.max(2.0, v.firstDrillRadius * vp.zoom);
-        var padR = Math.max(2.8, v.padRadius * vp.zoom);
-        var isSelected = State.measureSelection.some(function (s) { return s.type === 'via' && s.item.id === v.id; });
-
-        ctx.strokeStyle = isSelected ? '#38bdf8' : (v.viaSpanType === 'buried' ? 'rgba(192,132,252,0.85)' : (v.viaSpanType === 'blind' ? 'rgba(56,189,248,0.85)' : (v.isGnd ? 'rgba(148,163,184,0.45)' : 'rgba(239,68,68,0.7)')));
-        ctx.lineWidth = isSelected ? 2 : (isBlindOrBuried ? 1.4 : 1);
-        ctx.setLineDash([2, 2]);
-        ctx.beginPath(); ctx.arc(p[0], p[1], padR, 0, 2 * Math.PI); ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(p[0], p[1], firstDrillR, 0, 2 * Math.PI); ctx.stroke();
-
-        ctx.fillStyle = v.isGnd ? '#334155' : '#ef4444';
-        ctx.beginPath(); ctx.arc(p[0], p[1], finishDrillR, 0, 2 * Math.PI); ctx.fill();
-        ctx.strokeStyle = isSelected ? '#38bdf8' : (v.isGnd ? '#64748b' : '#f87171');
-        ctx.stroke();
-
-        if (showLabels && vp.zoom > 1.2) {
-          ctx.fillStyle = isBlindOrBuried ? '#e9d5ff' : '#cbd5e1';
-          ctx.font = '10px ui-monospace, sans-serif';
-          ctx.fillText('V' + v.id + (isBlindOrBuried && v.spanShort ? '[' + v.spanShort + ']' : ''), p[0] + padR + 2, p[1] - 2);
-        }
-        ctx.restore();
+      App.CanvasVias.draw(ctx, {
+        vias: State.vias,
+        vp: vp,
+        bounds: { minX: vMinX, maxX: vMaxX, minY: vMinY, maxY: vMaxY },
+        worldToScreen: worldToScreen,
+        showLabels: showLabels,
+        activeLayerFocus: (State.highlightNetRoute && State.highlightNetRoute.layer) || ($('selLayerFilter') ? $('selLayerFilter').value : ''),
+        measureSelection: State.measureSelection,
+        locatedPair: State.activeLocatedViaPair
       });
     }
 
@@ -325,7 +299,7 @@
       (p ? ('<div style="font-size:11px;color:#cbd5e1;line-height:1.5;margin-bottom:8px">' +
         '<div>走线: <strong>' + escHtml(p.trace.net) + '</strong> · ' + escHtml(p.trace.subset) + ' | 过孔: <strong>Via ' + p.via.id + '</strong> · ' + escHtml(p.via.net) + '</div>' +
         '<div>实测: <strong style="color:' + (p.status === '不满足' ? '#f87171' : '#4ade80') + ';font-family:var(--mono)">' + p.evalDist.toFixed(2) + ' mil</strong> · 阈值 ≥ ' + p.threshold.toFixed(2) + ' mil</div></div>') : '') +
-      '<div style="display:flex;justify-content:flex-end"><button type="button" class="btn sec small" onclick="document.querySelector(\'nav#tabs button[data-tab=result]\').click()">返回结果明细</button></div>';
+      '<div style="display:flex;justify-content:flex-end"><button type="button" class="btn sec small" onclick="returnToDfmResults()">返回检查结果明细</button></div>';
     card.style.display = 'block';
   }
 
@@ -337,7 +311,27 @@
     renderCanvas();
   }
 
+  /** 从孔到孔明细定位：居中两孔中点，缩放到两孔间距的 2.5 倍视野，并高亮该孔对。 */
+  function locateViaPairInCanvas(gndViaId, sigViaId) {
+    State.activeLocatedViaPair = { gndViaId: gndViaId, sigViaId: sigViaId };
+    var gnd = State.vias.find(function (v) { return v.id === gndViaId; });
+    var sig = State.vias.find(function (v) { return v.id === sigViaId; });
+    if (!gnd || !sig) return;
+    State.highlightNetRoute = null;
+    var tabBtn = document.querySelector('nav#tabs button[data-tab="canvas"]');
+    if (tabBtn) tabBtn.click();
+    if (!canvas) return;
+    var vp = State.viewport;
+    var midX = (gnd.origin[0] + sig.origin[0]) / 2, midY = (gnd.origin[1] + sig.origin[1]) / 2;
+    var distance = Math.hypot(gnd.origin[0] - sig.origin[0], gnd.origin[1] - sig.origin[1]);
+    vp.zoom = Math.max(2, Math.min(10, Math.min(canvas.width, canvas.height) / Math.max(distance * 2.5, 1)));
+    vp.panX = canvas.width / 2 - midX * vp.zoom;
+    vp.panY = canvas.height / 2 - midY * vp.zoom;
+    renderCanvas();
+  }
+
   function locateInCanvas(viaId, traceId) {
+    State.activeLocatedViaPair = null;
     State.highlightNetRoute = null;
     var tabBtn = document.querySelector('nav#tabs button[data-tab="canvas"]');
     if (tabBtn) tabBtn.click();
@@ -557,6 +551,7 @@
   root.updateMeasurements = updateMeasurements;
   root.toggleDfmPairReview = toggleDfmPairReview;
   root.locateInCanvas = locateInCanvas;
+  root.locateViaPairInCanvas = locateViaPairInCanvas;
   root.locateNetRoute = locateNetRoute;
 
   bindCanvasEvents();
