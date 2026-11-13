@@ -51,7 +51,7 @@ function readPageCss(page) {
     const href = m[1];
     const css = fs.readFileSync(resolveAssetPath(href), 'utf8');
     chunks.push(css);
-    if (!/eda-shell\.css/i.test(href)) {
+    if (!/eda-(shell|dock)\.css/i.test(href)) {
       ownChunks.push(css);
     }
   }

@@ -1,0 +1,297 @@
+/* ============================================================================
+ * eda-dock.css —— 三栏壳层的右列：功能与工具栏、实时遥测、显示控制、悬浮气泡
+ * 紧随 eda-shell.css 加载（左列导轨与中列视口在 eda-shell.css）
+ * ========================================================================== */
+
+/* ---------- 右列：功能、操作工具与实时遥测检视栏 ---------- */
+aside.eda-right-dock {
+  background: var(--dock-bg);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 30;
+}
+
+.eda-dock-head {
+  height: 40px;
+  flex: none;
+  padding: 0 12px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.eda-dock-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.eda-dock-collapse-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.eda-dock-collapse-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+}
+
+.eda-dock-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+html.eda-dock-collapsed .eda-dock-title,
+html.eda-dock-collapsed .eda-dock-body {
+  display: none;
+}
+
+html.eda-dock-collapsed .eda-dock-head {
+  padding: 0;
+  justify-content: center;
+}
+
+.eda-dock-panel {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.eda-dock-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eda-dock-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eda-dock-actions .dock-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--txt);
+  text-decoration: none;
+  transition: all 0.12s;
+}
+
+.eda-dock-actions .dock-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+  background: var(--pri-soft);
+}
+
+.eda-dock-actions .dock-btn.pri {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #ffffff;
+}
+
+.eda-dock-actions .dock-btn.pri:hover {
+  background: var(--pri-hover);
+}
+
+.eda-dock-actions .dock-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+/* 右侧实时遥测检视网格 */
+.eda-telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.eda-tele-cell {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.eda-tele-cell .k {
+  font-size: 11px;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eda-tele-cell .v {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.eda-tele-cell.bad .v { color: var(--bad); }
+.eda-tele-cell.ok .v { color: var(--ok); }
+.eda-tele-cell.warn .v { color: var(--warn); }
+
+/* 工作区显示与参数记忆控制区（位于右侧工具栏内） */
+.global-display-ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.global-display-ctrl .gdisp-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--txt);
+  transition: all 0.12s;
+}
+
+.global-display-ctrl .gdisp-btn:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+  background: var(--pri-soft);
+}
+
+.global-display-ctrl .gdisp-btn.active {
+  background: var(--pri-soft);
+  border-color: var(--pri);
+  color: var(--pri);
+}
+
+/* ---------- 悬浮气泡提示（替代界面内括号解释文案） ---------- */
+.eda-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 4px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #6b7280;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+  user-select: none;
+  flex: none;
+}
+
+.eda-tip:hover,
+.eda-tip:focus {
+  border-color: var(--pri);
+  background: var(--pri);
+  color: #ffffff;
+  outline: none;
+}
+
+[data-tip] {
+  cursor: help;
+}
+
+button[data-tip],
+a[data-tip],
+select[data-tip],
+input[data-tip],
+label[data-tip] {
+  cursor: pointer;
+}
+
+input[type="text"][data-tip],
+input[type="number"][data-tip] {
+  cursor: text;
+}
+
+#edaFloatingTooltip {
+  position: fixed;
+  z-index: 10050;
+  max-width: 320px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  pointer-events: none;
+  display: none;
+  word-break: break-word;
+}
+
+@media (max-width: 1100px) {
+  body.eda-workbench {
+    grid-template-columns: 196px minmax(0, 1fr) 228px;
+  }
+}
+
+@media (max-width: 860px) {
+  body.eda-workbench {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+  aside.eda-left-rail,
+  .eda-center-col,
+  aside.eda-right-dock {
+    height: auto;
+    width: 100%;
+  }
+}

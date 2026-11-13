@@ -14,7 +14,7 @@ const PAGES = {
   'pour.html': 5,
   'unified.html': 6
 };
-const SHELL_CSS = ['tokens.css', 'eda-shell.css', 'components.css'];
+const SHELL_CSS = ['tokens.css', 'eda-shell.css', 'eda-dock.css', 'components.css'];
 const SHELL_JS = ['eda-tooltip.js', 'eda-shell.js', 'ui-prefs.js'];
 
 let pass = 0, fail = 0;
@@ -89,14 +89,19 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
     });
   }
 
-  await test('各页面引用独立的页面样式文件', () => {
-    const own = {};
+  await test('各页面引用独立的页面样式文件，且文件名以页面名为前缀', () => {
+    const stems = { 'index.html': 'trace', 'copper.html': 'copper', 'dfm.html': 'dfm', 'fanout.html': 'fanout', 'pour.html': 'pour', 'unified.html': 'unified' };
+    const seen = new Set();
     for (const page of Object.keys(PAGES)) {
-      own[page] = readPageCss(page).full.match(/href="assets\/styles\/pages\/[a-z-]+\.css/g) || [];
-      assert(own[page].length === 1, `${page} 应恰好引用 1 个页面样式文件`);
+      const files = (readPageCss(page).full.match(/href=\"assets\/styles\/pages\/[a-z-]+\.css/g) || [])
+        .map(h => h.replace(/.*pages\//, ''));
+      assert(files.length >= 1, `${page} 缺少页面样式文件`);
+      files.forEach(f => {
+        assert(f.startsWith(stems[page]), `${page} 引用了不属于本页的样式 ${f}`);
+        assert(!seen.has(f), `页面样式 ${f} 被多个页面共用`);
+        seen.add(f);
+      });
     }
-    const set = new Set(Object.values(own).map(a => a[0]));
-    assert(set.size === 6, '页面样式文件应各不相同');
   });
 
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
