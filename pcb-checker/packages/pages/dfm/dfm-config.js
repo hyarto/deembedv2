@@ -169,22 +169,19 @@
   }
 
 
-  var LayerRules = {
-    get rows() { return root.LayerRules ? root.LayerRules.rows : []; },
-    set rows(v) { if (root.LayerRules) root.LayerRules.rows = v; },
-    defaults: function () { return root.LayerRules.defaults(); },
-    load: function () { return root.LayerRules.load(); },
-    save: function () { return root.LayerRules.save(); },
-    read: function () { return root.LayerRules.read(); },
-    getActive: function () { return root.LayerRules.getActive(); },
-    render: function (r) { return root.LayerRules.render(r); },
-    renderStats: function (c) { return root.LayerRules.renderStats(c); },
-    updateHitCounts: function (c) { return root.LayerRules.updateHitCounts(c); },
-    init: function () { return root.LayerRules.init(); }
-  };
-  var DfmRuleConfig = {
-    bindEvents: function () { return root.DfmRuleConfig.bindEvents(); }
-  };
+  /* LayerRules 与 DfmRuleConfig 实现在 dfm-rules-io.js（后加载），这里按需转发全部成员，避免手写代理漏方法 */
+  function lazyForward(name) {
+    return new Proxy({}, {
+      get: function (_, key) {
+        var target = root[name];
+        var value = target[key];
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+      set: function (_, key, value) { root[name][key] = value; return true; }
+    });
+  }
+  var LayerRules = lazyForward('LayerRules');
+  var DfmRuleConfig = lazyForward('DfmRuleConfig');
 
   function readPadShapes() {
     var kind = ($('selPadShape') && $('selPadShape').value) || 'circle';
